@@ -21,12 +21,6 @@
 #################################################################################
 
 
-# Script to setup packege installation
-from setuptools import setup, find_packages
-import os
-
-setup(
-    name="dspace",
-    version="0.1.0",
-    packages=find_packages(),
-)
+# Package-level variables
+__author__ = 'Eclipse Tractus-X Contributors'
+__license__ = "Apache License, Version 2.0"
