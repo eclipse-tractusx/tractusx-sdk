@@ -26,12 +26,12 @@ FROM alpine:3.19
 USER root
 
 ## Move all the files from the project to the sdk directory
-COPY ./ /dataspace-sdk
+COPY ../ /tractusx-sdk
 
-WORKDIR /dataspace-sdk
+WORKDIR /tractusx-sdk/dataspace
 
 ## List the contents of the /backend directory
-RUN ls -la
+RUN ls -la /tractusx-sdk/dataspace
 
 ## Install Python
 RUN apk add python3 py3-pip libpq --no-cache
@@ -51,7 +51,7 @@ RUN mkdir -p ./logs
 RUN mkdir -p ./data
 
 ## Update user permissions
-RUN chown -R 1000:3000 /dataspace-sdk && chmod -R 775 /dataspace-sdk/
+RUN chown -R 1000:3000 /tractusx-sdk/dataspace && chmod -R 775 /tractusx-sdk/dataspace
 
 ## If necessary to inject documentation do it here:
 # COPY ./resources/docs/* ./resources/docs
