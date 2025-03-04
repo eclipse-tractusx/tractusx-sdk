@@ -47,8 +47,7 @@ jobs:
       - name: Build dataspace-sdk Docker image
         id: build-docker-dataspace-sdk
         run: |
-            cd dataspace
-            docker build -t ${{ env.IMAGE_NAMESPACE }}/${{ env.DATASPACE_SDK_IMAGE_NAME }}:latest .
+            docker build -f dataspace/Dockerfile -t ${{ env.IMAGE_NAMESPACE }}/${{ env.DATASPACE_SDK_IMAGE_NAME }}:latest .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # 0.29.0
@@ -82,8 +81,7 @@ jobs:
       - name: Build industry-sdk Docker image
         id: build-docker-industry-sdk
         run: |
-            cd industry
-            docker build -t ${{ env.IMAGE_NAMESPACE }}/${{ env.INDUSTRY_SDK_IMAGE_NAME }}:latest .
+            docker build -f industry/Dockerfile -t ${{ env.IMAGE_NAMESPACE }}/${{ env.INDUSTRY_SDK_IMAGE_NAME }}:latest .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # 0.29.0
