@@ -32,3 +32,4 @@ __author__ = 'Eclipse Tractus-X Contributors'
 __license__ = "Apache License, Version 2.0"
 
 ## Specific industry static tools
+from .encoding_utils import encode_as_base64_url_safe, decode_base64_url_safe

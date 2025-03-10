@@ -23,3 +23,28 @@
 ## Where the models are stored
 
 from .example import ParentExample, ChildExample
+from .asset_admin_shell_models import (
+    # Enums
+    AssetKind,
+    ReferenceTypes,
+    ReferenceKeyTypes,
+    ProtocolInformationSecurityAttributesTypes,
+    # Basic models
+    MultiLanguage,
+    ReferenceKey,
+    Reference,
+    ProtocolInformationSecurityAttributes,
+    ProtocolInformation,
+    EmbeddedDataSpecification,
+    AdministrativeInformation,
+    Endpoint,
+    SpecificAssetId,
+    # Major models
+    SubModelDescriptor,
+    ShellDescriptor,
+    # Response models
+    PagingMetadata,
+    BasePaginatedResponse,
+    GetAllShellDescriptorsResponse,
+    GetSubmodelDescriptorsByAssResponse,
+)
