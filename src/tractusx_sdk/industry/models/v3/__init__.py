@@ -20,37 +20,28 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-## Where the models are stored
-
-from .example import ParentExample, ChildExample
-
-from .supported_versions_aas import (
-    AASSupportedVersionsEnum,
-)
-
-from .abstract_aas import (
+from .aas import (
     # Enums
     AssetKind,
     ReferenceTypes,
     ReferenceKeyTypes,
     ProtocolInformationSecurityAttributesTypes,
     # Basic models
-    BaseAbstractModel,
-    AbstractMultiLanguage,
-    AbstractReferenceKey,
-    AbstractReference,
-    AbstractProtocolInformationSecurityAttributes,
-    AbstractProtocolInformation,
-    AbstractEmbeddedDataSpecification,
-    AbstractAdministrativeInformation,
-    AbstractEndpoint,
-    AbstractSpecificAssetId,
+    MultiLanguage,
+    ReferenceKey,
+    Reference,
+    ProtocolInformationSecurityAttributes,
+    ProtocolInformation,
+    EmbeddedDataSpecification,
+    AdministrativeInformation,
+    Endpoint,
+    SpecificAssetId,
     # Major models
-    AbstractSubModelDescriptor,
-    AbstractShellDescriptor,
+    SubModelDescriptor,
+    ShellDescriptor,
     # Response models
-    AbstractPagingMetadata,
-    AbstractPaginatedResponse,
-    AbstractGetAllShellDescriptorsResponse,
-    AbstractGetSubmodelDescriptorsByAssResponse,
+    PagingMetadata,
+    PaginatedResponse,
+    GetAllShellDescriptorsResponse,
+    GetSubmodelDescriptorsByAssResponse,
 )
