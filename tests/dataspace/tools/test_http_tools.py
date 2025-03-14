@@ -72,6 +72,41 @@ class TestHttpTools(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {"error": "Bad Request"})
 
+    @patch("requests.Session.put")
+    def test_do_put_success(self, mock_put):
+        """Test a successful PUT request."""
+        mock_put.return_value = Mock(status_code=200, json=lambda: {"message": "updated"})
+        
+        response = HttpTools.do_put(self.test_url, json=self.payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"message": "updated"})
+
+    @patch("requests.Session.put")
+    def test_do_put_failure(self, mock_put):
+        """Test PUT request with bad request response."""
+        mock_put.return_value = Mock(status_code=400, json=lambda: {"error": "Bad Request"})
+        
+        response = HttpTools.do_put(self.test_url, json=self.payload)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"error": "Bad Request"})
+
+    @patch("requests.Session.delete")
+    def test_do_delete_success(self, mock_delete):
+        """Test a successful DELETE request."""
+        mock_delete.return_value = Mock(status_code=204, json=lambda: {"message": "deleted"})
+        
+        response = HttpTools.do_delete(self.test_url)
+        self.assertEqual(response.status_code, 204)
+
+    @patch("requests.Session.delete")
+    def test_do_delete_failure(self, mock_delete):
+        """Test DELETE request with not found response."""
+        mock_delete.return_value = Mock(status_code=404, json=lambda: {"error": "Not Found"})
+        
+        response = HttpTools.do_delete(self.test_url)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"error": "Not Found"})
+
     def test_response_json(self):
         """Ensure JSON response is properly structured."""
         response = HttpTools.response({"message": "OK"}, status=200)

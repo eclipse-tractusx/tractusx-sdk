@@ -67,7 +67,37 @@ class HttpTools:
                             timeout=timeout,headers=headers,
                             data=data,json=json,
                             allow_redirects=allow_redirects)
-    
+
+    # do put request without session
+    def do_put(url, data=None, verify=False, headers=None, timeout=None, json=None, allow_redirects=False):
+        return requests.put(url=url, verify=verify,
+                            timeout=timeout, headers=headers,
+                            data=data, json=json,
+                            allow_redirects=allow_redirects)
+
+    # do put request with session
+    def do_put(url, session=None, data=None, verify=False, headers=None, timeout=None, json=None, allow_redirects=False):
+        if session is None:
+            session = requests.Session()
+        return session.put(url=url, verify=verify,
+                           timeout=timeout, headers=headers,
+                           data=data, json=json,
+                           allow_redirects=allow_redirects)
+
+    # do delete request without session
+    def do_delete(url, verify=False, headers=None, timeout=None, params=None, allow_redirects=False):
+        return requests.delete(url=url, verify=verify,
+                               timeout=timeout, headers=headers,
+                               params=params, allow_redirects=allow_redirects)
+
+    # do delete request with session
+    def do_delete(url, session=None, verify=False, headers=None, timeout=None, params=None, allow_redirects=False):
+        if session is None:
+            session = requests.Session()
+        return session.delete(url=url, verify=verify,
+                              timeout=timeout, headers=headers,
+                              params=params, allow_redirects=allow_redirects)
+
     # prepare response
     @staticmethod
     def response(data, status=200, content_type='application/json'):
