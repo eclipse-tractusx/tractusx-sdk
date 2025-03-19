@@ -39,7 +39,7 @@ ENV POETRY_NO_INTERACTION=1 \
     POETRY_VERSION=1.8.3
 
 
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
 	&& curl -sSL https://install.python-poetry.org | python3 -
 
 USER root
@@ -50,19 +50,27 @@ ENV PYTHONPATH=/tractusx-sdk/src:$PYTHONPATH
 
 COPY pyproject.toml poetry.lock /tractusx-sdk/
 
-RUN poetry lock
-
-RUN poetry install --no-ansi
+RUN poetry lock \
+	&& poetry install --no-ansi
 
 ## Move all the files from the project to the sdk directory
 COPY . /tractusx-sdk
 
 ## Create the directories
-RUN mkdir -p ./logs
-RUN mkdir -p ./data
+RUN mkdir -p ./logs \
+	&& mkdir -p ./data
 
 ## Expose default port
 EXPOSE 8000
+
+# Create a non-root user
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser \
+	&& chown -R appuser:appgroup /tractusx-sdk
+
+# Set the user for running the application
+USER appuser
+
+HEALTHCHECK CMD ["curl", "--fail", "http://localhost:8000/example", "||", "exit", "1"]
 
 ## Execute the application
 CMD ["poetry", "run", "python3","dataspace/main.py", "--host", "0.0.0.0", "--port", "8000"]
