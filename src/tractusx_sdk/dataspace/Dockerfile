@@ -23,7 +23,7 @@
 
 FROM python:3.12.6-slim-bookworm
 
-# Python
+# Python ENV
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONHASHSEED=random \
@@ -31,14 +31,14 @@ ENV PYTHONFAULTHANDLER=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
     PIP_DEFAULT_TIMEOUT=100
 
-# Poetry
+# Poetry ENV
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_CREATE=false \
     POETRY_CACHE_DIR='/var/cache/pypoetry' \
     POETRY_HOME='/usr/local' \
     POETRY_VERSION=2.1.0
 
-
+# Install curl and Poetry via a script
 RUN apt-get update && apt-get install -y --no-install-recommends curl=7.88.1-10+deb12u12 && rm -rf /var/lib/apt/lists/* \
 	&& curl --proto "=https" -sSL https://install.python-poetry.org | python3 -
 
@@ -46,17 +46,21 @@ USER root
 
 WORKDIR /tractusx-sdk/src/tractusx_sdk
 
+# Add the project directory to the Python path
 ENV PYTHONPATH=/tractusx-sdk/src:$PYTHONPATH
 
+# Copy necessary Poetry configuration files to the container
+# These files are required to install the correct dependencies
 COPY pyproject.toml poetry.lock README.md /tractusx-sdk/
 
+# Lock dependencies using Poetry and install them
 RUN poetry lock \
 	&& poetry install --no-root
 
-## Move all the files from the project to the sdk directory
+# Copy the source code from the local machine into the container
 COPY src/* /tractusx-sdk/src/tractusx_sdk/
 
-## Create the directories
+## Create the directories logs and data
 RUN mkdir -p ./logs \
 	&& mkdir -p ./data
 
@@ -70,6 +74,7 @@ RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser \
 # Set the user for running the application
 USER appuser
 
+# Define the health check command to verify if the application is responsive
 HEALTHCHECK CMD ["curl", "--fail", "-H", "Edc-Bpn: HEALTHCHECK", "http://localhost:8000/example"]
 
 ## Execute the application
