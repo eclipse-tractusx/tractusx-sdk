@@ -21,46 +21,48 @@
 #################################################################################
 
 
-FROM alpine:3.19
+FROM python:3.12.6-slim-bookworm
+
+# Python
+ENV PYTHONFAULTHANDLER=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONHASHSEED=random \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100
+
+# Poetry
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_CACHE_DIR='/var/cache/pypoetry' \
+    POETRY_HOME='/usr/local' \
+    POETRY_VERSION=1.8.3
+
+
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \
+	&& curl -sSL https://install.python-poetry.org | python3 -
 
 USER root
 
+WORKDIR /tractusx-sdk/src/tractusx_sdk
+
+ENV PYTHONPATH=/tractusx-sdk/src:$PYTHONPATH
+
+COPY pyproject.toml poetry.lock /tractusx-sdk/
+
+RUN poetry lock
+
+RUN poetry install --no-ansi
+
 ## Move all the files from the project to the sdk directory
-COPY ../ /tractusx-sdk
-
-WORKDIR /tractusx-sdk/industry
-
-## List the contents of the /backend directory
-RUN ls -la /tractusx-sdk/industry
-
-## Install Python
-RUN apk add python3 py3-pip libpq --no-cache
-
-## Install application requirements
-RUN pip3 install --break-system-packages --no-cache-dir --upgrade -r ./requirements.txt
-
-## Create user groups
-RUN addgroup -g 3000 appgroup \
-	&& adduser -u 1000 -g 3000 -h /home/nonroot -D nonroot
-
-## Specify the volumes
-VOLUME ./data ./logs
+COPY . /tractusx-sdk
 
 ## Create the directories
 RUN mkdir -p ./logs
 RUN mkdir -p ./data
 
-## Update user permissions
-RUN chown -R 1000:3000 /tractusx-sdk/industry && chmod -R 775 /tractusx-sdk/industry
-
-## If necessary to inject documentation do it here:
-# COPY ./resources/docs/* ./resources/docs
-
-## Choose the user
-USER 1000:3000
-
 ## Expose default port
 EXPOSE 8000
 
 ## Execute the application
-CMD ["python3","./main.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["poetry", "run", "python3","industry/main.py", "--host", "0.0.0.0", "--port", "8000"]
