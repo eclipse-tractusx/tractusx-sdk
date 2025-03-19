@@ -58,6 +58,21 @@ dataspace/
 
 ```py main.py --host 0.0.0.0 --port 8000```
 
+## Build and Deploy with Docker
+
+1. Go to the root '/' folder
+
+2. Build the Docker image:
+
+```bash
+docker build -t dataspace:latest --no-cache -f src/tractusx_sdk/dataspace/Dockerfile .
+```
+
+3. Run the Docker image:
+
+```bash
+docker run -p 8000:8000 dataspace:latest
+```
 
 ### docs/
 This directory contains documentation files, including user guides, API references, and other relevant documentation to help you understand and use the SDK effectively.
