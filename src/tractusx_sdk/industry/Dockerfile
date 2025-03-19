@@ -36,11 +36,11 @@ ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_CREATE=false \
     POETRY_CACHE_DIR='/var/cache/pypoetry' \
     POETRY_HOME='/usr/local' \
-    POETRY_VERSION=1.8.3
+    POETRY_VERSION=2.1.0
 
 
-	RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
-	&& curl -sSL https://install.python-poetry.org | python3 -
+RUN apt-get update && apt-get install -y --no-install-recommends curl=7.88.1-10+deb12u12 && rm -rf /var/lib/apt/lists/* \
+	&& curl --proto "=https" -sSL https://install.python-poetry.org | python3 -
 
 USER root
 
@@ -48,13 +48,13 @@ WORKDIR /tractusx-sdk/src/tractusx_sdk
 
 ENV PYTHONPATH=/tractusx-sdk/src:$PYTHONPATH
 
-COPY pyproject.toml poetry.lock /tractusx-sdk/
+COPY pyproject.toml poetry.lock README.md /tractusx-sdk/
 
 RUN poetry lock \
-	&& poetry install --no-ansi
+	&& poetry install --no-root
 
 ## Move all the files from the project to the sdk directory
-COPY . /tractusx-sdk
+COPY src/* /tractusx-sdk/src/tractusx_sdk/
 
 ## Create the directories
 RUN mkdir -p ./logs \
@@ -70,7 +70,7 @@ RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser \
 # Set the user for running the application
 USER appuser
 
-HEALTHCHECK CMD ["curl", "--fail", "http://localhost/api/healthcheck", "||", "exit", "1"]
+HEALTHCHECK CMD ["curl", "--fail", "-H", "Edc-Bpn: HEALTHCHECK", "http://localhost:8000/example"]
 
 ## Execute the application
 CMD ["poetry", "run", "python3","industry/main.py", "--host", "0.0.0.0", "--port", "8000"]
