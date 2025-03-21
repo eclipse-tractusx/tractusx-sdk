@@ -20,8 +20,18 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-# Package-level variables
-__author__ = 'Eclipse Tractus-X Contributors'
-__license__ = "Apache License, Version 2.0"
+from fastapi import APIRouter 
+from tractusx_sdk.industry.config import logger
+from tractusx_sdk.dataspace.tools import op
 
-from .checks import router as checks_router
+router = APIRouter()
+
+@router.get("/health")
+def health_check():
+    health_status = {
+        "status": "OK",
+        "timestamp": op.get_filedatetime(),
+        "service": "INDUSTRY-SDK"
+    }
+    logger.debug(f"Health check: {health_status}")
+    return health_status
