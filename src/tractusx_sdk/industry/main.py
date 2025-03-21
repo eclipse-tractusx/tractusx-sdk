@@ -35,14 +35,10 @@ from fastapi_keycloak_middleware import CheckPermissions
 from fastapi_keycloak_middleware import get_user
 
 ## Import Library Packeges
-from tractusx_sdk.dataspace.tools import op, HttpTools, get_arguments
+from tractusx_sdk.dataspace.tools import HttpTools, get_arguments
 
 from tractusx_sdk.industry.config import (
     auth_manager,
-    edc_service,
-    aas_service,
-    app_configuration,
-    log_config,
     logger)
 
 urllib3.disable_warnings()
