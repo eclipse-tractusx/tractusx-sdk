@@ -21,7 +21,7 @@
 #################################################################################
 
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 
 ## Import FastAPI Router
 from tractusx_sdk.dataspace.controllers import (
@@ -38,7 +38,9 @@ import urllib3
 urllib3.disable_warnings()
 
 from tractusx_sdk.dataspace.tools import HttpTools, get_arguments
-from tractusx_sdk.dataspace.config import auth_manager, logger
+from tractusx_sdk.dataspace.config import (
+    auth_manager,
+    logger)
 
 ## Declare Global Variables
 app = FastAPI(title="main")

@@ -20,14 +20,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-# Set up imports configuration
-import logging.config
-import logging
-import yaml
-import uvicorn
-import urllib3
-import os
-
 from fastapi import FastAPI, HTTPException, Request
 
 ## Import FastAPI Router
@@ -46,6 +38,9 @@ from tractusx_sdk.industry.config import (
     auth_manager,
     logger)
 
+# Set up imports configuration
+import uvicorn
+import urllib3
 urllib3.disable_warnings()
 
 app = FastAPI(title="main")
