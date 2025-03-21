@@ -20,62 +20,50 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+# Build stage
+FROM python:3.12-alpine AS builder
 
-FROM python:3.12.6-slim-bookworm
+WORKDIR /build
 
-# Python ENV
+# Copy source code and build configuration
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
+
+# Install build tool and build the wheel
+RUN pip install --no-cache-dir build \
+    && python -m build --wheel
+
+# Production stage
+FROM python:3.12-alpine AS production
+
+# Set environment variables for runtime
 ENV PYTHONFAULTHANDLER=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONHASHSEED=random \
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100
+    PYTHONUNBUFFERED=1
 
-# Poetry ENV
-ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_CACHE_DIR='/var/cache/pypoetry' \
-    POETRY_HOME='/usr/local' \
-    POETRY_VERSION=2.1.0
+WORKDIR /app
 
-# Install curl and Poetry via a script
-RUN apt-get update && apt-get install -y --no-install-recommends curl=7.88.1-10+deb12u12 && rm -rf /var/lib/apt/lists/* \
-	&& curl --proto "=https" -sSL https://install.python-poetry.org | python3 -
+# Install runtime dependencies
+RUN apk add --no-cache curl
 
-USER root
+# Copy only the built wheel
+COPY --from=builder /build/dist/*.whl ./
 
-WORKDIR /tractusx-sdk/src/tractusx_sdk
-
-# Add the project directory to the Python path
-ENV PYTHONPATH=/tractusx-sdk/src:$PYTHONPATH
-
-# Copy necessary Poetry configuration files to the container
-# These files are required to install the correct dependencies
-COPY pyproject.toml poetry.lock README.md /tractusx-sdk/
-
-# Lock dependencies using Poetry and install them
-RUN poetry lock \
-	&& poetry install --no-root
-
-# Copy the source code from the local machine into the container
-COPY src/* /tractusx-sdk/src/tractusx_sdk/
-
-## Create the directories logs and data
-RUN mkdir -p ./logs \
-	&& mkdir -p ./data
-
-## Expose default port
-EXPOSE 8000
-
+# Install the package wheel
+RUN pip install --no-cache-dir ./*.whl && rm -f ./*.whl \
+# Create required directories
+    && mkdir -p ./logs ./data \
 # Create a non-root user
-RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser \
-	&& chown -R appuser:appgroup /tractusx-sdk
+    && addgroup -S appgroup && adduser -S -G appgroup appuser \
+    && chown -R appuser:appgroup /app ./logs ./data
 
 # Set the user for running the application
 USER appuser
 
-# Define the health check command to verify if the application is responsive
-HEALTHCHECK CMD ["curl", "--fail", "-H", "Edc-Bpn: HEALTHCHECK", "http://localhost:8000/example"]
+# Expose the port
+EXPOSE 8000
 
-## Execute the application
-CMD ["poetry", "run", "python3","dataspace/main.py", "--host", "0.0.0.0", "--port", "8000"]
+# Define the health check command to verify if the application is responsive
+HEALTHCHECK CMD ["curl", "--fail", "http://localhost:8000/api/check/health"]
+
+# Run the industry module from the installed package
+CMD ["python", "-m", "tractusx_sdk.dataspace.main", "--host", "0.0.0.0", "--port", "8000"]
