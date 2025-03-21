@@ -31,7 +31,7 @@ def get_arguments():
 
     parser.add_argument('--test-mode', action='store_true', help="Run in test mode (skips uvicorn.run())", required=False)
     
-    parser.add_argument("--debug", default=False, action="store_false", help="Enable and disable the debug", required=False)
+    parser.add_argument("--debug", default=False, action="store_true", help="Enable and disable the debug", required=False)
     
     parser.add_argument("--port", default=9000, help="The server port where it will be available", type=int, required=False,)
     
