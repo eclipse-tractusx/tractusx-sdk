@@ -23,6 +23,11 @@
 
 from fastapi import FastAPI, Request
 
+## Import FastAPI Router
+from tractusx_sdk.dataspace.controllers import (
+    checks_router
+)
+
 ## FAST API example for keycloak
 from fastapi_keycloak_middleware import CheckPermissions
 from fastapi_keycloak_middleware import get_user
@@ -80,6 +85,9 @@ with open(CONFIG_LOG_PATH, 'rt') as f:
 with open(CONFIG_CONFIG_PATH, 'rt') as f:
     # Read the yaml configuration
     app_configuration = yaml.safe_load(f.read())
+
+# Include the router
+app.include_router(checks_router, prefix="/api/check")
 
 @app.get("/example")
 async def api_call(request: Request):
