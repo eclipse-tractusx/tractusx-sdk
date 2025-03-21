@@ -21,17 +21,13 @@
 #################################################################################
 
 ## Import Library Packeges
-from logging import config
 import logging
-import yaml
 logging.captureWarnings(True)
 import os
 
 from tractusx_sdk.dataspace.managers import AuthManager
 from tractusx_sdk.dataspace.services import EdcService
 from tractusx_sdk.dataspace.tools import op, get_arguments, get_log_config, get_app_config
-
-global edc_service, auth_manager, logger, args, app_configuration, log_config
 
 ## In memory authentication manager service
 auth_manager: AuthManager
