@@ -32,8 +32,8 @@ import uvicorn
 import urllib3
 urllib3.disable_warnings()
 
-from tractusx_sdk.dataspace.tools import HttpTools
-from tractusx_sdk.dataspace.config import auth_manager, logger, args
+from tractusx_sdk.dataspace.tools import HttpTools, get_arguments
+from tractusx_sdk.dataspace.config import auth_manager, logger
 
 ## Declare Global Variables
 app = FastAPI(title="main")
@@ -67,6 +67,9 @@ async def api_call(request: Request):
         )
 
 def start():    
+    # Initialize the server environment and get the comand line arguments
+    args = get_arguments()
+    
     ## Once initial checks and configurations are done here is the place where it shall be included
     logger.info("[INIT] Application Startup Initialization Completed!")
 
