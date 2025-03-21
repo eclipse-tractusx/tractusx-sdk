@@ -20,6 +20,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-## Where the configuration of sdk is stored
+# Package-level variables
+__author__ = 'Eclipse Tractus-X Contributors'
+__license__ = "Apache License, Version 2.0"
 
-from .initial_config import auth_manager, edc_service, aas_service, logger, args, app_configuration, log_config
+from .checks import router as checks_router

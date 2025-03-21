@@ -25,3 +25,8 @@ authorization:
   apiKey: 
     key: "X-Api-Key"
     value: <<example>>
+
+AasService:
+  base_url: "https://example.com"
+  base_lookup_url: "https://lookup.example.com"
+  api_path: "/api/v3"
