@@ -22,6 +22,7 @@
 
 import argparse
 import yaml
+from logging import config
 import logging
 from tractusx_sdk.dataspace.tools import op
 
