@@ -21,65 +21,24 @@
 #################################################################################
 
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 
 ## FAST API example for keycloak
 from fastapi_keycloak_middleware import CheckPermissions
 from fastapi_keycloak_middleware import get_user
 
 ## Import Library Packeges
-import sys
-import argparse
-from logging import config
-import logging
-import yaml
 import uvicorn
 import urllib3
 urllib3.disable_warnings()
-logging.captureWarnings(True)
-from pathlib import Path
-import os
 
-## Import paths
-sys.path.append(str(Path(__file__).resolve().parents[1]))
-sys.dont_write_bytecode = True
-
-from tractusx_sdk.dataspace.managers import AuthManager
-from tractusx_sdk.dataspace.services import EdcService
-from tractusx_sdk.dataspace.tools import op, HttpTools
+from tractusx_sdk.dataspace.tools import HttpTools, get_arguments
+from tractusx_sdk.dataspace.config import (
+    auth_manager,
+    logger)
 
 ## Declare Global Variables
-app_configuration:dict
-log_config:dict
 app = FastAPI(title="main")
-
-## In memory authentication manager service
-auth_manager: AuthManager
-
-## In memory storage/management services
-edc_service: EdcService
-
-## Create Loggin Folder
-op.make_dir("logs")
-
-# Get the absolute path of the project directory
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_LOG_PATH = os.path.join(BASE_DIR, "config", "logging.yml")
-CONFIG_CONFIG_PATH = os.path.join(BASE_DIR, "config", "configuration.yml")
-
-# Load the logging config file
-with open(CONFIG_LOG_PATH, 'rt') as f:
-    # Read the yaml configuration
-    log_config = yaml.safe_load(f.read())
-    current_date = op.get_filedate()
-    op.make_dir(dir_name="logs/"+current_date)
-    log_config["handlers"]["file"]["filename"] = f'logs/{current_date}/{op.get_filedatetime()}-dataspace-sdk.log'
-    config.dictConfig(log_config)
-
-# Load the configuation for the application
-with open(CONFIG_CONFIG_PATH, 'rt') as f:
-    # Read the yaml configuration
-    app_configuration = yaml.safe_load(f.read())
 
 @app.get("/example")
 async def api_call(request: Request):
@@ -109,23 +68,9 @@ async def api_call(request: Request):
             message="It was not possible to execute the request!"
         )
 
-def start():
-    ## Load in memory data storages and authentication manager
-    global edc_service, auth_manager, logger
-    
+def start():    
     # Initialize the server environment and get the comand line arguments
     args = get_arguments()
-
-    # Configure the logging confiuration depending on the configuration stated
-    logger = logging.getLogger('staging')
-    if(args.debug):
-        logger = logging.getLogger('development')
-
-    ## Start storage and edc communication service
-    edc_service = EdcService()
-
-    ## Start the authentication manager
-    auth_manager = AuthManager()
     
     ## Once initial checks and configurations are done here is the place where it shall be included
     logger.info("[INIT] Application Startup Initialization Completed!")
@@ -133,22 +78,6 @@ def start():
     # Only start the Uvicorn server if not in test mode
     if not args.test_mode:
         uvicorn.run(app, host=args.host, port=args.port, log_level=("debug" if args.debug else "info"))         
-    
-def get_arguments():
-    
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--test-mode', action='store_true', help="Run in test mode (skips uvicorn.run())", required=False)
-    
-    parser.add_argument("--debug", default=False, action="store_false", help="Enable and disable the debug", required=False)
-    
-    parser.add_argument("--port", default=9000, help="The server port where it will be available", type=int, required=False,)
-    
-    parser.add_argument("--host", default="localhost", help="The server host where it will be available", type=str, required=False)
-    
-    args = parser.parse_args()
-    return args
-
 
 if __name__ == "__main__":
     

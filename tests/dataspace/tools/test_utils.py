@@ -11,7 +11,7 @@
 # https://www.apache.org/licenses/LICENSE-2.0.
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS
+# distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
 # either express or implied. See the
 # License for the specific language govern in permissions and limitations
@@ -20,6 +20,25 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-## Where the configuration of sdk is stored
+from unittest import TestCase
+from unittest.mock import patch
 
-from .initial_config import auth_manager, edc_service, aas_service, logger, args, app_configuration, log_config
+from tractusx_sdk.dataspace.tools import get_arguments
+
+class TestUtils(TestCase):
+
+    @patch('sys.argv', ['script_name', '--test-mode', '--debug', '--port', '8080', '--host', 'example.com'])
+    def test_get_all_arguments_initialized(self):
+        args = get_arguments()
+        assert args.test_mode == True
+        assert args.debug == True
+        assert args.port == 8080
+        assert args.host == 'example.com'
+
+    @patch('sys.argv', [''])
+    def test_get_all_arguments_not_initialized(self):
+        args = get_arguments()
+        assert args.test_mode == False
+        assert args.debug == False
+        assert args.port == 9000
+        assert args.host == 'localhost'

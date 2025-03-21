@@ -20,72 +20,23 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-
-from datetime import datetime
-import sys
-
-# Set up imports configuration
-import argparse
-import logging.config
-import logging
-import yaml
-import uvicorn
-import urllib3
-import os
-from pathlib import Path
-
 from fastapi import FastAPI, HTTPException, Request
 
 ## FAST API example for keycloak
 from fastapi_keycloak_middleware import CheckPermissions
 from fastapi_keycloak_middleware import get_user
 
-## Import paths
-sys.path.append(str(Path(__file__).resolve().parents[1]))
-sys.dont_write_bytecode = True
-
-
 ## Import Library Packeges
-from tractusx_sdk.dataspace.tools import op, HttpTools
-from tractusx_sdk.dataspace.managers import AuthManager
-from tractusx_sdk.dataspace.services import EdcService
-from tractusx_sdk.industry.services import AasService
+from tractusx_sdk.dataspace.tools import HttpTools, get_arguments
 
-## Declare Global Variables
-app_configuration:dict
-log_config:dict
+from tractusx_sdk.industry.config import (
+    auth_manager,
+    logger)
 
-## In memory storage/management services
-edc_service: EdcService
-
-## In memory authentication manager service
-auth_manager: AuthManager
-
+# Set up imports configuration
+import uvicorn
+import urllib3
 urllib3.disable_warnings()
-logging.captureWarnings(True)
-
-## Create Loggin Folder
-op.make_dir("logs")
-
-# Get the absolute path of the project directory
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_LOG_PATH = os.path.join(BASE_DIR, "config", "logging.yml")
-CONFIG_CONFIG_PATH = os.path.join(BASE_DIR, "config", "configuration.yml")
-
-# Load the logging config file
-with open(CONFIG_LOG_PATH, 'rt') as f:
-    # Read the yaml configuration
-    log_config = yaml.safe_load(f.read())
-    # Set logging filename with datetime
-    date = op.get_filedate()
-    op.make_dir(dir_name="logs/"+date)
-    log_config["handlers"]["file"]["filename"] = f'logs/{date}/{op.get_filedatetime()}-industry-sdk.log'
-    logging.config.dictConfig(log_config)
-
-# Load the configuation for the application
-with open(CONFIG_CONFIG_PATH, 'rt') as f:
-    # Read the yaml configuration
-    app_configuration = yaml.safe_load(f.read())
 
 app = FastAPI(title="main")
 
@@ -118,41 +69,15 @@ async def api_call(request: Request):
         )
 
 def start():
-    ## Load in memory data storages and authentication manager
-    global edc_service, auth_manager, logger
-    
+    # Initialize the server environment and get the comand line arguments
     args = get_arguments()
-    logger = logging.getLogger('staging')
-    if(args.debug):
-        logger = logging.getLogger('development')
-        
-    ## Start storage and edc communication service
-    edc_service = EdcService()
 
-    ## Start the authentication manager
-    auth_manager = AuthManager()
-    
     ## Once initial checks and configurations are done here is the place where it shall be included
     logger.info("[INIT] Application Startup Initialization Completed!")
 
     # Only start the Uvicorn server if not in test mode
     if not args.test_mode:
         uvicorn.run(app, host=args.host, port=args.port, log_level=("debug" if args.debug else "info"))      
-    
-def get_arguments():
-    
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--test-mode', action='store_true', help="Run in test mode (skips uvicorn.run())", required=False)
-        
-    parser.add_argument("--debug", default=False, action="store_false", help="Enable and disable the debug", required=False)
-    
-    parser.add_argument("--port", default=7000, help="The server port where it will be available", type=int, required=False,)
-    
-    parser.add_argument("--host", default="localhost", help="The server host where it will be available", type=str, required=False)
-    
-    args = parser.parse_args()
-    return args
 
 
 if __name__ == "__main__":
