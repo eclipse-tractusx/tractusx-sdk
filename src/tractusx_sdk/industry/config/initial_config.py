@@ -29,7 +29,7 @@ import os
 
 from tractusx_sdk.dataspace.managers import AuthManager
 from tractusx_sdk.dataspace.services import EdcService
-from tractusx_sdk.dataspace.tools import op, get_arguments
+from tractusx_sdk.dataspace.tools import op, get_arguments, get_app_config, get_log_config
 from tractusx_sdk.industry.services import AasService
 
 global auth_manager, edc_service, aas_service, logger, args, app_configuration, log_config
@@ -67,19 +67,10 @@ if(args.debug):
 op.make_dir("logs")
 
 # Load the logging config file
-with open(CONFIG_LOG_PATH, 'rt') as f:
-    # Read the yaml configuration
-    log_config = yaml.safe_load(f.read())
-    # Set logging filename with datetime
-    date = op.get_filedate()
-    op.make_dir(dir_name="logs/"+date)
-    log_config["handlers"]["file"]["filename"] = f'logs/{date}/{op.get_filedatetime()}-industry-sdk.log'
-    logging.config.dictConfig(log_config)
+log_config = get_log_config(CONFIG_LOG_PATH, "industry-sdk")
 
 # Load the configuation for the application
-with open(CONFIG_CONFIG_PATH, 'rt') as f:
-    # Read the yaml configuration
-    app_configuration = yaml.safe_load(f.read())
+app_configuration = get_app_config(CONFIG_CONFIG_PATH)
 
 ## Start storage and aas communication service
 base_url = app_configuration["AasService"]["base_url"]

@@ -29,7 +29,7 @@ import os
 
 from tractusx_sdk.dataspace.managers import AuthManager
 from tractusx_sdk.dataspace.services import EdcService
-from tractusx_sdk.dataspace.tools import op, get_arguments
+from tractusx_sdk.dataspace.tools import op, get_arguments, get_log_config, get_app_config
 
 global edc_service, auth_manager, logger, args, app_configuration, log_config
 
@@ -66,15 +66,7 @@ if(args.debug):
 op.make_dir("logs")
 
 # Load the logging config file
-with open(CONFIG_LOG_PATH, 'rt') as f:
-    # Read the yaml configuration
-    log_config = yaml.safe_load(f.read())
-    current_date = op.get_filedate()
-    op.make_dir(dir_name="logs/"+current_date)
-    log_config["handlers"]["file"]["filename"] = f'logs/{current_date}/{op.get_filedatetime()}-dataspace-sdk.log'
-    config.dictConfig(log_config)
+log_config = get_log_config(CONFIG_LOG_PATH, "dataspace-sdk")
 
 # Load the configuation for the application
-with open(CONFIG_CONFIG_PATH, 'rt') as f:
-    # Read the yaml configuration
-    app_configuration = yaml.safe_load(f.read())
+app_configuration = get_app_config(CONFIG_CONFIG_PATH)
