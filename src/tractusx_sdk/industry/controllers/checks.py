@@ -20,6 +20,18 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-## Where the configuration of sdk is stored
+from fastapi import APIRouter 
+from tractusx_sdk.industry.config import logger
+from tractusx_sdk.dataspace.tools import op
 
-from .initial_config import auth_manager, edc_service, aas_service, logger, args, app_configuration, log_config
+router = APIRouter()
+
+@router.get("/health")
+def health_check():
+    health_status = {
+        "status": "OK",
+        "timestamp": op.get_filedatetime(),
+        "service": "INDUSTRY-SDK"
+    }
+    logger.debug(f"Health check: {health_status}")
+    return health_status
