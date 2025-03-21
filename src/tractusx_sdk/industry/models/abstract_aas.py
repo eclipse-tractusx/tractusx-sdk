@@ -50,6 +50,7 @@ TSubModelDesc = TypeVar("TSubModelDesc", bound="AbstractSubModelDescriptor")
 TSpecificAssetId = TypeVar("TSpecificAssetId", bound="AbstractSpecificAssetId")
 TPagingMetadata = TypeVar("TPagingMetadata", bound="AbstractPagingMetadata")
 TShellDescriptor = TypeVar("TShellDescriptor", bound="AbstractShellDescriptor")
+TMessage = TypeVar("TMessage", bound="AbstractMessage")
 
 
 class BaseAbstractModel(BaseModel, ABC):
@@ -136,6 +137,15 @@ class ProtocolInformationSecurityAttributesTypes(str, Enum):
     NONE = "NONE"
     RFC_TLSA = "RFC_TLSA"
     W3C_DID = "W3C_DID"
+
+class MessageTypeEnum(str, Enum):
+    """Enum for message types."""
+
+    UNDEFINED = "Undefined"
+    INFO = "Info"
+    WARNING = "Warning"
+    ERROR = "Error"
+    EXCEPTION = "Exception"
 
 
 class AbstractReferenceKey(BaseAbstractModel):
@@ -434,3 +444,27 @@ class AbstractGetSubmodelDescriptorsByAssResponse(
     """
 
     result: List[TSubModelDesc]
+
+class AbstractMessage(BaseAbstractModel):
+    """
+    Abstract class for message in a not 2XX response.
+    This class should not be used directly. Instead, use a version-specific implementation.
+    Supported versions extend this class with modifications specific to that API version.
+    Extending classes can add additional version-specific configuration.
+    """
+
+    code: str | None = Field(None)
+    correlationId: str | None = Field(None)
+    messageType: MessageTypeEnum | None = Field(None)
+    text: str | None = Field(None)
+    timestamp: str | None = Field(None)
+
+class AbstractResult(BaseAbstractModel, Generic[TMessage]):
+    """
+    Abstract class for result in a not 2XX response.
+    This class should not be used directly. Instead, use a version-specific implementation.
+    Supported versions extend this class with modifications specific to that API version.
+    Extending classes can add additional version-specific configuration.
+    """
+
+    messages: List[TMessage] | None = Field(None)

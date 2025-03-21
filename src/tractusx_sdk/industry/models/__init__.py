@@ -34,6 +34,7 @@ from .abstract_aas import (
     ReferenceTypes,
     ReferenceKeyTypes,
     ProtocolInformationSecurityAttributesTypes,
+    MessageTypeEnum,
     # Basic models
     BaseAbstractModel,
     AbstractMultiLanguage,
@@ -45,6 +46,7 @@ from .abstract_aas import (
     AbstractAdministrativeInformation,
     AbstractEndpoint,
     AbstractSpecificAssetId,
+    AbstractMessage,
     # Major models
     AbstractSubModelDescriptor,
     AbstractShellDescriptor,
@@ -53,4 +55,5 @@ from .abstract_aas import (
     AbstractPaginatedResponse,
     AbstractGetAllShellDescriptorsResponse,
     AbstractGetSubmodelDescriptorsByAssResponse,
+    AbstractResult,
 )

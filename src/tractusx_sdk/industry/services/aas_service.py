@@ -22,12 +22,15 @@
 
 from typing import Dict
 
+from requests import HTTPError
+
 from tractusx_sdk.industry.models.v3.aas import (
     AssetKind,
     ShellDescriptor,
     SubModelDescriptor,
     GetAllShellDescriptorsResponse,
     GetSubmodelDescriptorsByAssResponse,
+    Result,
 )
 from tractusx_sdk.dataspace.tools import HttpTools, encode_as_base64_url_safe
 from tractusx_sdk.industry.services.keycloak_service import KeycloakService
@@ -105,7 +108,7 @@ class AasService:
         asset_kind: AssetKind | None = None,
         asset_type: str | None = None,
         bpn: str | None = None,
-    ) -> GetAllShellDescriptorsResponse:
+    ) -> GetAllShellDescriptorsResponse | Result:
         """
         Retrieves all Asset Administration Shell (AAS) Descriptors from the Digital Twin Registry.
 
@@ -120,10 +123,10 @@ class AasService:
             bpn (str, optional): Business Partner Number for authorization.
 
         Returns:
-            GetAllShellDescriptorsResponse_3_0: Response containing shell descriptors and pagination metadata.
+            GetAllShellDescriptorsResponse: Response containing shell descriptors and pagination metadata.
+            Result: The result object if the request returns a non-2XX status code.
 
         Raises:
-            HTTPError: If the request fails
             ConnectionError: If there is a network connectivity issue
             TimeoutError: If the request times out
         """
@@ -150,15 +153,19 @@ class AasService:
             verify=self.verify_ssl,
         )
 
-        # Check for errors
-        response.raise_for_status()
+        try:
+            # Check for errors
+            response.raise_for_status()
+        except HTTPError as _:
+            # Return the parsed response
+            return Result(**response.json())
 
         # Return the parsed response
         return GetAllShellDescriptorsResponse(**response.json())
 
     def get_asset_administration_shell_descriptor_by_id(
         self, aas_identifier: str, bpn: str | None = None
-    ) -> ShellDescriptor:
+    ) -> ShellDescriptor | Result:
         """
         Retrieves a specific Asset Administration Shell (AAS) Descriptor by its identifier.
 
@@ -171,10 +178,11 @@ class AasService:
                 it is added as an Edc-Bpn header to the request.
 
         Returns:
-            ShellDescriptor_3_0: The requested Asset Administration Shell Descriptor object.
+            ShellDescriptor: The requested Asset Administration Shell Descriptor object.
+            Result: The result object if the request returns a non-2XX status code.
+
 
         Raises:
-            HTTPError: If the request fails
             ConnectionError: If there is a network connectivity issue.
             TimeoutError: If the request times out.
         """
@@ -186,9 +194,17 @@ class AasService:
 
         # Make the request
         url = f"{self.aas_url}/shell-descriptors/{encoded_identifier}"
-        response = HttpTools.do_get(
-            url=url, headers=headers, verify=self.verify_ssl
-        )
+        response = HttpTools.do_get(url=url, headers=headers, verify=self.verify_ssl)
+
+        try:
+            # Check for errors
+            response.raise_for_status()
+        except HTTPError as _:
+            # Return the parsed response
+            return Result(**response.json())
+
+        # Return the parsed response
+        return ShellDescriptor(**response.json())
 
         # Check for errors
         response.raise_for_status()
@@ -202,7 +218,7 @@ class AasService:
         limit: int | None = None,
         cursor: str | None = None,
         bpn: str | None = None,
-    ) -> GetSubmodelDescriptorsByAssResponse:
+    ) -> GetSubmodelDescriptorsByAssResponse | Result:
         """
         Retrieves all Submodel Descriptors associated with a specific Asset Administration Shell (AAS).
 
@@ -220,13 +236,13 @@ class AasService:
                 it is added as an Edc-Bpn header to the request.
 
         Returns:
-            GetSubmodelDescriptorsByAssResponse_3_0: A response object containing:
-                - A list of SubModelDescriptor_3_0 objects in the 'result' field
+            GetSubmodelDescriptorsByAssResponse: A response object containing:
+                - A list of SubModelDescriptor objects in the 'result' field
                 - Pagination metadata in the 'paging_metadata' field
+            Result: The result object if the request returns a non-2XX status code.
 
         Raises:
             ValueError: If the limit parameter is provided but is less than 1.
-            HTTPError: If the request fails
             ConnectionError: If there is a network connectivity issue.
             TimeoutError: If the request times out.
         """
@@ -256,15 +272,19 @@ class AasService:
             verify=self.verify_ssl,
         )
 
-        # Check for errors
-        response.raise_for_status()
+        try:
+            # Check for errors
+            response.raise_for_status()
+        except HTTPError as _:
+            # Return the parsed response
+            return Result(**response.json())
 
         # Return the parsed response
         return GetSubmodelDescriptorsByAssResponse(**response.json())
 
     def get_submodel_descriptor_by_ass_and_submodel_id(
         self, aas_identifier: str, submodel_identifier: str, bpn: str | None = None
-    ) -> SubModelDescriptor:
+    ) -> SubModelDescriptor | Result:
         """
         Retrieves a specific Submodel Descriptor by its identifier and parent AAS identifier.
 
@@ -280,11 +300,10 @@ class AasService:
                 it is added as an Edc-Bpn header to the request.
 
         Returns:
-            SubModelDescriptor_3_0: The requested Submodel Descriptor object.
-                If no matching Submodel is found, the server will typically return a 404 error.
+            SubModelDescriptor: The requested Submodel Descriptor object.
+            Result: The result object if the request returns a non-2XX status code.
 
         Raises:
-            HTTPError: If the request fails
             ConnectionError: If there is a network connectivity issue.
             TimeoutError: If the request times out.
         """
@@ -297,33 +316,35 @@ class AasService:
 
         # Make the request
         url = f"{self.aas_url}/shell-descriptors/{encoded_aas_identifier}/submodel-descriptors/{encoded_submodel_identifier}"
-        response = HttpTools.do_get(
-            url=url, headers=headers, verify=self.verify_ssl
-        )
+        response = HttpTools.do_get(url=url, headers=headers, verify=self.verify_ssl)
 
-        # Check for errors
-        response.raise_for_status()
+        try:
+            # Check for errors
+            response.raise_for_status()
+        except HTTPError as _:
+            # Return the parsed response
+            return Result(**response.json())
 
         # Return the parsed response
         return SubModelDescriptor(**response.json())
 
     def create_asset_administration_shell_descriptor(
         self, shell_descriptor: ShellDescriptor, bpn: str | None = None
-    ) -> ShellDescriptor:
+    ) -> ShellDescriptor | Result:
         """
         Creates a new Asset Administration Shell (AAS) Descriptor in the Digital Twin Registry.
 
         Args:
-            shell_descriptor (ShellDescriptor_3_0): The shell descriptor to create
+            shell_descriptor (ShellDescriptor): The shell descriptor to create
             bpn (str, optional): Business Partner Number for authorization purposes.
                 When provided, it is added as an Edc-Bpn header to the request.
 
         Returns:
-            ShellDescriptor_3_0: The created Asset Administration Shell Descriptor object
+            ShellDescriptor: The created Asset Administration Shell Descriptor object
             with server-assigned fields.
+            Result: The result object if the request returns a non-2XX status code.
 
         Raises:
-            HTTPError: If the request fails
             ConnectionError: If there is a network connectivity issue
             TimeoutError: If the request times out
         """
@@ -342,8 +363,12 @@ class AasService:
             verify=self.verify_ssl,
         )
 
-        # Check for errors
-        response.raise_for_status()
+        try:
+            # Check for errors
+            response.raise_for_status()
+        except HTTPError as _:
+            # Return the parsed response
+            return Result(**response.json())
 
         # Return the parsed response
         return ShellDescriptor(**response.json())

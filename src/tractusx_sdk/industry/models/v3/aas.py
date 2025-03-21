@@ -39,6 +39,8 @@ from tractusx_sdk.industry.models import (
     AbstractPagingMetadata,
     AbstractGetAllShellDescriptorsResponse,
     AbstractGetSubmodelDescriptorsByAssResponse,
+    AbstractMessage,
+    AbstractResult,
 )
 from tractusx_sdk.industry.models import (
     AASSupportedVersionsEnum,
@@ -107,6 +109,16 @@ class ProtocolInformationSecurityAttributesTypes(str, Enum):
     NONE = "NONE"
     RFC_TLSA = "RFC_TLSA"
     W3C_DID = "W3C_DID"
+
+
+class MessageTypeEnum(str, Enum):
+    """Enum for message types. AAS 3.0 specification."""
+
+    UNDEFINED = "Undefined"
+    INFO = "Info"
+    WARNING = "Warning"
+    ERROR = "Error"
+    EXCEPTION = "Exception"
 
 
 class ReferenceKey(AbstractReferenceKey, VersionedModel):
@@ -219,5 +231,21 @@ class GetSubmodelDescriptorsByAssResponse(
     AbstractGetSubmodelDescriptorsByAssResponse[PagingMetadata, SubModelDescriptor],
 ):
     """Response model for the get_submodel_descriptors method following the AAS 3.0 specification."""
+
+    pass
+
+
+class Message(AbstractMessage):
+    """
+    Abstract class for message in a not 2XX response following the AAS 3.0 specification.
+    """
+
+    pass
+
+
+class Result(AbstractResult[Message]):
+    """
+    Abstract class for result in a not 2XX response following the AAS 3.0 specification.
+    """
 
     pass
