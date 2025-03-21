@@ -21,13 +21,17 @@
 #################################################################################
 
 from fastapi import APIRouter 
-import logging
-from main import logger
+from tractusx_sdk.dataspace.config import logger
+from tractusx_sdk.dataspace.tools import op
 
 router = APIRouter()
 
 @router.get("/health")
 def health_check():
-    print("Dataspace SDK is healthy")
-    logger.info("Dataspace SDK is healthy")
-    return {"status": "ok"}
+    health_status = {
+        "status": "OK",
+        "timestamp": op.get_filedatetime(),
+        "service": "DATASPACE-SDK"
+    }
+    logger.debug(f"Health check: {health_status}")
+    return health_status
