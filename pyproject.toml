@@ -81,3 +81,17 @@ documentation = "https://github.com/eclipse-tractusx/tractusx-sdk/tree/main/docs
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = ["tests"]
+
+[tool.tox]
+envlist = ["py39"]
+skipsdist = true
+
+[tool.tox.testenv]
+deps = [
+    "pytest",
+    "pytest-cov"
+]
+commands = [
+    "pytest --cov=my_project --cov-report=xml --cov-config=tox.ini --cov-branch"
+]
+
