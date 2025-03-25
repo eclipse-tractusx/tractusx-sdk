@@ -69,7 +69,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          poetry run pytest --cov=tractusx_sdk --cov-report=xml
+          $POETRY_HOME/bin/poetry run pytest --cov=tractusx_sdk --cov-report=xml
 
       - name: Check if coverage report is generated
         run: |
