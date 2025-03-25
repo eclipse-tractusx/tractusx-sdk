@@ -10,6 +10,7 @@ pypi/pypi/-/certifi/2023.7.22, MPL-2.0, approved, #19826
 pypi/pypi/-/cffi/1.17.1, MIT, approved, #19388
 pypi/pypi/-/charset-normalizer/3.4.1, MIT AND (LGPL-2.1-only AND MIT) AND LGPL-2.1-only AND CC-BY-SA-3.0, approved, #19391
 pypi/pypi/-/click/8.1.8, BSD-2-Clause AND BSD-3-Clause, approved, clearlydefined
+pypi/pypi/-/coverage/6.5.0, Apache-2.0 AND (MIT OR GPL-2.0-only), approved, #7973
 pypi/pypi/-/cryptography/44.0.1, Apache-2.0 AND BSD-3-Clause AND Apache-2.0 AND BSD-3-Clause AND (BSD-3-Clause AND MIT), approved, #19520
 pypi/pypi/-/deprecation/2.1.0, Apache-2.0 AND BSD-3-Clause AND MIT, approved, #7823
 pypi/pypi/-/dnspython/2.7.0, ISC, approved, #19394
@@ -35,6 +36,7 @@ pypi/pypi/-/pydantic/2.6.3, MIT, approved, #13069
 pypi/pypi/-/pydantic_core/2.16.3, MIT, approved, clearlydefined
 pypi/pypi/-/pyproject_hooks/1.2.0, MIT, approved, clearlydefined
 pypi/pypi/-/pytest-asyncio/0.15.1, Apache-2.0, approved, clearlydefined
+pypi/pypi/-/pytest-cov/3.0.0, MIT, approved, clearlydefined
 pypi/pypi/-/pytest/8.1.1, MIT, approved, #19365
 pypi/pypi/-/python-dotenv/1.0.1, BSD-2-Clause AND BSD-3-Clause, approved, clearlydefined
 pypi/pypi/-/python-keycloak/4.0.1, MIT, approved, clearlydefined
