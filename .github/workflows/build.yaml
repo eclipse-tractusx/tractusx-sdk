@@ -44,7 +44,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -r DEPENDENCIES_TRACTUS-X_SDK.txt
           pip install pytest pytest-cov
 
       - name: Run tests with coverage
