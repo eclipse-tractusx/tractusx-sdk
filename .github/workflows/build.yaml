@@ -62,9 +62,9 @@ jobs:
       - name: Install dependencies
         run: |
           if [ -f poetry.lock ]; then
-            $POETRY_HOME/bin/poetry sync --no-root
+            $POETRY_HOME/bin/poetry sync
           else
-            $POETRY_HOME/bin/poetry install --no-root
+            $POETRY_HOME/bin/poetry install
           fi
 
       - name: Run tests with coverage
