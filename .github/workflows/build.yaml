@@ -47,6 +47,7 @@ jobs:
       # https://python-poetry.org/docs/#ci-recommendations
       - name: Create a venv for Poetry and install Poetry
         run: |
+          curl --proto "=https" -sSL https://install.python-poetry.org
           python3 -m venv $POETRY_HOME
           $POETRY_HOME/bin/pip install poetry==$POETRY_VERSION
           $POETRY_HOME/bin/poetry --version
