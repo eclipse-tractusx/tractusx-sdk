@@ -42,10 +42,25 @@ jobs:
         with:
           python-version: '3.9'
 
+      # We don't need to create a python virtual environment because Poetry already handles it for us
+      # Poetry is installed in a separate virtual environment because it is highly recommended
+      # https://python-poetry.org/docs/#ci-recommendations
+      - name: Create a venv for Poetry and install Poetry
+        run: |
+          python3 -m venv $POETRY_HOME
+          $POETRY_HOME/bin/pip install poetry==$POETRY_VERSION
+          $POETRY_HOME/bin/poetry --version
+
+      # Poetry sync is preferred over install because it makes sure to be in sync with the poetry.lock file
+      # We use --no-root to avoid installing the current package in the virtual environment
+      # If the poetry.lock file is not present, we use install as a fallback
       - name: Install dependencies
         run: |
-          pip install -e .
-          pip install pytest pytest-cov
+          if [ -f poetry.lock ]; then
+            $POETRY_HOME/bin/poetry sync --no-root
+          else
+            $POETRY_HOME/bin/poetry install --no-root
+          fi
 
       - name: Run tests with coverage
         run: |
