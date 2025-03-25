@@ -92,6 +92,5 @@ deps = [
     "pytest-cov"
 ]
 commands = [
-    "pytest --cov=my_project --cov-report=xml --cov-config=tox.ini --cov-branch"
+    "pytest tests --cov=my_project --cov-report=xml --cov-branch"
 ]
-
