@@ -47,10 +47,12 @@ jobs:
       # https://python-poetry.org/docs/#ci-recommendations
       - name: Create a venv for Poetry and install Poetry
         run: |
-          curl --proto "=https" -sSL https://install.python-poetry.org
+          export POETRY_HOME="$HOME/.poetry"
+          curl --proto "=https" -sSL https://install.python-poetry.org | python3 -
           python3 -m venv $POETRY_HOME
           $POETRY_HOME/bin/pip install poetry==$POETRY_VERSION
           $POETRY_HOME/bin/poetry --version
+
 
       # Poetry sync is preferred over install because it makes sure to be in sync with the poetry.lock file
       # We use --no-root to avoid installing the current package in the virtual environment
