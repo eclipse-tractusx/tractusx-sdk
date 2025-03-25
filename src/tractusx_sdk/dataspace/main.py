@@ -146,7 +146,7 @@ def get_arguments():
     
     parser.add_argument("--host", default="localhost", help="The server host where it will be available", type=str, required=False)
     
-    args, unknown = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
     return args
 
 
