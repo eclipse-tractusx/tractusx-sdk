@@ -23,7 +23,6 @@ on:
   push:
     branches:
       - main
-      - testCoverage
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
@@ -45,7 +44,18 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install tox
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
 
       - name: Run tests with coverage
-        run: tox -e py39
+        run: |
+          pytest --cov=tractusx_sdk --cov-report=xml
+
+      - name: Check if coverage report is generated
+        run: |
+          if [ ! -f coverage.xml ]; then
+            echo "Coverage report not found!"
+            exit 1
+          else
+            echo "Coverage report generated successfully."
+          fi
