@@ -68,9 +68,9 @@ class BaseAbstractModel(BaseModel, ABC):
         """Convert to JSON string."""
         return self.model_dump_json(exclude_none=True, by_alias=True)
 
-    def get_version_info(self) -> str:
+    def get_version(self) -> AASSupportedVersionsEnum:
         """Get the AAS API supported version"""
-        return f"Version {self._supported_version}"
+        return self._supported_version
 
 
 class AbstractMultiLanguage(BaseAbstractModel):

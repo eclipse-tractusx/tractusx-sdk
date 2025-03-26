@@ -61,6 +61,7 @@ class PaginatedResponse(AbstractPaginatedResponse[PagingMetadata], VersionedMode
 class GetAllShellDescriptorsResponse(
     PaginatedResponse,
     AbstractGetAllShellDescriptorsResponse[PagingMetadata, ShellDescriptor],
+    VersionedModel
 ):
     """Response model for the get_all_shell_descriptors method following the AAS 3.0 specification."""
 
@@ -70,13 +71,14 @@ class GetAllShellDescriptorsResponse(
 class GetSubmodelDescriptorsByAssResponse(
     PaginatedResponse,
     AbstractGetSubmodelDescriptorsByAssResponse[PagingMetadata, SubModelDescriptor],
+    VersionedModel
 ):
     """Response model for the get_submodel_descriptors method following the AAS 3.0 specification."""
 
     pass
 
 
-class Message(AbstractMessage):
+class Message(AbstractMessage, VersionedModel):
     """
     Abstract class for message in a not 2XX response following the AAS 3.0 specification.
     """
@@ -84,7 +86,7 @@ class Message(AbstractMessage):
     pass
 
 
-class Result(AbstractResult[Message]):
+class Result(AbstractResult[Message], VersionedModel):
     """
     Abstract class for result in a not 2XX response following the AAS 3.0 specification.
     """
