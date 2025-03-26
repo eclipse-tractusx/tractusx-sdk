@@ -20,13 +20,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from .aas import (
+from .base import (
     # Enums
     AssetKind,
     ReferenceTypes,
     ReferenceKeyTypes,
     ProtocolInformationSecurityAttributesTypes,
     # Basic models
+    VersionedModel,
     MultiLanguage,
     ReferenceKey,
     Reference,
@@ -39,9 +40,17 @@ from .aas import (
     # Major models
     SubModelDescriptor,
     ShellDescriptor,
+)
+
+from .base_dto import (
+    # Enums
+    MessageTypeEnum,
+    # Basic models
+    Message,
     # Response models
     PagingMetadata,
     PaginatedResponse,
     GetAllShellDescriptorsResponse,
     GetSubmodelDescriptorsByAssResponse,
+    Result
 )

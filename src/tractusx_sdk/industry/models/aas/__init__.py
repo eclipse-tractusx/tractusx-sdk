@@ -21,5 +21,42 @@
 #################################################################################
 
 ## Where the models are stored
+from .supported_versions import (
+    AASSupportedVersionsEnum,
+)
 
-from .example import ParentExample, ChildExample
+from .base_abstract import (
+    # Enums
+    AssetKind,
+    ReferenceTypes,
+    ReferenceKeyTypes,
+    ProtocolInformationSecurityAttributesTypes,
+    # Basic models
+    BaseAbstractModel,
+    AbstractMultiLanguage,
+    AbstractReferenceKey,
+    AbstractReference,
+    AbstractProtocolInformationSecurityAttributes,
+    AbstractProtocolInformation,
+    AbstractEmbeddedDataSpecification,
+    AbstractAdministrativeInformation,
+    AbstractEndpoint,
+    AbstractSpecificAssetId,
+    # Major models
+    AbstractSubModelDescriptor,
+    AbstractShellDescriptor,
+)
+
+from .base_abstract_dto import (
+    # Enums
+    MessageTypeEnum,
+    # Basic models
+    AbstractMessage,
+    # Major models
+    # Response models
+    AbstractPagingMetadata,
+    AbstractPaginatedResponse,
+    AbstractGetAllShellDescriptorsResponse,
+    AbstractGetSubmodelDescriptorsByAssResponse,
+    AbstractResult,
+)
