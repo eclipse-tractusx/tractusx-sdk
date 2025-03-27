@@ -87,7 +87,7 @@ class AasService:
         headers = {"Accept": "application/json"}
 
         # Add content type for POST requests
-        if method == "POST":
+        if method == "POST" or method == "PUT":
             headers["Content-Type"] = "application/json"
 
         # Add authentication if available
@@ -206,11 +206,79 @@ class AasService:
         # Return the parsed response
         return ShellDescriptor(**response.json())
 
-        # Check for errors
-        response.raise_for_status()
+    def update_asset_administration_shell_descriptor(
+        self, aas_identifier: str, bpn: str | None = None
+    ) -> None | Result:
+        """
+        Updates an existing Asset Administration Shell (AAS) Descriptor.
 
-        # Return the parsed response
-        return ShellDescriptor(**response.json())
+        Args:
+            aas_identifier (str): The unique identifier of the Asset Administration Shell.
+                This ID will be automatically encoded as URL-safe Base64.
+            bpn (str, optional): Business Partner Number for authorization purposes. When provided,
+                it is added as an Edc-Bpn header to the request.
+
+        Returns:
+            None: if the request is successful
+            Result: if the request returns a non-2XX status code
+
+        Raises:
+            ConnectionError: If there is a network connectivity issue.
+            TimeoutError: If the request times out.
+        """
+        # Get headers and session
+        headers = self._prepare_headers(bpn, method="PUT")
+
+        # Properly encode the AAS identifier as URL-safe Base64
+        encoded_identifier = encode_as_base64_url_safe(aas_identifier)
+
+        # Make the request
+        url = f"{self.aas_url}/shell-descriptors/{encoded_identifier}"
+        response = HttpTools.do_put(url=url, headers=headers, verify=self.verify_ssl)
+
+        try:
+            # Check for errors
+            response.raise_for_status()
+        except HTTPError as _:
+            # Return the parsed response
+            return Result(**response.json())
+
+        return None
+
+    def delete_asset_administration_shell_descriptor(
+        self, aas_identifier: str, bpn: str | None = None
+    ) -> None | Result:
+        """
+        Deletes an existing Asset Administration Shell (AAS) Descriptor.
+
+        Args:
+            aas_identifier (str): The unique identifier of the Asset Administration Shell.
+                This ID will be automatically encoded as URL-safe Base64.
+            bpn (str, optional): Business Partner Number for authorization purposes. When provided,
+                it is added as an Edc-Bpn header to the request.
+
+        Raises:
+            ConnectionError: If there is a network connectivity issue.
+            TimeoutError: If the request times out.
+        """
+        # Get headers and session
+        headers = self._prepare_headers(bpn)
+
+        # Properly encode the AAS identifier as URL-safe Base64
+        encoded_identifier = encode_as_base64_url_safe(aas_identifier)
+
+        # Make the request
+        url = f"{self.aas_url}/shell-descriptors/{encoded_identifier}"
+        response = HttpTools.do_delete(url=url, headers=headers, verify=self.verify_ssl)
+
+        try:
+            # Check for errors
+            response.raise_for_status()
+        except HTTPError as _:
+            # Return the parsed response
+            return Result(**response.json())
+
+        return None
 
     def get_submodel_descriptors_by_aas_id(
         self,
@@ -372,3 +440,139 @@ class AasService:
 
         # Return the parsed response
         return ShellDescriptor(**response.json())
+
+    def create_submodel_descriptor(
+        self,
+        aas_identifier: str,
+        submodel_descriptor: SubModelDescriptor,
+        bpn: str | None = None,
+    ) -> SubModelDescriptor | Result:
+        """
+        Creates a new Submodel Descriptor in the Digital Twin Registry.
+
+        Args:
+            aas_identifier (str): The unique identifier of the Asset Administration Shell.
+                This ID will be automatically encoded as URL-safe Base64.
+            submodel_descriptor (SubModelDescriptor): The submodel descriptor to create
+            bpn (str, optional): Business Partner Number for authorization purposes.
+                When provided, it is added as an Edc-Bpn header to the request.
+
+        Returns:
+            SubModelDescriptor: The created Submodel Descriptor object with server-assigned fields.
+            Result: The result object if the request returns a non-2XX status code.
+        """
+        # Get headers with content type added
+        headers = self._prepare_headers(bpn, method="POST")
+
+        # Convert submodel to dictionary(json)
+        submodel_dict = submodel_descriptor.to_dict()
+
+        # Properly encode the AAS identifier as URL-safe Base64
+        encoded_aas_id = encode_as_base64_url_safe(aas_identifier)
+
+        # Make the request
+        url = f"{self.aas_url}/shell-descriptors/{encoded_aas_id}/submodel-descriptors"
+        response = HttpTools.do_post(
+            url=url,
+            json=submodel_dict,
+            headers=headers,
+            verify=self.verify_ssl,
+        )
+
+        try:
+            # Check for errors
+            response.raise_for_status()
+        except HTTPError as _:
+            # Return the parsed response
+            return Result(**response.json())
+
+        # Return the parsed response
+        return SubModelDescriptor(**response.json())
+
+    def update_submodel_descriptor(
+        self,
+        aas_identifier: str,
+        submodel_identifier: str,
+        submodel_descriptor: SubModelDescriptor,
+        bpn: str | None = None,
+    ) -> None | Result:
+        """Updates an existing Submodel Descriptor.
+
+        Args:
+            aas_identifier (str): The unique identifier of the Asset Administration Shell.
+                This ID will be automatically encoded as URL-safe Base64.
+            submodel_identifier (str): The unique identifier of the Submodel to update.
+                This ID will be automatically encoded as URL-safe Base64.
+            bpn (str | None, optional): Business Partner Number for authorization purposes.
+                When provided, it is added as an Edc-Bpn header to the request.
+
+        Returns:
+            None | Result: None if the request is successful, Result if the request returns a non-2XX status code.
+        """
+        # Get headers with content type added
+        headers = self._prepare_headers(bpn, method="PUT")
+
+        # Convert submodel to dictionary(json)
+        submodel_dict = submodel_descriptor.to_dict()
+
+        # Properly encode the identifiers as URL-safe Base64
+        encoded_aas_identifier = encode_as_base64_url_safe(aas_identifier)
+        encoded_submodel_identifier = encode_as_base64_url_safe(submodel_identifier)
+
+        # Make the request
+        url = f"{self.aas_url}/shell-descriptors/{encoded_aas_identifier}/submodel-descriptors/{encoded_submodel_identifier}"
+        response = HttpTools.do_put(
+            url=url,
+            json=submodel_dict,
+            headers=headers,
+            verify=self.verify_ssl,
+        )
+
+        try:
+            # Check for errors
+            response.raise_for_status()
+        except HTTPError as _:
+            # Return the parsed response
+            return Result(**response.json())
+
+        return None
+
+    def delete_submodel_descriptor(
+        self,
+        aas_identifier: str,
+        submodel_identifier: str,
+        bpn: str | None = None,
+    ) -> None | Result:
+        """
+        Deletes an existing Submodel Descriptor.
+
+        Args:
+            aas_identifier (str): The unique identifier of the Asset Administration Shell.
+                This ID will be automatically encoded as URL-safe Base64.
+            submodel_identifier (str): The unique identifier of the Submodel to delete.
+                This ID will be automatically encoded as URL-safe Base64.
+            bpn (str | None, optional): Business Partner Number for authorization purposes.
+                When provided, it is added as an Edc-Bpn header to the request.
+
+        Returns:
+            None | Result: None if the request is successful, Result if the request returns a non-2XX status code.
+        """
+        # Get headers and session
+        headers = self._prepare_headers(bpn)
+
+        # Properly encode the identifiers as URL-safe Base64
+        encoded_aas_identifier = encode_as_base64_url_safe(aas_identifier)
+        encoded_submodel_identifier = encode_as_base64_url_safe(submodel_identifier)
+
+        # Make the request
+        url = f"{self.aas_url}/shell-descriptors/{encoded_aas_identifier}/submodel-descriptors/{encoded_submodel_identifier}"
+        response = HttpTools.do_delete(url=url, headers=headers, verify=self.verify_ssl)
+
+        try:
+            # Check for errors
+            response.raise_for_status()
+        except HTTPError as _:
+            # Return the parsed response
+            return Result(**response.json())
+
+        return None
