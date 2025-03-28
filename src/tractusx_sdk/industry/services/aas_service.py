@@ -24,7 +24,7 @@ from typing import Dict
 
 from requests import HTTPError
 
-from tractusx_sdk.industry.models.v3.aas import (
+from tractusx_sdk.industry.models.aas.v3 import (
     AssetKind,
     ShellDescriptor,
     SubModelDescriptor,

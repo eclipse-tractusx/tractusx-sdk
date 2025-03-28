@@ -21,11 +21,9 @@
 #################################################################################
 
 from enum import Enum
-from pydantic import Field
-from tractusx_sdk.industry.models import (
+from tractusx_sdk.industry.models.aas import (
     BaseAbstractModel,
     AbstractMultiLanguage,
-    AbstractPaginatedResponse,
     AbstractProtocolInformationSecurityAttributes,
     AbstractProtocolInformation,
     AbstractEmbeddedDataSpecification,
@@ -36,13 +34,6 @@ from tractusx_sdk.industry.models import (
     AbstractSubModelDescriptor,
     AbstractSpecificAssetId,
     AbstractShellDescriptor,
-    AbstractPagingMetadata,
-    AbstractGetAllShellDescriptorsResponse,
-    AbstractGetSubmodelDescriptorsByAssResponse,
-    AbstractMessage,
-    AbstractResult,
-)
-from tractusx_sdk.industry.models import (
     AASSupportedVersionsEnum,
 )
 
@@ -109,16 +100,6 @@ class ProtocolInformationSecurityAttributesTypes(str, Enum):
     NONE = "NONE"
     RFC_TLSA = "RFC_TLSA"
     W3C_DID = "W3C_DID"
-
-
-class MessageTypeEnum(str, Enum):
-    """Enum for message types. AAS 3.0 specification."""
-
-    UNDEFINED = "Undefined"
-    INFO = "Info"
-    WARNING = "Warning"
-    ERROR = "Error"
-    EXCEPTION = "Exception"
 
 
 class ReferenceKey(AbstractReferenceKey, VersionedModel):
@@ -201,51 +182,5 @@ class ShellDescriptor(
     VersionedModel,
 ):
     """Asset Administration Shell (AAS) Descriptor following the AAS 3.0 specification."""
-
-    asset_kind: AssetKind | None = Field(None, alias="assetKind")
-
-
-class PagingMetadata(AbstractPagingMetadata, VersionedModel):
-    """Paging metadata for the response following the AAS 3.0 specification."""
-
-    pass
-
-
-class PaginatedResponse(AbstractPaginatedResponse[PagingMetadata], VersionedModel):
-    """Base class for paginated responses following the AAS 3.0 specification."""
-
-    pass
-
-
-class GetAllShellDescriptorsResponse(
-    PaginatedResponse,
-    AbstractGetAllShellDescriptorsResponse[PagingMetadata, ShellDescriptor],
-):
-    """Response model for the get_all_shell_descriptors method following the AAS 3.0 specification."""
-
-    pass
-
-
-class GetSubmodelDescriptorsByAssResponse(
-    PaginatedResponse,
-    AbstractGetSubmodelDescriptorsByAssResponse[PagingMetadata, SubModelDescriptor],
-):
-    """Response model for the get_submodel_descriptors method following the AAS 3.0 specification."""
-
-    pass
-
-
-class Message(AbstractMessage):
-    """
-    Abstract class for message in a not 2XX response following the AAS 3.0 specification.
-    """
-
-    pass
-
-
-class Result(AbstractResult[Message]):
-    """
-    Abstract class for result in a not 2XX response following the AAS 3.0 specification.
-    """
 
     pass

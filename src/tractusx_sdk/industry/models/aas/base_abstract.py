@@ -26,7 +26,7 @@ from typing import Dict, List, Any, TypeVar, Generic
 from enum import Enum
 from abc import ABC
 from pydantic import BaseModel, Field
-from tractusx_sdk.industry.models import (
+from tractusx_sdk.industry.models.aas import (
     AASSupportedVersionsEnum,
 )
 
@@ -48,9 +48,7 @@ TAdminInfo = TypeVar("TAdminInfo", bound="AbstractAdministrativeInformation")
 TEndpoint = TypeVar("TEndpoint", bound="AbstractEndpoint")
 TSubModelDesc = TypeVar("TSubModelDesc", bound="AbstractSubModelDescriptor")
 TSpecificAssetId = TypeVar("TSpecificAssetId", bound="AbstractSpecificAssetId")
-TPagingMetadata = TypeVar("TPagingMetadata", bound="AbstractPagingMetadata")
 TShellDescriptor = TypeVar("TShellDescriptor", bound="AbstractShellDescriptor")
-TMessage = TypeVar("TMessage", bound="AbstractMessage")
 
 
 class BaseAbstractModel(BaseModel, ABC):
@@ -70,9 +68,9 @@ class BaseAbstractModel(BaseModel, ABC):
         """Convert to JSON string."""
         return self.model_dump_json(exclude_none=True, by_alias=True)
 
-    def get_version_info(self) -> str:
+    def get_version(self) -> AASSupportedVersionsEnum:
         """Get the AAS API supported version"""
-        return f"Version {self._supported_version}"
+        return self._supported_version
 
 
 class AbstractMultiLanguage(BaseAbstractModel):
@@ -137,15 +135,6 @@ class ProtocolInformationSecurityAttributesTypes(str, Enum):
     NONE = "NONE"
     RFC_TLSA = "RFC_TLSA"
     W3C_DID = "W3C_DID"
-
-class MessageTypeEnum(str, Enum):
-    """Enum for message types."""
-
-    UNDEFINED = "Undefined"
-    INFO = "Info"
-    WARNING = "Warning"
-    ERROR = "Error"
-    EXCEPTION = "Exception"
 
 
 class AbstractReferenceKey(BaseAbstractModel):
@@ -395,76 +384,3 @@ class AbstractShellDescriptor(
         if self.submodel_descriptors is None:
             self.submodel_descriptors = []
         self.submodel_descriptors.append(submodel)
-
-
-class AbstractPagingMetadata(BaseAbstractModel):
-    """
-    Abstract class for paging metadata for responses.
-    This class should not be used directly. Instead, use a version-specific implementation.
-    Supported versions extend this class with modifications specific to that API version.
-    Extending classes can add additional version-specific configuration.
-    """
-
-    cursor: str | None = Field(None)
-
-
-class AbstractPaginatedResponse(BaseAbstractModel, Generic[TPagingMetadata]):
-    """
-    Abstract base class for paginated responses.
-    This class should not be used directly. Instead, use a version-specific implementation.
-    Supported versions extend this class with modifications specific to that API version.
-    Extending classes can add additional version-specific configuration.
-    """
-
-    paging_metadata: TPagingMetadata | None = Field(None)
-
-
-class AbstractGetAllShellDescriptorsResponse(
-    AbstractPaginatedResponse[TPagingMetadata],
-    Generic[TPagingMetadata, TShellDescriptor],
-):
-    """
-    Abstract response model for the get_all_shell_descriptors method.
-    This class should not be used directly. Instead, use a version-specific implementation.
-    Supported versions extend this class with modifications specific to that API version.
-    Extending classes can add additional version-specific configuration.
-    """
-
-    result: List[TShellDescriptor]
-
-
-class AbstractGetSubmodelDescriptorsByAssResponse(
-    AbstractPaginatedResponse[TPagingMetadata], Generic[TPagingMetadata, TSubModelDesc]
-):
-    """
-    Abstract response model for the get_submodel_descriptors method.
-    This class should not be used directly. Instead, use a version-specific implementation.
-    Supported versions extend this class with modifications specific to that API version.
-    Extending classes can add additional version-specific configuration.
-    """
-
-    result: List[TSubModelDesc]
-
-class AbstractMessage(BaseAbstractModel):
-    """
-    Abstract class for message in a not 2XX response.
-    This class should not be used directly. Instead, use a version-specific implementation.
-    Supported versions extend this class with modifications specific to that API version.
-    Extending classes can add additional version-specific configuration.
-    """
-
-    code: str | None = Field(None)
-    correlationId: str | None = Field(None)
-    messageType: MessageTypeEnum | None = Field(None)
-    text: str | None = Field(None)
-    timestamp: str | None = Field(None)
-
-class AbstractResult(BaseAbstractModel, Generic[TMessage]):
-    """
-    Abstract class for result in a not 2XX response.
-    This class should not be used directly. Instead, use a version-specific implementation.
-    Supported versions extend this class with modifications specific to that API version.
-    Extending classes can add additional version-specific configuration.
-    """
-
-    messages: List[TMessage] | None = Field(None)
