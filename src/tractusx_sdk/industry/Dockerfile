@@ -20,47 +20,50 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+# Build stage
+FROM python:3.12-alpine AS builder
 
-FROM alpine:3.19
+WORKDIR /build
 
-USER root
+# Copy source code and build configuration
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
 
-## Move all the files from the project to the sdk directory
-COPY ../ /tractusx-sdk
+# Install build tool and build the wheel
+RUN pip install --no-cache-dir build \
+    && python -m build --wheel
 
-WORKDIR /tractusx-sdk/industry
+# Production stage
+FROM python:3.12-alpine AS production
 
-## List the contents of the /backend directory
-RUN ls -la /tractusx-sdk/industry
+# Set environment variables for runtime
+ENV PYTHONFAULTHANDLER=1 \
+    PYTHONUNBUFFERED=1
 
-## Install Python
-RUN apk add python3 py3-pip libpq --no-cache
+WORKDIR /app
 
-## Install application requirements
-RUN pip3 install --break-system-packages --no-cache-dir --upgrade -r ./requirements.txt
+# Install runtime dependencies
+RUN apk add --no-cache curl
 
-## Create user groups
-RUN addgroup -g 3000 appgroup \
-	&& adduser -u 1000 -g 3000 -h /home/nonroot -D nonroot
+# Copy only the built wheel
+COPY --from=builder /build/dist/*.whl ./
 
-## Specify the volumes
-VOLUME ./data ./logs
+# Install the package wheel
+RUN pip install --no-cache-dir ./*.whl && rm -f ./*.whl \
+# Create required directories
+    && mkdir -p ./logs ./data \
+# Create a non-root user
+    && addgroup -S appgroup && adduser -S -G appgroup appuser \
+    && chown -R appuser:appgroup /app ./logs ./data
 
-## Create the directories
-RUN mkdir -p ./logs
-RUN mkdir -p ./data
+# Set the user for running the application
+USER appuser
 
-## Update user permissions
-RUN chown -R 1000:3000 /tractusx-sdk/industry && chmod -R 775 /tractusx-sdk/industry
-
-## If necessary to inject documentation do it here:
-# COPY ./resources/docs/* ./resources/docs
-
-## Choose the user
-USER 1000:3000
-
-## Expose default port
+# Expose the port
 EXPOSE 8000
 
-## Execute the application
-CMD ["python3","./main.py", "--host", "0.0.0.0", "--port", "8000"]
+# Define the health check command to verify if the application is responsive
+HEALTHCHECK CMD ["curl", "--fail", "http://localhost:8000/api/check/health"]
+
+# Run the industry module from the installed package
+CMD ["python", "-m", "tractusx_sdk.industry.main", "--host", "0.0.0.0", "--port", "8000"]
