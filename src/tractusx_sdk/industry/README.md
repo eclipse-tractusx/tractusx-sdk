@@ -52,11 +52,11 @@ industry/
 
 1. Install requirements:
 
-`pip install -r requirements.txt`
+`poetry install`
 
 2. Run the script:
 
-```py main.py --host 0.0.0.0 --port 8000```
+```poetry run python3 src/tractusx_sdk/industry/main.py --host 0.0.0.0 --port 8000```
 
 ## Build and Deploy with Docker
 
