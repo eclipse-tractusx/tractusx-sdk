@@ -133,6 +133,7 @@ class AasService:
         Raises:
             ConnectionError: If there is a network connectivity issue
             TimeoutError: If the request times out
+            ValidationError: If the JSON response does not match the expected model.
         """
         # Prepare query parameters
         params = {}
@@ -189,6 +190,7 @@ class AasService:
         Raises:
             ConnectionError: If there is a network connectivity issue.
             TimeoutError: If the request times out.
+            ValidationError: If the JSON response does not match the expected model.
         """
         # Get headers and session
         headers = self._prepare_headers(bpn)
@@ -229,6 +231,7 @@ class AasService:
         Raises:
             ConnectionError: If there is a network connectivity issue.
             TimeoutError: If the request times out.
+            ValidationError: If the JSON response does not match the expected model.
         """
         # Get headers and session
         headers = self._prepare_headers(bpn, method="PUT")
@@ -264,6 +267,7 @@ class AasService:
         Raises:
             ConnectionError: If there is a network connectivity issue.
             TimeoutError: If the request times out.
+            ValidationError: If the JSON response does not match the expected model.
         """
         # Get headers and session
         headers = self._prepare_headers(bpn)
@@ -317,6 +321,7 @@ class AasService:
             ValueError: If the limit parameter is provided but is less than 1.
             ConnectionError: If there is a network connectivity issue.
             TimeoutError: If the request times out.
+            ValidationError: If the JSON response does not match the expected model.
         """
         # Validate parameters
         if limit is not None and limit < 1:
@@ -378,6 +383,7 @@ class AasService:
         Raises:
             ConnectionError: If there is a network connectivity issue.
             TimeoutError: If the request times out.
+            ValidationError: If the JSON response does not match the expected model.
         """
         # Get headers and session
         headers = self._prepare_headers(bpn)
@@ -419,6 +425,7 @@ class AasService:
         Raises:
             ConnectionError: If there is a network connectivity issue
             TimeoutError: If the request times out
+            ValidationError: If the JSON response does not match the expected model
         """
         # Get headers with content type added
         headers = self._prepare_headers(bpn, method="POST")
@@ -468,6 +475,7 @@ class AasService:
         Raises:
             ConnectionError: If there is a network connectivity issue
             TimeoutError: If the request times out
+            ValidationError: If the JSON response does not match the expected model
         """
         # Get headers with content type added
         headers = self._prepare_headers(bpn, method="POST")
@@ -520,6 +528,7 @@ class AasService:
         Raises:
             ConnectionError: If there is a network connectivity issue
             TimeoutError: If the request times out
+            ValidationError: If the JSON response does not match the expected model
         """
         # Get headers with content type added
         headers = self._prepare_headers(bpn, method="PUT")
@@ -572,6 +581,7 @@ class AasService:
         Raises:
             ConnectionError: If there is a network connectivity issue
             TimeoutError: If the request times out
+            ValidationError: If the JSON response does not match the expected model
         """
         # Get headers and session
         headers = self._prepare_headers(bpn)
@@ -642,6 +652,7 @@ class AasService:
         Raises:
             ConnectionError: If there is a network connectivity issue
             TimeoutError: If the request times out
+            ValidationError: If the JSON response does not match the expected model.
         """
         # Get headers
         headers = self._prepare_headers(bpn)
@@ -685,6 +696,7 @@ class AasService:
         Raises:
             ConnectionError: If there is a network connectivity issue
             TimeoutError: If the request times outs
+            ValidationError: If the JSON response does not match the expected model.
         """
         # Get headers
         headers = self._prepare_headers(bpn)
@@ -730,6 +742,7 @@ class AasService:
         Raises:
             ConnectionError: If there is a network connectivity issue
             TimeoutError: If the request times out
+            ValidationError: If the JSON response does not match the expected model.
         """
         # Get headers
         headers = self._prepare_headers(bpn)
@@ -739,9 +752,7 @@ class AasService:
 
         # Make the request
         url = f"{self.aas_lookup_url}/lookup/shells/{encoded_aas_identifier}"
-        response = HttpTools.do_delete(
-            url=url, headers=headers, verify=self.verify_ssl
-        )
+        response = HttpTools.do_delete(url=url, headers=headers, verify=self.verify_ssl)
 
         try:
             # Check for errors
