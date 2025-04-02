@@ -30,7 +30,7 @@ COPY pyproject.toml README.md ./
 COPY src/ ./src/
 
 # Install build tool and build the wheel
-RUN pip install --no-cache-dir build \
+RUN pip install --no-cache-dir build==1.2.2 \
     && python -m build --wheel
 
 # Production stage

@@ -22,8 +22,7 @@
 
 import argparse
 import yaml
-from logging import config
-import logging
+import logging.config
 from tractusx_sdk.dataspace.tools import op
 
 def get_arguments():

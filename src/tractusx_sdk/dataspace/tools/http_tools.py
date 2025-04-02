@@ -29,11 +29,9 @@
 
 import requests
 from fastapi.responses import JSONResponse, Response
-from fastapi import FastAPI, Request
 from io import BytesIO
 import logging
 import urllib.parse
-import collections
 
 logger = logging.getLogger('staging')
 class HttpTools:

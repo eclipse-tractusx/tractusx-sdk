@@ -21,7 +21,7 @@
 #################################################################################
 
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 
 ## Import FastAPI Router
 from tractusx_sdk.dataspace.controllers import (
@@ -29,8 +29,8 @@ from tractusx_sdk.dataspace.controllers import (
 )
 
 ## FAST API example for keycloak
-from fastapi_keycloak_middleware import CheckPermissions
-from fastapi_keycloak_middleware import get_user
+# from fastapi_keycloak_middleware import CheckPermissions
+# from fastapi_keycloak_middleware import get_user
 
 ## Import Library Packeges
 import uvicorn

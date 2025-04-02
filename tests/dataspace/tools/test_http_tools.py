@@ -23,7 +23,6 @@
 
 import unittest
 from unittest.mock import patch, Mock, AsyncMock
-import requests
 from fastapi.responses import Response, JSONResponse
 from io import BytesIO
 

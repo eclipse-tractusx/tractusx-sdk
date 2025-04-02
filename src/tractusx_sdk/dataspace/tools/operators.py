@@ -35,7 +35,7 @@ import json
 import time
 import io
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 """
 Class that defines operations in files, directories, clases, ...
@@ -175,9 +175,11 @@ class op:
                     - IOError: if the file cannot be opened
         """
         if "b" in open_mode: #If reading binary, encoding arg not supported
-            string = open(file_path, open_mode).read()
+            with open(file_path, open_mode) as f:
+                string = f.read()
         else:
-            string = open(file_path, open_mode, encoding=encoding).read()
+            with open(file_path, open_mode, encoding=encoding) as f:
+                string = f.read()
         return string
     
     @ staticmethod
@@ -191,7 +193,9 @@ class op:
                 - IOError: if the file cannot be opened
                 - PermissionError: if the file cannot be opened due to permissions
         """
-        buffer = io.BytesIO(open(file_path, "rb").read())
+        with open(file_path, "rb") as f:
+            buffer_file = f.read()
+        buffer = io.BytesIO(buffer_file)
         return buffer
 
     @ staticmethod
@@ -263,7 +267,7 @@ class op:
                 - PermissionError: if the file cannot be opened due to permissions
                 - ValueError: if the open mode is not valid
         """
-        if(data == "" or data == None):
+        if(data == "" or data is None):
             return False
 
         with open(file_path, open_mode, encoding=sys.stdout.encoding) as file:
@@ -297,7 +301,7 @@ class op:
         if source_object is None:
             return tmp_ret
     
-        if path_sep == None or path_sep == "":
+        if path_sep is None or path_sep == "":
             return tmp_ret
     
         tmp_parts=attr_path.split(path_sep)

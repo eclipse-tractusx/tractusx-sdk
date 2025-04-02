@@ -206,12 +206,6 @@ class AasService:
         # Return the parsed response
         return ShellDescriptor(**response.json())
 
-        # Check for errors
-        response.raise_for_status()
-
-        # Return the parsed response
-        return ShellDescriptor(**response.json())
-
     def get_submodel_descriptors_by_aas_id(
         self,
         aas_identifier: str,
