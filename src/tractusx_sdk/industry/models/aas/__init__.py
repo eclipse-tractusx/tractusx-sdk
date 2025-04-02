@@ -50,10 +50,12 @@ from .base_abstract import (
 from .base_abstract_dto import (
     # Enums
     MessageTypeEnum,
+    ProfileEnum,
     # Basic models
     AbstractMessage,
     # Major models
     # Response models
+    AbstractServiceDescription,
     AbstractPagingMetadata,
     AbstractPaginatedResponse,
     AbstractGetAllShellDescriptorsResponse,

@@ -34,6 +34,7 @@ from tractusx_sdk.industry.models.aas.v3 import (
     GetSubmodelDescriptorsByAssResponse,
     Result,
     SpecificAssetId,
+    ServiceDescription,
 )
 from tractusx_sdk.dataspace.tools import HttpTools, encode_as_base64_url_safe
 from tractusx_sdk.industry.services.keycloak_service import KeycloakService
@@ -591,6 +592,35 @@ class AasService:
             return Result(**response.json())
 
         return None
+
+    def get_description(self) -> ServiceDescription | Result:
+        """
+        Retrieves the service description, which presents the capabilities of the server, in particular which profiles they implement.
+
+        Returns:
+            ServiceDescription | Result: A ServiceDescription object if the request is successful,
+                or a Result object if the request returns a non-2XX status code
+
+        Raises:
+            ConnectionError: If there is a network connectivity issue
+            TimeoutError: If the request times out
+            ValidationError: If the JSON response does not match the expected model
+        """
+        headers = self._prepare_headers()
+
+        # Make the request
+        url = f"{self.aas_url}/description"
+        response = HttpTools.do_get(url=url, headers=headers, verify=self.verify_ssl)
+
+        try:
+            # Check for errors
+            response.raise_for_status()
+        except HTTPError as _:
+            # Return the parsed response
+            return Result(**response.json())
+
+        # Return the parsed response
+        return ServiceDescription(**response.json())
 
     def get_assets_ids_by_asset_administration_shell_id(
         self,
