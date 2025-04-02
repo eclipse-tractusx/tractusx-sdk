@@ -513,8 +513,7 @@ def test_write_to_file_with_wrong_permissions_should_raise_PermissionError(tmp_p
     """
     file_path = tmp_path / "test.txt"
     file_path.touch()
-    # NOSONAR # Reason: Intentionally setting read-only permissions to test PermissionError handling.
-    os.chmod(file_path, 0o444)  # Set file as read-only
+    os.chmod(file_path, 0o444)  # NOSONAR # Reason: Intentionally setting read-only permissions to test PermissionError handling.
     
     with pytest.raises((PermissionError, io.UnsupportedOperation)): #Also support for Windows
         op.write_to_file("test data", str(file_path))
