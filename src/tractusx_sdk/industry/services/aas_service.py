@@ -679,8 +679,13 @@ class AasService:
             # Return the parsed response
             return Result(**response.json())
 
+        parsed_response: List[SpecificAssetId] = [
+            SpecificAssetId(**specific_asset_id)
+            for specific_asset_id in response.json()
+        ]
+
         # Return the parsed response
-        return List(**response.json())
+        return parsed_response
 
     def create_all_asset_ids_links_by_asset_administration_shell_id(
         self,
@@ -728,8 +733,13 @@ class AasService:
             # Return the parsed response
             return Result(**response.json())
 
+        parsed_response: List[SpecificAssetId] = [
+            SpecificAssetId(**specific_asset_id)
+            for specific_asset_id in response.json()
+        ]
+
         # Return the parsed response
-        return List(**response.json())
+        return parsed_response
 
     def delete_all_asset_ids_links_by_asset_administration_shell_id(
         self,
