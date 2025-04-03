@@ -213,7 +213,10 @@ class AasService:
         return ShellDescriptor(**response.json())
 
     def update_asset_administration_shell_descriptor(
-        self, aas_identifier: str, bpn: str | None = None
+        self,
+        aas_identifier: str,
+        shell_descriptor: ShellDescriptor,
+        bpn: str | None = None,
     ) -> None | Result:
         """
         Updates an existing Asset Administration Shell (AAS) Descriptor.
@@ -239,9 +242,14 @@ class AasService:
         # Properly encode the AAS identifier as URL-safe Base64
         encoded_identifier = encode_as_base64_url_safe(aas_identifier)
 
+        # Convert ShellDescriptor to dictionary(json)
+        shell_dict = shell_descriptor.to_dict()
+
         # Make the request
         url = f"{self.aas_url}/shell-descriptors/{encoded_identifier}"
-        response = HttpTools.do_put(url=url, headers=headers, verify=self.verify_ssl)
+        response = HttpTools.do_put(
+            url=url, headers=headers, json=shell_dict, verify=self.verify_ssl
+        )
 
         try:
             # Check for errors
