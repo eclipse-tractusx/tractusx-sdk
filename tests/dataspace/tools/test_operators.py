@@ -464,7 +464,7 @@ def test_delete_file_input_nonexistent_path_should_return_false():
     result = op.delete_file("non_existent_file.txt")
     assert result is False
     
-def test_delete_file_input_directory_should_raise_isAdirectoryerror_or_permissionerror(tmp_path):
+def test_delete_file_input_directory_should_raise_isadirectoryerror_or_permissionerror(tmp_path):
     """
     Directory path should raise IsADirectoryError
     """
