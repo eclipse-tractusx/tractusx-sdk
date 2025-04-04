@@ -45,12 +45,14 @@ from .base import (
 from .base_dto import (
     # Enums
     MessageTypeEnum,
+    ProfileEnum,
     # Basic models
     Message,
     # Response models
+    ServiceDescription,
     PagingMetadata,
     PaginatedResponse,
     GetAllShellDescriptorsResponse,
     GetSubmodelDescriptorsByAssResponse,
-    Result
+    Result,
 )
