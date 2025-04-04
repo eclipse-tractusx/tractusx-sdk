@@ -95,22 +95,22 @@ def complex_json_for_test(): #Complete JSON with variances for testing purposes
 #Function 1 - json_string_to_object
 
 @pytest.mark.parametrize("type", ["empty_string", "bytes", "bytearray", "string_whitespace", "bytes_whitespace", "bytearray_whitespace"])
-def test_json_string_to_object_with_empty_valid_input_should_return_JSONDecodeError(type, data_for_test):
+def test_json_string_to_object_with_empty_valid_input_should_return_jsondecodeerror(type, data_for_test):
     with pytest.raises(json.JSONDecodeError):
         op.json_string_to_object(data_for_test[type]) 
         
 @pytest.mark.parametrize("type", ["int", "boolean", "None", "array", "empty_dict", "float", "set", "tuple", "date"])
-def test_json_string_to_object_with_invalid_input_should_return_TypeError(type, data_for_test):
+def test_json_string_to_object_with_invalid_input_should_return_typeerror(type, data_for_test):
     with pytest.raises(TypeError):
         op.json_string_to_object(data_for_test[type]) 
                              
 @pytest.mark.parametrize("entries", ["extra_comma","unquoted_key","missing_bracket","unescaped_special_characters"])
-def test_json_string_to_object_with_invalid_JSON_format_should_return_JSONDecodeError(entries,data_for_test):
+def test_json_string_to_object_with_invalid_json_format_should_return_jsondecodeerror(entries,data_for_test):
     with pytest.raises(json.JSONDecodeError):
         op.json_string_to_object(data_for_test[entries])
         
 @pytest.mark.parametrize("entries", ["complex_valid_string","complex_valid_bytes", "complex_valid_bytearray", "unicode_valid"])
-def test_json_string_to_object_with_valid_format_should_return_valid_JSON(entries,data_for_test):
+def test_json_string_to_object_with_valid_format_should_return_valid_json(entries,data_for_test):
     expected = json.loads(data_for_test[entries])
     assert op.json_string_to_object(data_for_test[entries]) == expected
 
@@ -121,7 +121,7 @@ def test_to_json_with_serializable_input_should_return_valid_json(type,data_for_
     assert op.to_json(data_for_test[type]) == json.dumps(data_for_test[type])
     
 @pytest.mark.parametrize("type", ["bytes", "bytearray", "set", "date"])
-def test_to_json_with_non_serializable_input_should_return_TypeError(type,data_for_test):
+def test_to_json_with_non_serializable_input_should_return_typeerror(type,data_for_test):
     with pytest.raises(TypeError):
         op.to_json(data_for_test[type])
 
@@ -141,7 +141,7 @@ def test_to_json_with_special_numbers(): #Specific for this method
     assert "NaN" in op.to_json({"value":math.nan})
     assert "Infinity" in op.to_json({"value":math.inf})
 
-def test_to_json_with_custom_object_should_raise_TypeError(): #Specific edge case for this method
+def test_to_json_with_custom_object_should_raise_typeerror(): #Specific edge case for this method
     #Arange
     class Custom:
         pass
@@ -172,12 +172,12 @@ def test_to_json_file_with_append_mode_should_append_valid_json(tmp_path, data_f
     #Assert
     assert file_path.read_text() == expected #The JSON data should be appended after the initial content.
 
-def test_to_json_file_with_invalid_file_mode_should_raise_ValueError(tmp_path):
+def test_to_json_file_with_invalid_file_mode_should_raise_valueerror(tmp_path):
     with pytest.raises(ValueError): #  An invalid file mode should trigger an exception when opening the file.
         op.to_json_file(source_object="", json_file_path=str(tmp_path), file_open_mode="invalid", indent=2)
 
 @pytest.mark.parametrize("entries", ["bytes", "bytearray", "set", "date"])
-def test_to_json_file_with_non_serializable_object_should_raise_TypeError(tmp_path, entries, data_for_test):
+def test_to_json_file_with_non_serializable_object_should_raise_typeerror(tmp_path, entries, data_for_test):
     with pytest.raises(TypeError):
         op.to_json_file(source_object=data_for_test[entries], json_file_path=str(tmp_path/"non_serializable.json"), file_open_mode="w", indent=2)
 
@@ -191,12 +191,12 @@ def test_read_json_file_with_valid_input_should_return_dict(tmp_path, entries, d
     #Assert
     assert op.read_json_file(str(file_path)) == data_for_test[entries]
 
-def test_read_json_file_with_nonexistent_file_should_raise_FileNotFoundError(tmp_path):
+def test_read_json_file_with_nonexistent_file_should_raise_filenotfounderror(tmp_path):
     with pytest.raises(FileNotFoundError):
         op.read_json_file(str(tmp_path/"nonexistent.json"))
 
 @pytest.mark.parametrize("entries", ["empty_string","unquoted_key","missing_bracket","mismatching_bracket","unescaped_special_characters"])
-def test_read_json_file_with_invalid_json_should_raise_JsonDecodeError(tmp_path ,entries, data_for_test):
+def test_read_json_file_with_invalid_json_should_raise_jsondecodeerror(tmp_path ,entries, data_for_test):
     #Arange
     file_path = tmp_path / "test_file.json"
     file_path.write_text(data_for_test[entries], encoding="utf-8")
@@ -254,7 +254,7 @@ def test_path_exists_trailing_slash(tmp_path):
     path_with_slash = str(directory) + os.sep
     assert op.path_exists(path_with_slash) is True
 
-def test_path_exists_with_none_should_raise_TypeError():
+def test_path_exists_with_none_should_raise_typeerror():
     """
     Test path_exists: Passing None as input should raise TypeError.
     """
@@ -374,7 +374,7 @@ def test_to_string_and_load_file(tmp_path):
     assert isinstance(buffer, io.BytesIO)
     assert buffer.getvalue() == content.encode("utf-8")
 
-def test_to_string_file_non_existent_should_raise_FileNotFoundError(tmp_path):
+def test_to_string_file_non_existent_should_raise_filenotfounderror(tmp_path):
     """
     Test that FileNotFoundError is raised for non-existent file.
     """
@@ -464,7 +464,7 @@ def test_delete_file_input_nonexistent_path_should_return_false():
     result = op.delete_file("non_existent_file.txt")
     assert result is False
     
-def test_delete_file_input_directory_should_raise_IsADirectoryError_or_PermissionError(tmp_path):
+def test_delete_file_input_directory_should_raise_IsADirectoryError_or_permissionerror(tmp_path):
     """
     Directory path should raise IsADirectoryError
     """
@@ -475,7 +475,7 @@ def test_delete_file_input_directory_should_raise_IsADirectoryError_or_Permissio
         op.delete_file(str(test_dir))
 
 @pytest.mark.parametrize("type", ["int", "float", "boolean", "None", "array", "tuple", "empty_dict", "non_string_key_dict"])
-def test_delete_file_with_invalid_type_path_should_raise_TypeError(type, data_for_test):
+def test_delete_file_with_invalid_type_path_should_raise_typeerror(type, data_for_test):
     """
     Tests that input a wrong type parameter raises correct exception
     """
@@ -497,7 +497,7 @@ def test_write_to_file(tmp_path):
     assert op.write_to_file("", str(file_path)) is False
     assert op.write_to_file(None, str(file_path)) is False
     
-def test_write_to_file_non_existent_directory_should_raise_FileNotFoundError(tmp_path):
+def test_write_to_file_non_existent_directory_should_raise_filenotfounderror(tmp_path):
     """
     Test write_to_file with non-existent directory
     """
@@ -507,7 +507,7 @@ def test_write_to_file_non_existent_directory_should_raise_FileNotFoundError(tmp
     with pytest.raises(FileNotFoundError):
         op.write_to_file("test data", str(file_path))
 
-def test_write_to_file_with_wrong_permissions_should_raise_PermissionError(tmp_path):
+def test_write_to_file_with_wrong_permissions_should_raise_permissionerror(tmp_path):
     """
     Test write to file with wrong permissions
     """
@@ -518,7 +518,7 @@ def test_write_to_file_with_wrong_permissions_should_raise_PermissionError(tmp_p
     with pytest.raises((PermissionError, io.UnsupportedOperation)): #Also support for Windows
         op.write_to_file("test data", str(file_path))
 
-def test_write_to_file_invalid_mode_should_raise_ValueError(tmp_path):
+def test_write_to_file_invalid_mode_should_raise_valueerror(tmp_path):
     """
     Test write to file with invalid opening mode
     """
@@ -544,7 +544,7 @@ def test_timestamp_and_file_date_functions():
     assert len(file_d) == 8
     assert len(file_dt) >= 15
 
-def test_timestamp_and_file_date_unvalid_timezone_should_raise_TypeError():
+def test_timestamp_and_file_date_unvalid_timezone_should_raise_typeerror():
     """
     Test get_filedatetime and get_filedate with unrecognized timezone: Should raise TypeError.
     """
@@ -639,7 +639,7 @@ def test_get_attribute_empty_keys_due_to_split_should_still_work():
     result = op.get_attribute(data, ".", default_value="default")
     assert result == 100, "Should correctly handle empty keys derived from split"
 
-def test_get_attribute_non_subscriptable_source_object_should_raise_TypeError():
+def test_get_attribute_non_subscriptable_source_object_should_raise_typeerror():
     """
     Test that passing a non-subscriptable source_object (e.g., an integer) raises a TypeError.
     """
