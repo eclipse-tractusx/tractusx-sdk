@@ -108,7 +108,7 @@ class TestHttpTools(unittest.TestCase):
 
     def test_response_json(self):
         """Ensure JSON response is properly structured."""
-        response = HttpTools.json_response({"message": "OK"}, status=200)
+        response = HttpTools.json_response({"message": "OK"}, status_code=200)
         self.assertIsInstance(response, JSONResponse)
         self.assertEqual(response.status_code, 200)
 
