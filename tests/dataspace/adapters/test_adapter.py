@@ -48,30 +48,6 @@ class TestAdapter(unittest.TestCase):
         with self.assertRaises(TypeError):
             builder.build()
 
-    def test_concat_into_url(self):
-        base_url = "https://example.com"
-        path = "api/v1/resource"
-        expected_url = "https://example.com/api/v1/resource"
-
-        result = Adapter.concat_into_url(base_url, path)
-        self.assertEqual(expected_url, result)
-
-    def test_concat_into_url_with_slashes(self):
-        base_url = "https://example.com/"
-        path = "/api/v1/resource/"
-        expected_url = "https://example.com/api/v1/resource"
-
-        result = Adapter.concat_into_url(base_url, path)
-        self.assertEqual(expected_url, result)
-
-    def test_concat_into_url_with_empty_path(self):
-        base_url = "https://example.com"
-        path = ""
-        expected_url = "https://example.com/"
-
-        result = Adapter.concat_into_url(base_url, path)
-        self.assertEqual(expected_url, result)
-
     @requests_mock.Mocker()
     def test_request_method(self, mock_request):
         mock_url = f"{self.base_url}/test-endpoint"

@@ -22,7 +22,7 @@
 
 import requests
 
-from fastapi.responses import JSONResponse
+from ..tools import HttpTools
 
 
 class Adapter:
@@ -97,27 +97,6 @@ class Adapter:
             """
             return self.cls(**self._data)
 
-    @staticmethod
-    def concat_into_url(*args):
-        """
-        Joins given arguments into an url. Trailing and leading slashes are stripped for each argument.
-
-        :param args: The parts of a URL to be concatenated into one
-        :return: Complete URL
-        """
-
-        return "/".join(map(lambda x: str(x).strip("/"), args))
-
-    @staticmethod
-    def json_response(data, status_code: int = 200, headers: dict = None):
-        response = JSONResponse(
-            content=data,
-            status_code=status_code,
-            headers=headers
-        )
-        response.headers["Content-Type"] = 'application/json'
-        return response
-
     def close(self):
         """
         Close the requests session
@@ -184,7 +163,7 @@ class Adapter:
         :return: The response of the request
         """
 
-        url = self.concat_into_url(self.base_url, path)
+        url = HttpTools.concat_into_url(self.base_url, path)
 
         response = self.session.request(
             method=method,
@@ -192,7 +171,7 @@ class Adapter:
             **kwargs
         )
 
-        return Adapter.json_response(
+        return HttpTools.json_response(
             data=response.json(),
             status_code=response.status_code,
             headers=dict(response.headers)

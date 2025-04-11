@@ -102,10 +102,25 @@ class HttpTools:
 
     # prepare response
     @staticmethod
-    def response(data, status=200, content_type='application/json'):
-        response = JSONResponse(data, status)
-        response.headers["Content-Type"] = content_type
+    def json_response(data, status_code: int = 200, headers: dict = None):
+        response = JSONResponse(
+            content=data,
+            status_code=status_code,
+            headers=headers
+        )
+        response.headers["Content-Type"] = 'application/json'
         return response
+
+    @staticmethod
+    def concat_into_url(*args):
+        """
+        Joins given arguments into an url. Trailing and leading slashes are stripped for each argument.
+
+        :param args: The parts of a URL to be concatenated into one
+        :return: Complete URL
+        """
+
+        return "/".join(map(lambda x: str(x).strip("/"), args))
     
     @staticmethod
     def get_host(url):
@@ -137,7 +152,7 @@ class HttpTools:
     # Generates a error response with message
     @staticmethod
     def get_error_response(status=500,message="It was not possible to process/execute this request!"):
-        return HttpTools.response({
+        return HttpTools.json_response({
             "message": message,
             "status": status 
         }, status)
@@ -148,7 +163,7 @@ class HttpTools:
     
     @staticmethod
     def get_not_authorized():
-        return HttpTools.response({
+        return HttpTools.json_response({
             "message": "Not Authorized",
             "status": 401
         }, 401)
