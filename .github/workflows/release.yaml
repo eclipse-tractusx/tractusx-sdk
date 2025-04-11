@@ -27,11 +27,12 @@ on:
 jobs:
   build:
     name: Build distribution 📦
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-latest  
     steps:
     - name: Checkout repository
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+          fetch-depth: 0
     
     - name: Set up Python
       uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
@@ -41,8 +42,13 @@ jobs:
     - name: Install pypa/build
       run: python3 -m pip install build --user
     
-    - name: Build a binary wheel and a source tarball
-      run: python3 -m build
+    - name: Install and configure Poetry
+      uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a
+      with:
+        version: latest
+
+    - name: Install using poetry
+      run: poetry build
 
     - name: Store the distribution packages
       uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
