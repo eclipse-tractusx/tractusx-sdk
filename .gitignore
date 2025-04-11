@@ -141,3 +141,5 @@ mvnw.cmd
 # Chart dependencies
 **/charts/*.tgz
 *.lock
+# Allow Poetry lock
+!poetry.lock
