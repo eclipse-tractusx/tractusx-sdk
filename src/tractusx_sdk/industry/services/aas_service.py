@@ -443,7 +443,7 @@ class AasService:
 
         # Make the request
         url = f"{self.aas_url}/shell-descriptors"
-        response = HttpTools.do_post(
+        response = HttpTools.do_post_without_session(
             url=url,
             json=shell_descriptor_dict,
             headers=headers,
