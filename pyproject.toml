@@ -68,7 +68,10 @@ dependencies = [
     "typing-extensions (==4.12.2)",
     "urllib3 (==2.3.0)",
     "uvicorn (==0.30.3)",
-    "uvloop (==0.21.0)",
+
+    "uvloop(==0.21.0); sys_platform == 'linux' or sys_platform == 'darwin'",
+    "winloop(==0.1.8); sys_platform == 'win32'",
+    
     "watchfiles (==1.0.4)",
     "websockets (==14.2)"
 ]
