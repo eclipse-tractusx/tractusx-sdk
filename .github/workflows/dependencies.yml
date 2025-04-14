@@ -168,7 +168,7 @@ jobs:
           run: |
               Invoke-WebRequest -Uri 'https://repo.eclipse.org/service/local/artifact/maven/redirect?r=dash-licenses&g=org.eclipse.dash&a=org.eclipse.dash.licenses&v=LATEST' -OutFile .\dash.jar
 
-              $DEP_FILE = "DEPENDENCIES_TRACTUS-X_SDK"
+              $DEP_FILE = "DEPENDENCIES_TRACTUS-X_SDK_WINDOWS"
 
               echo "DEP_FILE=$DEP_FILE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
