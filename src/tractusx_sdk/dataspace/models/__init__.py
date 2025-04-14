@@ -23,33 +23,3 @@
 ## Where the models are stored
 
 from .example import ParentExample, ChildExample
-from .abstract_aas import (
-    # Enums
-    AssetKind,
-    ReferenceTypes,
-    ReferenceKeyTypes,
-    ProtocolInformationSecurityAttributesTypes,
-    # Basic models
-    BaseAbstractModel,
-    AbstractMultiLanguage,
-    AbstractReferenceKey,
-    AbstractReference,
-    AbstractProtocolInformationSecurityAttributes,
-    AbstractProtocolInformation,
-    AbstractEmbeddedDataSpecification,
-    AbstractAdministrativeInformation,
-    AbstractEndpoint,
-    AbstractSpecificAssetId,
-    # Major models
-    AbstractSubModelDescriptor,
-    AbstractShellDescriptor,
-    # Response models
-    AbstractPagingMetadata,
-    AbstractPaginatedResponse,
-    AbstractGetAllShellDescriptorsResponse,
-    AbstractGetSubmodelDescriptorsByAssResponse,
-)
-
-from .supported_versions_aas import (
-    AASSupportedVersionsEnum,
-)
