@@ -20,6 +20,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-## Where the models are stored
+from ..base_dma_adapter import BaseDmaAdapter
 
-from .example import ParentExample, ChildExample
+
+class DmaAdapter(BaseDmaAdapter):
+    pass

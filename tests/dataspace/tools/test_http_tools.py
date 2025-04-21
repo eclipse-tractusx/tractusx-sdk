@@ -108,9 +108,33 @@ class TestHttpTools(unittest.TestCase):
 
     def test_response_json(self):
         """Ensure JSON response is properly structured."""
-        response = HttpTools.response({"message": "OK"}, status=200)
+        response = HttpTools.json_response({"message": "OK"}, status_code=200)
         self.assertIsInstance(response, JSONResponse)
         self.assertEqual(response.status_code, 200)
+
+    def test_concat_into_url(self):
+        base_url = "https://example.com"
+        path = "api/v1/resource"
+        expected_url = "https://example.com/api/v1/resource"
+
+        result = HttpTools.concat_into_url(base_url, path)
+        self.assertEqual(expected_url, result)
+
+    def test_concat_into_url_with_slashes(self):
+        base_url = "https://example.com/"
+        path = "/api/v1/resource/"
+        expected_url = "https://example.com/api/v1/resource"
+
+        result = HttpTools.concat_into_url(base_url, path)
+        self.assertEqual(expected_url, result)
+
+    def test_concat_into_url_with_empty_path(self):
+        base_url = "https://example.com"
+        path = ""
+        expected_url = "https://example.com/"
+
+        result = HttpTools.concat_into_url(base_url, path)
+        self.assertEqual(expected_url, result)
 
     def test_empty_response(self):
         """Verify empty response creation."""
