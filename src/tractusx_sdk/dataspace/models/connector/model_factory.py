@@ -344,7 +344,7 @@ class ModelFactory:
             offset: int = 0,
             limit: int = 10,
             sort_order: str = "DESC",
-            sort_field: str = "",
+            sort_field: str = "createdAt",
             filter_expression: list[dict] = None,
             **kwargs
     ):
