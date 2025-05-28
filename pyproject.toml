@@ -47,7 +47,7 @@ requires-poetry = ">=2.0"
 [tool.poetry.group.dev.dependencies]
 fastapi-cli = "^0.0.7"
 build = "^1.2.2"
-setuptools = "^75.8.2"
+setuptools = "^78.1.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.1.1"
