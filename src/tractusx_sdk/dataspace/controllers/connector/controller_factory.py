@@ -20,14 +20,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-import logging
 from enum import Enum
 from importlib import import_module
 from os import listdir, path
 
 from ...adapters.connector.base_dma_adapter import BaseDmaAdapter
-
-logger = logging.getLogger(__name__)
 
 
 class ControllerType(Enum):
@@ -337,6 +334,6 @@ class ControllerFactory:
                         **kwargs
                     )
                 except AttributeError:
-                    logger.warning(f"A controller for {controller_type.name} does not exist for version {connector_version}")
+                    raise ValueError(f"A controller for {controller_type.name} does not exist for version {connector_version}")
 
         return controllers

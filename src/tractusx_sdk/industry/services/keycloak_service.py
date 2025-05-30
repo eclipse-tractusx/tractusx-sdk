@@ -22,10 +22,7 @@
 
 from keycloak import KeycloakOpenID
 from datetime import datetime, timedelta
-import logging
 from tractusx_sdk.industry.services import AuthService
-
-logger = logging.getLogger(__name__)
 
 class KeycloakService(AuthService):
     """
@@ -96,13 +93,10 @@ class KeycloakService(AuthService):
         """
         try:
             if self.token is None or self.is_token_valid():
-                logger.debug("Refreshing Keycloak token")
                 
                 self.token = self.keycloak_openid.token(grant_type=self.grant_type)
                 self.token_expiry = datetime.now() + timedelta(seconds=self.token.get("expires_in", 300))
-                
-                logger.debug("Token refreshed successfully")
+            
             return self.token["access_token"]
         except Exception as e:
-            logger.error(f"Failed to refresh token: {str(e)}")
-            raise
+            raise ValueError(f"Failed to refresh token: {str(e)}")
