@@ -20,7 +20,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-import logging
 
 from ...controller import Controller
 
@@ -39,19 +38,16 @@ def controller_method(func):
 
         class_name = type(self).__name__
         func_name = func.__name__
-        logger = logging.getLogger(class_name)
 
         if not isinstance(self, Controller):
-            logger.error(
+            raise ValueError(
                 f"Please ensure that {class_name} inherits from Controller in order to use {func_name}."
             )
-            return None
 
         if not hasattr(self, "endpoint_url"):
-            logger.error(
+            raise ValueError(
                 f"Please ensure that {class_name} defines an 'endpoint_url' attribute in order to use {func_name}."
             )
-            return None
 
         ret_val = func(*args, **kwargs)
         return ret_val

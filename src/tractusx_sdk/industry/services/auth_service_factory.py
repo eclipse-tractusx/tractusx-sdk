@@ -20,11 +20,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-import logging
 from tractusx_sdk.industry.services import AuthService, KeycloakService
-
-logger = logging.getLogger(__name__)
-
 
 class AuthServiceFactory:
     """
@@ -54,9 +50,6 @@ class AuthServiceFactory:
                                      None otherwise
         """
         try:
-            logger.info(
-                f"Creating KeycloakService with URL: {auth_url}, client ID: {client_id}"
-            )
             return KeycloakService(
                 server_url=auth_url,
                 client_id=client_id,
@@ -65,5 +58,4 @@ class AuthServiceFactory:
                 grant_type=grant_type,
             )
         except Exception as e:
-            logger.error(f"Failed to create KeycloakService: {str(e)}")
-            raise e
+            raise ValueError(f"Failed to create KeycloakService: {str(e)}")

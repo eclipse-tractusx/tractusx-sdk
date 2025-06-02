@@ -36,7 +36,7 @@ The Tractus-X SDK will have a memory/cache mechanism so it can store just the op
 ```py
 
 
-class edcService:
+class ConnectorService:
 
     memory_cache: dict
 

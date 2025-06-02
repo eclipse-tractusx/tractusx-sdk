@@ -30,10 +30,7 @@
 import requests
 from fastapi.responses import JSONResponse, Response
 from io import BytesIO
-import logging
 import urllib.parse
-
-logger = logging.getLogger('staging')
 class HttpTools:
 
     # do get request without session

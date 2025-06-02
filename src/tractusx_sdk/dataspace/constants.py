@@ -20,6 +20,5 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-## Where the configuration of sdk is stored
 
-from .initial_config import auth_manager, edc_service, aas_service, logger, args, app_configuration, log_config
+DSP_DATASET_KEY:str="dcat:dataset"

@@ -23,17 +23,17 @@
 import unittest
 
 from tractusx_sdk.dataspace.controllers.connector.base_dma_controller import BaseDmaController
-from tractusx_sdk.dataspace.services.connector.base_edc_service import BaseEdcService
+from tractusx_sdk.dataspace.services.connector.base_connector_services import BaseConnectorService
 
 
-class TestBaseEdcService(unittest.TestCase):
+class TestBaseConnectorService(unittest.TestCase):
     def setUp(self):
         self.version = "v0_9_0"
         self.base_url = "https://example.com"
         self.dma_path = "/dma"
         self.headers = {"Authorization": "Bearer token"}
 
-        self.service = BaseEdcService(
+        self.service = BaseConnectorService(
             version=self.version,
             base_url=self.base_url,
             dma_path=self.dma_path,
@@ -66,7 +66,7 @@ class TestBaseEdcService(unittest.TestCase):
         self.assertIsNotNone(self.service._transfer_process_controller)
 
     def test_builder_sets_dma_path(self):
-        builder = BaseEdcService.builder()
+        builder = BaseConnectorService.builder()
         builder.dma_path(self.dma_path)
         self.assertEqual(builder._data["dma_path"], self.dma_path)
 
