@@ -34,6 +34,9 @@ class EdrController(CreateControllerMixin, GetAllControllerMixin, DeleteControll
 
     endpoint_url = "/v3/edrs"
 
+    def get_data_address_with_token_refresh(self, oid: str, **kwargs):
+        return self.adapter.get(url=f"{self.endpoint_url}/{oid}/dataaddress?auto_refresh=true", **kwargs)
+    
     def get_data_address(self, oid: str, **kwargs):
         return self.adapter.get(url=f"{self.endpoint_url}/{oid}/dataaddress", **kwargs)
 

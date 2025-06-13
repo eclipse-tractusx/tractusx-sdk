@@ -20,6 +20,15 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-## Where the configuration of sdk is stored
+"""
+This module contains utility functions and classes for working with the Eclipse Tractus-X Software Development KIT.
 
-from .initial_config import auth_manager, edc_service, aas_service, logger, args, app_configuration, log_config
+:copyright: (c) 2025 Eclipse Foundation
+:license: Apache License, Version 2.0, see LICENSE for more details.
+"""
+
+# Package-level variables
+__author__ = 'Eclipse Tractus-X Contributors'
+__license__ = "Apache License, Version 2.0"
+
+from .memory_connection_manager import MemoryConnectionManager

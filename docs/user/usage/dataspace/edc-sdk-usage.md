@@ -267,12 +267,12 @@ transfer_process_model = ModelFactory.get_transfer_process_model(
 
 ### EDC Service
 
-The EDC Service is a central component that provides access to various controllers in the Eclipse Dataspace Connector (EDC). These controllers allow you to manage assets, catalogs, contracts, policies, and data transfers in the dataspace. The BaseEdcService acts as a wrapper, providing a unified interface to interact with the EDC's Data Management API.
+The EDC Service is a central component that provides access to various controllers in the Eclipse Dataspace Connector (EDC). These controllers allow you to manage assets, catalogs, contracts, policies, and data transfers in the dataspace. The BaseConnectorService acts as a wrapper, providing a unified interface to interact with the EDC's Data Management API.
 
 ```pyhton
-from tractusx_sdk.dataspace.services.connector.v0_9_0.edc_service import EdcService
+from tractusx_sdk.dataspace.services.connector.v0_9_0.edc_service import ConnectorService
 
-service = EdcService(base_url=self.base_url,
+service = ConnectorService(base_url=self.base_url,
                             dma_path=self.dma_path,
                             headers=self.headers,)
 

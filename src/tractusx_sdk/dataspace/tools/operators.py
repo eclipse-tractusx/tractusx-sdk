@@ -35,7 +35,7 @@ import json
 import time
 import io
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 """
 Class that defines operations in files, directories, clases, ...
@@ -362,3 +362,55 @@ class op:
             bool: True if the path corresponds to an existing file, False otherwise.
         """
         return os.path.isfile(path=path)
+    
+    @staticmethod
+    def search_element_by_field(array, id, field="id"):
+        """
+        Searches for an element in a list of dictionaries by a specific field value.
+        Args:
+            array (list): The list of dictionaries to search through.
+            id (Any): The value to match against the specified field.
+            field (str, optional): The field in the dictionary to compare the value with. Defaults to "id".
+        Returns:
+            dict or None: The first dictionary where the field matches the value, or None if not found.
+        """
+        return next((x for x in array if x[field] == id), None)
+
+    @staticmethod
+    def get_future_timestamp(minutes=0, zone=timezone.utc):
+        """
+        Calculates a future timestamp by adding minutes to the current time.
+        Args:
+            minutes (int, optional): The number of minutes to add to the current time. Defaults to 0.
+            zone (datetime.tzinfo, optional): The timezone to use. Defaults to UTC.
+        Returns:
+            float: The future timestamp as a float.
+        """
+        future_time = datetime.now(zone) + timedelta(minutes=minutes)
+        return future_time.timestamp()
+
+    @staticmethod
+    def is_interval_reached(end_timestamp: int, zone=timezone.utc) -> bool:
+        """
+        Determines whether the current time has reached or passed a given timestamp.
+        Args:
+            end_timestamp (int): The timestamp to compare against the current time.
+            zone (datetime.tzinfo, optional): The timezone to use. Defaults to UTC.
+        Returns:
+            bool: True if the current time is equal to or greater than the end timestamp, False otherwise.
+        """
+        current_timestamp = datetime.timestamp(datetime.now(zone))
+        return end_timestamp <= current_timestamp
+
+    @staticmethod
+    def timestamp_to_datetime(timestamp: int, zone=timezone.utc, format: str = "%d.%m.%Y %H:%M:%S.%f"):
+        """
+        Converts a timestamp into a formatted datetime string.
+        Args:
+            timestamp (int): The timestamp to convert.
+            zone (datetime.tzinfo, optional): The timezone to use. Defaults to UTC.
+            format (str, optional): The format string for the output datetime. Defaults to "%d.%m.%Y %H:%M:%S.%f".
+        Returns:
+            str: The formatted datetime string.
+        """
+        return datetime.fromtimestamp(timestamp, zone).strftime(format)

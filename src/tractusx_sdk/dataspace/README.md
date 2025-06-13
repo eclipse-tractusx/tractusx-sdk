@@ -49,7 +49,7 @@ dataspace/
 4. Import the SDK like this:
 
 ```python
-   from tractusx_sdk.dataspace.services import EdcService
+   from tractusx_sdk.dataspace.services import ConnectorService
 ```
 
 ## Run it in your local environment
