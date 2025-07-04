@@ -11,7 +11,7 @@
 # https://www.apache.org/licenses/LICENSE-2.0.
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an "AS IS" BASIS
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
 # either express or implied. See the
 # License for the specific language govern in permissions and limitations
@@ -20,30 +20,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from abc import ABC, abstractmethod
+# Package-level variables
+__author__ = 'Eclipse Tractus-X Contributors'
+__license__ = "Apache License, Version 2.0"
 
-class AuthService(ABC):
-    """
-    Abstract base class for authentication services.
-    All authentication service implementations should inherit from this class.
-    """
-    
-    @abstractmethod
-    def get_token(self) -> str:
-        """
-        Get an authentication token.
-        
-        Returns:
-            str: The authentication token
-        """
-        pass
-    
-    @abstractmethod
-    def is_token_valid(self) -> bool:
-        """
-        Check if the current token is valid.
-        
-        Returns:
-            bool: True if the token is valid, False otherwise
-        """
-        pass
+from .discovery_services import DiscoveryFinderService
+from .discovery_services import ConnectorDiscoveryService

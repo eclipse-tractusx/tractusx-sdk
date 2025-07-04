@@ -37,7 +37,7 @@ from tractusx_sdk.industry.models.aas.v3 import (
     ServiceDescription,
 )
 from tractusx_sdk.dataspace.tools import HttpTools, encode_as_base64_url_safe
-from tractusx_sdk.industry.services.keycloak_service import KeycloakService
+from tractusx_sdk.dataspace.managers.oauth2_manager import OAuth2Manager
 
 
 class AasService:
@@ -53,7 +53,7 @@ class AasService:
         base_url: str,
         base_lookup_url: str,
         api_path: str,
-        auth_service: KeycloakService = None,
+        auth_service: OAuth2Manager = None,
         verify_ssl: bool = True,
     ):
         """
@@ -63,7 +63,7 @@ class AasService:
             base_url (str): Base URL of the AAS API
             base_lookup_url (str): Base URL for the AAS lookup service
             api_path (str): API endpoint path
-            auth_service (KeycloakService, optional): Authentication service for obtaining access tokens
+            auth_service (OAuth2Manager, optional): Authentication service for obtaining access tokens
             verify_ssl (bool): Whether to verify SSL certificates
         """
         self.base_url = base_url.rstrip("/")
@@ -96,8 +96,7 @@ class AasService:
 
         # Add authentication if available
         if self.auth_service:
-            token = self.auth_service.get_token()
-            headers["Authorization"] = f"Bearer {token}"
+            headers = self.auth_service.add_auth_header(headers=headers)
 
         # Add BPN if provided
         if bpn:
