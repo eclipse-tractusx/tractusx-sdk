@@ -20,16 +20,15 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from .dma_controller import DmaController
-from ..mixins import GetControllerMixin, GetAllControllerMixin
+from ..base_connector_service import BaseConnectorService
+from ....managers.connection.base_connection_manager import BaseConnectionManager
+class ConnectorService(BaseConnectorService):
+    def __init__(self, base_url: str, dma_path: str, headers: dict = None, connection_manager:BaseConnectionManager=None):
+        super().__init__(
+            version="jupiter",
+            base_url=base_url,
+            dma_path=dma_path,
+            headers=headers,
+            connection_manager=connection_manager
+        )
 
-
-class ContractAgreementController(GetControllerMixin, GetAllControllerMixin, DmaController):
-    """
-    Concrete implementation of the ContractAgreementController for the Connector v0.9.0 Data Management API.
-    """
-
-    endpoint_url = "/v3/contractagreements"
-
-    def get_negotiation_by_id(self, oid: str, **kwargs):
-        return self.adapter.get(url=f"{self.endpoint_url}/{oid}/negotiation", **kwargs)

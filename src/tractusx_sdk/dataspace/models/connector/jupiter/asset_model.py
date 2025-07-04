@@ -20,41 +20,30 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from ..base_dma_controller import BaseDmaController
-from .base_mixins import (
-    CreateControllerMixin,
-    GetControllerMixin,
-    UpdateControllerMixin,
-    DeleteControllerMixin,
-    GetAllControllerMixin,
-    GetStateControllerMixin,
-    TerminateControllerMixin
-)
+from json import dumps as jdumps
+from pydantic import Field
+
+from ..base_asset_model import BaseAssetModel
 
 
-class BaseCrudDmaController(
-    CreateControllerMixin,
-    GetControllerMixin,
-    UpdateControllerMixin,
-    DeleteControllerMixin,
-    BaseDmaController
-):
-    pass
+class AssetModel(BaseAssetModel):
+    TYPE: str = Field(default="Asset", frozen=True)
 
+    def to_data(self):
+        """
+        Converts the model to a JSON representing the data that will
+        be sent to a jupiter connector when using an asset model.
 
-class CrudDmaController(
-    GetAllControllerMixin,
-    BaseCrudDmaController
-):
-    pass
+        :return: a JSON representation of the model
+        """
 
+        data = {
+            "@context": self.context,
+            "@type": self.TYPE,
+            "@id": self.oid,
+            "properties": self.properties,
+            "privateProperties": self.private_properties,
+            "dataAddress": self.data_address
+        }
 
-class StatefulEntityDmaController(
-    CreateControllerMixin,
-    GetControllerMixin,
-    GetAllControllerMixin,
-    GetStateControllerMixin,
-    TerminateControllerMixin,
-    BaseDmaController
-):
-    pass
+        return jdumps(data)

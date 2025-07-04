@@ -20,15 +20,18 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from ..base_connector_service import BaseConnectorService
-from ....managers.connection.base_connection_manager import BaseConnectionManager
-class ConnectorService(BaseConnectorService):
-    def __init__(self, base_url: str, dma_path: str, headers: dict = None, connection_manager:BaseConnectionManager=None):
-        super().__init__(
-            version="v0_9_0",
-            base_url=base_url,
-            dma_path=dma_path,
-            headers=headers,
-            connection_manager=connection_manager
-        )
+from ..base_dma_controller import BaseDmaController
+from tractusx_sdk.dataspace.adapters.connector.jupiter import DmaAdapter
 
+
+class DmaController(BaseDmaController):
+    """
+    Implementation of a base DmaController for the Connector jupiter Data Management API.
+
+    This class overrides the adapter method of the parent's _Builder class in order
+    to ensure the correct Adapter class types are used, instead of the generic ones.
+    """
+
+    class _Builder(BaseDmaController._Builder):
+        def adapter(self, adapter: DmaAdapter):
+            return super().adapter(adapter)

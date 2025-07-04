@@ -20,30 +20,18 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from json import dumps as jdumps
-from pydantic import Field
-
-from ..base_asset_model import BaseAssetModel
+from .dma_controller import DmaController
+from tractusx_sdk.dataspace.models.connector.jupiter import CatalogModel
 
 
-class AssetModel(BaseAssetModel):
-    TYPE: str = Field(default="Asset", frozen=True)
+class CatalogController(DmaController):
+    """
+    Concrete implementation of the CatalogController for the Connector DMA jupiter.
+    """
 
-    def to_data(self):
-        """
-        Converts the model to a JSON representing the data that will
-        be sent to a v0.9.0 connector when using an asset model.
+    endpoint_url = "/v3/catalog"
 
-        :return: a JSON representation of the model
-        """
+    def get_catalog(self, obj: CatalogModel, **kwargs):
+        kwargs["data"] = obj.to_data()
+        return self.adapter.post(url=f"{self.endpoint_url}/request", **kwargs)
 
-        data = {
-            "@context": self.context,
-            "@type": self.TYPE,
-            "@id": self.oid,
-            "properties": self.properties,
-            "privateProperties": self.private_properties,
-            "dataAddress": self.data_address
-        }
-
-        return jdumps(data)

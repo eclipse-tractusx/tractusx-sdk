@@ -28,7 +28,7 @@ from tractusx_sdk.dataspace.models.connector.model_factory import ModelFactory
 
 class TestModelFactoryPolicy(unittest.TestCase):
     def setUp(self):
-        self.connector_version = "v0_9_0"
+        self.connector_version = "jupiter"
         self.oid = "test-oid"
         self.context = {"key": "value"}
         self.permissions = [{"action": "permission"}]

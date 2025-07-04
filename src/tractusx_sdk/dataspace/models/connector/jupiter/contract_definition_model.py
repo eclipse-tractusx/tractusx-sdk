@@ -20,18 +20,30 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from ..base_dma_controller import BaseDmaController
-from ....adapters.connector.v0_9_0 import DmaAdapter
+from json import dumps as jdumps
+from pydantic import Field
+
+from ..base_contract_definition_model import BaseContractDefinitionModel
 
 
-class DmaController(BaseDmaController):
-    """
-    Implementation of a base DmaController for the Connector v0.9.0 Data Management API.
+class ContractDefinitionModel(BaseContractDefinitionModel):
+    TYPE: str = Field(default="ContractDefinition", frozen=True)
 
-    This class overrides the adapter method of the parent's _Builder class in order
-    to ensure the correct Adapter class types are used, instead of the generic ones.
-    """
+    def to_data(self):
+        """
+        Converts the model to a JSON representing the data that will
+        be sent to a jupiter connector when using a contract definition model.
 
-    class _Builder(BaseDmaController._Builder):
-        def adapter(self, adapter: DmaAdapter):
-            return super().adapter(adapter)
+        :return: a JSON representation of the model
+        """
+
+        data = {
+            "@context": self.context,
+            "@type": self.TYPE,
+            "@id": self.oid,
+            "accessPolicyId": self.access_policy_id,
+            "contractPolicyId": self.contract_policy_id,
+            "assetsSelector": self.assets_selector
+        }
+
+        return jdumps(data)

@@ -23,18 +23,17 @@
 from json import dumps as jdumps
 from pydantic import Field
 
-from ..base_contract_negotiation_model import BaseContractNegotiationModel
+from ..base_transfer_process_model import BaseTransferProcessModel
 
 
-class ContractNegotiationModel(BaseContractNegotiationModel):
-    TYPE: str = Field(default="ContractRequest", frozen=True)
+class TransferProcessModel(BaseTransferProcessModel):
+    TYPE: str = Field(default="TransferRequest", frozen=True)
     PROTOCOL: str = Field(default="dataspace-protocol-http")
-    OFFER_TYPE: str = Field(default="odrl:Offer", frozen=True)
 
     def to_data(self):
         """
         Converts the model to a JSON representing the data that will
-        be sent to a v0.9.0 connector when using a contract negotiation model.
+        be sent to a jupiter connector when using a transfer process model.
 
         :return: a JSON representation of the model
         """
@@ -44,13 +43,10 @@ class ContractNegotiationModel(BaseContractNegotiationModel):
             "@type": self.TYPE,
             "counterPartyAddress": self.counter_party_address,
             "protocol": self.PROTOCOL,
-            "policy": {
-                "@id": self.offer_id,
-                "@type": self.OFFER_TYPE,
-                "assigner": self.provider_id,
-                "target": self.asset_id,
-                **self.offer_policy
-            },
+            "contractId": self.contract_id,
+            "transferType": self.transfer_type,
+            "dataDestination": self.data_destination,
+            "privateProperties": self.private_properties,
             "callbackAddresses": self.callback_addresses
         }
 

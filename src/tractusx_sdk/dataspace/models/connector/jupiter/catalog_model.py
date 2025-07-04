@@ -20,32 +20,32 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from tractusx_sdk.dataspace.adapters.adapter import Adapter
-from tractusx_sdk.dataspace.controllers.connector.utils.decorators import controller_method
-from tractusx_sdk.dataspace.controllers.controller import Controller
+from json import dumps as jdumps
+from pydantic import Field
 
-ENDPOINT_URL = "/some/endpoint"
-
-
-def generic_controller_setup(obj) -> None:
-    obj.adapter = Adapter("https://example.com")
-    obj.endpoint_url = ENDPOINT_URL
-
-    return obj
+from ..base_catalog_model import BaseCatalogModel
 
 
-class SampleController(Controller):
-    """
-    A very basic, template-like class inheriting Controller
-    """
+class CatalogModel(BaseCatalogModel):
+    TYPE: str = Field(default="CatalogRequest", frozen=True)
+    PROTOCOL: str = Field(default="dataspace-protocol-http")
 
-    endpoint_url = ENDPOINT_URL
+    def to_data(self):
+        """
+        Converts the model to a JSON representing the data that will
+        be sent to a jupiter connector when using a catalog model.
 
-    @controller_method
-    def func(self):
-        return "Hello world!"
+        :return: a JSON representation of the model
+        """
 
+        data = {
+            "@context": self.context,
+            "@type": self.TYPE,
+            "counterPartyAddress": self.counter_party_address,
+            "counterPartyId": self.counter_party_id,
+            "protocol": self.PROTOCOL,
+            "additionalScopes": self.additional_scopes,
+            "querySpec": self.queryspec
+        }
 
-class ControllerPropertiesMixin:
-    adapter = None
-    endpoint_url = None
+        return jdumps(data)

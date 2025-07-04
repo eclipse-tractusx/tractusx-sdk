@@ -35,7 +35,7 @@ class TestAdapterFactory(unittest.TestCase):
 
     def test_get_dma_adapter_success(self):
         adapter = AdapterFactory.get_dma_adapter(
-            connector_version="v0_9_0",
+            connector_version="jupiter",
             base_url=self.base_url,
             dma_path=self.dma_path,
             headers=self.headers
@@ -58,7 +58,7 @@ class TestAdapterFactory(unittest.TestCase):
             adapter_type = Enum('AdapterType', { 'foo': 'bar' })
             AdapterFactory._get_adapter_builder(
                 adapter_type=adapter_type.foo,
-                connector_version="v0_9_0"
+                connector_version="jupiter"
             )
 
     def test_get_adapter_import_error(self):
@@ -73,7 +73,7 @@ class TestAdapterFactory(unittest.TestCase):
         # TODO: There is no dataplane adapter yet. Adjust this test when it is implemented.
         with self.assertRaises(AttributeError):
             AdapterFactory.get_dataplane_adapter(
-                connector_version="v0_9_0",
+                connector_version="jupiter",
                 base_url=self.base_url,
                 headers=self.headers
             )

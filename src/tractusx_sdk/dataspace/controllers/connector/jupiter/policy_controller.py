@@ -20,30 +20,23 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from json import dumps as jdumps
-from pydantic import Field
+from .dma_controller import DmaController
+from tractusx_sdk.dataspace.controllers.connector.utils.mixins import CrudDmaController
+from tractusx_sdk.dataspace.models.connector.jupiter import PolicyModel
 
-from ..base_contract_definition_model import BaseContractDefinitionModel
 
+class PolicyController(CrudDmaController, DmaController):
+    """
+    Concrete implementation of the PolicyController for the Connector jupiter Data Management API.
 
-class ContractDefinitionModel(BaseContractDefinitionModel):
-    TYPE: str = Field(default="ContractDefinition", frozen=True)
+    This class overrides the create and update methods in order to ensure the correct class types are used,
+    instead of the generic ones.
+    """
 
-    def to_data(self):
-        """
-        Converts the model to a JSON representing the data that will
-        be sent to a v0.9.0 connector when using a contract definition model.
+    endpoint_url = "/v3/policydefinitions"
 
-        :return: a JSON representation of the model
-        """
+    def create(self, obj: PolicyModel, **kwargs):
+        return super().create(obj, **kwargs)
 
-        data = {
-            "@context": self.context,
-            "@type": self.TYPE,
-            "@id": self.oid,
-            "accessPolicyId": self.access_policy_id,
-            "contractPolicyId": self.contract_policy_id,
-            "assetsSelector": self.assets_selector
-        }
-
-        return jdumps(data)
+    def update(self, obj: PolicyModel, **kwargs):
+        return super().update(obj, **kwargs)

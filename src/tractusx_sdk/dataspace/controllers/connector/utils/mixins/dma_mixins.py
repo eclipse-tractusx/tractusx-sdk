@@ -20,23 +20,41 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from .dma_controller import DmaController
-from ..mixins import CrudDmaController
-from ....models.connector.v0_9_0 import PolicyModel
+from tractusx_sdk.dataspace.controllers.connector.base_dma_controller import BaseDmaController
+from .base_mixins import (
+    CreateControllerMixin,
+    GetControllerMixin,
+    UpdateControllerMixin,
+    DeleteControllerMixin,
+    GetAllControllerMixin,
+    GetStateControllerMixin,
+    TerminateControllerMixin
+)
 
 
-class PolicyController(CrudDmaController, DmaController):
-    """
-    Concrete implementation of the PolicyController for the Connector v0.9.0 Data Management API.
+class BaseCrudDmaController(
+    CreateControllerMixin,
+    GetControllerMixin,
+    UpdateControllerMixin,
+    DeleteControllerMixin,
+    BaseDmaController
+):
+    pass
 
-    This class overrides the create and update methods in order to ensure the correct class types are used,
-    instead of the generic ones.
-    """
 
-    endpoint_url = "/v3/policydefinitions"
+class CrudDmaController(
+    GetAllControllerMixin,
+    BaseCrudDmaController
+):
+    pass
 
-    def create(self, obj: PolicyModel, **kwargs):
-        return super().create(obj, **kwargs)
 
-    def update(self, obj: PolicyModel, **kwargs):
-        return super().update(obj, **kwargs)
+class StatefulEntityDmaController(
+    CreateControllerMixin,
+    GetControllerMixin,
+    GetAllControllerMixin,
+    GetStateControllerMixin,
+    TerminateControllerMixin,
+    BaseDmaController
+):
+    pass

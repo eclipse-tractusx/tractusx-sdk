@@ -66,7 +66,7 @@ properties:dict = {
     }
 
 asset = ModelFactory.get_asset_model(
-    connector_version="v0_9_0",
+    connector_version="jupiter",
     context=context,
     oid="<<your-asset-id>>",
     properties=properties,

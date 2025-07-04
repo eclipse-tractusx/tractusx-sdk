@@ -21,17 +21,24 @@
 #################################################################################
 
 from .dma_controller import DmaController
-from ....models.connector.v0_9_0 import CatalogModel
+from tractusx_sdk.dataspace.controllers.connector.utils.mixins import StatefulEntityDmaController
+from tractusx_sdk.dataspace.models.connector.jupiter import TransferProcessModel
 
 
-class CatalogController(DmaController):
+class TransferProcessController(StatefulEntityDmaController, DmaController):
     """
-    Concrete implementation of the CatalogController for the Connector DMA v0.9.0.
+    Concrete implementation of the TransferProcessController for the Connector jupiter Data Management API.
+
+    This class overrides the create and terminate_by_id methods in order to ensure the correct class types are used, instead of the generic ones.
     """
 
-    endpoint_url = "/v3/catalog"
+    endpoint_url = "/v3/transferprocesses"
 
-    def get_catalog(self, obj: CatalogModel, **kwargs):
-        kwargs["data"] = obj.to_data()
-        return self.adapter.post(url=f"{self.endpoint_url}/request", **kwargs)
+    def create(self, obj: TransferProcessModel, **kwargs):
+        return super().create(obj, **kwargs)
 
+    def terminate_by_id(self, oid: str, obj: TransferProcessModel, **kwargs):
+        return super().terminate_by_id(oid, obj, **kwargs)
+
+    def deprovision_by_id(self, oid: str, **kwargs):
+        return self.adapter.post(url=f"{self.endpoint_url}/{oid}/deprovision", **kwargs)

@@ -23,7 +23,7 @@
 from unittest import TestCase
 from unittest.mock import Mock, MagicMock
 
-from tractusx_sdk.dataspace.controllers.connector.mixins import (
+from tractusx_sdk.dataspace.controllers.connector.utils.mixins import (
     CreateControllerMixin,
     GetControllerMixin,
     UpdateControllerMixin,

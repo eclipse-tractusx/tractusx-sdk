@@ -21,24 +21,15 @@
 #################################################################################
 
 from .dma_controller import DmaController
-from ..mixins import CreateControllerMixin, GetAllControllerMixin, DeleteControllerMixin
-from ....models.connector.v0_9_0 import ContractNegotiationModel
+from tractusx_sdk.dataspace.controllers.connector.utils.mixins import GetControllerMixin, GetAllControllerMixin
 
 
-class EdrController(CreateControllerMixin, GetAllControllerMixin, DeleteControllerMixin, DmaController):
+class ContractAgreementController(GetControllerMixin, GetAllControllerMixin, DmaController):
     """
-    Concrete implementation of the EdrController for the Connector v0.9.0 Data Management API.
-
-    This class overrides the create method in order to ensure the correct class types are used, instead of the generic ones.
+    Concrete implementation of the ContractAgreementController for the Connector jupiter Data Management API.
     """
 
-    endpoint_url = "/v3/edrs"
-    
-    def get_data_address(self, oid: str, **kwargs):
-        return self.adapter.get(url=f"{self.endpoint_url}/{oid}/dataaddress", **kwargs)
+    endpoint_url = "/v3/contractagreements"
 
-    def refresh(self, oid: str, **kwargs):
-        return self.adapter.post(url=f"{self.endpoint_url}/{oid}/refresh", **kwargs)
-
-    def create(self, obj: ContractNegotiationModel, **kwargs):
-        return super().create(obj, **kwargs)
+    def get_negotiation_by_id(self, oid: str, **kwargs):
+        return self.adapter.get(url=f"{self.endpoint_url}/{oid}/negotiation", **kwargs)

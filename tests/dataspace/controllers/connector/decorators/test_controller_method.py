@@ -22,7 +22,7 @@
 
 from unittest import TestCase
 
-from tractusx_sdk.dataspace.controllers.connector.decorators import controller_method
+from tractusx_sdk.dataspace.controllers.connector.utils.decorators import controller_method
 from tractusx_sdk.dataspace.controllers.controller import Controller
 from tests.dataspace.controllers.connector.utils import (
     generic_controller_setup,

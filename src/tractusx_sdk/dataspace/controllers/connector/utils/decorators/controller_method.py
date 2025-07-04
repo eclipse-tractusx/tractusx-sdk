@@ -21,7 +21,7 @@
 #################################################################################
 
 
-from ...controller import Controller
+from tractusx_sdk.dataspace.controllers.controller import Controller
 
 
 def controller_method(func):

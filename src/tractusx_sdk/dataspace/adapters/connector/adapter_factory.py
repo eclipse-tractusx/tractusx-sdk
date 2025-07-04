@@ -45,7 +45,7 @@ class AdapterFactory:
     SUPPORTED_VERSIONS = []
     for module in listdir(_adapters_base_path):
         module_path = path.join(_adapters_base_path, module)
-        if path.isdir(module_path) and module.startswith("v"):
+        if path.isdir(module_path) and module != "__pycache__":
             SUPPORTED_VERSIONS.append(module)
 
     @staticmethod
@@ -61,7 +61,7 @@ class AdapterFactory:
         adapter class, and returns it, with whatever parameters necessary for its initialization.
 
         :param adapter_type: The type of adapter to create, as per the AdapterType enum
-        :param connector_version: The version of the Connector (e.g., "v0_9_0")
+        :param connector_version: The version of the Connector (e.g., "jupiter")
         :return: An instance of the specified Adapter subclass
         """
 
@@ -101,7 +101,7 @@ class AdapterFactory:
         """
         Create a (DMA) adapter instance, based a specific version.
 
-        :param connector_version: The version of the Connector DMA (e.g., "v0_9_0")
+        :param connector_version: The version of the Connector DMA (e.g., "jupiter")
         :param base_url: The URL of the Connector DMA to be requested
         :param dma_path: The path of the Connector Data Management API to be requested
         :param headers: The headers (i.e.: API Key) of the Connector to be requested
@@ -131,7 +131,7 @@ class AdapterFactory:
         """
         Create a dataplane adapter instance, based a specific version.
 
-        :param connector_version: The version of the Connector dataplane (e.g., "v0_9_0")
+        :param connector_version: The version of the Connector dataplane (e.g., "jupiter")
         :param base_url: The URL of the Connector dataplane to be requested
         :param headers: The headers (i.e.: Edc-Bpn) of the Connector dataplane to be requested
         :return: An instance of the specified Adapter subclass

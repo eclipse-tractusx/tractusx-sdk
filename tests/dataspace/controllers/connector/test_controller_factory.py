@@ -26,7 +26,7 @@ from unittest.mock import patch, Mock
 
 from tractusx_sdk.dataspace.adapters.connector.base_dma_adapter import BaseDmaAdapter
 from tractusx_sdk.dataspace.controllers.connector.controller_factory import ControllerFactory, ControllerType
-from tractusx_sdk.dataspace.controllers.connector.v0_9_0 import (
+from tractusx_sdk.dataspace.controllers.connector.jupiter import (
     AssetController,
     CatalogController,
     ContractAgreementController,
@@ -40,7 +40,7 @@ from tractusx_sdk.dataspace.controllers.connector.v0_9_0 import (
 
 class TestControllerFactory(unittest.TestCase):
     def setUp(self):
-        self.connector_version = "v0_9_0"
+        self.connector_version = "jupiter"
         self.adapter = Mock(BaseDmaAdapter)
 
     def test_get_controller_unsupported_version(self):
@@ -55,7 +55,7 @@ class TestControllerFactory(unittest.TestCase):
             controller_type = Enum('ControllerType', {'foo': 'bar'})
             ControllerFactory._get_controller_builder(
                 controller_type=controller_type.foo,
-                connector_version="v0_9_0"
+                connector_version="jupiter"
             )
 
     def test_get_controller_import_error(self):

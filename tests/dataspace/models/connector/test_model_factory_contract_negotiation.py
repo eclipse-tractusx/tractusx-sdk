@@ -33,7 +33,7 @@ from tractusx_sdk.dataspace.models.connector.model_factory import ModelFactory
 
 class TestModelFactoryContractNegotiation(unittest.TestCase):
     def setUp(self):
-        self.connector_version = "v0_9_0"
+        self.connector_version = "jupiter"
         self.context = { "key": "value" }
         self.counter_party_address = "https://counterparty.com"
         self.asset_id = "asset-id"

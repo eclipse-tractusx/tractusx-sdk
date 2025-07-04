@@ -21,22 +21,21 @@
 #################################################################################
 
 from .dma_controller import DmaController
-from ..mixins import CrudDmaController
-from ....models.connector.v0_9_0 import AssetModel
+from tractusx_sdk.dataspace.controllers.connector.utils.mixins import CrudDmaController
+from tractusx_sdk.dataspace.models.connector.jupiter import ContractDefinitionModel
 
 
-class AssetController(CrudDmaController, DmaController):
+class ContractDefinitionController(CrudDmaController, DmaController):
     """
-    Concrete implementation of the AssetController for the Connector v0.9.0 Data Management API.
+    Concrete implementation of the ContractDefinitionController for the Connector jupiter Data Management API.
 
-    This class overrides the create and update methods in order to ensure the correct class types are used,
-    instead of the generic ones.
+    This class overrides the create and update methods in order to ensure the correct class types are used, instead of the generic ones.
     """
 
-    endpoint_url = "/v3/assets"
+    endpoint_url = "/v3/contractdefinitions"
 
-    def create(self, obj: AssetModel, **kwargs):
+    def create(self, obj: ContractDefinitionModel, **kwargs):
         return super().create(obj, **kwargs)
 
-    def update(self, obj: AssetModel, **kwargs):
+    def update(self, obj: ContractDefinitionModel, **kwargs):
         return super().update(obj, **kwargs)

@@ -28,7 +28,7 @@ from tractusx_sdk.dataspace.services.connector.base_connector_service import Bas
 
 class TestBaseConnectorService(unittest.TestCase):
     def setUp(self):
-        self.version = "v0_9_0"
+        self.version = "jupiter"
         self.base_url = "https://example.com"
         self.dma_path = "/dma"
         self.headers = {"Authorization": "Bearer token", "Content-Type": "application/json"}

@@ -53,7 +53,7 @@ class ModelFactory:
     SUPPORTED_VERSIONS = []
     for module in listdir(_models_base_path):
         module_path = path.join(_models_base_path, module)
-        if path.isdir(module_path) and module.startswith("v"):
+        if path.isdir(module_path) and module != "__pycache__":
             SUPPORTED_VERSIONS.append(module)
 
     @staticmethod
@@ -69,7 +69,7 @@ class ModelFactory:
         model class, and returns a builder for it.
 
         :param model_type: The type of model to create, as per the ModelType enum
-        :param connector_version: The version of the Connector (e.g., "v0_9_0")
+        :param connector_version: The version of the Connector (e.g., "jupiter")
 
         :return: An instance of the specified Model subclass' builder
         """
@@ -114,7 +114,7 @@ class ModelFactory:
         """
         Create an Asset model instance for a specific version.
 
-        :param connector_version: The version of the Connector (e.g., "v0_9_0")
+        :param connector_version: The version of the Connector (e.g., "jupiter")
         :param oid: The unique identifier for the asset
         :param data_address: The data address associated with the asset
         :param context: Optional context dictionary
@@ -158,7 +158,7 @@ class ModelFactory:
         """
         Create a Catalog model instance for a specific version.
 
-        :param connector_version: The version of the Connector (e.g., "v0_9_0")
+        :param connector_version: The version of the Connector (e.g., "jupiter")
         :param counter_party_address: The address of the counterparty
         :param counter_party_id: The ID of the counterparty
         :param context: Optional context dictionary
@@ -206,7 +206,7 @@ class ModelFactory:
         """
         Create a Contract Definition model instance for a specific version.
 
-        :param connector_version: The version of the Connector (e.g., "v0_9_0")
+        :param connector_version: The version of the Connector (e.g., "jupiter")
         :param oid: The unique identifier for the contract definition
         :param access_policy_id: The ID of the access policy
         :param contract_policy_id: The ID of the contract policy
@@ -250,7 +250,7 @@ class ModelFactory:
         """
         Create a Contract Negotiation model instance for a specific version.
 
-        :param connector_version: The version of the Connector (e.g., "v0_9_0")
+        :param connector_version: The version of the Connector (e.g., "jupiter")
         :param counter_party_address: The address of the counterparty
         :param offer_id: The ID of the offer
         :param asset_id: The ID of the asset
@@ -304,7 +304,7 @@ class ModelFactory:
         """
         Create a Policy model instance for a specific version.
 
-        :param connector_version: The version of the Connector (e.g., "v0_9_0")
+        :param connector_version: The version of the Connector (e.g., "jupiter")
         :param oid: The unique identifier for the policy
         :param context: Optional context dictionary
         :param permissions: Optional list of permissions
@@ -351,7 +351,7 @@ class ModelFactory:
         """
         Create a QuerySpec model instance for a specific version.
 
-        :param connector_version: The version of the Connector (e.g., "v0_9_0")
+        :param connector_version: The version of the Connector (e.g., "jupiter")
         :param context: Optional context dictionary
         :param offset: Optional offset for pagination
         :param limit: Optional limit for pagination
@@ -395,7 +395,7 @@ class ModelFactory:
         """
         Create a TransferProcess model instance for a specific version.
 
-        :param connector_version: The version of the Connector (e.g., "v0_9_0")
+        :param connector_version: The version of the Connector (e.g., "jupiter")
         :param counter_party_address: The address of the counterparty
         :param transfer_type: The type of transfer
         :param contract_id: The ID of the contract

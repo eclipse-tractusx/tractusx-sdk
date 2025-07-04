@@ -21,10 +21,10 @@
 #################################################################################
 
 
-from ..decorators import controller_method
-from ....adapters.adapter import Adapter
-from ....models.model import BaseModel
-from ....models.connector.base_queryspec_model import BaseQuerySpecModel
+from tractusx_sdk.dataspace.controllers.connector.utils.decorators import controller_method
+from tractusx_sdk.dataspace.adapters.adapter import Adapter
+from tractusx_sdk.dataspace.models.model import BaseModel
+from tractusx_sdk.dataspace.models.connector.base_queryspec_model import BaseQuerySpecModel
 
 
 class CreateControllerMixin:

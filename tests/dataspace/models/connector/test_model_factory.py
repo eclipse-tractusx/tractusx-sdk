@@ -28,7 +28,7 @@ from tractusx_sdk.dataspace.models.connector.model_factory import ModelFactory, 
 
 class TestModelFactory(unittest.TestCase):
     def setUp(self):
-        self.connector_version = "v0_9_0"
+        self.connector_version = "jupiter"
         self.oid = "test-oid"
         self.data_address = {"type": "test_type", "value": "test_value"}
 
@@ -44,7 +44,7 @@ class TestModelFactory(unittest.TestCase):
             model_type = Enum('ModelType', { 'foo': 'bar' })
             ModelFactory._get_model_builder(
                 model_type=model_type.foo,
-                connector_version="v0_9_0"
+                connector_version="jupiter"
             )
 
     def test_get_model_import_error(self):
