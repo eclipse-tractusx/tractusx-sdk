@@ -34,13 +34,15 @@ import urllib.parse
 class HttpTools:
 
     # do get request without session
+    @staticmethod
     def do_get(url,verify=True,headers=None,timeout=None,params=None,allow_redirects=False):
         return requests.get(url=url,verify=verify,
                             timeout=timeout,headers=headers,
                             params=params,allow_redirects=allow_redirects)
     
     # do get request with session
-    def do_get(url,session=None,verify=True,headers=None,timeout=None, params=None,allow_redirects=False):
+    @staticmethod
+    def do_get_with_session(url,session=None,verify=True,headers=None,timeout=None, params=None,allow_redirects=False):
         if session is None:
             session = requests.Session()
         return session.get(url=url,verify=verify,
@@ -48,6 +50,7 @@ class HttpTools:
                            params=params,allow_redirects=allow_redirects)
     
     # do post request without session
+    @staticmethod
     def do_post(url,data=None,verify=True,headers=None,timeout=None,json=None,allow_redirects=False):
         return requests.post(url=url,verify=verify,
                              timeout=timeout,headers=headers,
@@ -55,7 +58,8 @@ class HttpTools:
                              allow_redirects=allow_redirects)
     
     # do post request with session
-    def do_post(url,session=None,data=None,verify=True,headers=None,timeout=None,json=None,allow_redirects=False):
+    @staticmethod
+    def do_post_with_session(url,session=None,data=None,verify=True,headers=None,timeout=None,json=None,allow_redirects=False):
         if session is None:
             session = requests.Session()
         return session.post(url=url,verify=verify,
@@ -73,7 +77,7 @@ class HttpTools:
 
     # do put request with session
     @staticmethod
-    def do_put(url, session=None, data=None, verify=True, headers=None, timeout=None, json=None, allow_redirects=False):
+    def do_put_with_session(url, session=None, data=None, verify=True, headers=None, timeout=None, json=None, allow_redirects=False):
         if session is None:
             session = requests.Session()
         return session.put(url=url, verify=verify,
@@ -90,7 +94,7 @@ class HttpTools:
 
     # do delete request with session
     @staticmethod
-    def do_delete(url, session=None, verify=True, headers=None, timeout=None, params=None, allow_redirects=False):
+    def do_delete_with_session(url, session=None, verify=True, headers=None, timeout=None, params=None, allow_redirects=False):
         if session is None:
             session = requests.Session()
         return session.delete(url=url, verify=verify,

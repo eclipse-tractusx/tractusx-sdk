@@ -35,8 +35,8 @@ class TestHttpTools(unittest.TestCase):
         self.headers = {"Content-Type": "application/json"}
         self.payload = {"key": "value"}
 
-    @patch("tractusx_sdk.dataspace.tools.http_tools.requests.Session")
-    def test_do_get_success(self, mock_session_class):
+    @patch("requests.get")
+    def test_do_get_without_session_success(self, mock_get):
         """Test a successful GET request."""
         session = Mock()
         mock_response = Mock()
@@ -49,22 +49,35 @@ class TestHttpTools(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"message": "success"})
 
-    @patch("tractusx_sdk.dataspace.tools.http_tools.requests.Session")
-    def test_do_get_failure(self, mock_session_class):
+    @patch("requests.get")
+    def test_do_get_without_session_failure(self, mock_get):
         """Test GET request when server returns an error."""
-        session = Mock()
-        mock_response = Mock()
-        mock_response.status_code = 500
-        mock_response.json.return_value = {"error": "Internal Server Error"}
-        session.get.return_value = mock_response
-        mock_session_class.return_value.__enter__.return_value = session
-
-        response = HttpTools.do_get(self.test_url, session=session)
+        mock_get.return_value = Mock(status_code=500, json=lambda: {"error": "Internal Server Error"})
+        
+        response = HttpTools.do_get(self.test_url)
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.json(), {"error": "Internal Server Error"})
 
-    @patch("requests.Session.post")
-    def test_do_post_success(self, mock_post):
+    @patch("requests.Session.get")
+    def test_do_get_with_session_success(self, mock_get):
+        """Test a successful GET request."""
+        mock_get.return_value = Mock(status_code=200, json=lambda: {"message": "success"})
+        
+        response = HttpTools.do_get_with_session(self.test_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"message": "success"})
+
+    @patch("requests.Session.get")
+    def test_do_get_with_session_failure(self, mock_get):
+        """Test GET request when server returns an error."""
+        mock_get.return_value = Mock(status_code=500, json=lambda: {"error": "Internal Server Error"})
+        
+        response = HttpTools.do_get_with_session(self.test_url)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json(), {"error": "Internal Server Error"})
+
+    @patch("requests.post")
+    def test_do_post_without_session_success(self, mock_post):
         """Test a successful POST request."""
         mock_post.return_value = Mock(status_code=201, json=lambda: {"message": "created"})
         
@@ -72,8 +85,8 @@ class TestHttpTools(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json(), {"message": "created"})
 
-    @patch("requests.Session.post")
-    def test_do_post_failure(self, mock_post):
+    @patch("requests.post")
+    def test_do_post_without_session_failure(self, mock_post):
         """Test POST request with bad request response."""
         mock_post.return_value = Mock(status_code=400, json=lambda: {"error": "Bad Request"})
         
@@ -81,8 +94,26 @@ class TestHttpTools(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {"error": "Bad Request"})
 
-    @patch("requests.Session.put")
-    def test_do_put_success(self, mock_put):
+    @patch("requests.Session.post")
+    def test_do_post_with_session_success(self, mock_post):
+        """Test a successful POST request."""
+        mock_post.return_value = Mock(status_code=201, json=lambda: {"message": "created"})
+        
+        response = HttpTools.do_post_with_session(self.test_url, json=self.payload)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json(), {"message": "created"})
+
+    @patch("requests.Session.post")
+    def test_do_post_with_session_failure(self, mock_post):
+        """Test POST request with bad request response."""
+        mock_post.return_value = Mock(status_code=400, json=lambda: {"error": "Bad Request"})
+        
+        response = HttpTools.do_post_with_session(self.test_url, json=self.payload)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"error": "Bad Request"})
+
+    @patch("requests.put")
+    def test_do_put_without_session_success(self, mock_put):
         """Test a successful PUT request."""
         mock_put.return_value = Mock(status_code=200, json=lambda: {"message": "updated"})
         
@@ -90,8 +121,8 @@ class TestHttpTools(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"message": "updated"})
 
-    @patch("requests.Session.put")
-    def test_do_put_failure(self, mock_put):
+    @patch("requests.put")
+    def test_do_put_without_session_failure(self, mock_put):
         """Test PUT request with bad request response."""
         mock_put.return_value = Mock(status_code=400, json=lambda: {"error": "Bad Request"})
         
@@ -99,20 +130,55 @@ class TestHttpTools(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {"error": "Bad Request"})
 
-    @patch("requests.Session.delete")
-    def test_do_delete_success(self, mock_delete):
+    @patch("requests.Session.put")
+    def test_do_put_with_session_success(self, mock_put):
+        """Test a successful PUT request."""
+        mock_put.return_value = Mock(status_code=200, json=lambda: {"message": "updated"})
+        
+        response = HttpTools.do_put_with_session(self.test_url, json=self.payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"message": "updated"})
+
+    @patch("requests.Session.put")
+    def test_do_put_with_session_failure(self, mock_put):
+        """Test PUT request with bad request response."""
+        mock_put.return_value = Mock(status_code=400, json=lambda: {"error": "Bad Request"})
+        
+        response = HttpTools.do_put_with_session(self.test_url, json=self.payload)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"error": "Bad Request"})
+
+    @patch("requests.delete")
+    def test_do_delete_without_session_success(self, mock_delete):
         """Test a successful DELETE request."""
         mock_delete.return_value = Mock(status_code=204, json=lambda: {"message": "deleted"})
         
         response = HttpTools.do_delete(self.test_url)
         self.assertEqual(response.status_code, 204)
 
-    @patch("requests.Session.delete")
-    def test_do_delete_failure(self, mock_delete):
+    @patch("requests.delete")
+    def test_do_delete_without_session_failure(self, mock_delete):
         """Test DELETE request with not found response."""
         mock_delete.return_value = Mock(status_code=404, json=lambda: {"error": "Not Found"})
         
         response = HttpTools.do_delete(self.test_url)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"error": "Not Found"})
+
+    @patch("requests.Session.delete")
+    def test_do_delete_with_session_success(self, mock_delete):
+        """Test a successful DELETE request."""
+        mock_delete.return_value = Mock(status_code=204, json=lambda: {"message": "deleted"})
+        
+        response = HttpTools.do_delete_with_session(self.test_url)
+        self.assertEqual(response.status_code, 204)
+
+    @patch("requests.Session.delete")
+    def test_do_delete_with_session_failure(self, mock_delete):
+        """Test DELETE request with not found response."""
+        mock_delete.return_value = Mock(status_code=404, json=lambda: {"error": "Not Found"})
+        
+        response = HttpTools.do_delete_with_session(self.test_url)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"error": "Not Found"})
 
