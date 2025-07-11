@@ -22,8 +22,9 @@
 #################################################################################
 
 from keycloak.keycloak_openid import KeycloakOpenID
+from .auth_manager_interface import AuthManagerInterface
 
-class OAuth2Manager:
+class OAuth2Manager(AuthManagerInterface):
     
     """
     Class responsible for managing the IAM IDP Service
@@ -87,3 +88,6 @@ class OAuth2Manager:
         ## Build token header
         headers["Authorization"] = "Bearer " + self.get_token()
         return headers
+    
+    def get_auth_headers(self):
+        return self.get_token()

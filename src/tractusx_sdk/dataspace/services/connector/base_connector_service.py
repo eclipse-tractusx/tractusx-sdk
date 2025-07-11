@@ -26,6 +26,7 @@ from ..service import BaseService
 from ...adapters.connector.adapter_factory import AdapterFactory
 from ...controllers.connector.base_dma_controller import BaseDmaController
 from ...controllers.connector.controller_factory import ControllerFactory
+from ...managers.auth_manager import AuthManagerInterface
 
 
 class BaseConnectorService(BaseService):
@@ -36,14 +37,19 @@ class BaseConnectorService(BaseService):
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str,
                  consumer_service: BaseConnectorConsumerService,
                  provider_service: BaseConnectorProviderService,
-                 headers: dict = None):
+                 headers: dict = None,
+                 auth_header: AuthManagerInterface | None = None):
         self.dataspace_version = dataspace_version
+
+        merged_headers = headers or {}
+        if auth_header is not None:
+            merged_headers.update(auth_header.get_auth_headers())
 
         dma_adapter = AdapterFactory.get_dma_adapter(
             dataspace_version=dataspace_version,
             base_url=base_url,
             dma_path=dma_path,
-            headers=headers
+            headers=merged_headers
         )
 
         self._contract_agreement_controller = ControllerFactory.get_contract_agreement_controller(
