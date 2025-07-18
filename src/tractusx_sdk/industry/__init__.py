@@ -21,6 +21,10 @@
 #################################################################################
 
 # Package-level variables
+<<<<<<< HEAD
 __version__ = '0.3.2'
+=======
+__version__ = '0.3.1'
+>>>>>>> d90d67e (chore: update version to 0.3.1 and add changelog entry for recent refactor)
 __author__ = 'Eclipse Tractus-X Contributors'
 __license__ = "Apache License, Version 2.0"
