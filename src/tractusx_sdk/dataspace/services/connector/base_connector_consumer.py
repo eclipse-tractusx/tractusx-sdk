@@ -573,7 +573,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         dct_type: str,
         policies: list = None,
-        dct_type_key="'http://purl.org/dc/terms/type'.'@id'",
+        dct_type_key=f"'http://purl.org/dc/terms/type'.'{JSONLDKeys.AT_ID}'",
         operator="="
     ) -> tuple[str, str]:
         return self.do_dsp(
@@ -609,7 +609,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         dct_type: str,
         policies: list = None,
-        dct_type_key="'http://purl.org/dc/terms/type'.'@id'",
+        dct_type_key=f"'http://purl.org/dc/terms/type'.'{JSONLDKeys.AT_ID}'",
         operator="=",
         session=None,
         **kwargs,
@@ -654,7 +654,7 @@ class BaseConnectorConsumerService(BaseService):
         body,
         dct_type: str,
         policies: list = None,
-        dct_type_key="'http://purl.org/dc/terms/type'.'@id'",
+        dct_type_key=f"'http://purl.org/dc/terms/type'.'{JSONLDKeys.AT_ID}'",
         operator="=",
         session=None,
         **kwargs,
