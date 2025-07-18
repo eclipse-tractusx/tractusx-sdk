@@ -5,7 +5,15 @@ Further information can be found on the [README.md](README.md) file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.1] - 2025-07-18
+
+### Added
+
+- feat/refactor: policy governance models, constants and update models to use new JSON-LD keys by @matbmoser in #126
+
 ## [0.3.0] - 2025-07-16
+
+### Added
 
 - refactor(http-tools): update HttpTools methods to  avoid overriding by @samuelroywork in https://github.com/eclipse-tractusx/tractusx-sdk/pull/67
 - feat: added dependencies: Fixed conflicts in dependencies + session management by @matbmoser in https://github.com/eclipse-tractusx/tractusx-sdk/pull/124

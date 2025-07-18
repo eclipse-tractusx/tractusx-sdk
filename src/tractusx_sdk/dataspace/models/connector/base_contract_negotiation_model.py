@@ -26,7 +26,7 @@ from pydantic import Field
 
 from .base_policy_model import BasePolicyModel
 from ..model import BaseModel
-
+from ...constants import JSONLDKeys
 
 class BaseContractNegotiationModel(BaseModel, ABC):
     """
@@ -67,8 +67,8 @@ class BaseContractNegotiationModel(BaseModel, ABC):
         def offer_policy_from_policy_model(self, policy_model: BasePolicyModel):
             # Remove unnecessary fields from a policy model's policy data
             policy_data = policy_model.to_data()["policy"]
-            policy_data.pop("@id", None)
-            policy_data.pop("@type", None)
+            policy_data.pop(JSONLDKeys.AT_ID, None)
+            policy_data.pop(JSONLDKeys.AT_TYPE, None)
 
             return self.offer_policy(policy_data)
 

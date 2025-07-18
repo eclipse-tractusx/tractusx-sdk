@@ -35,9 +35,9 @@ class FileSystemConnectionManager(MemoryConnectionManager):
     persist_interval: int
     _last_modified_time: int
     _stop_event: threading.Event
-    
-    def __init__(self, path: str = "/data/connection_cache.json", persist_interval: int = 5):
-        super().__init__()
+
+    def __init__(self, path: str = "/data/connection_cache.json", persist_interval: int = 5, provider_id_key: str = "providerId", edrs_key: str = "edrs"):
+        super().__init__(provider_id_key=provider_id_key, edrs_key=edrs_key)
         self.file_path = path
         self.lock = FileLock(f"{self.file_path}.lock")
         self.persist_interval = persist_interval
