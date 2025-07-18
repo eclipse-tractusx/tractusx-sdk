@@ -27,7 +27,7 @@ from ...controllers.connector.base_dma_controller import BaseDmaController
 from ...controllers.connector.controller_factory import ControllerType, ControllerFactory
 from ...models.connector.model_factory import ModelFactory
 import logging
-
+from ...constants import JSONLDKeys, ODRLTypes
 
 class BaseConnectorProviderService(BaseService):
     _asset_controller: BaseDmaController
@@ -108,7 +108,7 @@ class BaseConnectorProviderService(BaseService):
         }
 
         data_address = {
-            "@type": "DataAddress",
+            JSONLDKeys.AT_TYPE: "DataAddress",
             "type": "HttpData",
             "baseUrl": base_url
         }
@@ -122,7 +122,7 @@ class BaseConnectorProviderService(BaseService):
 
         properties: dict = {
             "dct:type": {
-                "@id": dct_type
+                JSONLDKeys.AT_ID: dct_type
             }
         }
 
@@ -131,7 +131,7 @@ class BaseConnectorProviderService(BaseService):
 
         if semantic_id is not None:
             context["aas-semantics"] = "https://admin-shell.io/aas/3/0/HasSemantics/"
-            properties["aas-semantics:semanticId"] = {"@id": semantic_id}
+            properties["aas-semantics:semanticId"] = {JSONLDKeys.AT_ID: semantic_id}
 
         asset = ModelFactory.get_asset_model(
             connector_version=self.dataspace_version,
@@ -169,9 +169,9 @@ class BaseConnectorProviderService(BaseService):
 
         asset_selector = [
             {
-                "operandLeft": "https://w3id.org/edc/v0.0.1/ns/id",
-                "operator": "=",
-                "operandRight": asset_id
+                ODRLTypes.OPERAND_LEFT: "https://w3id.org/edc/v0.0.1/ns/id",
+                ODRLTypes.OPERATOR: "=",
+                ODRLTypes.OPERAND_RIGHT: asset_id
             }
         ]
 

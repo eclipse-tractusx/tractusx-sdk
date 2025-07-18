@@ -24,7 +24,7 @@ from json import dumps as jdumps
 from pydantic import Field
 
 from ..base_transfer_process_model import BaseTransferProcessModel
-
+from ....constants import JSONLDKeys
 
 class TransferProcessModel(BaseTransferProcessModel):
     TYPE: str = Field(default="TransferRequest", frozen=True)
@@ -39,8 +39,8 @@ class TransferProcessModel(BaseTransferProcessModel):
         """
 
         data = {
-            "@context": self.context,
-            "@type": self.TYPE,
+            JSONLDKeys.AT_CONTEXT: self.context,
+            JSONLDKeys.AT_TYPE: self.TYPE,
             "counterPartyAddress": self.counter_party_address,
             "protocol": self.PROTOCOL,
             "contractId": self.contract_id,

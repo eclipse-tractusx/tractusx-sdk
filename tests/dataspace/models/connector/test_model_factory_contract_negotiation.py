@@ -29,7 +29,7 @@ from pydantic import ValidationError
 from tractusx_sdk.dataspace.models.connector.base_contract_negotiation_model import BaseContractNegotiationModel
 from tractusx_sdk.dataspace.models.connector.base_policy_model import BasePolicyModel
 from tractusx_sdk.dataspace.models.connector.model_factory import ModelFactory
-
+from tractusx_sdk.dataspace.constants import JSONLDKeys, ODRLTypes
 
 class TestModelFactoryContractNegotiation(unittest.TestCase):
     def setUp(self):
@@ -40,15 +40,15 @@ class TestModelFactoryContractNegotiation(unittest.TestCase):
         self.offer_id = "offer-id"
         self.provider_id = "provider-id"
         self.offer_policy_data = {
-            "@context": { "key": "value" },
-            "permission": "permission-obj",
-            "prohibition": "prohibition-obj",
-            "obligation": "obligation-obj",
+            JSONLDKeys.AT_CONTEXT: { "key": "value" },
+            ODRLTypes.PERMISSION: "permission-obj",
+            ODRLTypes.PROHIBITION: "prohibition-obj",
+            ODRLTypes.OBLIGATION: "obligation-obj",
         }
         self.policy_data = {
             "policy": {
-                "@id": "policy-id",
-                "@type": "policy-type",
+                JSONLDKeys.AT_ID: "policy-id",
+                JSONLDKeys.AT_TYPE: "policy-type",
                 **self.offer_policy_data,
             }
         }
@@ -105,8 +105,8 @@ class TestModelFactoryContractNegotiation(unittest.TestCase):
         another_offer_policy_data = { "key": "value" }
         another_policy_data = {
             "policy": {
-                "@id": "policy-id2",
-                "@type": "policy-type2",
+                JSONLDKeys.AT_ID: "policy-id2",
+                JSONLDKeys.AT_TYPE: "policy-type2",
                 **another_offer_policy_data,
             }
         }
