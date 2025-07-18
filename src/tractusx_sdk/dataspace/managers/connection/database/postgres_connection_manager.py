@@ -27,35 +27,38 @@ from sqlmodel import Column
 from ..base_connection_manager import BaseConnectionManager
 from sqlalchemy.engine import Engine as E
 from sqlalchemy.orm import Session as S
-
-# SQLModel model for EDRConnection
-class EDRConnection(SQLModel, table=True):
-    __tablename__ = "edr_connections"
-
-    transfer_id: str = Field(primary_key=True)
-    counter_party_id: str
-    counter_party_address: str
-    query_checksum: str
-    policy_checksum: str
-    edr_data: dict = Field(sa_column=Column(JSON))
-
+from ....constants import JSONLDKeys
 
 class PostgresConnectionManager(BaseConnectionManager):
-    def __init__(self, engine: E | S):
+    def __init__(self, engine: E | S, provider_id_key: str = "providerId", table_name: str = "edr_connections"):
         self.engine = engine
-        EDRConnection.metadata.create_all(engine)
-        
+        self.provider_id_key = provider_id_key
+        self.table_name = table_name
+
+        # Create a dynamic EDRConnection class for the given table name
+        class DynamicEDRConnection(SQLModel, table=True):
+            __tablename__ = table_name
+            transfer_id: str = Field(primary_key=True)
+            counter_party_id: str
+            counter_party_address: str
+            query_checksum: str
+            policy_checksum: str
+            edr_data: dict = Field(sa_column=Column(JSON))
+
+        self.EDRConnection = DynamicEDRConnection
+        DynamicEDRConnection.metadata.create_all(engine)
+
     def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry: dict) -> str | None:
-        transfer_process_id: str = connection_entry.get(self.TRANSFER_ID_KEY, None)
+        transfer_process_id: str = connection_entry.get(JSONLDKeys.AT_ID, None)
         if not transfer_process_id:
             raise Exception("[Postgres Connection Manager] The transfer id key was not found or is empty! Not able to do the contract negotiation!")
 
         saved_edr = connection_entry.copy()
-        saved_edr.pop("@type", None)
-        saved_edr.pop("providerId", None)
-        saved_edr.pop("@context", None)
+        saved_edr.pop(JSONLDKeys.AT_TYPE, None)
+        saved_edr.pop(self.provider_id_key, None)
+        saved_edr.pop(JSONLDKeys.AT_CONTEXT, None)
 
-        new_entry = EDRConnection(
+        new_entry = self.EDRConnection(
             counter_party_id=counter_party_id,
             counter_party_address=counter_party_address,
             query_checksum=query_checksum,
@@ -65,40 +68,40 @@ class PostgresConnectionManager(BaseConnectionManager):
         )
 
         with Session(self.engine) as session:
-            if not session.get(EDRConnection, transfer_process_id):
+            if not session.get(self.EDRConnection, transfer_process_id):
                 session.add(new_entry)
                 session.commit()
                 print("[Postgres Connection Manager] A new EDR entry was saved in the database.")
         return transfer_process_id
 
     def get_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
-        stmt = select(EDRConnection).where(
-            EDRConnection.counter_party_id == counter_party_id,
-            EDRConnection.counter_party_address == counter_party_address,
-            EDRConnection.query_checksum == query_checksum,
-            EDRConnection.policy_checksum == policy_checksum
+        stmt = select(self.EDRConnection).where(
+            self.EDRConnection.counter_party_id == counter_party_id,
+            self.EDRConnection.counter_party_address == counter_party_address,
+            self.EDRConnection.query_checksum == query_checksum,
+            self.EDRConnection.policy_checksum == policy_checksum
         )
         with Session(self.engine) as session:
             result = session.exec(stmt).first()
         return result.edr_data if result else {}
 
     def get_connection_transfer_id(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
-        stmt = select(EDRConnection.transfer_id).where(
-            EDRConnection.counter_party_id == counter_party_id,
-            EDRConnection.counter_party_address == counter_party_address,
-            EDRConnection.query_checksum == query_checksum,
-            EDRConnection.policy_checksum == policy_checksum
+        stmt = select(self.EDRConnection.transfer_id).where(
+            self.EDRConnection.counter_party_id == counter_party_id,
+            self.EDRConnection.counter_party_address == counter_party_address,
+            self.EDRConnection.query_checksum == query_checksum,
+            self.EDRConnection.policy_checksum == policy_checksum
         )
         with Session(self.engine) as session:
             result = session.exec(stmt).first()
         return result if result else None
 
     def delete_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str) -> bool:
-        stmt = select(EDRConnection).where(
-            EDRConnection.counter_party_id == counter_party_id,
-            EDRConnection.counter_party_address == counter_party_address,
-            EDRConnection.query_checksum == query_checksum,
-            EDRConnection.policy_checksum == policy_checksum
+        stmt = select(self.EDRConnection).where(
+            self.EDRConnection.counter_party_id == counter_party_id,
+            self.EDRConnection.counter_party_address == counter_party_address,
+            self.EDRConnection.query_checksum == query_checksum,
+            self.EDRConnection.policy_checksum == policy_checksum
         )
         with Session(self.engine) as session:
             result = session.exec(stmt).first()

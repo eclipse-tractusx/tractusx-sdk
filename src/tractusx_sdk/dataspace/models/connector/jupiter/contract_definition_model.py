@@ -24,7 +24,7 @@ from json import dumps as jdumps
 from pydantic import Field
 
 from ..base_contract_definition_model import BaseContractDefinitionModel
-
+from ....constants import JSONLDKeys
 
 class ContractDefinitionModel(BaseContractDefinitionModel):
     TYPE: str = Field(default="ContractDefinition", frozen=True)
@@ -38,9 +38,9 @@ class ContractDefinitionModel(BaseContractDefinitionModel):
         """
 
         data = {
-            "@context": self.context,
-            "@type": self.TYPE,
-            "@id": self.oid,
+            JSONLDKeys.AT_CONTEXT: self.context,
+            JSONLDKeys.AT_TYPE: self.TYPE,
+            JSONLDKeys.AT_ID: self.oid,
             "accessPolicyId": self.access_policy_id,
             "contractPolicyId": self.contract_policy_id,
             "assetsSelector": self.assets_selector

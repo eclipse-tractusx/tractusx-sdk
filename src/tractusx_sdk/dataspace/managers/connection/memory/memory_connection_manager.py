@@ -21,13 +21,16 @@
 #################################################################################
 import copy
 from ..base_connection_manager import BaseConnectionManager
+from ....constants import JSONLDKeys
 
 class MemoryConnectionManager(BaseConnectionManager):
-    
-    def __init__(self):
+
+    def __init__(self, provider_id_key: str = "providerId", edrs_key: str = "edrs"):
         """
         Initializes the MemoryConnectionManager with the given parameters.
         """
+        self.provider_id_key = provider_id_key
+        self.edrs_key = edrs_key
         self.open_connections=dict()
         
     def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry:dict) -> str | None:
@@ -59,17 +62,17 @@ class MemoryConnectionManager(BaseConnectionManager):
             cached_details[policy_checksum] = {}
 
         saved_edr = copy.deepcopy(connection_entry)
-        del saved_edr["@type"], saved_edr["providerId"], saved_edr["@context"]
-        
+        del saved_edr[JSONLDKeys.AT_TYPE], saved_edr[self.provider_id_key], saved_edr[JSONLDKeys.AT_CONTEXT]
+
         ## Store edr in cache
         cached_details[policy_checksum] = saved_edr
         
-        if "edrs" not in self.open_connections:
-            self.open_connections["edrs"] = 0
+        if self.edrs_key not in self.open_connections:
+            self.open_connections[self.edrs_key] = 0
 
-        self.open_connections["edrs"] += 1
+        self.open_connections[self.edrs_key] += 1
         print(
-            f"[Memory Connection Manager] A new EDR entry was saved in the memory cache! [{self.open_connections['edrs']}] EDRs Available")
+            f"[Memory Connection Manager] A new EDR entry was saved in the memory cache! [{self.open_connections[self.edrs_key]}] EDRs Available")
         return transfer_process_id
     
     def get_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
@@ -92,8 +95,8 @@ class MemoryConnectionManager(BaseConnectionManager):
             cached_details = self.open_connections[counter_party_id][counter_party_address][query_checksum]
             if policy_checksum in cached_details:
                 del cached_details[policy_checksum]
-                if "edrs" in self.open_connections:
-                    self.open_connections["edrs"] -= 1
+                if self.edrs_key in self.open_connections:
+                    self.open_connections[self.edrs_key] -= 1
                 print(f"[Memory Connection Manager] Deleted EDR entry for policy checksum '{policy_checksum}'.")
                 return True
             return False
