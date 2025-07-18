@@ -26,7 +26,7 @@ from pydantic import Field
 
 from .base_policy_model import BasePolicyModel
 from ..model import BaseModel
-from constants import JSONLDKeys
+from ...constants import JSONLDKeys
 
 class BaseContractNegotiationModel(BaseModel, ABC):
     """
