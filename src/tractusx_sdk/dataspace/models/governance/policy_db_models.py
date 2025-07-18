@@ -1,7 +1,10 @@
 from enum import Enum
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
+from ...constants import ODRLTypes
 
+RULE_ID_KEY:str = "rule.id"
+POLICY_ID_KEY:str = "policy.id"
 
 class OperatorEnum(str, Enum):
     eq = "eq"
@@ -26,9 +29,9 @@ class PolicyType(str, Enum):
 
 
 class RuleType(str, Enum):
-    permission = "permission"
-    prohibition = "prohibition"
-    obligation = "obligation"
+    permission = ODRLTypes.PERMISSION
+    prohibition = ODRLTypes.PROHIBITION
+    obligation = ODRLTypes.OBLIGATION
 
 
 class Policy(SQLModel, table=True):
@@ -43,7 +46,7 @@ class Policy(SQLModel, table=True):
 class Rule(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     type: RuleType  # Permission, Prohibition, Obligation
-    policy_id: int = Field(foreign_key="policy.id")
+    policy_id: int = Field(foreign_key=POLICY_ID_KEY)
     constraint_hash: Optional[str] = Field(index=True)
     action: str  # e.g., odrl:use
 
@@ -54,7 +57,7 @@ class Rule(SQLModel, table=True):
 
 class AtomicConstraint(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    rule_id: int = Field(foreign_key="rule.id")
+    rule_id: int = Field(foreign_key=RULE_ID_KEY)
     left_operand: str
     operator: OperatorEnum
     right_operand: str
@@ -64,7 +67,7 @@ class AtomicConstraint(SQLModel, table=True):
 
 class Duty(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    rule_id: int = Field(foreign_key="rule.id")
-    consequence_rule_id: Optional[int] = Field(default=None, foreign_key="rule.id")
+    rule_id: int = Field(foreign_key=RULE_ID_KEY)
+    consequence_rule_id: Optional[int] = Field(default=None, foreign_key=RULE_ID_KEY)
 
     rule: Optional[Rule] = Relationship(back_populates="duties")
