@@ -26,17 +26,7 @@ class JSONLDKeys:
     AT_CONTEXT = "@context"
 class DCATKeys:
     DATASET = "dcat:dataset"
-class ODRLKeys:
-    POLICY = "odrl:hasPolicy"
-    LEFT_OPERAND = "odrl:leftOperand"
-    OPERATOR = "odrl:operator"
-    RIGHT_OPERAND = "odrl:rightOperand"
-    ODRL_AND = "odrl:and"
-    ODRL_OR = "odrl:or"
-    PERMISSION: str = "odrl:permission"
-    PROHIBITION: str = "odrl:prohibition"
-    OBLIGATION: str = "odrl:obligation"
-
+    
 class ODRLTypes:
     PERMISSION: str = "permission"
     PROHIBITION: str = "prohibition"
@@ -45,3 +35,13 @@ class ODRLTypes:
     OPERATOR: str = "operator"
     OPERAND_RIGHT: str = "operandRight"
     EQUALS: str = "="
+class ODRLKeys:
+    POLICY = "odrl:hasPolicy"
+    LEFT_OPERAND = "odrl:leftOperand"
+    OPERATOR = f"odrl:{ODRLTypes.OPERATOR}"
+    RIGHT_OPERAND = "odrl:rightOperand"
+    ODRL_AND = "odrl:and"
+    ODRL_OR = "odrl:or"
+    PERMISSION: str = f"odrl:{ODRLTypes.PERMISSION}"
+    PROHIBITION: str = f"odrl:{ODRLTypes.PROHIBITION}"
+    OBLIGATION: str = f"odrl:{ODRLTypes.OBLIGATION}"
