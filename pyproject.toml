@@ -4,11 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "tractusx_sdk"
-<<<<<<< HEAD
 version = "0.3.2"
-=======
-version = "0.3.1"
->>>>>>> d90d67e (chore: update version to 0.3.1 and add changelog entry for recent refactor)
 description = "Eclipse Tractus-X Software Development KIT - The Dataspace & Industry Foundation Middleware"
 license = { text = "Apache-2.0" }
 readme = "README.md"
