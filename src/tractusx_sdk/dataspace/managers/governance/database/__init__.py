@@ -21,7 +21,9 @@
 #################################################################################
 
 """
-This module contains utility functions and classes for working with the Eclipse Tractus-X Software Development KIT.
+Database Governance Manager.
+
+This module provides persistent policy validation and management using database storage.
 
 :copyright: (c) 2025 Eclipse Foundation
 :license: Apache License, Version 2.0, see LICENSE for more details.
@@ -31,6 +33,5 @@ This module contains utility functions and classes for working with the Eclipse 
 __author__ = 'Eclipse Tractus-X Contributors'
 __license__ = "Apache License, Version 2.0"
 
-from .auth_manager import AuthManager
-from .oauth2_manager import OAuth2Manager
-from . import governance
+from .postgres_governance_manager import PostgresGovernanceManager
+from .postgres_memory_governance_manager import PostgresMemoryGovernanceManager
