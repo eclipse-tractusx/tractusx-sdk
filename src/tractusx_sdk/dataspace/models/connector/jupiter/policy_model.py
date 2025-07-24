@@ -24,7 +24,7 @@ from json import dumps as jdumps
 from pydantic import Field
 
 from ..base_policy_model import BasePolicyModel
-
+from ....constants import JSONLDKeys, ODRLTypes
 
 class PolicyModel(BasePolicyModel):
     TYPE: str = Field(default="PolicyDefinition", frozen=True)
@@ -40,15 +40,15 @@ class PolicyModel(BasePolicyModel):
         """
 
         data = {
-            "@context": self.context,
-            "@type": self.TYPE,
-            "@id": self.oid,
+            JSONLDKeys.AT_CONTEXT: self.context,
+            JSONLDKeys.AT_TYPE: self.TYPE,
+            JSONLDKeys.AT_ID: self.oid,
             "policy": {
-                "@context": self.ODRL_CONTEXT,
-                "@type": self.ODRL_TYPE,
-                "permission": self.permissions,
-                "prohibition": self.prohibitions,
-                "obligation": self.obligations
+                JSONLDKeys.AT_CONTEXT: self.ODRL_CONTEXT,
+                JSONLDKeys.AT_TYPE: self.ODRL_TYPE,
+                ODRLTypes.PERMISSION: self.permissions,
+                ODRLTypes.PROHIBITION: self.prohibitions,
+                ODRLTypes.OBLIGATION: self.obligations
             }
         }
 

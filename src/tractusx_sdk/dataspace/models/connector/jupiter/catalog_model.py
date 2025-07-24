@@ -24,7 +24,7 @@ from json import dumps as jdumps
 from pydantic import Field
 
 from ..base_catalog_model import BaseCatalogModel
-
+from ....constants import JSONLDKeys
 
 class CatalogModel(BaseCatalogModel):
     TYPE: str = Field(default="CatalogRequest", frozen=True)
@@ -39,8 +39,8 @@ class CatalogModel(BaseCatalogModel):
         """
 
         data = {
-            "@context": self.context,
-            "@type": self.TYPE,
+            JSONLDKeys.AT_CONTEXT: self.context,
+            JSONLDKeys.AT_TYPE: self.TYPE,
             "counterPartyAddress": self.counter_party_address,
             "counterPartyId": self.counter_party_id,
             "protocol": self.PROTOCOL,

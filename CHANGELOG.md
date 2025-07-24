@@ -19,6 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.3.0] - 2025-07-16
 
+### Added
+
 - refactor(http-tools): update HttpTools methods to  avoid overriding by @samuelroywork in https://github.com/eclipse-tractusx/tractusx-sdk/pull/67
 - feat: added dependencies: Fixed conflicts in dependencies + session management by @matbmoser in https://github.com/eclipse-tractusx/tractusx-sdk/pull/124
 - feat: implement AuthManagerInterface and update authentication handling in managers by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/122

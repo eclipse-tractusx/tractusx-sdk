@@ -24,7 +24,7 @@ from json import dumps as jdumps
 from pydantic import Field
 
 from ..base_queryspec_model import BaseQuerySpecModel
-
+from ....constants import JSONLDKeys
 
 class QuerySpecModel(BaseQuerySpecModel):
     TYPE: str = Field(default="QuerySpec", frozen=True)
@@ -38,8 +38,8 @@ class QuerySpecModel(BaseQuerySpecModel):
         """
 
         data = {
-            "@context": self.context,
-            "@type": self.TYPE,
+            JSONLDKeys.AT_CONTEXT: self.context,
+            JSONLDKeys.AT_TYPE: self.TYPE,
             "offset": self.offset,
             "limit": self.limit,
             "sortOrder": self.sort_order,
