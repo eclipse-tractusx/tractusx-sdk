@@ -26,7 +26,6 @@ from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 from enum import Enum
 import hashlib
-from sqlalchemy import JSON
 
 class PolicyUsageRole(str, Enum):
     PROVIDER = "provider"
