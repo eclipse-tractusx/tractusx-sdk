@@ -20,30 +20,17 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from json import dumps as jdumps
-from pydantic import Field
+"""
+File System Governance Manager.
 
-from ..base_contract_definition_model import BaseContractDefinitionModel
-from ....constants import JSONLDKeys
+This module provides persistent policy validation and management using JSON file storage.
 
-class ContractDefinitionModel(BaseContractDefinitionModel):
-    TYPE: str = Field(default="ContractDefinition", frozen=True)
+:copyright: (c) 2025 Eclipse Foundation
+:license: Apache License, Version 2.0, see LICENSE for more details.
+"""
 
-    def to_data(self):
-        """
-        Converts the model to a JSON representing the data that will
-        be sent to a jupiter connector when using a contract definition model.
+# Package-level variables
+__author__ = 'Eclipse Tractus-X Contributors'
+__license__ = "Apache License, Version 2.0"
 
-        :return: a JSON representation of the model
-        """
-
-        data = {
-            JSONLDKeys.AT_CONTEXT: self.context,
-            JSONLDKeys.AT_TYPE: self.TYPE,
-            JSONLDKeys.AT_ID: self.oid,
-            "accessPolicyId": self.access_policy_id,
-            "contractPolicyId": self.contract_policy_id,
-            "assetsSelector": self.assets_selector
-        }
-
-        return jdumps(data)
+from .file_system_governance_manager import FileSystemGovernanceManager
