@@ -20,30 +20,42 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from json import dumps as jdumps
-from pydantic import Field
+from .policy_db_models import (
+    Policy,
+    PolicyUsage,
+    PolicyUsageRole,
+    Rule,
+    Action,
+    ActionType,
+    AtomicConstraint,
+    Constraint,
+    ConstraintAtomicLink,
+    Permission,
+    Prohibition,
+    Duty,
+    LeftOperand,
+    RightOperand,
+    FilterExpression,
+    OperatorType,
+    LogicType,
+)
 
-from ..base_contract_definition_model import BaseContractDefinitionModel
-from ....constants import JSONLDKeys
-
-class ContractDefinitionModel(BaseContractDefinitionModel):
-    TYPE: str = Field(default="ContractDefinition", frozen=True)
-
-    def to_data(self):
-        """
-        Converts the model to a JSON representing the data that will
-        be sent to a jupiter connector when using a contract definition model.
-
-        :return: a JSON representation of the model
-        """
-
-        data = {
-            JSONLDKeys.AT_CONTEXT: self.context,
-            JSONLDKeys.AT_TYPE: self.TYPE,
-            JSONLDKeys.AT_ID: self.oid,
-            "accessPolicyId": self.access_policy_id,
-            "contractPolicyId": self.contract_policy_id,
-            "assetsSelector": self.assets_selector
-        }
-
-        return jdumps(data)
+__all__ = [
+    "Policy",
+    "PolicyUsage",
+    "PolicyUsageRole",
+    "Rule",
+    "Action",
+    "ActionType",
+    "AtomicConstraint",
+    "Constraint",
+    "ConstraintAtomicLink",
+    "Permission",
+    "Prohibition",
+    "Duty",
+    "LeftOperand",
+    "RightOperand",
+    "FilterExpression",
+    "OperatorType",
+    "LogicType",
+]

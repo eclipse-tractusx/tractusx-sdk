@@ -38,7 +38,7 @@ from ...models.connector.base_catalog_model import BaseCatalogModel
 from ...models.connector.base_contract_negotiation_model import BaseContractNegotiationModel
 from ...models.connector.base_queryspec_model import BaseQuerySpecModel
 from ...tools import HttpTools, DspTools, op
-
+from ...constants import JSONLDKeys, ODRLTypes
 
 class BaseConnectorConsumerService(BaseService):
     _catalog_controller: BaseDmaController
@@ -205,10 +205,10 @@ class BaseConnectorConsumerService(BaseService):
 
     def get_query_spec(self, filter_expression: list[dict]) -> dict:
         return {
-            "@context": {
+            JSONLDKeys.AT_CONTEXT: {
                 "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
             },
-            "@type": "QuerySpec",
+            JSONLDKeys.AT_TYPE: "QuerySpec",
             "filterExpression": filter_expression
         }
 
@@ -248,7 +248,7 @@ class BaseConnectorConsumerService(BaseService):
         Returns:
         dict: The EDR negotiation request in the form of a dictionary.
         """
-        offer_id = policy.get("@id", None)
+        offer_id = policy.get(JSONLDKeys.AT_ID, None)
         if (offer_id is None):
             raise ValueError("[EDC Service] Policy offer id is not available!")
 
@@ -308,10 +308,10 @@ class BaseConnectorConsumerService(BaseService):
 
         content: dict = response.json()
         ## Check if the id was returned in the response
-        if ("@id" not in content):
+        if (JSONLDKeys.AT_ID not in content):
             return None
 
-        return content.get("@id", None)
+        return content.get(JSONLDKeys.AT_ID, None)
 
     def get_edr_negotiation_filter(self, negotiation_id: str) -> BaseQuerySpecModel:
 
@@ -322,11 +322,11 @@ class BaseConnectorConsumerService(BaseService):
         )
 
     def get_catalogs_by_dct_type(self, counter_party_id: str, edcs: list, dct_type: str,
-                                 dct_type_key: str = "'http://purl.org/dc/terms/type'.'@id'", timeout: int = None):
+                                 dct_type_key: str = f"'http://purl.org/dc/terms/type'.'{JSONLDKeys.AT_ID}'", timeout: int = None):
         return self.get_catalogs_with_filter(counter_party_id=counter_party_id, edcs=edcs, key=dct_type_key,
-                                             value=dct_type, operator="=", timeout=timeout)
+                                             value=dct_type, operator=ODRLTypes.EQUALS, timeout=timeout)
 
-    def get_catalogs_with_filter(self, counter_party_id: str, edcs: list, key: str, value: str, operator: str = "=",
+    def get_catalogs_with_filter(self, counter_party_id: str, edcs: list, key: str, value: str, operator: str = ODRLTypes.EQUALS,
                                  timeout: int = None):
 
         ## Where the catalogs get stored
@@ -355,7 +355,7 @@ class BaseConnectorConsumerService(BaseService):
         return catalogs
 
     def get_catalog_by_dct_type(self, counter_party_id: str, counter_party_address: str, dct_type: str,
-                                dct_type_key="'http://purl.org/dc/terms/type'.'@id'", operator="=", timeout=None):
+                                dct_type_key=f"'http://purl.org/dc/terms/type'.'{JSONLDKeys.AT_ID}'", operator=ODRLTypes.EQUALS, timeout=None):
         return self.get_catalog_with_filter(counter_party_id=counter_party_id,
                                             counter_party_address=counter_party_address, filter_expression=[
                 self.get_filter_expression(key=dct_type_key, value=dct_type, operator=operator)],
@@ -574,7 +574,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         dct_type: str,
         policies: list = None,
-        dct_type_key="'http://purl.org/dc/terms/type'.'@id'",
+        dct_type_key=f"'http://purl.org/dc/terms/type'.'{JSONLDKeys.AT_ID}'",
         operator="="
     ) -> tuple[str, str]:
         """
@@ -672,7 +672,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         dct_type: str,
         policies: list = None,
-        dct_type_key="'http://purl.org/dc/terms/type'.'@id'",
+        dct_type_key=f"'http://purl.org/dc/terms/type'.'{JSONLDKeys.AT_ID}'",
         operator="=",
         session=None,
         **kwargs,
@@ -792,7 +792,7 @@ class BaseConnectorConsumerService(BaseService):
         body,
         dct_type: str,
         policies: list = None,
-        dct_type_key="'http://purl.org/dc/terms/type'.'@id'",
+        dct_type_key=f"'http://purl.org/dc/terms/type'.'{JSONLDKeys.AT_ID}'",
         operator="=",
         session=None,
         **kwargs,

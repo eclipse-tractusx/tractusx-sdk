@@ -25,7 +25,7 @@ import unittest
 from tractusx_sdk.dataspace.services.connector.service_factory import ServiceFactory
 from unittest import mock
 import tractusx_sdk.dataspace.services.connector.base_connector_consumer as bcc
-
+from tractusx_sdk.dataspace.constants import JSONLDKeys, ODRLTypes
 class TestBaseConsumerConnectorService(unittest.TestCase):
     def setUp(self):
         self.dataspace_version = "jupiter"
@@ -55,8 +55,8 @@ class TestBaseConsumerConnectorService(unittest.TestCase):
                 counter_party_id="<provider-bpn>",
                 filter_expression=[
                     self.service.get_filter_expression(
-                        key="'http://purl.org/dc/terms/type'.'@id'",
-                        operator="=",
+                        key=f"'http://purl.org/dc/terms/type'.'{JSONLDKeys.AT_ID}'",
+                        operator=ODRLTypes.EQUALS,
                         value="https://w3id.org/catenax/taxonomy#DigitalTwinRegistry"
                     )
                 ],
@@ -145,11 +145,11 @@ class TestBaseConsumerConnectorService(unittest.TestCase):
     def test_get_filter_expression(self):
         service, *_ = self.create_mock_service()
         expr = service.get_filter_expression("foo", "bar", operator="!=")
-        self.assertEqual(expr, {"operandLeft": "foo", "operator": "!=", "operandRight": "bar"})
+        self.assertEqual(expr, {ODRLTypes.OPERAND_LEFT: "foo", ODRLTypes.OPERATOR: "!=", ODRLTypes.OPERAND_RIGHT: "bar"})
 
     def test_get_query_spec(self):
         service, *_ = self.create_mock_service()
-        filter_expr = [{"operandLeft": "foo", "operator": "=", "operandRight": "bar"}]
+        filter_expr = [{ODRLTypes.OPERAND_LEFT: "foo", ODRLTypes.OPERATOR: "=", ODRLTypes.OPERAND_RIGHT: "bar"}]
         spec = service.get_query_spec(filter_expr)
         self.assertEqual(spec["@type"], "QuerySpec")
         self.assertEqual(spec["filterExpression"], filter_expr)
@@ -158,7 +158,7 @@ class TestBaseConsumerConnectorService(unittest.TestCase):
         service, *_ = self.create_mock_service()
         mock_catalog_model = mock.Mock()
         service.get_catalog_request = mock.Mock(return_value=mock_catalog_model)
-        filter_expr = [{"operandLeft": "foo", "operator": "=", "operandRight": "bar"}]
+        filter_expr = [{ODRLTypes.OPERAND_LEFT: "foo", ODRLTypes.OPERATOR: "=", ODRLTypes.OPERAND_RIGHT: "bar"}]
         result = service.get_catalog_request_with_filter("bpn", "url", filter_expr)
         self.assertEqual(result.queryspec["filterExpression"], filter_expr)
 
@@ -250,13 +250,13 @@ class TestBaseConsumerConnectorService(unittest.TestCase):
     def test_get_catalog_with_filter_calls_get_catalog(self):
         service, *_ = self.create_mock_service()
         service.get_catalog = mock.Mock(return_value={"catalog": "data"})
-        filter_expr = [{"operandLeft": "foo", "operator": "=", "operandRight": "bar"}]
+        filter_expr = [{ODRLTypes.OPERAND_LEFT: "foo", ODRLTypes.OPERATOR: "=", ODRLTypes.OPERAND_RIGHT: "bar"}]
         result = service.get_catalog_with_filter("bpn", "url", filter_expr)
         self.assertEqual(result, {"catalog": "data"})
 
     def test_get_query_spec_structure(self):
         service, *_ = self.create_mock_service()
-        filter_expr = [{"operandLeft": "foo", "operator": "=", "operandRight": "bar"}]
+        filter_expr = [{ODRLTypes.OPERAND_LEFT: "foo", ODRLTypes.OPERATOR: "=", ODRLTypes.OPERAND_RIGHT: "bar"}]
         spec = service.get_query_spec(filter_expr)
         self.assertIn("@context", spec)
         self.assertIn("@type", spec)
@@ -265,7 +265,7 @@ class TestBaseConsumerConnectorService(unittest.TestCase):
     def test_get_filter_expression_default_operator(self):
         service, *_ = self.create_mock_service()
         expr = service.get_filter_expression("foo", "bar")
-        self.assertEqual(expr["operator"], "=")
+        self.assertEqual(expr[ODRLTypes.OPERATOR], "=")
 
     def test_get_data_plane_headers_accept(self):
         service, *_ = self.create_mock_service()
