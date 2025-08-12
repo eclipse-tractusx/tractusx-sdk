@@ -20,30 +20,31 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from json import dumps as jdumps
-from pydantic import Field
+import hashlib
+import json
 
-from ..base_contract_definition_model import BaseContractDefinitionModel
-from ....constants import JSONLDKeys
+from ..constants import DCATKeys, ODRLKeys, JSONLDKeys
 
-class ContractDefinitionModel(BaseContractDefinitionModel):
-    TYPE: str = Field(default="ContractDefinition", frozen=True)
+def extract_odrl_policy(offer: dict) -> dict:
+    return offer.get(DCATKeys.DATASET, {}).get(ODRLKeys.POLICY, {})
 
-    def to_data(self):
-        """
-        Converts the model to a JSON representing the data that will
-        be sent to a jupiter connector when using a contract definition model.
+def hash_constraints(constraints):
+    canon = extract_constraints(constraints)
+    canon_str = json.dumps(canon, separators=(",", ":"))
+    return hashlib.sha256(canon_str.encode('utf-8')).hexdigest()
 
-        :return: a JSON representation of the model
-        """
+def extract_constraints(constraints):
+    if isinstance(constraints, dict):
+        constraints = constraints.get(ODRLKeys.ODRL_AND) or constraints.get(ODRLKeys.ODRL_OR) or []
 
-        data = {
-            JSONLDKeys.AT_CONTEXT: self.context,
-            JSONLDKeys.AT_TYPE: self.TYPE,
-            JSONLDKeys.AT_ID: self.oid,
-            "accessPolicyId": self.access_policy_id,
-            "contractPolicyId": self.contract_policy_id,
-            "assetsSelector": self.assets_selector
-        }
+    if not isinstance(constraints, list):
+        return []
 
-        return jdumps(data)
+    return sorted([
+        (
+            c[ODRLKeys.LEFT_OPERAND][JSONLDKeys.AT_ID],
+            c[ODRLKeys.OPERATOR][JSONLDKeys.AT_ID],
+            c[ODRLKeys.RIGHT_OPERAND]
+        )
+        for c in constraints
+    ])

@@ -46,7 +46,7 @@ class PostgresMemoryRefreshConnectionManager(PostgresMemoryConnectionManager):
             logger (Logger, optional): Logger instance for debug output.
             verbose (bool): Enable verbose logging.
         """
-        super().__init__(engine=engine, provider_id_key=provider_id_key, edrs_key=edrs_key, logger=logger, verbose=verbose)
+        super().__init__(engine=engine, provider_id_key=provider_id_key, table_name=table_name, edrs_key=edrs_key, logger=logger, verbose=verbose)
         self.persist_interval = persist_interval
         self._stop_event = threading.Event()
         self._start_background_tasks()
