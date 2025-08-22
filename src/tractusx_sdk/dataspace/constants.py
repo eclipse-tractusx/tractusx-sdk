@@ -20,9 +20,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-DSP_DATASET_KEY:str="dcat:dataset"
-DSP_POLICY_KEY:str="odrl:hasPolicy"
-
 class JSONLDKeys:
     AT_ID = "@id"
     AT_TYPE = "@type"

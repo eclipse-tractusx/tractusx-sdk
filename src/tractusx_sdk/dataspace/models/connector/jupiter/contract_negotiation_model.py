@@ -24,7 +24,7 @@ from json import dumps as jdumps
 from pydantic import Field
 
 from ..base_contract_negotiation_model import BaseContractNegotiationModel
-
+from ....constants import JSONLDKeys
 
 class ContractNegotiationModel(BaseContractNegotiationModel):
     TYPE: str = Field(default="ContractRequest", frozen=True)
@@ -40,13 +40,13 @@ class ContractNegotiationModel(BaseContractNegotiationModel):
         """
 
         data = {
-            "@context": self.context,
-            "@type": self.TYPE,
+            JSONLDKeys.AT_CONTEXT: self.context,
+            JSONLDKeys.AT_TYPE: self.TYPE,
             "counterPartyAddress": self.counter_party_address,
             "protocol": self.PROTOCOL,
             "policy": {
-                "@id": self.offer_id,
-                "@type": self.OFFER_TYPE,
+                JSONLDKeys.AT_ID: self.offer_id,
+                JSONLDKeys.AT_TYPE: self.OFFER_TYPE,
                 "assigner": self.provider_id,
                 "target": self.asset_id,
                 **self.offer_policy

@@ -24,7 +24,7 @@ from json import dumps as jdumps
 from pydantic import Field
 
 from ..base_asset_model import BaseAssetModel
-
+from ....constants import JSONLDKeys
 
 class AssetModel(BaseAssetModel):
     TYPE: str = Field(default="Asset", frozen=True)
@@ -38,9 +38,9 @@ class AssetModel(BaseAssetModel):
         """
 
         data = {
-            "@context": self.context,
-            "@type": self.TYPE,
-            "@id": self.oid,
+            JSONLDKeys.AT_CONTEXT: self.context,
+            JSONLDKeys.AT_TYPE: self.TYPE,
+            JSONLDKeys.AT_ID: self.oid,
             "properties": self.properties,
             "privateProperties": self.private_properties,
             "dataAddress": self.data_address
