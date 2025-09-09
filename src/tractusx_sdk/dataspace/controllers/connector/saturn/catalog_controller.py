@@ -20,34 +20,22 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-DSP_DATASET_KEY:str="dcat:dataset"
-DSP_POLICY_KEY:str="odrl:hasPolicy"
+from .dma_controller import DmaController
+from tractusx_sdk.dataspace.models.connector.saturn import CatalogDatasetRequestModel, CatalogModel
 
-V3:str="/v3"
-V4_ALPHA:str="/v4alpha"
 
-class JSONLDKeys:
-    AT_ID = "@id"
-    AT_TYPE = "@type"
-    AT_CONTEXT = "@context"
-class DCATKeys:
-    DATASET = "dcat:dataset"
+class CatalogController(DmaController):
+    """
+    Concrete implementation of the CatalogController for the Connector DMA jupiter.
+    """
+
+    endpoint_url = "/v3/catalog"
+
+    def get_catalog(self, obj: CatalogModel, **kwargs):
+        kwargs["data"] = obj.to_data()
+        return self.adapter.post(url=f"{self.endpoint_url}/request", **kwargs)
     
-class ODRLTypes:
-    PERMISSION: str = "permission"
-    PROHIBITION: str = "prohibition"
-    OBLIGATION: str = "obligation"
-    OPERAND_LEFT: str = "operandLeft"
-    OPERATOR: str = "operator"
-    OPERAND_RIGHT: str = "operandRight"
-    EQUALS: str = "="
-class ODRLKeys:
-    POLICY = "odrl:hasPolicy"
-    LEFT_OPERAND = "odrl:leftOperand"
-    OPERATOR = f"odrl:{ODRLTypes.OPERATOR}"
-    RIGHT_OPERAND = "odrl:rightOperand"
-    ODRL_AND = "odrl:and"
-    ODRL_OR = "odrl:or"
-    PERMISSION: str = f"odrl:{ODRLTypes.PERMISSION}"
-    PROHIBITION: str = f"odrl:{ODRLTypes.PROHIBITION}"
-    OBLIGATION: str = f"odrl:{ODRLTypes.OBLIGATION}"
+    def get_by_dataset(self, obj: CatalogDatasetRequestModel, **kwargs):
+        kwargs["data"] = obj.to_data()
+        return self.adapter.post(url=f"{self.endpoint_url}/dataset/request", **kwargs)
+

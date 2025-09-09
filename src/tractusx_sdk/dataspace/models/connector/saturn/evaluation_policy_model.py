@@ -20,34 +20,27 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-DSP_DATASET_KEY:str="dcat:dataset"
-DSP_POLICY_KEY:str="odrl:hasPolicy"
+from json import dumps as jdumps
+from pydantic import Field
 
-V3:str="/v3"
-V4_ALPHA:str="/v4alpha"
+from ..base_evaluation_policy_model import BaseEvaluationPolicyModel
 
-class JSONLDKeys:
-    AT_ID = "@id"
-    AT_TYPE = "@type"
-    AT_CONTEXT = "@context"
-class DCATKeys:
-    DATASET = "dcat:dataset"
-    
-class ODRLTypes:
-    PERMISSION: str = "permission"
-    PROHIBITION: str = "prohibition"
-    OBLIGATION: str = "obligation"
-    OPERAND_LEFT: str = "operandLeft"
-    OPERATOR: str = "operator"
-    OPERAND_RIGHT: str = "operandRight"
-    EQUALS: str = "="
-class ODRLKeys:
-    POLICY = "odrl:hasPolicy"
-    LEFT_OPERAND = "odrl:leftOperand"
-    OPERATOR = f"odrl:{ODRLTypes.OPERATOR}"
-    RIGHT_OPERAND = "odrl:rightOperand"
-    ODRL_AND = "odrl:and"
-    ODRL_OR = "odrl:or"
-    PERMISSION: str = f"odrl:{ODRLTypes.PERMISSION}"
-    PROHIBITION: str = f"odrl:{ODRLTypes.PROHIBITION}"
-    OBLIGATION: str = f"odrl:{ODRLTypes.OBLIGATION}"
+
+class EvaluationPolicyModel(BaseEvaluationPolicyModel):
+    TYPE: str = Field(default="PolicyEvaluationPlanRequest", frozen=True)
+
+    def to_data(self):
+        """
+        Converts the model to a JSON representing the data that will
+        be sent to a saturn connector when using an evaluation policy model.
+
+        :return: a JSON representation of the model
+        """
+
+        data = {
+            "@context": self.context,
+            "@type": self.TYPE,
+            "policyScope": self.policy_scope
+        }
+
+        return jdumps(data)

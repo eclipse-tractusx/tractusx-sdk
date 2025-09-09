@@ -20,34 +20,23 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-DSP_DATASET_KEY:str="dcat:dataset"
-DSP_POLICY_KEY:str="odrl:hasPolicy"
+from .dma_controller import DmaController
+from tractusx_sdk.dataspace.controllers.connector.utils.mixins import CrudDmaController
+from tractusx_sdk.dataspace.models.connector.saturn import AssetModel
 
-V3:str="/v3"
-V4_ALPHA:str="/v4alpha"
 
-class JSONLDKeys:
-    AT_ID = "@id"
-    AT_TYPE = "@type"
-    AT_CONTEXT = "@context"
-class DCATKeys:
-    DATASET = "dcat:dataset"
-    
-class ODRLTypes:
-    PERMISSION: str = "permission"
-    PROHIBITION: str = "prohibition"
-    OBLIGATION: str = "obligation"
-    OPERAND_LEFT: str = "operandLeft"
-    OPERATOR: str = "operator"
-    OPERAND_RIGHT: str = "operandRight"
-    EQUALS: str = "="
-class ODRLKeys:
-    POLICY = "odrl:hasPolicy"
-    LEFT_OPERAND = "odrl:leftOperand"
-    OPERATOR = f"odrl:{ODRLTypes.OPERATOR}"
-    RIGHT_OPERAND = "odrl:rightOperand"
-    ODRL_AND = "odrl:and"
-    ODRL_OR = "odrl:or"
-    PERMISSION: str = f"odrl:{ODRLTypes.PERMISSION}"
-    PROHIBITION: str = f"odrl:{ODRLTypes.PROHIBITION}"
-    OBLIGATION: str = f"odrl:{ODRLTypes.OBLIGATION}"
+class AssetController(CrudDmaController, DmaController):
+    """
+    Concrete implementation of the AssetController for the Connector saturn Data Management API.
+
+    This class overrides the create and update methods in order to ensure the correct class types are used,
+    instead of the generic ones.
+    """
+
+    endpoint_url = "/v3/assets"
+
+    def create(self, obj: AssetModel, **kwargs):
+        return super().create(obj, **kwargs)
+
+    def update(self, obj: AssetModel, **kwargs):
+        return super().update(obj, **kwargs)

@@ -20,34 +20,31 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-DSP_DATASET_KEY:str="dcat:dataset"
-DSP_POLICY_KEY:str="odrl:hasPolicy"
+from json import dumps as jdumps
+from pydantic import Field
 
-V3:str="/v3"
-V4_ALPHA:str="/v4alpha"
+from ..base_queryspec_model import BaseQuerySpecModel
 
-class JSONLDKeys:
-    AT_ID = "@id"
-    AT_TYPE = "@type"
-    AT_CONTEXT = "@context"
-class DCATKeys:
-    DATASET = "dcat:dataset"
-    
-class ODRLTypes:
-    PERMISSION: str = "permission"
-    PROHIBITION: str = "prohibition"
-    OBLIGATION: str = "obligation"
-    OPERAND_LEFT: str = "operandLeft"
-    OPERATOR: str = "operator"
-    OPERAND_RIGHT: str = "operandRight"
-    EQUALS: str = "="
-class ODRLKeys:
-    POLICY = "odrl:hasPolicy"
-    LEFT_OPERAND = "odrl:leftOperand"
-    OPERATOR = f"odrl:{ODRLTypes.OPERATOR}"
-    RIGHT_OPERAND = "odrl:rightOperand"
-    ODRL_AND = "odrl:and"
-    ODRL_OR = "odrl:or"
-    PERMISSION: str = f"odrl:{ODRLTypes.PERMISSION}"
-    PROHIBITION: str = f"odrl:{ODRLTypes.PROHIBITION}"
-    OBLIGATION: str = f"odrl:{ODRLTypes.OBLIGATION}"
+
+class QuerySpecModel(BaseQuerySpecModel):
+    TYPE: str = Field(default="QuerySpec", frozen=True)
+
+    def to_data(self):
+        """
+        Converts the model to a JSON representing the data that
+        will be sent to the connector when using a queryspec model.
+
+        :return: a JSON representation of the model
+        """
+
+        data = {
+            "@context": self.context,
+            "@type": self.TYPE,
+            "offset": self.offset,
+            "limit": self.limit,
+            "sortOrder": self.sort_order,
+            "sortField": self.sort_field,
+            "filterExpression": self.filter_expression
+        }
+
+        return jdumps(data)

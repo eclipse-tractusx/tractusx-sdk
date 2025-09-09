@@ -20,34 +20,21 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-DSP_DATASET_KEY:str="dcat:dataset"
-DSP_POLICY_KEY:str="odrl:hasPolicy"
+from .dma_controller import DmaController
+from tractusx_sdk.dataspace.constants import V3, V4_ALPHA
 
-V3:str="/v3"
-V4_ALPHA:str="/v4alpha"
 
-class JSONLDKeys:
-    AT_ID = "@id"
-    AT_TYPE = "@type"
-    AT_CONTEXT = "@context"
-class DCATKeys:
-    DATASET = "dcat:dataset"
+class DataplaneSelectorController(DmaController):
+    """
+    Concrete implementation of the DataplaneSelectorController for the Connector saturn Data Management API.
+
+    This class overrides the create method in order to ensure the correct class types are used, instead of the generic ones.
+    """
+
+    endpoint_url = "/dataplanes"
+
+    def get_all_v3(self, **kwargs):
+        return self.adapter.get(url=f"{V3}/{self.endpoint_url}", **kwargs)
     
-class ODRLTypes:
-    PERMISSION: str = "permission"
-    PROHIBITION: str = "prohibition"
-    OBLIGATION: str = "obligation"
-    OPERAND_LEFT: str = "operandLeft"
-    OPERATOR: str = "operator"
-    OPERAND_RIGHT: str = "operandRight"
-    EQUALS: str = "="
-class ODRLKeys:
-    POLICY = "odrl:hasPolicy"
-    LEFT_OPERAND = "odrl:leftOperand"
-    OPERATOR = f"odrl:{ODRLTypes.OPERATOR}"
-    RIGHT_OPERAND = "odrl:rightOperand"
-    ODRL_AND = "odrl:and"
-    ODRL_OR = "odrl:or"
-    PERMISSION: str = f"odrl:{ODRLTypes.PERMISSION}"
-    PROHIBITION: str = f"odrl:{ODRLTypes.PROHIBITION}"
-    OBLIGATION: str = f"odrl:{ODRLTypes.OBLIGATION}"
+    def get_all_v4alpha(self, **kwargs):
+        return self.adapter.get(url=f"{V4_ALPHA}/{self.endpoint_url}", **kwargs)

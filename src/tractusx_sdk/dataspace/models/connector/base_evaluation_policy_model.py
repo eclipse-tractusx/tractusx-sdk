@@ -20,34 +20,28 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-DSP_DATASET_KEY:str="dcat:dataset"
-DSP_POLICY_KEY:str="odrl:hasPolicy"
+from abc import ABC
+from typing import Optional, Union
+from pydantic import Field
 
-V3:str="/v3"
-V4_ALPHA:str="/v4alpha"
+from ..model import BaseModel
 
-class JSONLDKeys:
-    AT_ID = "@id"
-    AT_TYPE = "@type"
-    AT_CONTEXT = "@context"
-class DCATKeys:
-    DATASET = "dcat:dataset"
-    
-class ODRLTypes:
-    PERMISSION: str = "permission"
-    PROHIBITION: str = "prohibition"
-    OBLIGATION: str = "obligation"
-    OPERAND_LEFT: str = "operandLeft"
-    OPERATOR: str = "operator"
-    OPERAND_RIGHT: str = "operandRight"
-    EQUALS: str = "="
-class ODRLKeys:
-    POLICY = "odrl:hasPolicy"
-    LEFT_OPERAND = "odrl:leftOperand"
-    OPERATOR = f"odrl:{ODRLTypes.OPERATOR}"
-    RIGHT_OPERAND = "odrl:rightOperand"
-    ODRL_AND = "odrl:and"
-    ODRL_OR = "odrl:or"
-    PERMISSION: str = f"odrl:{ODRLTypes.PERMISSION}"
-    PROHIBITION: str = f"odrl:{ODRLTypes.PROHIBITION}"
-    OBLIGATION: str = f"odrl:{ODRLTypes.OBLIGATION}"
+
+class BaseEvaluationPolicyModel(BaseModel, ABC):
+    """
+    Base model class for representing a connector's policy evaluation request.
+    """
+
+    policy_scope: str
+    context: Optional[Union[dict, list, str]] = Field(default={
+        "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+    })
+
+    class _Builder(BaseModel._Builder):
+        def context(self, context: dict):
+            self._data["context"] = context
+            return self
+
+        def policy_scope(self, policy_scope: str):
+            self._data["policy_scope"] = policy_scope
+            return self
