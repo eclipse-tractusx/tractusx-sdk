@@ -161,8 +161,7 @@ class AasService:
             url=url,
             params=params,
             headers=headers,
-            verify=self.verify_ssl,
-            session=self.session
+            verify=self.verify_ssl
         )
 
         try:
@@ -361,8 +360,7 @@ class AasService:
             url=url,
             params=params,
             headers=headers,
-            verify=self.verify_ssl,
-            session=self.session
+            verify=self.verify_ssl
         )
 
         try:
