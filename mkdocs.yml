@@ -1,0 +1,105 @@
+###############################################################
+# Eclipse Tractus-X - Tractus-X SDK
+#
+# Copyright (c) 2025 LKS Next
+# Copyright (c) 2025 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+###############################################################
+
+site_name: Tractus-X SDK Documentation
+site_description: A comprehensive SDK for Eclipse Tractus-X components
+repo_url: https://github.com/eclipse-tractusx/tractusx-sdk
+repo_name: eclipse-tractusx/tractusx-sdk
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  favicon: assets/images/logo_tractus-x-min.ico
+  logo: assets/images/logo_tractus-x.svg
+  custom_dir: docs/overrides
+  palette:
+    # Orange and Black custom theme
+    - scheme: default
+      primary: custom
+      accent: orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode with orange accents
+    - scheme: slate
+      primary: custom
+      accent: orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs  # Renders top-level navigation as tabs
+    - navigation.sections  # Groups navigation items into sections
+    - navigation.expand  # Automatically expands navigation sections
+    - navigation.top  # Adds back-to-top button for easy page navigation
+    - search.highlight  # Highlights search terms in results
+    - search.share  # Adds share button to search results
+    - content.code.copy  # Adds copy button to code blocks
+    - content.action.edit  # Adds edit button to pages (links to repository)
+
+plugins:
+  - search  # Enables site-wide search functionality
+  - mkdocstrings  # Automatically generates API documentation from Python docstrings
+
+extra:
+  version:
+    provider: mike
+
+extra_css:
+  - assets/stylesheets/orange-black-theme.css
+
+markdown_extensions:
+  - admonition  # Creates callout boxes (notes, warnings, tips, etc.)
+  - pymdownx.details  # Adds collapsible content sections
+  - pymdownx.superfences  # Enhanced code blocks with nesting support
+  - pymdownx.tabbed:  # Creates tabbed content blocks
+      alternate_style: true
+  - pymdownx.highlight:  # Syntax highlighting for code blocks
+      anchor_linenums: true  # Makes line numbers clickable links
+      line_spans: __span
+      pygments_lang_class: true
+      use_pygments: true
+      pygments_style: monokai  # VS Code-like dark theme
+      auto_title: true  # Automatically adds language title to code blocks
+  - pymdownx.inlinehilite  # Syntax highlighting for inline code
+  - pymdownx.snippets  # Includes external code files in documentation
+  - attr_list  # Adds CSS classes and attributes to Markdown elements
+  - md_in_html  # Allows Markdown syntax inside HTML blocks
+
+nav:
+  - Home: index.md
+  - Getting Started: generate-doc/getting-started.md
+  - User Guide:
+    - Overview: user/README.md
+    - Usage Examples:
+      - Dataspace SDK:
+        - EDC Usage: user/usage/dataspace/edc-sdk-usage.md
+      - Industry SDK:
+        - DTR Usage: user/usage/industry/dtr-sdk-usage.md
+        - Submodel Service Usage: user/usage/industry/submodel-service-sdk-usage.md
+  - Architecture:
+    - Decision Records:
+      - Record Architecture Decisions: architecture/decision-records/0001-record-architecture-decisions.md
+      - Data Storage Architecture: architecture/decision-records/0002-data-storage-architecture.md
+      - SDK Module Architecture: architecture/decision-records/0003-sdk-module-architecture.md
+      - Tractus-X SDK Services: architecture/decision-records/0004-tractusx-sdk-services.md
+  - Versioning: VERSIONING.md
