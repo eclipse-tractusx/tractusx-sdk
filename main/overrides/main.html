@@ -1,0 +1,187 @@
+<!--
+  Eclipse Tractus-X - Industry Core Hub Frontend
+
+  Copyright (c) 2025 LKS Next
+  Copyright (c) 2025 Contributors to the Eclipse Foundation
+
+  See the NOTICE file(s) distributed with this work for additional
+  information regarding copyright ownership.
+ 
+  This program and the accompanying materials are made available under the
+  terms of the Apache License, Version 2.0 which is available at
+  https://www.apache.org/licenses/LICENSE-2.0.
+ 
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  either express or implied. See the
+  License for the specific language govern in permissions and limitations
+  under the License.
+ 
+  SPDX-License-Identifier: Apache-2.0
+-->
+
+{% extends "base.html" %}
+
+{% block styles %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ 'assets/stylesheets/orange-black-theme.css' | url }}">
+  <style>
+    /* Fix version number display and header spacing */
+    .md-header__inner {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex-wrap: nowrap !important;
+    }
+    
+    .md-header__title {
+      flex: 1 !important;
+      min-width: 0 !important;
+      margin-right: 16px !important;
+    }
+    
+
+    
+    .md-header__button {
+      margin-left: 4px !important;
+    }
+    
+    /* Move version selector next to GitHub repository info */
+    .md-version {
+      position: absolute !important;
+      right: -750px !important;
+      z-index: 1 !important;
+    }
+    
+    /* Keep search in center position */
+    .md-search {
+      margin-right: auto !important;
+      margin-left: auto !important;
+    }
+    
+    /* GitHub repo info on the far right */
+    .md-header__source {
+      margin-left: auto !important;
+      margin-right: 60px !important;
+    }
+    
+    /* Theme selector stays on far right */
+    .md-header__button.md-icon {
+      margin-left: auto !important;
+      margin-right: 8px !important;
+    }
+    
+    .md-version__current {
+      background-color: rgba(0, 0, 0, 0.3) !important;
+      border: 2px solid #FFD700 !important;
+      color: #FFD700 !important;
+      font-weight: 600 !important;
+      padding: 6px 16px !important;
+      border-radius: 6px !important;
+      min-width: 140px !important;
+      max-width: 200px !important;
+      text-align: center !important;
+      white-space: nowrap !important;
+      overflow: visible !important;
+      display: block !important;
+      line-height: 1.2 !important;
+    }
+    
+
+    
+    /* Responsive adjustments for better visibility */
+    @media screen and (max-width: 1220px) {
+      .md-header__title {
+        font-size: 1.5rem !important;
+      }
+      
+      .md-version__current {
+        min-width: 120px !important;
+        font-size: 0.9rem !important;
+        padding: 4px 12px !important;
+      }
+      
+      .md-header__option {
+        margin-right: 16px !important;
+      }
+    }
+    
+    @media screen and (max-width: 1024px) {
+      .md-header__title {
+        font-size: 1.3rem !important;
+      }
+      
+      .md-version__current {
+        min-width: 100px !important;
+        font-size: 0.85rem !important;
+        padding: 4px 10px !important;
+      }
+    }
+    
+    @media screen and (max-width: 768px) {
+      .md-header__title {
+        font-size: 1.1rem !important;
+      }
+      
+      .md-version__current {
+        min-width: 90px !important;
+        font-size: 0.8rem !important;
+        padding: 3px 8px !important;
+      }
+      
+      .md-header__option {
+        margin-right: 8px !important;
+        margin-left: 8px !important;
+      }
+    }
+    
+    /* Fix navigation tabs hover coverage */
+    .md-tabs__link {
+      padding: 16px 16px !important;
+      height: auto !important;
+      min-height: 48px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      line-height: 1.2 !important;
+      position: relative !important;
+    }
+    
+    .md-tabs__link:hover {
+      background-color: rgba(0, 0, 0, 0.2) !important;
+      border-radius: 0 !important;
+    }
+    
+    .md-tabs__link--active {
+      background-color: rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    /* Ensure full height coverage for tab text */
+    .md-tabs__item {
+      height: 100% !important;
+    }
+    
+    /* Make content links darker in light mode for better visibility */
+    [data-md-color-scheme="default"] .md-content a {
+      color: #ce970c !important; 
+    }
+    
+    [data-md-color-scheme="default"] .md-content a:hover {
+      color: #8B6914 !important;
+    }
+    
+    [data-md-color-scheme="default"] .md-nav__link:hover {
+      color: #8B6914 !important;
+    }
+    
+    [data-md-color-scheme="default"] .md-nav__link--active {
+      color: #654321 !important;
+      font-weight: 600 !important;
+    }
+    
+    [data-md-color-scheme="default"] .md-nav--secondary .md-nav__link:hover {
+      color: #8B6914 !important;
+    }
+  </style>
+{% endblock %}
