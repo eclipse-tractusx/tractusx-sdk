@@ -152,3 +152,6 @@ nav:
       - 3.- SDK Module Architecture: architecture/decision-records/0003-sdk-module-architecture.md
       - 4.- Tractus-X SDK Service: architecture/decision-records/0004-tractusx-sdk-services.md
   - Versioning: VERSIONING.md
+
+copyright: >
+  Copyright &copy; 2025 Eclipse Tractus-X
