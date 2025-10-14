@@ -217,6 +217,100 @@
     [data-md-color-scheme="default"] .md-nav--secondary .md-nav__link:hover {
       color: #8B6914 !important;
     }
+    
+    /* Custom Footer Styles */
+    .md-footer {
+      background-color: #2c2c2c !important;
+      color: #ffffff !important;
+      border-top: 4px solid #FFD700 !important;
+    }
+    
+    .custom-footer {
+      background-color: #2c2c2c;
+      color: #ffffff;
+      padding: 40px 0 20px 0;
+      margin-top: 40px;
+    }
+    
+    .custom-footer__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .custom-footer__section h3 {
+      color: #FFD700 !important;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #FFD700;
+      padding-bottom: 8px;
+    }
+    
+    .custom-footer__links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .custom-footer__links li {
+      margin-bottom: 12px;
+    }
+    
+    .custom-footer__links a {
+      color: #cccccc !important;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      font-size: 0.9rem;
+    }
+    
+    .custom-footer__links a:hover {
+      color: #FFD700 !important;
+      text-decoration: none;
+    }
+    
+    .custom-footer__bottom {
+      border-top: 1px solid #555;
+      margin-top: 30px;
+      padding-top: 20px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .custom-footer__copyright {
+      font-size: 0.85rem;
+      color: #aaaaaa;
+    }
+    
+    .custom-footer__copyright a {
+      color: #FFD700 !important;
+      text-decoration: none;
+    }
+    
+    .custom-footer__copyright a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Responsive footer */
+    @media screen and (max-width: 768px) {
+      .custom-footer__grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        padding: 0 15px;
+      }
+      
+      .custom-footer__bottom {
+        flex-direction: column;
+        gap: 15px;
+      }
+    }
   </style>
 
     
@@ -947,12 +1041,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../dataspace-library/discovery-services/connector-discovery-service/" class="md-nav__link">
+      <a href="../../../dataspace-library/discovery-services/discovery-finder-service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Connector Discovery Service
+    Discovery Finder Service
     
   </span>
   
@@ -970,12 +1064,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../dataspace-library/discovery-services/discovery-finder-service/" class="md-nav__link">
+      <a href="../../../dataspace-library/discovery-services/connector-discovery-service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Discovery Finder Service
+    Connector Discovery Service
     
   </span>
   
@@ -989,6 +1083,29 @@
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dataspace-library/authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Authentication
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1039,10 +1156,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2_6" >
         
           
-          <label class="md-nav__link" for="__nav_3_2_5" id="__nav_3_2_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_2_6" id="__nav_3_2_6_label" tabindex="0">
             
   
   
@@ -1055,8 +1172,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_2_5">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2_6">
             <span class="md-nav__icon md-icon"></span>
             Legacy
           </label>
@@ -2236,24 +2353,55 @@ SPDX-License-Identifier: CC-BY-4.0
         
       </main>
       
-        <footer class="md-footer">
-  
-  <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-      <div class="md-copyright">
-  
-  
-    Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
-    </a>
-  
-</div>
-      
+<div class="custom-footer">
+  <div class="custom-footer__grid">
+    <!-- Eclipse Foundation Section -->
+    <div class="custom-footer__section">
+      <h3>Eclipse Foundation</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://www.eclipse.org/org/" target="_blank" rel="noopener">About</a></li>
+        <li><a href="https://www.eclipse.org/legal/privacy.php" target="_blank" rel="noopener">Privacy Policy</a></li>
+        <li><a href="https://www.eclipse.org/legal/termsofuse.php" target="_blank" rel="noopener">Terms of Use</a></li>
+        <li><a href="https://www.eclipse.org/legal/epl-2.0/" target="_blank" rel="noopener">Compliance</a></li>
+        <li><a href="https://www.eclipse.org/legal/" target="_blank" rel="noopener">Legal Resources</a></li>
+        <li><a href="https://www.eclipse.org/org/foundation/contact.php" target="_blank" rel="noopener">Contact</a></li>
+      </ul>
+    </div>
+    
+    <!-- Eclipse Tractus-X Section -->
+    <div class="custom-footer__section">
+      <h3>Eclipse Tractus-X</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://projects.eclipse.org/projects/automotive.tractusx" target="_blank" rel="noopener">Eclipse Project</a></li>
+        <li><a href="https://github.com/eclipse-tractusx" target="_blank" rel="noopener">GitHub Organization</a></li>
+        <li><a href="https://catena-x.net/" target="_blank" rel="noopener">Catena-X Automotive Network</a></li>
+        <li><a href="mailto:tractusx-dev@eclipse.org">Mailing List</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/issues/new" target="_blank" rel="noopener">Report a Bug</a></li>
+      </ul>
+    </div>
+    
+    <!-- More Section -->
+    <div class="custom-footer__section">
+      <h3>More</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/security/advisories/new" target="_blank" rel="noopener">Report a Vulnerability</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">How to Contribute</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/discussions" target="_blank" rel="noopener">Discussions</a></li>
+        <li><a href="https://chat.eclipse.org/#/room/#automotive.tractusx:matrix.eclipse.org" target="_blank" rel="noopener">Matrix Chat</a></li>
+      </ul>
     </div>
   </div>
-</footer>
-      
+  
+  <div class="custom-footer__bottom">
+    <div class="custom-footer__copyright">
+      Copyright © 2025 Eclipse Tractus-X. Built with 
+      <a href="https://www.mkdocs.org/" target="_blank" rel="noopener">MkDocs</a> and 
+      <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">Material for MkDocs</a>.
+    </div>
+  </div>
+</div>
+
     </div>
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>

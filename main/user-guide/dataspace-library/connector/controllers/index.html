@@ -37,7 +37,7 @@
         <link rel="prev" href="../managers/">
       
       
-        <link rel="next" href="../../discovery-services/connector-discovery-service/">
+        <link rel="next" href="../../discovery-services/discovery-finder-service/">
       
       
       <link rel="icon" href="../../../../assets/images/logo_tractus-x-min.ico">
@@ -217,6 +217,100 @@
     [data-md-color-scheme="default"] .md-nav--secondary .md-nav__link:hover {
       color: #8B6914 !important;
     }
+    
+    /* Custom Footer Styles */
+    .md-footer {
+      background-color: #2c2c2c !important;
+      color: #ffffff !important;
+      border-top: 4px solid #FFD700 !important;
+    }
+    
+    .custom-footer {
+      background-color: #2c2c2c;
+      color: #ffffff;
+      padding: 40px 0 20px 0;
+      margin-top: 40px;
+    }
+    
+    .custom-footer__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .custom-footer__section h3 {
+      color: #FFD700 !important;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #FFD700;
+      padding-bottom: 8px;
+    }
+    
+    .custom-footer__links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .custom-footer__links li {
+      margin-bottom: 12px;
+    }
+    
+    .custom-footer__links a {
+      color: #cccccc !important;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      font-size: 0.9rem;
+    }
+    
+    .custom-footer__links a:hover {
+      color: #FFD700 !important;
+      text-decoration: none;
+    }
+    
+    .custom-footer__bottom {
+      border-top: 1px solid #555;
+      margin-top: 30px;
+      padding-top: 20px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .custom-footer__copyright {
+      font-size: 0.85rem;
+      color: #aaaaaa;
+    }
+    
+    .custom-footer__copyright a {
+      color: #FFD700 !important;
+      text-decoration: none;
+    }
+    
+    .custom-footer__copyright a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Responsive footer */
+    @media screen and (max-width: 768px) {
+      .custom-footer__grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        padding: 0 15px;
+      }
+      
+      .custom-footer__bottom {
+        flex-direction: column;
+        gap: 15px;
+      }
+    }
   </style>
 
     
@@ -262,7 +356,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#connector-controller" class="md-skip">
+        <a href="#connector-controllers" class="md-skip">
           Skip to content
         </a>
       
@@ -921,6 +1015,66 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      Purpose
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controller-types-supported-versions-and-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controller Types, Supported Versions, and Methods
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#instantiation-required-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Instantiation &amp; Required Attributes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Instantiation &amp; Required Attributes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controller-methods-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controller Methods Reference
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      Further Reading
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#notice" class="md-nav__link">
     <span class="md-ellipsis">
       NOTICE
@@ -998,12 +1152,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../discovery-services/connector-discovery-service/" class="md-nav__link">
+      <a href="../../discovery-services/discovery-finder-service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Connector Discovery Service
+    Discovery Finder Service
     
   </span>
   
@@ -1021,12 +1175,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../discovery-services/discovery-finder-service/" class="md-nav__link">
+      <a href="../../discovery-services/connector-discovery-service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Discovery Finder Service
+    Connector Discovery Service
     
   </span>
   
@@ -1040,6 +1194,29 @@
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Authentication
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1090,10 +1267,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2_6" >
         
           
-          <label class="md-nav__link" for="__nav_3_2_5" id="__nav_3_2_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_2_6" id="__nav_3_2_6_label" tabindex="0">
             
   
   
@@ -1106,8 +1283,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_2_5">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2_6">
             <span class="md-nav__icon md-icon"></span>
             Legacy
           </label>
@@ -2012,6 +2189,66 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      Purpose
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controller-types-supported-versions-and-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controller Types, Supported Versions, and Methods
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#instantiation-required-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Instantiation &amp; Required Attributes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Instantiation &amp; Required Attributes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controller-methods-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controller Methods Reference
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      Further Reading
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#notice" class="md-nav__link">
     <span class="md-ellipsis">
       NOTICE
@@ -2062,8 +2299,332 @@ https://creativecommons.org/licenses/by/4.0/legalcode.
 SPDX-License-Identifier: CC-BY-4.0
 
 -->
-<h1 id="connector-controller">Connector Controller</h1>
-<p>TBD</p>
+
+<h1 id="connector-controllers">Connector Controllers</h1>
+<p>This page provides a comprehensive overview of the <strong>Connector controllers</strong> in the Tractus-X SDK. These controllers are the main building blocks for interacting with dataspace entities managed by the Eclipse Tractus-X Connector, such as assets, contracts, policies, and transfer processes. Whether you are managing data, negotiating contracts, or monitoring connector health, connector controllers offer a unified and extensible API for all major dataspace operations. Use this guide to understand which connector controller fits your use case, how to instantiate them, and what methods are available for each type.</p>
+<h2 id="purpose">Purpose</h2>
+<p>Connector Controllers provide the main interface for interacting with dataspace entities such as assets, contracts, policies, and transfer processes. They encapsulate the logic for CRUD operations, queries, and process management, abstracting the underlying HTTP/API details and ensuring consistency across dataspace versions.</p>
+<p>Controllers are responsible for:</p>
+<ul>
+<li>Managing dataspace entities (assets, contracts, policies, etc.)</li>
+<li>Querying and retrieving entity details</li>
+<li>Orchestrating data transfer and negotiation processes</li>
+</ul>
+<p>They are versioned and extensible, supporting multiple dataspace standards (e.g., "jupiter", "saturn").</p>
+<h2 id="controller-types-supported-versions-and-methods">Controller Types, Supported Versions, and Methods</h2>
+<p>The following table summarizes all available controller types in the Tractus-X SDK, the dataspace protocol versions they support, and the key methods they provide. The rightmost column describes the main purpose of each controller, helping you quickly identify which controller to use for a given task.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Most controllers are available for both the "jupiter" and "saturn" dataspace versions. Some advanced controllers (such as Dataplane Selector, Application Observability, Connector Discovery, and Protocol Version) are specific to the "saturn" version and provide specialized functionality for connector management and monitoring.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Controller Type</th>
+<th>Supported Versions</th>
+<th>Methods</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Asset Controller</strong></td>
+<td>Jupiter, Saturn</td>
+<td><code>create</code>, <code>update</code>, <code>get_by_id</code>, <code>delete</code>, <code>get_all</code>, <code>query</code></td>
+<td>Manages assets: create, update, retrieve, delete, and query</td>
+</tr>
+<tr>
+<td><strong>Catalog Controller</strong></td>
+<td>Jupiter, Saturn</td>
+<td><code>get_catalog</code></td>
+<td>Retrieves catalogs of available assets from counterparties</td>
+</tr>
+<tr>
+<td><strong>Contract Agreement Controller</strong></td>
+<td>Jupiter, Saturn</td>
+<td><code>get_negotiation_by_id</code>, <code>get_by_id</code>, <code>get_all</code>, <code>query</code></td>
+<td>Manages contract agreements and negotiations</td>
+</tr>
+<tr>
+<td><strong>Contract Definition Controller</strong></td>
+<td>Jupiter, Saturn</td>
+<td><code>create</code>, <code>update</code>, <code>get_by_id</code>, <code>delete</code>, <code>get_all</code>, <code>query</code></td>
+<td>Manages contract definitions: create, update, retrieve, delete, and query</td>
+</tr>
+<tr>
+<td><strong>Contract Negotiation Controller</strong></td>
+<td>Jupiter, Saturn</td>
+<td><code>create</code>, <code>terminate_by_id</code>, <code>get_agreement_by_negotiation_id</code>, <code>get_by_id</code>, <code>get_all</code>, <code>get_state_by_id</code>, <code>query</code></td>
+<td>Handles contract negotiation lifecycle and agreement retrieval</td>
+</tr>
+<tr>
+<td><strong>EDR Controller</strong></td>
+<td>Jupiter, Saturn</td>
+<td><code>get_data_address</code>, <code>refresh</code>, <code>create</code>, <code>get_all</code>, <code>delete</code>, <code>query</code></td>
+<td>Manages Endpoint Data References (EDRs) for secure data access</td>
+</tr>
+<tr>
+<td><strong>Policy Controller</strong></td>
+<td>Jupiter, Saturn</td>
+<td><code>create</code>, <code>update</code>, <code>get_by_id</code>, <code>delete</code>, <code>get_all</code>, <code>query</code></td>
+<td>Manages policies: create, update, retrieve, delete, and query</td>
+</tr>
+<tr>
+<td><strong>Transfer Process Controller</strong></td>
+<td>Jupiter, Saturn</td>
+<td><code>create</code>, <code>terminate_by_id</code>, <code>deprovision_by_id</code>, <code>get_by_id</code>, <code>get_all</code>, <code>query</code>, <code>get_state_by_id</code></td>
+<td>Orchestrates data transfer processes between dataspace participants</td>
+</tr>
+<tr>
+<td><strong>Dataplane Selector Controller</strong></td>
+<td>Saturn</td>
+<td><code>get_all_v3</code>, <code>get_all_v4alpha</code></td>
+<td>Manages and queries available dataplanes for data transfer</td>
+</tr>
+<tr>
+<td><strong>Application Observability Controller</strong></td>
+<td>Saturn</td>
+<td><code>get_health</code>, <code>get_liveness</code></td>
+<td>Provides health and liveness checks for connector applications</td>
+</tr>
+<tr>
+<td><strong>Connector Discovery Controller</strong></td>
+<td>Saturn</td>
+<td><code>get_discover</code></td>
+<td>Discovers connectors and their protocol versions in the dataspace</td>
+</tr>
+<tr>
+<td><strong>Protocol Version Controller</strong></td>
+<td>Saturn</td>
+<td><code>get_discover</code></td>
+<td>Queries supported protocol versions for connectors</td>
+</tr>
+</tbody>
+</table>
+<h2 id="instantiation-required-attributes">Instantiation &amp; Required Attributes</h2>
+<p>Controllers are typically instantiated via the <code>ControllerFactory</code>, which selects the correct implementation for the dataspace version and entity type.</p>
+<p><strong>Required attributes for instantiation:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dataspace_version</code></td>
+<td><code>str</code></td>
+<td>Dataspace protocol version (e.g., <code>"jupiter"</code>, <code>"saturn"</code>)</td>
+</tr>
+<tr>
+<td><code>adapter</code></td>
+<td><code>BaseDmaAdapter</code></td>
+<td>Adapter for HTTP/API communication</td>
+</tr>
+<tr>
+<td><code>endpoint_url</code></td>
+<td><code>str</code></td>
+<td>API endpoint for the controller</td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td><code>Model</code></td>
+<td>Entity model for operations (varies by controller)</td>
+</tr>
+<tr>
+<td><code>kwargs</code></td>
+<td><code>dict</code> (optional)</td>
+<td>Additional parameters for customization</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example">Example</h3>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.controllers.connector.controller_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ControllerFactory</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.adapters.connector.adapter_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdapterFactory</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Instantiate the DMA adapter for the desired dataspace version and connector</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">my_adapter</span> <span class="o">=</span> <span class="n">AdapterFactory</span><span class="o">.</span><span class="n">get_dma_adapter</span><span class="p">(</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="s2">&quot;jupiter&quot;</span><span class="p">,</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">base_url</span><span class="o">=</span><span class="s2">&quot;https://my-connector-controlplane.url&quot;</span><span class="p">,</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">dma_path</span><span class="o">=</span><span class="s2">&quot;/management&quot;</span><span class="p">,</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;X-Api-Key&quot;</span><span class="p">:</span> <span class="s2">&quot;my-api-key&quot;</span><span class="p">,</span> <span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">}</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">)</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># Instantiate the asset controller using the adapter</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">asset_controller</span> <span class="o">=</span> <span class="n">ControllerFactory</span><span class="o">.</span><span class="n">get_asset_controller</span><span class="p">(</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="s2">&quot;jupiter&quot;</span><span class="p">,</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">adapter</span><span class="o">=</span><span class="n">my_adapter</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="controller-methods-reference">Controller Methods Reference</h2>
+<table>
+<thead>
+<tr>
+<th>Method Name</th>
+<th>Required Attributes / Parameters</th>
+<th>Controllers Implementing Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>create</code></td>
+<td><code>Model</code></td>
+<td>Asset, Contract Definition, Policy, Contract Negotiation, Transfer Process, EDR</td>
+<td>Registers a new entity (asset, contract, policy, etc.)</td>
+</tr>
+<tr>
+<td><code>update</code></td>
+<td><code>Model</code></td>
+<td>Asset, Contract Definition, Policy</td>
+<td>Updates metadata or properties of an existing entity</td>
+</tr>
+<tr>
+<td><code>get_by_id</code></td>
+<td><code>oid</code></td>
+<td>Asset, Contract Definition, Policy, Contract Agreement, Contract Negotiation, Transfer Process, EDR</td>
+<td>Retrieves details of a specific entity by its unique identifier</td>
+</tr>
+<tr>
+<td><code>delete</code></td>
+<td><code>oid</code></td>
+<td>Asset, Contract Definition, Policy, EDR</td>
+<td>Deletes an entity by its unique identifier</td>
+</tr>
+<tr>
+<td><code>get_all</code></td>
+<td></td>
+<td>Asset, Contract Definition, Policy, Contract Agreement, Contract Negotiation, Transfer Process, EDR</td>
+<td>Retrieves a list of all entities currently registered</td>
+</tr>
+<tr>
+<td><code>query</code></td>
+<td><code>QuerySpecModel</code> (optional)</td>
+<td>Asset, Contract Definition, Policy, Contract Agreement, Contract Negotiation, Transfer Process, EDR</td>
+<td>Queries entities based on specific criteria</td>
+</tr>
+<tr>
+<td><code>get_state_by_id</code></td>
+<td><code>oid</code></td>
+<td>Contract Negotiation, Transfer Process</td>
+<td>Retrieves the current state of a specific entity</td>
+</tr>
+<tr>
+<td><code>terminate_by_id</code></td>
+<td><code>oid</code>, <code>Model</code></td>
+<td>Contract Negotiation, Transfer Process</td>
+<td>Terminates an ongoing process by its unique identifier</td>
+</tr>
+<tr>
+<td><code>refresh</code></td>
+<td><code>oid</code></td>
+<td>EDR</td>
+<td>Refreshes the Endpoint Data Reference (EDR) for an entity</td>
+</tr>
+<tr>
+<td><code>get_data_address</code></td>
+<td><code>oid</code></td>
+<td>EDR</td>
+<td>Retrieves the data address associated with an asset or contract</td>
+</tr>
+<tr>
+<td><code>get_catalog</code></td>
+<td><code>CatalogModel</code></td>
+<td>Catalog</td>
+<td>Retrieves catalogs of available assets from counterparties</td>
+</tr>
+<tr>
+<td><code>get_negotiation_by_id</code></td>
+<td><code>oid</code></td>
+<td>Contract Agreement</td>
+<td>Retrieves negotiation details for a contract agreement</td>
+</tr>
+<tr>
+<td><code>get_agreement_by_negotiation_id</code></td>
+<td><code>oid</code></td>
+<td>Contract Negotiation</td>
+<td>Retrieves contract agreement by negotiation ID</td>
+</tr>
+<tr>
+<td><code>deprovision_by_id</code></td>
+<td><code>oid</code></td>
+<td>Transfer Process</td>
+<td>Deprovisions resources associated with a transfer process</td>
+</tr>
+<tr>
+<td><code>get_all_v3</code></td>
+<td></td>
+<td>Dataplane Selector (Saturn)</td>
+<td>Retrieves all dataplanes (v3 API)</td>
+</tr>
+<tr>
+<td><code>get_all_v4alpha</code></td>
+<td></td>
+<td>Dataplane Selector (Saturn)</td>
+<td>Retrieves all dataplanes (v4alpha API)</td>
+</tr>
+<tr>
+<td><code>get_health</code></td>
+<td></td>
+<td>Application Observability (Saturn)</td>
+<td>Provides health check for connector application</td>
+</tr>
+<tr>
+<td><code>get_liveness</code></td>
+<td></td>
+<td>Application Observability (Saturn)</td>
+<td>Provides liveness check for connector application</td>
+</tr>
+<tr>
+<td><code>get_readiness</code></td>
+<td></td>
+<td>Application Observability (Saturn)</td>
+<td>Provides readiness check for connector application</td>
+</tr>
+<tr>
+<td><code>get_startup</code></td>
+<td></td>
+<td>Application Observability (Saturn)</td>
+<td>Provides startup check for connector application</td>
+</tr>
+<tr>
+<td><code>get_discover</code></td>
+<td><code>Model</code></td>
+<td>Connector Discovery, Protocol Version (Saturn)</td>
+<td>Discovers connectors or protocol versions in the dataspace</td>
+</tr>
+<tr>
+<td><code>evaluation_plan</code></td>
+<td><code>oid</code>, <code>EvaluationPolicyModel</code></td>
+<td>Policy (Saturn)</td>
+<td>Evaluates a policy plan for a given policy definition</td>
+</tr>
+<tr>
+<td><code>validate_policy</code></td>
+<td><code>oid</code></td>
+<td>Policy (Saturn)</td>
+<td>Validates a policy definition</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition info note">
+<p class="admonition-title">Info</p>
+<ul>
+<li><code>Model</code> refers to the specific model type for the controller (e.g., <code>AssetModel</code>, <code>ContractDefinitionModel</code>, <code>PolicyModel</code>, etc.)</li>
+<li><code>oid</code> is the unique identifier for the entity.</li>
+<li>Not all controllers implement every method; see specific controller documentation for details.</li>
+</ul>
+</div>
+<h2 id="further-reading">Further Reading</h2>
+<ul>
+<li><a href="../../">Dataspace Library Overview</a></li>
+<li><a href="../../../sdk-structure-and-components/">SDK Structure and Components</a></li>
+<li><a href="../services/">Connector Services</a></li>
+<li><a href="https://eclipse-tractusx.github.io/api-hub/">API Reference</a></li>
+</ul>
+<hr />
 <h2 id="notice">NOTICE</h2>
 <p>This work is licensed under the <a href="https://creativecommons.org/licenses/by/4.0/legalcode">CC-BY-4.0</a>.</p>
 <ul>
@@ -2101,24 +2662,55 @@ SPDX-License-Identifier: CC-BY-4.0
         
       </main>
       
-        <footer class="md-footer">
-  
-  <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-      <div class="md-copyright">
-  
-  
-    Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
-    </a>
-  
-</div>
-      
+<div class="custom-footer">
+  <div class="custom-footer__grid">
+    <!-- Eclipse Foundation Section -->
+    <div class="custom-footer__section">
+      <h3>Eclipse Foundation</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://www.eclipse.org/org/" target="_blank" rel="noopener">About</a></li>
+        <li><a href="https://www.eclipse.org/legal/privacy.php" target="_blank" rel="noopener">Privacy Policy</a></li>
+        <li><a href="https://www.eclipse.org/legal/termsofuse.php" target="_blank" rel="noopener">Terms of Use</a></li>
+        <li><a href="https://www.eclipse.org/legal/epl-2.0/" target="_blank" rel="noopener">Compliance</a></li>
+        <li><a href="https://www.eclipse.org/legal/" target="_blank" rel="noopener">Legal Resources</a></li>
+        <li><a href="https://www.eclipse.org/org/foundation/contact.php" target="_blank" rel="noopener">Contact</a></li>
+      </ul>
+    </div>
+    
+    <!-- Eclipse Tractus-X Section -->
+    <div class="custom-footer__section">
+      <h3>Eclipse Tractus-X</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://projects.eclipse.org/projects/automotive.tractusx" target="_blank" rel="noopener">Eclipse Project</a></li>
+        <li><a href="https://github.com/eclipse-tractusx" target="_blank" rel="noopener">GitHub Organization</a></li>
+        <li><a href="https://catena-x.net/" target="_blank" rel="noopener">Catena-X Automotive Network</a></li>
+        <li><a href="mailto:tractusx-dev@eclipse.org">Mailing List</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/issues/new" target="_blank" rel="noopener">Report a Bug</a></li>
+      </ul>
+    </div>
+    
+    <!-- More Section -->
+    <div class="custom-footer__section">
+      <h3>More</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/security/advisories/new" target="_blank" rel="noopener">Report a Vulnerability</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">How to Contribute</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/discussions" target="_blank" rel="noopener">Discussions</a></li>
+        <li><a href="https://chat.eclipse.org/#/room/#automotive.tractusx:matrix.eclipse.org" target="_blank" rel="noopener">Matrix Chat</a></li>
+      </ul>
     </div>
   </div>
-</footer>
-      
+  
+  <div class="custom-footer__bottom">
+    <div class="custom-footer__copyright">
+      Copyright © 2025 Eclipse Tractus-X. Built with 
+      <a href="https://www.mkdocs.org/" target="_blank" rel="noopener">MkDocs</a> and 
+      <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">Material for MkDocs</a>.
+    </div>
+  </div>
+</div>
+
     </div>
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>

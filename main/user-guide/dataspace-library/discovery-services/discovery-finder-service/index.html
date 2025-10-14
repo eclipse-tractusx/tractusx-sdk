@@ -34,10 +34,10 @@
       
       
       
-        <link rel="prev" href="../connector-discovery-service/">
+        <link rel="prev" href="../../connector/controllers/">
       
       
-        <link rel="next" href="../../tools/tools/">
+        <link rel="next" href="../connector-discovery-service/">
       
       
       <link rel="icon" href="../../../../assets/images/logo_tractus-x-min.ico">
@@ -216,6 +216,100 @@
     
     [data-md-color-scheme="default"] .md-nav--secondary .md-nav__link:hover {
       color: #8B6914 !important;
+    }
+    
+    /* Custom Footer Styles */
+    .md-footer {
+      background-color: #2c2c2c !important;
+      color: #ffffff !important;
+      border-top: 4px solid #FFD700 !important;
+    }
+    
+    .custom-footer {
+      background-color: #2c2c2c;
+      color: #ffffff;
+      padding: 40px 0 20px 0;
+      margin-top: 40px;
+    }
+    
+    .custom-footer__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .custom-footer__section h3 {
+      color: #FFD700 !important;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #FFD700;
+      padding-bottom: 8px;
+    }
+    
+    .custom-footer__links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .custom-footer__links li {
+      margin-bottom: 12px;
+    }
+    
+    .custom-footer__links a {
+      color: #cccccc !important;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      font-size: 0.9rem;
+    }
+    
+    .custom-footer__links a:hover {
+      color: #FFD700 !important;
+      text-decoration: none;
+    }
+    
+    .custom-footer__bottom {
+      border-top: 1px solid #555;
+      margin-top: 30px;
+      padding-top: 20px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .custom-footer__copyright {
+      font-size: 0.85rem;
+      color: #aaaaaa;
+    }
+    
+    .custom-footer__copyright a {
+      color: #FFD700 !important;
+      text-decoration: none;
+    }
+    
+    .custom-footer__copyright a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Responsive footer */
+    @media screen and (max-width: 768px) {
+      .custom-footer__grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        padding: 0 15px;
+      }
+      
+      .custom-footer__bottom {
+        flex-direction: column;
+        gap: 15px;
+      }
     }
   </style>
 
@@ -944,29 +1038,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../connector-discovery-service/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Connector Discovery Service
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -1020,6 +1091,129 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-it-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      What it does
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-you-can-do-with-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      What you can do with it
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-it-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting it up
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Core Methods
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting started
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error handling
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-with-other-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using with other services
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common problems
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common problems">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#authentication-not-connected" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication not connected
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response-was-not-successful" class="md-nav__link">
+    <span class="md-ellipsis">
+      Response was not successful
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-endpoints-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      No endpoints found
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      Further Reading
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#notice" class="md-nav__link">
     <span class="md-ellipsis">
       NOTICE
@@ -1037,9 +1231,55 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../connector-discovery-service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Connector Discovery Service
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Authentication
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1090,10 +1330,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2_6" >
         
           
-          <label class="md-nav__link" for="__nav_3_2_5" id="__nav_3_2_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_2_6" id="__nav_3_2_6_label" tabindex="0">
             
   
   
@@ -1106,8 +1346,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_2_5">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2_6">
             <span class="md-nav__icon md-icon"></span>
             Legacy
           </label>
@@ -2012,6 +2252,129 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-it-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      What it does
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-you-can-do-with-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      What you can do with it
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-it-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting it up
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Core Methods
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting started
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error handling
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-with-other-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using with other services
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common problems
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common problems">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#authentication-not-connected" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication not connected
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response-was-not-successful" class="md-nav__link">
+    <span class="md-ellipsis">
+      Response was not successful
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-endpoints-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      No endpoints found
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      Further Reading
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#notice" class="md-nav__link">
     <span class="md-ellipsis">
       NOTICE
@@ -2063,13 +2426,140 @@ SPDX-License-Identifier: CC-BY-4.0
 
 -->
 <h1 id="discovery-finder-service">Discovery Finder Service</h1>
-<p>TBD</p>
+<p>The Discovery Finder Service helps you locate other discovery services in the Tractus-X dataspace. Think of it as a phone book for finding the right service endpoints based on what you're looking for.</p>
+<h2 id="what-it-does">What it does</h2>
+<p>When you need to find a specific type of discovery service (like BPN discovery or part ID discovery), the Discovery Finder Service tells you where to find it. Instead of hardcoding URLs, you can dynamically discover the current endpoints.</p>
+<p><strong>How it works:</strong></p>
+<ol>
+<li>Ask the Discovery Finder for a specific discovery type (e.g., "bpn")</li>
+<li>Get back the URL where that service is running  </li>
+<li>Use that URL with other services like ConnectorDiscoveryService</li>
+</ol>
+<p>This is especially useful because service endpoints can change, and the Discovery Finder keeps track of the current locations.</p>
+<h2 id="what-you-can-do-with-it">What you can do with it</h2>
+<p>The service supports different types of discoveries:</p>
+<ul>
+<li><strong>BPN Discovery</strong>: Find connector endpoints for Business Partner Numbers</li>
+<li><strong>Part ID Discovery</strong>: Locate services for manufacturer part identification  </li>
+<li><strong>Custom Types</strong>: Works with any discovery type that gets added to the system</li>
+</ul>
+<p>You can also ask for multiple discovery types at once instead of making separate requests.</p>
+<h2 id="setting-it-up">Setting it up</h2>
+<p>The service handles OAuth2 authentication automatically once you provide the credentials, and it's flexible enough to work with different API response formats if needed.</p>
+<h2 id="core-methods">Core Methods</h2>
+<table>
+<thead>
+<tr>
+<th>Method Name</th>
+<th>Parameters</th>
+<th>Description</th>
+<th>Return Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>find_discovery_urls</code></td>
+<td><code>keys: list = ["bpn"]</code></td>
+<td>Finds discovery service URLs for specified types</td>
+<td><code>dict</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="getting-started">Getting started</h2>
+<p>First, import what you need:</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.managers</span><span class="w"> </span><span class="kn">import</span> <span class="n">OAuth2Manager</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.services.discovery</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiscoveryFinderService</span>
+</span></code></pre></div>
+<p>Then set up the service with your OAuth2 credentials:</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Set up authentication</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">oauth_manager</span> <span class="o">=</span> <span class="n">OAuth2Manager</span><span class="p">(</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">realm</span><span class="o">=</span><span class="s2">&quot;CX-Central&quot;</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">clientid</span><span class="o">=</span><span class="s2">&quot;your-client-id&quot;</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">clientsecret</span><span class="o">=</span><span class="s2">&quot;your-client-secret&quot;</span><span class="p">,</span> 
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">auth_url</span><span class="o">=</span><span class="s2">&quot;https://your-auth-server.com&quot;</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">)</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">oauth_manager</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1"># Create the discovery finder</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">discovery_finder</span> <span class="o">=</span> <span class="n">DiscoveryFinderService</span><span class="p">(</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    <span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://your-discovery-finder.com/api/v1.0/administration/connectors/discovery/search&quot;</span><span class="p">,</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    <span class="n">oauth</span><span class="o">=</span><span class="n">oauth_manager</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="basic-usage">Basic usage</h2>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Find discovery URLs for common types</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">discovery_urls</span> <span class="o">=</span> <span class="n">discovery_finder</span><span class="o">.</span><span class="n">find_discovery_urls</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;bpn&quot;</span><span class="p">,</span> <span class="s2">&quot;manufacturerPartId&quot;</span><span class="p">])</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">discovery_urls</span><span class="p">)</span>  <span class="c1"># {&#39;bpn&#39;: &#39;...&#39;, &#39;manufacturerPartId&#39;: &#39;...&#39;}</span>
+</span></code></pre></div>
+<h2 id="error-handling">Error handling</h2>
+<p>Things can go wrong, so wrap your calls in try/catch blocks:</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">discovery_urls</span> <span class="o">=</span> <span class="n">discovery_finder</span><span class="o">.</span><span class="n">find_discovery_urls</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;bpn&quot;</span><span class="p">])</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;BPN Discovery URL: </span><span class="si">{</span><span class="n">discovery_urls</span><span class="p">[</span><span class="s1">&#39;bpn&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">except</span> <span class="ne">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Authentication error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Make sure OAuth2 is connected with oauth_manager.connect()&quot;</span><span class="p">)</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Something went wrong: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="using-with-other-services">Using with other services</h2>
+<p>The Discovery Finder is often used with ConnectorDiscoveryService:</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.services.discovery</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConnectorDiscoveryService</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Pass the discovery finder to connector discovery</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">connector_discovery</span> <span class="o">=</span> <span class="n">ConnectorDiscoveryService</span><span class="p">(</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">oauth</span><span class="o">=</span><span class="n">oauth_manager</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">discovery_finder_service</span><span class="o">=</span><span class="n">discovery_finder</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">connector_discovery_key</span><span class="o">=</span><span class="s2">&quot;bpn&quot;</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">)</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1"># Now find connector endpoints for a BPN</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="n">endpoints</span> <span class="o">=</span> <span class="n">connector_discovery</span><span class="o">.</span><span class="n">find_connector_by_bpn</span><span class="p">(</span><span class="s2">&quot;BPNL000000000001&quot;</span><span class="p">)</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="nb">print</span><span class="p">(</span><span class="n">endpoints</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="common-problems">Common problems</h2>
+<h3 id="authentication-not-connected">Authentication not connected</h3>
+<p>Make sure you call <code>oauth_manager.connect()</code> first:</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">oauth_manager</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>  <span class="c1"># Do this before using discovery_finder</span>
+</span></code></pre></div>
+<h3 id="response-was-not-successful">Response was not successful</h3>
+<ul>
+<li>Check your discovery finder URL is correct</li>
+<li>Verify your OAuth2 credentials</li>
+<li>Make sure the service is running and accessible</li>
+</ul>
+<h3 id="no-endpoints-found">No endpoints found</h3>
+<ul>
+<li>Double-check the discovery type names (e.g., "bpn", not "BPN")</li>
+<li>The discovery services might not be registered yet</li>
+<li>Try a different discovery type to test</li>
+</ul>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<ul>
+<li><strong>Cache the results</strong> - Discovery URLs don't change often, so you can cache them</li>
+<li><strong>Batch requests</strong> - Ask for multiple discovery types at once instead of separate calls  </li>
+<li><strong>Reuse instances</strong> - Create one Discovery Finder and use it throughout your app</li>
+<li><strong>Use environment variables</strong> - Store OAuth2 credentials securely</li>
+<li><strong>Check authentication</strong> - Make sure OAuth2 is connected before making requests</li>
+</ul>
+</div>
+<h2 id="further-reading">Further Reading</h2>
+<ul>
+<li><a href="../../">Dataspace Library Overview</a></li>
+<li><a href="../connector-discovery-service/">Connector Discovery Service</a></li>
+<li><a href="../../../industry-library/discovery-services/bpn-discovery/">BPN Discovery Service</a></li>
+<li><a href="../../authentication/">OAuth2 Authentication</a></li>
+<li><a href="https://eclipse-tractusx.github.io/api-hub/">API Reference</a></li>
+</ul>
 <h2 id="notice">NOTICE</h2>
 <p>This work is licensed under the <a href="https://creativecommons.org/licenses/by/4.0/legalcode">CC-BY-4.0</a>.</p>
 <ul>
 <li>SPDX-License-Identifier: CC-BY-4.0</li>
 <li>SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation</li>
-<li>Source URL: https://github.com/eclipse-tractusx/tractusx-sdk</li>
+<li>Source URL: <a href="https://github.com/eclipse-tractusx/tractusx-sdk">https://github.com/eclipse-tractusx/tractusx-sdk</a></li>
 </ul>
 
 
@@ -2101,24 +2591,55 @@ SPDX-License-Identifier: CC-BY-4.0
         
       </main>
       
-        <footer class="md-footer">
-  
-  <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-      <div class="md-copyright">
-  
-  
-    Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
-    </a>
-  
-</div>
-      
+<div class="custom-footer">
+  <div class="custom-footer__grid">
+    <!-- Eclipse Foundation Section -->
+    <div class="custom-footer__section">
+      <h3>Eclipse Foundation</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://www.eclipse.org/org/" target="_blank" rel="noopener">About</a></li>
+        <li><a href="https://www.eclipse.org/legal/privacy.php" target="_blank" rel="noopener">Privacy Policy</a></li>
+        <li><a href="https://www.eclipse.org/legal/termsofuse.php" target="_blank" rel="noopener">Terms of Use</a></li>
+        <li><a href="https://www.eclipse.org/legal/epl-2.0/" target="_blank" rel="noopener">Compliance</a></li>
+        <li><a href="https://www.eclipse.org/legal/" target="_blank" rel="noopener">Legal Resources</a></li>
+        <li><a href="https://www.eclipse.org/org/foundation/contact.php" target="_blank" rel="noopener">Contact</a></li>
+      </ul>
+    </div>
+    
+    <!-- Eclipse Tractus-X Section -->
+    <div class="custom-footer__section">
+      <h3>Eclipse Tractus-X</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://projects.eclipse.org/projects/automotive.tractusx" target="_blank" rel="noopener">Eclipse Project</a></li>
+        <li><a href="https://github.com/eclipse-tractusx" target="_blank" rel="noopener">GitHub Organization</a></li>
+        <li><a href="https://catena-x.net/" target="_blank" rel="noopener">Catena-X Automotive Network</a></li>
+        <li><a href="mailto:tractusx-dev@eclipse.org">Mailing List</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/issues/new" target="_blank" rel="noopener">Report a Bug</a></li>
+      </ul>
+    </div>
+    
+    <!-- More Section -->
+    <div class="custom-footer__section">
+      <h3>More</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/security/advisories/new" target="_blank" rel="noopener">Report a Vulnerability</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">How to Contribute</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/discussions" target="_blank" rel="noopener">Discussions</a></li>
+        <li><a href="https://chat.eclipse.org/#/room/#automotive.tractusx:matrix.eclipse.org" target="_blank" rel="noopener">Matrix Chat</a></li>
+      </ul>
     </div>
   </div>
-</footer>
-      
+  
+  <div class="custom-footer__bottom">
+    <div class="custom-footer__copyright">
+      Copyright © 2025 Eclipse Tractus-X. Built with 
+      <a href="https://www.mkdocs.org/" target="_blank" rel="noopener">MkDocs</a> and 
+      <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">Material for MkDocs</a>.
+    </div>
+  </div>
+</div>
+
     </div>
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
