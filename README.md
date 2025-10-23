@@ -8,7 +8,7 @@
 
 Eclipse Tractus-X Software Development KIT - The Dataspace &amp; Industry Foundation Libraries
 
-A modular library/toolbox/framework, that helps you to build applications/scripts/microservices which can use the Connector, DTR, Discovery Services for providing and consuming data (any data). 
+A modular library/toolbox/framework, that helps you to build applications/scripts/microservices which can use the Connector, DTR, Discovery Services for providing and consuming data (any data).
 
 It aims to provide a reference implementation for the various interactions between applications and services like the EDC, Digital Twin Registry and Submodel Service.
 This "tool box" helps you to provide data and consume data on a Dataspace Context, how you orchestrate it is then up to you and your use case.
@@ -19,9 +19,9 @@ This SDK will manage automatically the version updates from the EDC and the Digi
 
 No specific use case logic will be configured here, only the bare minimum for interacting in a Dataspace and developing your own applications with this stack, based on the KITs which adopt the core data exchange functionalities, in concrete the following ones:
 
-- [Connector KIT](https://eclipse-tractusx.github.io/docs-kits/kits/Connector%20Kit/Adoption%20View/connector_kit_adoption_view)
-- [Digital Twin KIT](https://eclipse-tractusx.github.io/docs-kits/kits/Digital%20Twin%20Kit/Adoption%20View%20Digital%20Twin%20Kit)
-- [Industry Core KIT](https://eclipse-tractusx.github.io/docs-kits/kits/Industry%20Core%20Kit/Business%20View%20Industry%20Core%20Kit)
+- [Connector KIT](https://eclipse-tractusx.github.io/docs-kits/kits/connector-kit/adoption-view)
+- [Digital Twin KIT](https://eclipse-tractusx.github.io/docs-kits/kits/digital-twin-kit/adoption-view)
+- [Industry Core KIT](https://eclipse-tractusx.github.io/docs-kits/kits/industry-core-kit/adoption-view)
 
 ## Installation
 
@@ -39,20 +39,20 @@ Our latest documentation can be found here:
 
 ## Usage
 
-You can find some examples [here](./examples/)
+You can find some examples in the [dedicated section](./examples/).
 
 > [!NOTE]
 > We are working to make the SDK documentation more accessible and easy to adopt.
 > Our objective is to have an "Open Specification" at our github pages domain.
 > Support us by joining our [open meetings](https://eclipse-tractusx.github.io/community/open-meetings#Industry%20Core%20Hub%20&%20Tractus-X%20SDK%20Weekly) or contributing with documentation.
 
-We have an advanced usage guide in [docs/user](https://github.com/eclipse-tractusx/tractusx-sdk/tree/docs/sdk-usage/docs/user)
+We have an advanced usage guide in [docs/user](https://github.com/eclipse-tractusx/tractusx-sdk/tree/docs/sdk-usage/docs/user).
 
-Here we also have a quick guide
+Here we also have a quick guide:
 
 **📖 Quick Guide:**
 
-- [**Consumption**](#consumption) - Consuming data from the dataspace  
+- [**Consumption**](#consumption) - Consuming data from the dataspace
   - [Call endpoints with one click](#call-endpoints-with-one-click) - Quick data access
   - [Get access to endpoints behind connectors & reuse connections](#get-access-to-the-endpoints-behind-the-connector--reuse-connections) - Easy connection management
   - [Want more?](#want-more) - Advanced catalog operations
@@ -65,67 +65,69 @@ Here we also have a quick guide
 ### Consumption
 
 ```py
-
-from tractusx_sdk.dataspace.managers.connection import PostgresMemoryRefreshConnectionManager
-from tractusx_sdk.dataspace.services.discovery import ConnectorDiscoveryService, DiscoveryFinderService
+from tractusx_sdk.dataspace.managers.connection import PostgresMemoryRefreshConnectionManager, FileSystemConnectionManager, MemoryConnectionManager
+from tractusx_sdk.dataspace.services.connector import ServiceFactory
+from tractusx_sdk.dataspace.services import BaseConnectorService
 
 #####################################################
 
-## Select a connection manager
+# Select a connection manager
 
-## Postgres Synced Option with Memory
+# Postgres Synced Option with Memory
 from sqlmodel import create_engine
+
 engine = create_engine(str("postgresql://user:password@localhost:5432/db"))
-connection_manager = PostgresMemoryRefreshConnectionManager(engine=engine, logger=logger, verbose=True)
+connection_manager = PostgresMemoryRefreshConnectionManager(
+    engine=engine, logger=logger, verbose=True)
 
-### Another Postgres-Only option is available but is not recommended
+# Another Postgres-Only option is available but is not recommended
 
-## FileSystem
-connection_manager = FileSystemConnectionManager(path="./data/my-connections.json", logger=logger, verbose=True)
+# FileSystem
+connection_manager = FileSystemConnectionManager(
+    path="./data/my-connections.json", logger=logger, verbose=True)
 
-## Memory Only
+# Memory Only
 connection_manager = MemoryConnectionManager(logger=logger, verbose=True)
 
 #####################################################
 
-consumer_connector_service:dict = {
+consumer_connector_headers: dict = {
     "X-Api-Key": "my-api-key",
     "Content-Type": "application/json"
 }
 
-consumer_connector_service:BaseConnectorService = ServiceFactory.get_connector_consumer_service(
-      dataspace_version="jupiter", ## "saturn" is also 
-      base_url="https://my-connector-controlplane.url",
-      dma_path="/management",
-      headers=consumer_connector_headers,
-      connection_manager=connection_manager, ## Select one from above
-      logger=logger,## You can remove this to keep logs disabled
-      verbose=True## You can remove this to keep logs disabled
-  )
+consumer_connector_service: BaseConnectorService = ServiceFactory.get_connector_consumer_service(
+    dataspace_version="jupiter",  # "saturn" is also
+    base_url="https://my-connector-controlplane.url",
+    dma_path="/management",
+    headers=consumer_connector_headers,
+    connection_manager=connection_manager,  # Select one from above
+    logger=logger,  # You can remove this to keep logs disabled
+    verbose=True  # You can remove this to keep logs disabled
+)
 ```
 
 #### Call endpoints with one click
 
 ```py
+policies_to_accept: list = [{"odrl:permission": {"odrl:action": {"@id": "odrl:use"}, "odrl:constraint": {"odrl:and": [{"odrl:leftOperand": {"@id": "cx-policy:FrameworkAgreement"}, "odrl:operator": {"@id": "odrl:eq"}, "odrl:rightOperand": "DataExchangeGovernance:1.0"}, {"odrl:leftOperand": {
+    "@id": "cx-policy:Membership"}, "odrl:operator": {"@id": "odrl:eq"}, "odrl:rightOperand": "active"}, {"odrl:leftOperand": {"@id": "cx-policy:UsagePurpose"}, "odrl:operator": {"@id": "odrl:eq"}, "odrl:rightOperand": "cx.core.digitalTwinRegistry:1"}]}}, "odrl:prohibition": [], "odrl:obligation": []}]
 
-policies_to_accept:list = [{"odrl:permission": {"odrl:action": {"@id": "odrl:use"}, "odrl:constraint": {"odrl:and": [{"odrl:leftOperand": {"@id": "cx-policy:FrameworkAgreement"}, "odrl:operator": {"@id": "odrl:eq"}, "odrl:rightOperand": "DataExchangeGovernance:1.0"}, {"odrl:leftOperand": {"@id": "cx-policy:Membership"}, "odrl:operator": {"@id": "odrl:eq"}, "odrl:rightOperand": "active"}, {"odrl:leftOperand": {"@id": "cx-policy:UsagePurpose"}, "odrl:operator": {"@id": "odrl:eq"}, "odrl:rightOperand": "cx.core.digitalTwinRegistry:1"}]}}, "odrl:prohibition": [], "odrl:obligation": []}]
-    
 digital_twins = consumer_connector_service.do_get(
-  counter_party_id="BPNL00000003AYRE",
-  counter_party_address="https://connector-edc-controlplane.tractusx.io/api/v1/dsp",
-  filter_expression=consumer_connector_service.get_filter_expression(
-      key="'http://purl.org/dc/terms/type'.'@id'",
-      operator="=",
-      value="https://w3id.org/catenax/taxonomy#DigitalTwinRegistry"
-  ),
-  path="/shell-descriptors",
-  params={"limit": 5},
-  policies=policies_to_accept
+    counter_party_id="BPNL00000003AYRE",
+    counter_party_address="https://connector-edc-controlplane.tractusx.io/api/v1/dsp",
+    filter_expression=consumer_connector_service.get_filter_expression(
+        key="'http://purl.org/dc/terms/type'.'@id'",
+        operator="=",
+        value="https://w3id.org/catenax/taxonomy#DigitalTwinRegistry"
+    ),
+    path="/shell-descriptors",
+    params={"limit": 5},
+    policies=policies_to_accept
 )
 
-## Here are the digital twins
-print(digital-twins.json())
-
+# Here are the digital twins
+print(digital_twins.json())
 ```
 
 #### Get access to the endpoints behind the connector & reuse connections
@@ -133,40 +135,35 @@ print(digital-twins.json())
 You can do more! Explore other methods from the service.
 
 ```py
-
-
-########
-## Don't want to make the one click approach? Feel free to implement your own logic
+# Don't want to make the one click approach? Feel free to implement your own logic
 
 dataplane_url, access_token = consumer_connector_service.do_dsp(
-  counter_party_id="BPNL00000003AYRE",
-  counter_party_address="https://connector-edc-controlplane.tractusx.io/api/v1/dsp",
-  filter_expression=consumer_connector_service.get_filter_expression(
-      key="'http://purl.org/dc/terms/type'.'@id'",
-      operator="=",
-      value="https://w3id.org/catenax/taxonomy#DigitalTwinRegistry"
-  ),
-  policies=policies_to_accept
+    counter_party_id="BPNL00000003AYRE",
+    counter_party_address="https://connector-edc-controlplane.tractusx.io/api/v1/dsp",
+    filter_expression=consumer_connector_service.get_filter_expression(
+        key="'http://purl.org/dc/terms/type'.'@id'",
+        operator="=",
+        value="https://w3id.org/catenax/taxonomy#DigitalTwinRegistry"
+    ),
+    policies=policies_to_accept
 )
 
-### Using the dataplane proxy and the access token, you can call how much times you like different APIs behind the proxy, reusing the open connection!
-
+# Using the dataplane proxy and the access token, you can call how much times you like different APIs behind the proxy, reusing the open connection!
 ```
 
 #### Want more?
 
 ```py
-
-### Get Catalog by yourself
+# Get Catalog by yourself
 
 catalog = consumer_connector_service.get_catalog_by_dct_type(
-    dct_type="https://w3id.org/catenax/taxonomy#DigitalTwinRegistry"
+    dct_type="https://w3id.org/catenax/taxonomy#DigitalTwinRegistry",
     counter_party_id="BPNL00000003AYRE",
     counter_party_address="https://edc1-controlplane/api/v1/dsp",
     timeout=15
 )
 
-### One is not enough? Call in parallel!
+# One is not enough? Call in parallel!
 catalogs = consumer_connector_service.get_catalogs_by_dct_type(
     dct_type="https://w3id.org/catenax/taxonomy#DigitalTwinRegistry",
     counter_party_id="BPNL00000003AYRE",
@@ -177,44 +174,43 @@ catalogs = consumer_connector_service.get_catalogs_by_dct_type(
     ],
     timeout=15
 )
-
 ```
 
 #### Advanced Usage
 
 ```py
-
-### You can even implement it in the granularity you want!
+# You can even implement it in the granularity you want!
+from tractusx_sdk.dataspace.models.connector.base_contract_negotiation_model import BaseContractNegotiationModel
 from tractusx_sdk.dataspace.models.connector.model_factory import ModelFactory
 
 request: BaseContractNegotiationModel = ModelFactory. get_contract_negotiation_model(
-            dataspace_version="jupiter", 
-            context=[
-                "https://w3id.org/tractusx/policy/v1.0.0",
-                "http://www.w3.org/ns/odrl.jsonld",
-                {
-                    "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
-                }
-            ],
-            counter_party_address="https://edc1-controlplane/api/v1/dsp",
-            offer_id="offer-id",
-            asset_id="asset-id",
-            provider_id="BPNL00000003AYRE",
-            offer_policy=policies_to_accept[0] ## Add here the policy you want to accept
-        )
+    dataspace_version="jupiter",
+    context=[
+        "https://w3id.org/tractusx/policy/v1.0.0",
+        "http://www.w3.org/ns/odrl.jsonld",
+        {
+            "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+        }
+    ],
+    counter_party_address="https://edc1-controlplane/api/v1/dsp",
+    offer_id="offer-id",
+    asset_id="asset-id",
+    provider_id="BPNL00000003AYRE",
+    # Add here the policy you want to accept
+    offer_policy=policies_to_accept[0]
+)
 
-## Build catalog api url
+# Build catalog api url
 response: Response = self.edrs.create(request)
-## In case the response code is not successfull or the response is null
+# In case the response code is not successful or the response is null
 if (response is None or response.status_code != 200):
     return None
 
 negotiation_id = response.json().get("@id", None)
 
-response: Response = self.edrs.get_data_address(oid=negotiation_id, params={"auto_refresh": True})
-
+response: Response = self.edrs.get_data_address(
+    oid=negotiation_id, params={"auto_refresh": True})
 ```
-
 
 ### Discovery
 
@@ -223,14 +219,14 @@ from tractusx_sdk.dataspace.managers import OAuth2Manager
 from tractusx_sdk.dataspace.services.discovery import ConnectorDiscoveryService, DiscoveryFinderService
 
 discovery_oauth = OAuth2Manager(
-            auth_url="https://central-idp/auth/",
-            realm="CX-Central",
-            clientid="456as2id",
-            clientsecret="asbadjsk2as4sad574s",
-        )
+    auth_url="https://central-idp/auth/",
+    realm="CX-Central",
+    clientid="456as2id",
+    clientsecret="asbadjsk2as4sad574s",
+)
 
 discovery_finder_service = DiscoveryFinderService(
-    url="https://discovery-finder.url/api/v1.0/administration/connectors/discovery/search"
+    url="https://discovery-finder.url/api/v1.0/administration/connectors/discovery/search",
     oauth=discovery_oauth
 )
 
@@ -248,20 +244,20 @@ connector_discovery_service.find_connector_by_bpn("BPNL00000000TS1D")
 ```py
 from tractusx_sdk.dataspace.services.connector import ServiceFactory, BaseConnectorService
 
-provider_connector_headers:dict = {
+provider_connector_headers: dict = {
     "X-Api-Key": "my-api-key",
     "Content-Type": "application/json"
 }
 
-    # Create the connector provider service
-provider_connector_service:BaseConnectorService = ServiceFactory.get_connector_provider_service(
-        dataspace_version="jupiter", ## "saturn" is also available
-        base_url="https://my-connector-controlplane.url",
-        dma_path="/management",
-        headers=provider_connector_headers,
-        logger=logger, ## You can remove this to keep logs disabled
-        verbose=True ## You can remove this to keep logs disabled
-    )
+# Create the connector provider service
+provider_connector_service: BaseConnectorService = ServiceFactory.get_connector_provider_service(
+    dataspace_version="jupiter",  # "saturn" is also available
+    base_url="https://my-connector-controlplane.url",
+    dma_path="/management",
+    headers=provider_connector_headers,
+    logger=logger,  # You can remove this to keep logs disabled
+    verbose=True  # You can remove this to keep logs disabled
+)
 provider_connector_service.create_asset(
     asset_id="my-asset-id",
     base_url="https://submodel-service.url/",
@@ -269,23 +265,23 @@ provider_connector_service.create_asset(
     version="3.0",
     semantic_id="urn:samm:io.catenax.part_type_information:1.0.0#PartTypeInformation",
     headers={
-      "X-Api-Key": "my-secret-to-the-submodel-service"
+        "X-Api-Key": "my-secret-to-the-submodel-service"
     }
 )
 provider_connector_service.create_asset(
-  asset_id="digital-twin-registry",
-  base_url="https://digital-twin-registry.tractusx.io/api/v3",
-  dct_type="https://w3id.org/catenax/taxonomy#DigitalTwinRegistry",
-  version="3.0",
-  proxy_params={ 
-      "proxyQueryParams": "true",
-      "proxyPath": "true",
-      "proxyMethod": "true",
-      "proxyBody": "true"
-  }
+    asset_id="digital-twin-registry",
+    base_url="https://digital-twin-registry.tractusx.io/api/v3",
+    dct_type="https://w3id.org/catenax/taxonomy#DigitalTwinRegistry",
+    version="3.0",
+    proxy_params={
+        "proxyQueryParams": "true",
+        "proxyPath": "true",
+        "proxyMethod": "true",
+        "proxyBody": "true"
+    }
 )
 
-### And you can do much more! Create Policies, Contracts, etc
+# And you can do much more! Create Policies, Contracts, etc
 ```
 
 #### Digital Twin Registry
@@ -296,49 +292,54 @@ from tractusx_sdk.industry.models.aas.v3 import (
 )
 from tractusx_sdk.industry.services import AasService
 aas_service = AasService(
-        base_url="https://digital-twin-registry.tractusx.io",
-        base_lookup_url="https://aas-discovery.tractusx.io", ## Here you can add another one if you want.
-        api_path="/api/v3",
-    )
+    base_url="https://digital-twin-registry.tractusx.io",
+    # Here you can add another one if you want.
+    base_lookup_url="https://aas-discovery.tractusx.io",
+    api_path="/api/v3",
+)
 
-## Get shells or one shell
-existing_shell:ShellDescriptor = aas_service.get_asset_administration_shell_descriptor_by_id(
-            aas_identifier="urn:uuid:ad7bc88c-fa31-40d8-8f17-2ceaf1295ff6"
-        )
+# Get shells or one shell
+existing_shell: ShellDescriptor = aas_service.get_asset_administration_shell_descriptor_by_id(
+    aas_identifier="urn:uuid:ad7bc88c-fa31-40d8-8f17-2ceaf1295ff6"
+)
 
 ########
-## Create Shells
+# Create Shells
 
 # Create display name with multiple languages
 display_name_en = MultiLanguage(language="en", text="Vehicle Battery Shell")
 display_name_de = MultiLanguage(language="de", text="Fahrzeugbatterie Shell")
 display_names = [display_name_en, display_name_de]
 
-# Create description with multiple languages  
-description_en = MultiLanguage(language="en", text="Digital twin shell for electric vehicle battery component")
-description_de = MultiLanguage(language="de", text="Digitaler Zwilling für Elektrofahrzeug-Batteriekomponente")
+# Create description with multiple languages
+description_en = MultiLanguage(
+    language="en", text="Digital twin shell for electric vehicle battery component")
+description_de = MultiLanguage(
+    language="de", text="Digitaler Zwilling für Elektrofahrzeug-Batteriekomponente")
 descriptions = [description_en, description_de]
 
-bpns_list=["BPNL00000003AYRE", "BPNL000000000TEA4"]
-manufacturer_id="BPNL000000032ASTT"
+bpns_list = ["BPNL00000003AYRE", "BPNL000000000TEA4"]
+manufacturer_id = "BPNL000000032ASTT"
 # Create specific asset identifiers to allow shell descriptors to be seen.
 manufacturer_part_id = SpecificAssetId(
-             name="manufacturerPartId",
-            value="BAT-12345-ABC",
-            externalSubjectId=Reference(
-                type=ReferenceTypes.EXTERNAL_REFERENCE,
-                keys=[ReferenceKey(type=ReferenceKeyTypes.GLOBAL_REFERENCE, value=bpn) for bpn in bpn_keys] or
-                    [ReferenceKey(type=ReferenceKeyTypes.GLOBAL_REFERENCE, value=manufacturer_id)]
-            ),
-            supplementalSemanticIds=supplemental_semantic_ids
-        )(
     name="manufacturerPartId",
     value="BAT-12345-ABC",
-    external_subject_id={"type": "GlobalReference", "keys": ["BPNL00000003AYRE"]}
+    externalSubjectId=Reference(
+        type=ReferenceTypes.EXTERNAL_REFERENCE,
+        keys=[ReferenceKey(type=ReferenceKeyTypes.GLOBAL_REFERENCE, value=bpn) for bpn in bpn_keys] or
+        [ReferenceKey(type=ReferenceKeyTypes.GLOBAL_REFERENCE,
+                      value=manufacturer_id)]
+    ),
+    supplementalSemanticIds=supplemental_semantic_ids
+)(
+    name="manufacturerPartId",
+    value="BAT-12345-ABC",
+    external_subject_id={"type": "GlobalReference",
+                         "keys": ["BPNL00000003AYRE"]}
 )
 
 vehicle_identification_number = SpecificAssetId(
-    name="van", 
+    name="van",
     value="WVWZZZ1JZ3W386752"
 )
 
@@ -346,19 +347,19 @@ specific_asset_ids = [manufacturer_part_id, vehicle_identification_number]
 
 # Create the shell descriptor
 shell = ShellDescriptor(
-        id="urn:uuid:ad7bc88c-fa31-40d8-8f17-2ceaf1295ff6",
-        idShort="VehicleBatteryShell001",
-        displayName=display_names,
-        description=descriptions,
-        assetType="Battery",
-        assetKind=AssetKind.INSTANCE,
-        globalAssetId="urn:uuid:550e8400-e29b-41d4-a716-446655440000",
-        specificAssetIds=specific_asset_ids,
-    )
-res = aas_service.create_asset_administration_shell_descriptor(shell_descriptor=shell)
+    id="urn:uuid:ad7bc88c-fa31-40d8-8f17-2ceaf1295ff6",
+    idShort="VehicleBatteryShell001",
+    displayName=display_names,
+    description=descriptions,
+    assetType="Battery",
+    assetKind=AssetKind.INSTANCE,
+    globalAssetId="urn:uuid:550e8400-e29b-41d4-a716-446655440000",
+    specificAssetIds=specific_asset_ids,
+)
+res = aas_service.create_asset_administration_shell_descriptor(
+    shell_descriptor=shell)
 
-## Congrats! You created a shell according to the AAS 3.0 standards!
-
+# Congrats! You created a shell according to the AAS 3.0 standards!
 ```
 
 ### All in one
@@ -366,6 +367,7 @@ res = aas_service.create_asset_administration_shell_descriptor(shell_descriptor=
 Combine provider and consumer in one module to take the best from your connector!
 
 ```py
+from tractusx_sdk.dataspace.services.connector import ServiceFactory
 
 connector_service:dict = {
     "X-Api-Key": "my-api-key",
@@ -376,24 +378,23 @@ connector_service = ServiceFactory.get_connector_service(
       base_url="https://my-connector-controlplane.url",
       dma_path="/management",
       headers=connector_connector_headers,
-      connection_manager=connection_manager
+      connection_manager=connection_manager,
       logger=logger, ## You can remove this to keep logs disabled
       verbose=True ## You can remove this to keep logs disabled
 )
 
 connector_service.consumer.get_catalog(...)
 connector_service.provider.assets.create(...)
-
 ```
 
 ## Roadmap
 
 The development roadmap is the same as the industry core hub.
 
-```
+```text
 February 3 2025     R25.06             R25.09          R25.12
 Kickoff              MVP                Stable          NEXT            2026 -> Beyond
-| ------------------> | ----------------> | -----------> |  ----------------> | 
+| ------------------> | ----------------> | -----------> |  ----------------> |
                 Data Provision     Data Consumption    IC-HUB             + KIT Use Cases
                      SDK                 SDK             + Integrate First
                                                            Use Case (e.g. DPP) (Another usage for the SDK)
@@ -407,13 +408,13 @@ Kickoff              MVP                Stable          NEXT            2026 -> 
 - You can create a frontend for your use case (with any technology) and build your own Backend Apis with this tool box.
 - Furthermore, you can use this in a Jupyter notebook for example, or create your personal scripts for using the Connector, DTR and Submodel Service.
 - It enables you to build your own use case logic over it, without needing to worry about versioning (Jupiter and Saturn supported).
-- Base yourself in the [Industry Core Hub](https://github.com/eclipse-tractusx/tractusx-sdk) which provides you a "lighthouse" for using this SDK.
+- Base yourself in the [Industry Core Hub](https://github.com/eclipse-tractusx/industry-core-hub) which provides you a "lighthouse" for using this SDK.
 
 ## Applications that use this SDK
 
-- [Industry Core Hub](https://github.com/eclipse-tractusx/tractusx-sdk): Example on how to use the SDK to develop an application.
-  - [Backend](https://github.com/eclipse-tractusx/tractusx-sdk/tree/main/ichub-backend): An example of how to use the SDK dataspace & industry libaries in your application.
-  - [Frontend](https://github.com/eclipse-tractusx/tractusx-sdk/tree/main/ichub-frontend): An example of how to use the SDK API interfaces from each microservice.
+- [Industry Core Hub](https://github.com/eclipse-tractusx/industry-core-hub): Example on how to use the SDK to develop an application.
+  - [Backend](https://github.com/eclipse-tractusx/industry-core-hub/tree/main/ichub-backend): An example of how to use the SDK dataspace & industry libaries in your application.
+  - [Frontend](https://github.com/eclipse-tractusx/industry-core-hub/tree/main/ichub-frontend): An example of how to use the SDK API interfaces from each microservice.
   - The use case add-ons from the IC-Hub will also use this!
 
 - [Tractus-X SDK Services](https://github.com/eclipse-tractusx/tractusx-sdk-services): Repository where the reusable APIs/Services for the SDK are available as microservices.
@@ -434,16 +435,16 @@ To ease the understanding what is the tool box (SDK) here is a resumed diagram:
 
 Here you will find a design decision which was taken at the beginning of the industry core hub development:
 
-[Industry Core Hub Decision Record 0002](https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/docs/architecture/decision-records/0002-tractus-x-sdk.md)
+[Industry Core Hub Decision Record 0002](https://github.com/eclipse-tractusx/industry-core-hub/blob/main/docs/architecture/decision-records/0002-tractus-x-sdk.md)
 
 While developing the Industry Core Hub, in parallel we decided to create a SDK for Tractus-X.
 
-[Industry Core Hub Decision Record 0003 Create new Repository](https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/docs/architecture/decision-records/0003-tractus-x-sdk-individual-repository.md)
+[Industry Core Hub Decision Record 0003 Create new Repository](https://github.com/eclipse-tractusx/industry-core-hub/blob/main/docs/architecture/decision-records/0003-tractus-x-sdk-individual-repository.md)
 
 Having an individual SDK repository, we are creating a reusable and modular middleware/library for all use cases and applications that want to easily interact with the Tractus-X Datapaces Components required for data provision and data consumption:
 
 - [Tractus-X Eclipse Dataspace Connector (EDC)](https://github.com/eclipse-tractusx/tractusx-edc)
-- [Tractus-X Digital Twin Registry](https://github.com/eclipse-tractusx/sldt-digital-twin-registry)
+- [Tractus-X Digital Twin Registry (DTR)](https://github.com/eclipse-tractusx/sldt-digital-twin-registry)
 - [Simple Data Backend](https://github.com/eclipse-tractusx/tractus-x-umbrella/tree/main/simple-data-backend)
 
 And other core services like:
@@ -451,10 +452,10 @@ And other core services like:
 **Additional Services**:
 
 - Discovery Services:
-  - [Discovery Finder](https://github.com/eclipse-tractusx/sldt-discovery-finder)  
+  - [Discovery Finder](https://github.com/eclipse-tractusx/sldt-discovery-finder)
   - [BPN Discovery](https://github.com/eclipse-tractusx/sldt-bpn-discovery)
   - [EDC Discovery](https://github.com/eclipse-tractusx/portal-backend)
-  
+
 - [Portal IAM/IDP](https://github.com/eclipse-tractusx/portal-iam)
 
 Our aim is to automate the target releases and compatibility with this systems using DevOps mechanisms.
@@ -484,7 +485,7 @@ You can use it to build you use case application how you want, based on the indu
 
 ## Dataspace Architecture Patterns
 
-This SDK will be developed based and will follow the Dataspace & Industry Usage Patterns recommended in Eclipse Tractus-X [sig-architecture](https://github.com/eclipse-tractusx/sig-architecture)
+This SDK will be developed based and will follow the Dataspace & Industry Usage Patterns recommended in Eclipse Tractus-X [sig-architecture](https://github.com/eclipse-tractusx/sig-architecture).
 
 ## How to Get Involved
 
@@ -515,6 +516,7 @@ Please follow the [Security Issue Reporting Guidelines](https://eclipse-tractusx
 
 - [Apache-2.0](https://raw.githubusercontent.com/eclipse-tractusx/tractusx-sdk/main/LICENSE) for code
 - [CC-BY-4.0](https://spdx.org/licenses/CC-BY-4.0.html) for non-code
+
 ---
 
 Thank you for using Software Development KIT! If you have any questions or need further assistance, please feel free to reach out.
