@@ -208,7 +208,7 @@ connector_discovery = ConnectorDiscoveryService(
 - [Dataspace Library Overview](../index.md)
 - [Discovery Finder Service](./discovery-finder-service.md)
 - [Connector Services](../connector/services.md)
-- [OAuth2 Authentication](../authentication.md)
+- [OAuth2 Authentication](../../../core-concepts/authentication-security/authentication.md)
 - [API Reference](https://eclipse-tractusx.github.io/api-hub/)
 
 ## NOTICE

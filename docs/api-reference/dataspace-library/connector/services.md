@@ -63,7 +63,7 @@ provider_connector_service.create_asset(
 )
 ```
 
-For dedicated consumer and combined usage patterns, see the examples below. For even more advanced scenarios, refer to the [SDK Structure and Components](../../sdk-structure-and-components.md) and [Dataspace Connector Usage](../legacy/edc-sdk-usage.md).
+For dedicated consumer and combined usage patterns, see the examples below. For even more advanced scenarios, refer to the [SDK Structure and Components](../../../core-concepts/sdk-architecture/sdk-structure-and-components.md) and [Dataspace Connector Usage](../../../api-reference/dataspace-library/legacy/edc-sdk-usage.md).
 
 ## Consumer Connector Example
 
@@ -186,7 +186,7 @@ Combined:
 ## Further Reading
 
 - [Dataspace Library Overview](../index.md)
-- [SDK Structure and Components](../../sdk-structure-and-components.md)
+- [SDK Structure and Components](../../../core-concepts/sdk-architecture/sdk-structure-and-components.md)
 - [Connector Discovery Example](../discovery-services/connector-discovery-service.md)
 - [API Reference](https://eclipse-tractusx.github.io/api-hub/)
 

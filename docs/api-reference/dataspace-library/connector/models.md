@@ -109,7 +109,7 @@ The following table summarizes the most important attributes used across connect
 ## Further Reading
 
 - [Connector Services Overview](services.md)
-- [SDK Structure and Components](../../sdk-structure-and-components.md)
+- [SDK Structure and Components](../../../core-concepts/sdk-architecture/sdk-structure-and-components.md)
 - [Dataspace Library Overview](../index.md)
 - [API Reference](https://eclipse-tractusx.github.io/api-hub/)
 

@@ -158,7 +158,7 @@ oauth_manager.connect()  # Do this before using discovery_finder
 - [Dataspace Library Overview](../index.md)
 - [Connector Discovery Service](./connector-discovery-service.md)
 - [BPN Discovery Service](../../industry-library/discovery-services/bpn-discovery.md)
-- [OAuth2 Authentication](../authentication.md)
+- [OAuth2 Authentication](../../../core-concepts/authentication-security/authentication.md)
 - [API Reference](https://eclipse-tractusx.github.io/api-hub/)
 
 ## NOTICE

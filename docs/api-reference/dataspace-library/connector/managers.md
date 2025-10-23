@@ -119,7 +119,7 @@ pg_connection_manager = PostgresConnectionManager(engine=my_engine, table_name="
 
 - [Connector Services Overview](services.md)
 - [Connector Models](models.md)
-- [SDK Structure and Components](../../sdk-structure-and-components.md)
+- [SDK Structure and Components](../../../core-concepts/sdk-architecture/sdk-structure-and-components.md)
 - [API Reference](https://eclipse-tractusx.github.io/api-hub/)
 
 ---

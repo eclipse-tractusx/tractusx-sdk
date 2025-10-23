@@ -127,7 +127,7 @@ asset_controller = ControllerFactory.get_asset_controller(
 ## Further Reading
 
 - [Dataspace Library Overview](../index.md)
-- [SDK Structure and Components](../../sdk-structure-and-components.md)
+- [SDK Structure and Components](../../../core-concepts/sdk-architecture/sdk-structure-and-components.md)
 - [Connector Services](./services.md)
 - [API Reference](https://eclipse-tractusx.github.io/api-hub/)
 

@@ -53,7 +53,7 @@ tractusx_sdk/dataspace/
 └── tools/             # Utility functions and helpers
 ```
 
-For a deeper dive into the SDK structure, see [SDK Structure and Components](../sdk-structure-and-components.md).
+For a deeper dive into the SDK structure, see [SDK Structure and Components](../sdk-architecture/sdk-structure-and-components.md).
 
 ## Key Components
 
@@ -70,12 +70,12 @@ To get started, install the SDK and import the connector service:
 from tractusx_sdk.dataspace.services import ConnectorService
 ```
 
-See the [Getting Started](../../getting-started/getting-started.md) for setup instructions and first steps.
+See the [Getting Started](../../tutorials/getting-started.md) for setup instructions and first steps.
 
 ## Further Reading
 
-- [Connector Services API Reference](connector/services.md)
-- [SDK Structure and Components](../sdk-structure-and-components.md)
+- [Connector Services API Reference](../../api-reference/dataspace-library/connector/services.md)
+- [SDK Structure and Components](../sdk-architecture/sdk-structure-and-components.md)
 - [Tractus-X SDK Documentation](../../index.md)
 
 ## NOTICE

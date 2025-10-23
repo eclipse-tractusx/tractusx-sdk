@@ -2,6 +2,7 @@
 # Eclipse Tractus-X - Tractus-X SDK
 #
 # Copyright (c) 2025 LKS Next
+# Copyright (c) 2025 Mondragon Unibertsitatea
 # Copyright (c) 2025 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
@@ -112,47 +113,58 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting Started: getting-started/getting-started.md
-  - User Guide:
-    - SDK Structure and Components: user-guide/sdk-structure-and-components.md
-    - Dataspace Library:
-      - Overview: user-guide/dataspace-library/index.md
+  - Tutorials: 
+    - Installation & Setup: tutorials/getting-started.md
+    - Create First Asset: tutorials/create-first-asset.md    
+  - How-to Guides:
+    - Industry Core Hub Use Case: how-to-guides/ic-hub-use-case/industry-core-hub-overview.md
+    - Other Use Case: how-to-guides/other-use-case/other-use-case-overview.md
+  - Core Concepts:
+    - SDK Architecture: core-concepts/sdk-architecture/sdk-structure-and-components.md
+    - Dataspace Concepts: core-concepts/dataspace-concepts/index.md
+    - Industry Concepts: core-concepts/industry-concepts/index.md
+    - Extensions Concepts: core-concepts/extensions-concepts/index.md
+    - Authentication & Security: core-concepts/authentication-security/authentication.md
+  - API Reference:
+    - Dataspace Library: 
+      - Overview: api-reference/dataspace-library/index.md
       - Connector:
-        - Services: user-guide/dataspace-library/connector/services.md
-        - Models: user-guide/dataspace-library/connector/models.md
-        - Managers: user-guide/dataspace-library/connector/managers.md
-        - Controllers: user-guide/dataspace-library/connector/controllers.md
+        - Services: api-reference/dataspace-library/connector/services.md
+        - Models: api-reference/dataspace-library/connector/models.md
+        - Managers: api-reference/dataspace-library/connector/managers.md
+        - Controllers: api-reference/dataspace-library/connector/controllers.md
       - Discovery Services:
-        - Discovery Finder Service: user-guide/dataspace-library/discovery-services/discovery-finder-service.md
-        - Connector Discovery Service: user-guide/dataspace-library/discovery-services/connector-discovery-service.md
-      - Authentication: user-guide/dataspace-library/authentication.md
-      - Tools: user-guide/dataspace-library/tools/tools.md
+        - Discovery Finder Service: api-reference/dataspace-library/discovery-services/discovery-finder-service.md
+        - Connector Discovery Service: api-reference/dataspace-library/discovery-services/connector-discovery-service.md
+      - Tools: api-reference/dataspace-library/tools/tools.md
       - Legacy:
-        - Connector: user-guide/dataspace-library/legacy/edc-sdk-usage.md
+        - Connector: api-reference/dataspace-library/legacy/edc-sdk-usage.md
     - Industry Library:
-      - Overview: user-guide/industry-library/index.md
+      - Overview: api-reference/industry-library/index.md
       - DTR: 
-        - Services: user-guide/industry-library/dtr/services.md
-        - Models: user-guide/industry-library/dtr/models.md
+        - Services: api-reference/industry-library/dtr/services.md
+        - Models: api-reference/industry-library/dtr/models.md
       - Submodel Server:
         - Adapters:
-          - Base Adapter: user-guide/industry-library/submodel-server/adapters/base-adapter.md
-          - File System Adapter: user-guide/industry-library/submodel-server/adapters/file-system-adapter.md
+          - Base Adapter: api-reference/industry-library/submodel-server/adapters/base-adapter.md
+          - File System Adapter: api-reference/industry-library/submodel-server/adapters/file-system-adapter.md
       - Discovery Services:
-        - BPN Discovery: user-guide/industry-library/discovery-services/bpn-discovery.md
+        - BPN Discovery: api-reference/industry-library/discovery-services/bpn-discovery.md 
       - Legacy:
-        - Submodel Server: user-guide/industry-library/legacy/submodel-server-sdk-usage.md
-        - DTR: user-guide/industry-library/legacy/dtr-sdk-usage.md
+        - DTR: api-reference/industry-library/legacy/dtr-sdk-usage.md
+        - Submodel Server: api-reference/industry-library/legacy/submodel-server-sdk-usage.md
     - Extension Library:
-      - Overview: user-guide/extension-library/index.md
-      - Semantics: user-guide/extension-library/semantics/semantics.md
-  - Decisions Records:
-    - Architecture:
-      - 1.- Record Architecture Decisions: architecture/decision-records/0001-record-architecture-decisions.md
-      - 2.- Data Storage Architecture: architecture/decision-records/0002-data-storage-architecture.md
-      - 3.- SDK Module Architecture: architecture/decision-records/0003-sdk-module-architecture.md
-      - 4.- Tractus-X SDK Service: architecture/decision-records/0004-tractusx-sdk-services.md
-  - Versioning: VERSIONING.md
+      - Overview: api-reference/extension-library/index.md
+      - Semantics: api-reference/extension-library/semantics/semantics.md
+  - Contributing:
+    - Contribution Guidelines: contributing/contribution-guidelines.md
+    - Code of Conduct: contributing/code-of-conduct.md
+    - Architectural Decision Records:
+      - 1.- Record Architecture Decisions: contributing/architectural-decisions/0001-record-architecture-decisions.md
+      - 2.- Data Storage Architecture: contributing/architectural-decisions/0002-data-storage-architecture.md
+      - 3.- SDK Module Architecture: contributing/architectural-decisions/0003-sdk-module-architecture.md
+      - 4.- Tractus-X SDK Service: contributing/architectural-decisions/0004-tractusx-sdk-services.md
+    - Versioning: contributing/versioning/VERSIONING.md
 
 copyright: >
   Copyright &copy; 2025 Eclipse Tractus-X

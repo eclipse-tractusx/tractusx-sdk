@@ -32,7 +32,7 @@ The SDK is organized into three main libraries, each serving distinct purposes:
 
     Core connector services and Eclipse Tractus-X Connector integration for basic dataspace operations.
 
-    [:octicons-arrow-right-24: Learn more](dataspace-library/index.md)
+    [:octicons-arrow-right-24: Learn more](../../api-reference/dataspace-library/index.md)
 
 -   :material-factory:{ .lg .middle } **Industry Library**
 
@@ -40,7 +40,7 @@ The SDK is organized into three main libraries, each serving distinct purposes:
 
     Digital Twin Registry and Submodel Server integration for industry-specific data models and standards.
 
-    [:octicons-arrow-right-24: Learn more](industry-library/index.md)
+    [:octicons-arrow-right-24: Learn more](../../api-reference/industry-library/dtr/services.md)
 
 -   :material-puzzle:{ .lg .middle } **Extensions Library**
 
@@ -48,7 +48,7 @@ The SDK is organized into three main libraries, each serving distinct purposes:
 
     Use case-specific extensions and add-on functionality for custom business logic implementations.
 
-    [:octicons-arrow-right-24: Learn more](extension-library/index.md)
+    [:octicons-arrow-right-24: Learn more](../../api-reference/extension-library/semantics/semantics.md)
 
 </div>
 

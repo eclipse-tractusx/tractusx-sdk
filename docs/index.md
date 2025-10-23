@@ -98,13 +98,13 @@ This SDK is designed for:
 ## Quick Links and Resources
 
 ### 🚀 **Getting Started**
-- [Installation Guide](getting-started/getting-started.md#installation-guide) - Set up your development environment
-- [First step: Creation of an asset](getting-started/getting-started.md#first-step-creation-of-an-asset) - Build your first dataspace application
+- [Installation Guide](tutorials/getting-started.md) - Set up your development environment
+- [First step: Creation of an asset](tutorials/getting-started.md) - Build your first dataspace application
 
-### 📚 **User Guides**
-- [Dataspace Library](user-guide/dataspace-library/index.md) - Core connector services and Eclipse Tractus-X Connector integration
-- [Industry Library](user-guide/industry-library/index.md) - Digital Twin Registry and Submodel Server integration
-- [Extension Library](user-guide/extension-library/index.md) - Use case-specific extensions and add-on functionality
+### 📚 **Core Concepts**
+- [Dataspace Library](core-concepts/dataspace-concepts/index.md) - Core connector services and Eclipse Tractus-X Connector integration
+- [Industry Library](core-concepts/industry-concepts/index.md) - Digital Twin Registry and Submodel Server integration
+- [Extension Library](api-reference/extension-library/semantics/semantics.md) - Use case-specific extensions and add-on functionality
 
 ### 🛠️ **Development**
 - [GitHub Repository](https://github.com/eclipse-tractusx/tractusx-sdk) - Source code and issues
@@ -123,7 +123,7 @@ This SDK is designed for:
 ---
 
 !!! tip "New to Dataspace Technology?"
-    Start with our [First step](getting-started/getting-started.md#first-step-creation-of-an-asset) to learn the basics of dataspace interaction in just 10 minutes!
+    Start with our [Getting Started Guide](tutorials/getting-started.md) to learn the basics of dataspace interaction in just 10 minutes!
 
 !!! info "Version Information"
     **Current Version:** 0.5.0  

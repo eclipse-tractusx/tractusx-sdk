@@ -353,10 +353,12 @@ def safe_api_call(oauth_manager, api_function):
 
 ## Further Reading
 
-- [Discovery Services](./discovery-services/discovery-finder-service.md) - Learn how to use authentication with discovery services
-- [Connector Services](./connector/services.md) - Using authentication with connector services
-- [Dataspace Library Overview](./index.md) - Complete overview of the dataspace library
-- [Getting Started Guide](../../getting-started/getting-started.md) - Start here if you're new to the SDK
+## Further Reading
+
+- [Discovery Services](../../api-reference/dataspace-library/discovery-services/discovery-finder-service.md) - Learn how to use authentication with discovery services
+- [Connector Services](../../api-reference/dataspace-library/connector/services.md) - Using authentication with connector services
+- [Dataspace Library Overview](../../api-reference/dataspace-library/index.md) - Complete overview of the dataspace library
+- [Getting Started Guide](../../tutorials/getting-started.md) - Start here if you're new to the SDK
 
 ## NOTICE
 
