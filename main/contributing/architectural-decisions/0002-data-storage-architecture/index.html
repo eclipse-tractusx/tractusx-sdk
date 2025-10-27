@@ -34,28 +34,32 @@
       
       
       
+        <link rel="prev" href="../0001-record-architecture-decisions/">
       
       
-      <link rel="icon" href="/assets/images/logo_tractus-x-min.ico">
+        <link rel="next" href="../0003-sdk-module-architecture/">
+      
+      
+      <link rel="icon" href="../../../assets/images/logo_tractus-x-min.ico">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.21">
     
     
       
-        <title>Tractus-X SDK Documentation</title>
+        <title>2.- Data Storage Architecture - Tractus-X SDK Documentation</title>
       
     
     
   
-      <link rel="stylesheet" href="/assets/stylesheets/main.2a3383ac.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.2a3383ac.min.css">
       
         
-        <link rel="stylesheet" href="/assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
 
     
-  <link rel="stylesheet" href="/assets/stylesheets/orange-black-theme.css">
+  <link rel="stylesheet" href="../../../assets/stylesheets/orange-black-theme.css">
   <style>
     /* Fix version number display and header spacing */
     .md-header__inner {
@@ -322,11 +326,11 @@
       
     
     
-      <link rel="stylesheet" href="/assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="/assets/stylesheets/orange-black-theme.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/orange-black-theme.css">
     
-    <script>__md_scope=new URL("/",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -351,6 +355,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#2-data-storage-architecture" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -365,9 +374,9 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/." title="Tractus-X SDK Documentation" class="md-header__button md-logo" aria-label="Tractus-X SDK Documentation" data-md-component="logo">
+    <a href="../../.." title="Tractus-X SDK Documentation" class="md-header__button md-logo" aria-label="Tractus-X SDK Documentation" data-md-component="logo">
       
-  <img src="/assets/images/logo_tractus-x.svg" alt="logo">
+  <img src="../../../assets/images/logo_tractus-x.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -384,7 +393,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              2.- Data Storage Architecture
             
           </span>
         </div>
@@ -502,7 +511,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="/." class="md-tabs__link">
+      <a href="../../.." class="md-tabs__link">
         
   
   
@@ -523,7 +532,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="/tutorials/getting-started/" class="md-tabs__link">
+        <a href="../../../tutorials/getting-started/" class="md-tabs__link">
           
   
   
@@ -543,7 +552,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="/how-to-guides/ic-hub-use-case/industry-core-hub-overview/" class="md-tabs__link">
+        <a href="../../../how-to-guides/ic-hub-use-case/industry-core-hub-overview/" class="md-tabs__link">
           
   
   
@@ -563,7 +572,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="/core-concepts/sdk-architecture/sdk-structure-and-components/" class="md-tabs__link">
+        <a href="../../../core-concepts/sdk-architecture/sdk-structure-and-components/" class="md-tabs__link">
           
   
   
@@ -590,7 +599,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="/api-reference/dataspace-library/" class="md-tabs__link">
+        <a href="../../../api-reference/dataspace-library/" class="md-tabs__link">
           
   
   
@@ -609,11 +618,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="/contributing/contribution-guidelines/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../contribution-guidelines/" class="md-tabs__link">
           
   
   
@@ -647,9 +658,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/." title="Tractus-X SDK Documentation" class="md-nav__button md-logo" aria-label="Tractus-X SDK Documentation" data-md-component="logo">
+    <a href="../../.." title="Tractus-X SDK Documentation" class="md-nav__button md-logo" aria-label="Tractus-X SDK Documentation" data-md-component="logo">
       
-  <img src="/assets/images/logo_tractus-x.svg" alt="logo">
+  <img src="../../../assets/images/logo_tractus-x.svg" alt="logo">
 
     </a>
     Tractus-X SDK Documentation
@@ -676,7 +687,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -743,7 +754,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/tutorials/getting-started/" class="md-nav__link">
+      <a href="../../../tutorials/getting-started/" class="md-nav__link">
         
   
   
@@ -766,7 +777,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/tutorials/create-first-asset/" class="md-nav__link">
+      <a href="../../../tutorials/create-first-asset/" class="md-nav__link">
         
   
   
@@ -841,7 +852,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/how-to-guides/ic-hub-use-case/industry-core-hub-overview/" class="md-nav__link">
+      <a href="../../../how-to-guides/ic-hub-use-case/industry-core-hub-overview/" class="md-nav__link">
         
   
   
@@ -864,7 +875,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/how-to-guides/other-use-case/other-use-case-overview/" class="md-nav__link">
+      <a href="../../../how-to-guides/other-use-case/other-use-case-overview/" class="md-nav__link">
         
   
   
@@ -939,7 +950,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/core-concepts/sdk-architecture/sdk-structure-and-components/" class="md-nav__link">
+      <a href="../../../core-concepts/sdk-architecture/sdk-structure-and-components/" class="md-nav__link">
         
   
   
@@ -962,7 +973,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/core-concepts/dataspace-concepts/" class="md-nav__link">
+      <a href="../../../core-concepts/dataspace-concepts/" class="md-nav__link">
         
   
   
@@ -985,7 +996,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/core-concepts/industry-concepts/" class="md-nav__link">
+      <a href="../../../core-concepts/industry-concepts/" class="md-nav__link">
         
   
   
@@ -1008,7 +1019,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/core-concepts/extensions-concepts/" class="md-nav__link">
+      <a href="../../../core-concepts/extensions-concepts/" class="md-nav__link">
         
   
   
@@ -1031,7 +1042,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/core-concepts/authentication-security/authentication/" class="md-nav__link">
+      <a href="../../../core-concepts/authentication-security/authentication/" class="md-nav__link">
         
   
   
@@ -1151,7 +1162,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/dataspace-library/" class="md-nav__link">
+      <a href="../../../api-reference/dataspace-library/" class="md-nav__link">
         
   
   
@@ -1219,7 +1230,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/dataspace-library/connector/services/" class="md-nav__link">
+      <a href="../../../api-reference/dataspace-library/connector/services/" class="md-nav__link">
         
   
   
@@ -1242,7 +1253,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/dataspace-library/connector/models/" class="md-nav__link">
+      <a href="../../../api-reference/dataspace-library/connector/models/" class="md-nav__link">
         
   
   
@@ -1265,7 +1276,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/dataspace-library/connector/managers/" class="md-nav__link">
+      <a href="../../../api-reference/dataspace-library/connector/managers/" class="md-nav__link">
         
   
   
@@ -1288,7 +1299,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/dataspace-library/connector/controllers/" class="md-nav__link">
+      <a href="../../../api-reference/dataspace-library/connector/controllers/" class="md-nav__link">
         
   
   
@@ -1364,7 +1375,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/dataspace-library/discovery-services/discovery-finder-service/" class="md-nav__link">
+      <a href="../../../api-reference/dataspace-library/discovery-services/discovery-finder-service/" class="md-nav__link">
         
   
   
@@ -1387,7 +1398,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/dataspace-library/discovery-services/connector-discovery-service/" class="md-nav__link">
+      <a href="../../../api-reference/dataspace-library/discovery-services/connector-discovery-service/" class="md-nav__link">
         
   
   
@@ -1418,7 +1429,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/dataspace-library/tools/tools/" class="md-nav__link">
+      <a href="../../../api-reference/dataspace-library/tools/tools/" class="md-nav__link">
         
   
   
@@ -1486,7 +1497,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/dataspace-library/legacy/edc-sdk-usage/" class="md-nav__link">
+      <a href="../../../api-reference/dataspace-library/legacy/edc-sdk-usage/" class="md-nav__link">
         
   
   
@@ -1570,7 +1581,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/industry-library/" class="md-nav__link">
+      <a href="../../../api-reference/industry-library/" class="md-nav__link">
         
   
   
@@ -1638,7 +1649,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/industry-library/dtr/services/" class="md-nav__link">
+      <a href="../../../api-reference/industry-library/dtr/services/" class="md-nav__link">
         
   
   
@@ -1661,7 +1672,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/industry-library/dtr/models/" class="md-nav__link">
+      <a href="../../../api-reference/industry-library/dtr/models/" class="md-nav__link">
         
   
   
@@ -1782,7 +1793,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/industry-library/submodel-server/adapters/base-adapter/" class="md-nav__link">
+      <a href="../../../api-reference/industry-library/submodel-server/adapters/base-adapter/" class="md-nav__link">
         
   
   
@@ -1805,7 +1816,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/industry-library/submodel-server/adapters/file-system-adapter/" class="md-nav__link">
+      <a href="../../../api-reference/industry-library/submodel-server/adapters/file-system-adapter/" class="md-nav__link">
         
   
   
@@ -1889,7 +1900,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/industry-library/discovery-services/bpn-discovery/" class="md-nav__link">
+      <a href="../../../api-reference/industry-library/discovery-services/bpn-discovery/" class="md-nav__link">
         
   
   
@@ -1965,7 +1976,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/industry-library/legacy/dtr-sdk-usage/" class="md-nav__link">
+      <a href="../../../api-reference/industry-library/legacy/dtr-sdk-usage/" class="md-nav__link">
         
   
   
@@ -1988,7 +1999,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/industry-library/legacy/submodel-server-sdk-usage/" class="md-nav__link">
+      <a href="../../../api-reference/industry-library/legacy/submodel-server-sdk-usage/" class="md-nav__link">
         
   
   
@@ -2072,7 +2083,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/extension-library/" class="md-nav__link">
+      <a href="../../../api-reference/extension-library/" class="md-nav__link">
         
   
   
@@ -2095,7 +2106,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api-reference/extension-library/semantics/semantics/" class="md-nav__link">
+      <a href="../../../api-reference/extension-library/semantics/semantics/" class="md-nav__link">
         
   
   
@@ -2130,28 +2141,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
-        
-          
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
             
   
   
@@ -2164,7 +2178,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Contributing
@@ -2178,7 +2192,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/contributing/contribution-guidelines/" class="md-nav__link">
+      <a href="../../contribution-guidelines/" class="md-nav__link">
         
   
   
@@ -2201,7 +2215,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/contributing/code-of-conduct/" class="md-nav__link">
+      <a href="../../code-of-conduct/" class="md-nav__link">
         
   
   
@@ -2221,28 +2235,31 @@
                 
   
   
+    
   
   
+  
     
     
     
     
       
       
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
         
           
+          
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3" >
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="">
             
   
   
@@ -2255,7 +2272,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6_3">
             <span class="md-nav__icon md-icon"></span>
             Architectural Decision Records
@@ -2269,7 +2286,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/contributing/architectural-decisions/0001-record-architecture-decisions/" class="md-nav__link">
+      <a href="../0001-record-architecture-decisions/" class="md-nav__link">
         
   
   
@@ -2289,10 +2306,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="/contributing/architectural-decisions/0002-data-storage-architecture/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    2.- Data Storage Architecture
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -2303,6 +2342,71 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#status" class="md-nav__link">
+    <span class="md-ellipsis">
+      Status
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      Context
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      Consequences
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      NOTICE
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2315,7 +2419,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/contributing/architectural-decisions/0003-sdk-module-architecture/" class="md-nav__link">
+      <a href="../0003-sdk-module-architecture/" class="md-nav__link">
         
   
   
@@ -2338,7 +2442,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/contributing/architectural-decisions/0004-tractusx-sdk-services/" class="md-nav__link">
+      <a href="../0004-tractusx-sdk-services/" class="md-nav__link">
         
   
   
@@ -2369,7 +2473,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/contributing/versioning/VERSIONING/" class="md-nav__link">
+      <a href="../../versioning/VERSIONING/" class="md-nav__link">
         
   
   
@@ -2409,6 +2513,61 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#status" class="md-nav__link">
+    <span class="md-ellipsis">
+      Status
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      Context
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      Consequences
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      NOTICE
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -2420,8 +2579,87 @@
             <div class="md-content" data-md-component="content">
               <article class="md-content__inner md-typeset">
                 
-  <h1>404 - Not found</h1>
+                  
 
+
+  
+    <a href="https://github.com/eclipse-tractusx/tractusx-sdk/edit/main/docs/contributing/architectural-decisions/0002-data-storage-architecture.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<!--
+
+Eclipse Tractus-X - Software Development KIT
+
+Copyright (c) 2025 Contributors to the Eclipse Foundation
+
+See the NOTICE file(s) distributed with this work for additional
+information regarding copyright ownership.
+
+This work is made available under the terms of the
+Creative Commons Attribution 4.0 International (CC-BY-4.0) license,
+which is available at
+https://creativecommons.org/licenses/by/4.0/legalcode.
+
+SPDX-License-Identifier: CC-BY-4.0
+
+-->
+
+<h1 id="2-data-storage-architecture">2. Data Storage Architecture</h1>
+<p>Date: 2025-02-20</p>
+<h2 id="status">Status</h2>
+<p>Accepted</p>
+<h2 id="context">Context</h2>
+<p>From the experience from a data provider with many different products to offer, a SQL database is really critical for supporting the different complex queries that need to be performed.
+However this Tractus-X SDK implementation does not requires persistence at all, since the persistance is located in the service that contain the original data (Digital Twin Registry, EDC, etc.)</p>
+<p>The Tractus-X SDK will have a memory/cache mechanism so it can store just the operations that were performed in a short time, and this data format:</p>
+<div class="language-py highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">ConnectorService</span><span class="p">:</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">memory_cache</span><span class="p">:</span> <span class="nb">dict</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="n">true</span><span class="p">):</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">memory_cache</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="c1"># EXAMPLE</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">add_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edc_url</span><span class="p">,</span> <span class="n">bpn</span><span class="p">,</span> <span class="n">dct_type</span><span class="p">,</span> <span class="n">policies</span><span class="p">):</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">memory_cache</span><span class="p">[</span><span class="n">bpn</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">memory_cache</span><span class="p">[</span><span class="n">bpn</span><span class="p">][</span><span class="n">edc_url</span><span class="p">]</span> <span class="o">=</span> <span class="n">dct_type</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>        <span class="o">...</span>
+</span></code></pre></div>
+<p>The persistence layer will be done in the Use Case applications or in the Industry Core Hub Backend using whatever they want.</p>
+<p>They can decide which technology (SQL or NO-SQL).</p>
+<h2 id="decision">Decision</h2>
+<p>The Tractus-X SDK will provide an in memory cache for the Microservice Server (FAST-API) but it can be disabled per parameters.
+The Storage Architecture will not be specified in the SDK, need to be specified in the application that uses it.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li>Applications need to implement their own persistence layer</li>
+<li>If the application services (EDC, DTR, and data storage) are down then we can't know what was registered and when.</li>
+</ul>
+<h2 id="notice">NOTICE</h2>
+<p>This work is licensed under the <a href="https://creativecommons.org/licenses/by/4.0/legalcode">CC-BY-4.0</a>.</p>
+<ul>
+<li>SPDX-License-Identifier: CC-BY-4.0</li>
+<li>SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation</li>
+<li>Source URL: https://github.com/eclipse-tractusx/tractusx-sdk</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
               </article>
             </div>
           
@@ -2496,10 +2734,10 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "/", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "content.tabs.link", "toc.follow"], "search": "/assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "content.tabs.link", "toc.follow"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="/assets/javascripts/bundle.f55a23d4.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.f55a23d4.min.js"></script>
       
     
   </body>
