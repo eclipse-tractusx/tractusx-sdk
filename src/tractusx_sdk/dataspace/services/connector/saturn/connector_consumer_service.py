@@ -40,14 +40,17 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     DEFAULT_CONTEXT:dict = {"edc": EDC_NAMESPACE,"odrl": "http://www.w3.org/ns/odrl/2/","dct": "https://purl.org/dc/terms/"}
     _connector_discovery_controller: BaseDmaController
     DEFAULT_DCT_TYPE_KEY: str = "'http://purl.org/dc/terms/type'.'@id'"
-    def __init__(self, base_url: str, dma_path: str, headers: dict = None,
+    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
                  connection_manager: BaseConnectionManager = None, verbose: bool = True, logger: logging.Logger = None):
         # Set attributes before accessing them
         self.verbose = verbose
         self.logger = logger
         
+        # Validate dataspace_version is saturn
+        if dataspace_version != "saturn":
+            raise ValueError(f"Saturn ConnectorConsumerService only supports dataspace_version='saturn', got '{dataspace_version}'")
         
-        self.dataspace_version = "saturn"
+        self.dataspace_version = dataspace_version
         # Backwards compatibility: if verbose is True and no logger provided, use default logger
         if self.verbose and self.logger is None:
             self.logger = logging.getLogger(__name__)
