@@ -1,0 +1,4300 @@
+<!--
+  Eclipse Tractus-X - Industry Core Hub Frontend
+
+  Copyright (c) 2025 LKS Next
+  Copyright (c) 2025 Contributors to the Eclipse Foundation
+
+  See the NOTICE file(s) distributed with this work for additional
+  information regarding copyright ownership.
+ 
+  This program and the accompanying materials are made available under the
+  terms of the Apache License, Version 2.0 which is available at
+  https://www.apache.org/licenses/LICENSE-2.0.
+ 
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  either express or implied. See the
+  License for the specific language govern in permissions and limitations
+  under the License.
+ 
+  SPDX-License-Identifier: Apache-2.0
+-->
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A comprehensive SDK for Eclipse Tractus-X components">
+      
+      
+      
+      
+        <link rel="prev" href="../../tools/tools/">
+      
+      
+        <link rel="next" href="../../../industry-library/">
+      
+      
+      <link rel="icon" href="../../../../assets/images/logo_tractus-x-min.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.21">
+    
+    
+      
+        <title>Connector - Tractus-X SDK Documentation</title>
+      
+    
+    
+  
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.2a3383ac.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+  <link rel="stylesheet" href="../../../../assets/stylesheets/orange-black-theme.css">
+  <style>
+    /* Fix version number display and header spacing */
+    .md-header__inner {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex-wrap: nowrap !important;
+    }
+    
+    .md-header__title {
+      flex: 1 !important;
+      min-width: 0 !important;
+      margin-right: 16px !important;
+    }
+    
+
+    
+    .md-header__button {
+      margin-left: 4px !important;
+    }
+    
+    /* Move version selector next to GitHub repository info */
+    .md-version {
+      position: absolute !important;
+      right: -750px !important;
+      z-index: 1 !important;
+    }
+    
+    /* Keep search in center position */
+    .md-search {
+      margin-right: auto !important;
+      margin-left: auto !important;
+    }
+    
+    /* GitHub repo info on the far right */
+    .md-header__source {
+      margin-left: auto !important;
+      margin-right: 60px !important;
+    }
+    
+    /* Theme selector stays on far right */
+    .md-header__button.md-icon {
+      margin-left: auto !important;
+      margin-right: 8px !important;
+    }
+    
+    .md-version__current {
+      background-color: rgba(0, 0, 0, 0.3) !important;
+      border: 2px solid #FFD700 !important;
+      color: #FFD700 !important;
+      font-weight: 600 !important;
+      padding: 6px 16px !important;
+      border-radius: 6px !important;
+      min-width: 140px !important;
+      max-width: 200px !important;
+      text-align: center !important;
+      white-space: nowrap !important;
+      overflow: visible !important;
+      display: block !important;
+      line-height: 1.2 !important;
+    }
+    
+
+    
+    /* Responsive adjustments for better visibility */
+    @media screen and (max-width: 1220px) {
+      .md-header__title {
+        font-size: 1.5rem !important;
+      }
+      
+      .md-version__current {
+        min-width: 120px !important;
+        font-size: 0.9rem !important;
+        padding: 4px 12px !important;
+      }
+      
+      .md-header__option {
+        margin-right: 16px !important;
+      }
+    }
+    
+    @media screen and (max-width: 1024px) {
+      .md-header__title {
+        font-size: 1.3rem !important;
+      }
+      
+      .md-version__current {
+        min-width: 100px !important;
+        font-size: 0.85rem !important;
+        padding: 4px 10px !important;
+      }
+    }
+    
+    @media screen and (max-width: 768px) {
+      .md-header__title {
+        font-size: 1.1rem !important;
+      }
+      
+      .md-version__current {
+        min-width: 90px !important;
+        font-size: 0.8rem !important;
+        padding: 3px 8px !important;
+      }
+      
+      .md-header__option {
+        margin-right: 8px !important;
+        margin-left: 8px !important;
+      }
+    }
+    
+    /* Fix navigation tabs hover coverage */
+    .md-tabs__link {
+      padding: 16px 16px !important;
+      height: auto !important;
+      min-height: 48px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      line-height: 1.2 !important;
+      position: relative !important;
+    }
+    
+    .md-tabs__link:hover {
+      background-color: rgba(0, 0, 0, 0.2) !important;
+      border-radius: 0 !important;
+    }
+    
+    .md-tabs__link--active {
+      background-color: rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    /* Ensure full height coverage for tab text */
+    .md-tabs__item {
+      height: 100% !important;
+    }
+    
+    /* Make content links darker in light mode for better visibility */
+    [data-md-color-scheme="default"] .md-content a {
+      color: #ce970c !important; 
+    }
+    
+    [data-md-color-scheme="default"] .md-content a:hover {
+      color: #8B6914 !important;
+    }
+    
+    [data-md-color-scheme="default"] .md-nav__link:hover {
+      color: #8B6914 !important;
+    }
+    
+    [data-md-color-scheme="default"] .md-nav__link--active {
+      color: #654321 !important;
+      font-weight: 600 !important;
+    }
+    
+    [data-md-color-scheme="default"] .md-nav--secondary .md-nav__link:hover {
+      color: #8B6914 !important;
+    }
+    
+    /* Custom Footer Styles */
+    .md-footer {
+      background-color: #2c2c2c !important;
+      color: #ffffff !important;
+      border-top: 4px solid #FFD700 !important;
+    }
+    
+    .custom-footer {
+      background-color: #2c2c2c;
+      color: #ffffff;
+      padding: 40px 0 20px 0;
+      margin-top: 40px;
+    }
+    
+    .custom-footer__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .custom-footer__section h3 {
+      color: #FFD700 !important;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #FFD700;
+      padding-bottom: 8px;
+    }
+    
+    .custom-footer__links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .custom-footer__links li {
+      margin-bottom: 12px;
+    }
+    
+    .custom-footer__links a {
+      color: #cccccc !important;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      font-size: 0.9rem;
+    }
+    
+    .custom-footer__links a:hover {
+      color: #FFD700 !important;
+      text-decoration: none;
+    }
+    
+    .custom-footer__bottom {
+      border-top: 1px solid #555;
+      margin-top: 30px;
+      padding-top: 20px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .custom-footer__copyright {
+      font-size: 0.85rem;
+      color: #aaaaaa;
+    }
+    
+    .custom-footer__copyright a {
+      color: #FFD700 !important;
+      text-decoration: none;
+    }
+    
+    .custom-footer__copyright a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Responsive footer */
+    @media screen and (max-width: 768px) {
+      .custom-footer__grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        padding: 0 15px;
+      }
+      
+      .custom-footer__bottom {
+        flex-direction: column;
+        gap: 15px;
+      }
+    }
+  </style>
+
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/orange-black-theme.css">
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dataspace-connector-usage" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="Tractus-X SDK Documentation" class="md-header__button md-logo" aria-label="Tractus-X SDK Documentation" data-md-component="logo">
+      
+  <img src="../../../../assets/images/logo_tractus-x.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tractus-X SDK Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Connector
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/eclipse-tractusx/tractusx-sdk" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    eclipse-tractusx/tractusx-sdk
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../tutorials/getting-started/" class="md-tabs__link">
+          
+  
+  
+  Tutorials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../how-to-guides/ic-hub-use-case/industry-core-hub-overview/" class="md-tabs__link">
+          
+  
+  
+  How-to Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../core-concepts/sdk-architecture/sdk-structure-and-components/" class="md-tabs__link">
+          
+  
+  
+  Core Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../contributing/contribution-guidelines/" class="md-tabs__link">
+          
+  
+  
+  Contributing
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="Tractus-X SDK Documentation" class="md-nav__button md-logo" aria-label="Tractus-X SDK Documentation" data-md-component="logo">
+      
+  <img src="../../../../assets/images/logo_tractus-x.svg" alt="logo">
+
+    </a>
+    Tractus-X SDK Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/eclipse-tractusx/tractusx-sdk" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    eclipse-tractusx/tractusx-sdk
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Tutorials
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../tutorials/getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation & Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../tutorials/create-first-asset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create First Asset
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    How-to Guides
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            How-to Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../how-to-guides/ic-hub-use-case/industry-core-hub-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Industry Core Hub Use Case
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../how-to-guides/other-use-case/other-use-case-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Other Use Case
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Core Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Core Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../core-concepts/sdk-architecture/sdk-structure-and-components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    SDK Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../core-concepts/dataspace-concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dataspace Concepts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../core-concepts/industry-concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Industry Concepts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../core-concepts/extensions-concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Extensions Concepts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../core-concepts/authentication-security/authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Authentication & Security
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Dataspace Library
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            Dataspace Library
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1_2" id="__nav_5_1_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Connector
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            Connector
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../connector/services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Services
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../connector/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../connector/managers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Managers
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../connector/controllers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Controllers
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1_3" id="__nav_5_1_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Discovery Services
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            Discovery Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../discovery-services/discovery-finder-service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Discovery Finder Service
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../discovery-services/connector-discovery-service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Connector Discovery Service
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tools
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5_1_5" id="__nav_5_1_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Legacy
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            Legacy
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Connector
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Connector
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#models" class="md-nav__link">
+    <span class="md-ellipsis">
+      Models
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#general-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      General Values
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#asset-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Asset Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Asset Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#catalog-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Catalog Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Catalog Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contract-definition-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Definition Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contract Definition Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contract-negotiation-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Negotiation Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contract Negotiation Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#policy-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Policy Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Policy Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#queryspec-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      QuerySpec Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="QuerySpec Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transfer-process-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transfer Process Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Transfer Process Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Services
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#edc-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      EDC Service
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="EDC Service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#available-controllers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Available Controllers
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adapters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Adapters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dma-adapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      DMA Adapter
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DMA Adapter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controllers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controllers
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Controllers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#asset-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Asset Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Asset Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#asset-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Asset Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#catalog-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Catalog Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Catalog Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#catalog-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Catalog Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contract-agreement-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Agreement Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contract Agreement Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contract-agreement-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Agreement Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contract-definition-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Definition Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contract Definition Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contract-definition-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Definition Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contract-negotiation-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Negotiation Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contract Negotiation Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contract-negotiation-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Negotiation Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#edr-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      EDR Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="EDR Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#edr-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      EDR Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#policy-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Policy Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Policy Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#policy-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Policy Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transfer-process-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transfer Process Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Transfer Process Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#transfer-process-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transfer Process Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dma-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      DMA Controller
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      NOTICE
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Industry Library
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Industry Library
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../industry-library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2_2" id="__nav_5_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    DTR
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            DTR
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../industry-library/dtr/services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Services
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../industry-library/dtr/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2_3" id="__nav_5_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Submodel Server
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            Submodel Server
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_3_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2_3_1" id="__nav_5_2_3_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Adapters
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            Adapters
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../industry-library/submodel-server/adapters/base-adapter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Base Adapter
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../industry-library/submodel-server/adapters/file-system-adapter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    File System Adapter
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2_4" id="__nav_5_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Discovery Services
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            Discovery Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../industry-library/discovery-services/bpn-discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    BPN Discovery
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2_5" id="__nav_5_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Legacy
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            Legacy
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../industry-library/legacy/dtr-sdk-usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    DTR
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../industry-library/legacy/submodel-server-sdk-usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Submodel Server
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Extension Library
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            Extension Library
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../extension-library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../extension-library/semantics/semantics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Semantics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Contributing
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/contribution-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contribution Guidelines
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/code-of-conduct/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Code of Conduct
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Architectural Decision Records
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architectural Decision Records
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/architectural-decisions/0001-record-architecture-decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    1.- Record Architecture Decisions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/architectural-decisions/0002-data-storage-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    2.- Data Storage Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/architectural-decisions/0003-sdk-module-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    3.- SDK Module Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/architectural-decisions/0004-tractusx-sdk-services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    4.- Tractus-X SDK Service
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/versioning/VERSIONING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Versioning
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#models" class="md-nav__link">
+    <span class="md-ellipsis">
+      Models
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#general-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      General Values
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#asset-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Asset Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Asset Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#catalog-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Catalog Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Catalog Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contract-definition-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Definition Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contract Definition Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contract-negotiation-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Negotiation Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contract Negotiation Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#policy-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Policy Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Policy Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#queryspec-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      QuerySpec Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="QuerySpec Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transfer-process-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transfer Process Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Transfer Process Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Services
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#edc-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      EDC Service
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="EDC Service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#available-controllers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Available Controllers
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adapters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Adapters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dma-adapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      DMA Adapter
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DMA Adapter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controllers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controllers
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Controllers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#asset-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Asset Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Asset Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#asset-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Asset Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#catalog-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Catalog Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Catalog Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#catalog-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Catalog Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contract-agreement-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Agreement Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contract Agreement Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contract-agreement-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Agreement Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contract-definition-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Definition Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contract Definition Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contract-definition-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Definition Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contract-negotiation-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Negotiation Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contract Negotiation Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contract-negotiation-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contract Negotiation Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#edr-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      EDR Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="EDR Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#edr-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      EDR Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#policy-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Policy Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Policy Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#policy-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Policy Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transfer-process-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transfer Process Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Transfer Process Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#transfer-process-controller-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transfer Process Controller Methods
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dma-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      DMA Controller
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      NOTICE
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/eclipse-tractusx/tractusx-sdk/edit/main/docs/api-reference/dataspace-library/legacy/edc-sdk-usage.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<!--
+
+Eclipse Tractus-X - Software Development KIT
+
+Copyright (c) 2025 LKS Next
+Copyright (c) 2025 Contributors to the Eclipse Foundation
+
+See the NOTICE file(s) distributed with this work for additional
+information regarding copyright ownership.
+
+This work is made available under the terms of the
+Creative Commons Attribution 4.0 International (CC-BY-4.0) license,
+which is available at
+https://creativecommons.org/licenses/by/4.0/legalcode.
+
+SPDX-License-Identifier: CC-BY-4.0
+
+-->
+
+<!-- Part of this content was generated by Co-Pilot and reviewed by a human developer. -->
+
+<h1 id="dataspace-connector-usage">Dataspace Connector Usage</h1>
+<ul>
+<li><a href="#models">Models</a><ul>
+<li><a href="#general-values">General Values</a></li>
+<li><a href="#asset-model">Asset Model</a></li>
+<li><a href="#catalog-model">Catalog Model</a></li>
+<li><a href="#contract-definition-model">Contract Definition Model</a></li>
+<li><a href="#contract-negotiation-model">Contract Negotiation Model</a></li>
+<li><a href="#policy-model">Policy Model</a></li>
+<li><a href="#queryspec-model">QuerySpec Model</a></li>
+<li><a href="#transfer-process-model">Transfer Process Model</a></li>
+</ul>
+</li>
+<li><a href="#services">Services</a><ul>
+<li>Connector Service(#connector-service)</li>
+</ul>
+</li>
+<li><a href="#adapters">Adapters</a><ul>
+<li><a href="#dma-adapter">DMA Adapter</a></li>
+</ul>
+</li>
+<li><a href="#controllers">Controllers</a><ul>
+<li><a href="#asset-controller">Asset Controller</a></li>
+<li><a href="#catalog-controller">Catalog Controller</a></li>
+<li><a href="#contract-agreement-controller">Contract Agreement Controller</a></li>
+<li><a href="#contract-definition-controller">Contract Definition Controller</a></li>
+<li><a href="#contract-negotiation-controller">Contract Negotiation Controller</a></li>
+<li><a href="#edr-controller">EDR Controller</a></li>
+<li><a href="#policy-controller">Policy Controller</a></li>
+<li><a href="#transfer-process-controller">Transfer Process Controller</a></li>
+<li><a href="#dma-controller">DMA Controller</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="models">Models</h2>
+<h3 id="general-values">General Values</h3>
+<p>This section defines the configuration values, metadata, and policies required for interacting with the Eclipse Dataspace Connector (EDC). These values are used to configure endpoints, define asset details, and enforce policies for secure and compliant data exchange.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">edc_url</span><span class="o">=</span><span class="s2">&quot;http://dataprovider-controlplane.tx.test&quot;</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">dataspace_version</span> <span class="o">=</span> <span class="s2">&quot;jupiter&quot;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;X-Api-Key&quot;</span><span class="p">:</span> <span class="s2">&quot;TEST1&quot;</span><span class="p">,</span> <span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">}</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">oid</span> <span class="o">=</span> <span class="s2">&quot;201&quot;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">data_address</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;test_type&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;test_value&quot;</span><span class="p">}</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">context</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;odrl&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.w3.org/ns/odrl/2/&quot;</span><span class="p">}</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">properties</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;prop_key&quot;</span><span class="p">:</span> <span class="s2">&quot;prop_value&quot;</span><span class="p">}</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">private_properties</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;private_key&quot;</span><span class="p">:</span> <span class="s2">&quot;private_value&quot;</span><span class="p">}</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">permissions</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;permission&quot;</span><span class="p">}]</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">prohibitions</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;prohibitions&quot;</span><span class="p">}]</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="n">obligations</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;obligations&quot;</span><span class="p">}]</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">edc_url2</span><span class="o">=</span><span class="s2">&quot;http://dataconsumer-1-controlplane.tx.test&quot;</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">counter_party_address</span> <span class="o">=</span> <span class="n">edc_url</span> <span class="o">+</span> <span class="s2">&quot;/api/v1/dsp&quot;</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">counter_party_id</span> <span class="o">=</span> <span class="s2">&quot;BPNL00000003AYRE&quot;</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="n">context2</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="s2">&quot;https://w3id.org/tractusx/policy/v1.0.0&quot;</span><span class="p">,</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="s2">&quot;http://www.w3.org/ns/odrl.jsonld&quot;</span><span class="p">,</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="p">{</span> <span class="s2">&quot;@vocab&quot;</span><span class="p">:</span> <span class="s2">&quot;https://w3id.org/edc/v0.0.1/ns/&quot;</span> <span class="p">}</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="p">]</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="n">asset_id</span> <span class="o">=</span> <span class="s2">&quot;200&quot;</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="n">offer_id</span> <span class="o">=</span> <span class="s2">&quot;MjAw:MjAw:ZDE5ZjA4Y2QtMzg1Ny00MTEzLWFjZjQtZmFhNWQ1MDdjYmE3&quot;</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="n">offer_policy_data</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    <span class="s2">&quot;@context&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.w3.org/ns/odrl.jsonld&quot;</span><span class="p">,</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    <span class="s2">&quot;odrl:permission&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    <span class="s2">&quot;odrl:action&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>        <span class="s2">&quot;odrl:type&quot;</span><span class="p">:</span> <span class="s2">&quot;USE&quot;</span>
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    <span class="p">},</span>
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    <span class="s2">&quot;odrl:constraint&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        <span class="s2">&quot;odrl:or&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>        <span class="s2">&quot;odrl:leftOperand&quot;</span><span class="p">:</span> <span class="s2">&quot;BusinessPartnerNumber&quot;</span><span class="p">,</span>
+</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>        <span class="s2">&quot;odrl:operator&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>            <span class="s2">&quot;@id&quot;</span><span class="p">:</span> <span class="s2">&quot;odrl:eq&quot;</span>
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        <span class="p">},</span>
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        <span class="s2">&quot;odrl:rightOperand&quot;</span><span class="p">:</span> <span class="s2">&quot;BPNL00000003AZQP&quot;</span>
+</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>        <span class="p">}</span>
+</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    <span class="p">}</span>
+</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    <span class="p">},</span>
+</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    <span class="s2">&quot;odrl:prohibition&quot;</span><span class="p">:</span> <span class="p">[],</span>
+</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    <span class="s2">&quot;odrl:obligation&quot;</span><span class="p">:</span> <span class="p">[]</span>
+</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="p">}</span>
+</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="n">callback_addresses</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="nb">filter</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    <span class="p">{</span>
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    <span class="s2">&quot;operandLeft&quot;</span><span class="p">:</span> <span class="s2">&quot;contractNegotiationId&quot;</span><span class="p">,</span>
+</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span>
+</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    <span class="s2">&quot;operandRight&quot;</span><span class="p">:</span> <span class="s2">&quot;bf936f50-e2e7-4007-ba0d-7541be1721ae&quot;</span>
+</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    <span class="p">}</span>
+</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="p">]</span>
+</span></code></pre></div>
+<h3 id="asset-model">Asset Model</h3>
+<p>The Asset Model represents the metadata and configuration required to define an asset in the Eclipse Dataspace Connector (EDC). Assets are the core entities exchanged or managed in a dataspace, and they include details such as identifiers, data addresses, and associated properties</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.models.connector.model_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelFactory</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">asset</span> <span class="o">=</span> <span class="n">ModelFactory</span><span class="o">.</span><span class="n">get_asset_model</span><span class="p">(</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">oid</span><span class="o">=</span><span class="n">oid</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">data_address</span><span class="o">=</span><span class="n">data_address</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">private_properties</span><span class="o">=</span><span class="n">private_properties</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters">Explanation of Parameters</h4>
+<ul>
+<li><code>dataspace_version</code>: Specifies the version of the dataspace being used. Ensures compatibility with the EDC.</li>
+<li><code>oid</code>: The unique identifier for the asset being defined. This is used to distinguish the asset in the dataspace.</li>
+<li><code>data_address</code>: A dictionary that specifies the location or type of the data associated with the asset.</li>
+<li><code>context</code>: Defines the namespace for interpreting metadata and policies.</li>
+<li><code>properties</code>: A dictionary of metadata associated with the asset. These are general properties that describe the asset.</li>
+<li><code>private_properties</code>: A dictionary of sensitive or restricted metadata associated with the asset. These properties are not publicly accessible.</li>
+</ul>
+<h3 id="catalog-model">Catalog Model</h3>
+<p>The Catalog Model represents the metadata and configuration required to query and retrieve available assets from a counterparty in the Eclipse Dataspace Connector (EDC). It is used to interact with the catalog endpoint of a counterparty to discover assets that can be negotiated or exchanged.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.models.connector.model_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelFactory</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">catalog_model</span> <span class="o">=</span> <span class="n">ModelFactory</span><span class="o">.</span><span class="n">get_catalog_model</span><span class="p">(</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">counter_party_address</span><span class="o">=</span><span class="n">counter_party_address</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">counter_party_id</span><span class="o">=</span><span class="n">counter_party_id</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_1">Explanation of Parameters</h4>
+<ul>
+<li><code>dataspace_version</code>: Specifies the version of the dataspace being used. Ensures compatibility with the EDC.</li>
+<li><code>counter_party_address</code>: The endpoint URL of the counterparty's catalog service. This is where the catalog query will be sent.</li>
+<li><code>counter_party_id</code>: The unique identifier of the counterparty. This is used to identify the counterparty in the dataspace.</li>
+</ul>
+<h3 id="contract-definition-model">Contract Definition Model</h3>
+<p>The Contract Definition Model represents the metadata and configuration required to define a contract in the Eclipse Dataspace Connector (EDC). Contracts are used to enforce policies and rules for data exchange between parties in the dataspace.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.models.connector.model_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelFactory</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">contract_definition</span> <span class="o">=</span> <span class="n">ModelFactory</span><span class="o">.</span><span class="n">get_contract_definition_model</span><span class="p">(</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">oid</span><span class="o">=</span><span class="n">oid</span><span class="p">,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">access_policy_id</span><span class="o">=</span><span class="n">oid</span><span class="p">,</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">contract_policy_id</span><span class="o">=</span><span class="n">oid</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_2">Explanation of Parameters</h4>
+<ul>
+<li><code>dataspace_version</code>: Specifies the version of the dataspace being used. Ensures compatibility with the EDC.</li>
+<li><code>oid</code>: The unique identifier for the contract definition. This is used to distinguish the contract in the dataspace.</li>
+<li><code>access_policy_id</code>: The identifier of the access policy associated with the contract. This policy defines who can access the asset.</li>
+<li><code>contract_policy_id</code>: The identifier of the contract policy associated with the contract. This policy defines how the asset can be used.</li>
+</ul>
+<h3 id="contract-negotiation-model">Contract Negotiation Model</h3>
+<p>The Contract Negotiation Model represents the metadata and configuration required to initiate and manage contract negotiations in the Eclipse Dataspace Connector (EDC). Contract negotiations are a key step in establishing agreements between parties for data exchange, ensuring that both access and usage policies are agreed upon before the transfer of data.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.models.connector.model_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelFactory</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">contract_negotiation_model</span> <span class="o">=</span> <span class="n">ModelFactory</span><span class="o">.</span><span class="n">get_contract_negotiation_model</span><span class="p">(</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">counter_party_address</span><span class="o">=</span><span class="n">counter_party_address</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">offer_id</span><span class="o">=</span><span class="n">offer_id</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">asset_id</span><span class="o">=</span><span class="n">asset_id</span><span class="p">,</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="n">provider_id</span><span class="o">=</span><span class="n">counter_party_id</span><span class="p">,</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="n">offer_policy</span><span class="o">=</span><span class="n">offer_policy_data</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_3">Explanation of Parameters</h4>
+<ul>
+<li><code>dataspace_version</code>: Specifies the version of the dataspace being used. Ensures compatibility with the EDC.</li>
+<li><code>counter_party_address</code>: The endpoint URL of the counterparty's negotiation service. This is where the negotiation request will be sent.</li>
+<li><code>counter_party_id</code>: The unique identifier of the counterparty (e.g., Business Partner Number). This is used to identify the counterparty in the dataspace.</li>
+<li><code>offer_id</code>: The unique identifier of the data offer being negotiated. This links the negotiation to a specific asset and its associated policies.</li>
+<li><code>asset_id</code>: The unique identifier of the asset being negotiated. This ensures that the negotiation is tied to a specific resource.</li>
+<li><code>provider_id</code>: The unique identifier of the data provider. This is used to identify the provider in the dataspace.</li>
+<li><code>offer_policy</code>: A dictionary defining the policy associated with the data offer. This includes permissions, prohibitions, and obligations that govern the use of the asset.</li>
+</ul>
+<h3 id="policy-model">Policy Model</h3>
+<p>The Policy Model represents the metadata and configuration required to define policies in the Eclipse Dataspace Connector (EDC). Policies are used to enforce rules and constraints for data access and usage, ensuring compliance with predefined terms during data exchange</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.models.connector.model_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelFactory</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">policy</span> <span class="o">=</span> <span class="n">ModelFactory</span><span class="o">.</span><span class="n">get_policy_model</span><span class="p">(</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">oid</span><span class="o">=</span><span class="n">oid</span><span class="p">,</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">context</span><span class="o">=</span><span class="n">context</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_4">Explanation of Parameters</h4>
+<ul>
+<li><code>dataspace_version</code>: Specifies the version of the dataspace being used. Ensures compatibility with the EDC.</li>
+<li><code>oid</code>: The unique identifier for the policy. This is used to distinguish the policy in the dataspace.</li>
+<li><code>context</code>: Defines the namespace for interpreting the policy.</li>
+</ul>
+<h3 id="queryspec-model">QuerySpec Model</h3>
+<p>The QuerySpec Model represents the metadata and configuration required to define query specifications in the Eclipse Dataspace Connector (EDC). Query specifications are used to filter and retrieve specific assets or data from a catalog or other data sources in the dataspace.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.models.connector.model_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelFactory</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">queryspec_edr_model</span> <span class="o">=</span> <span class="n">ModelFactory</span><span class="o">.</span><span class="n">get_queryspec_model</span><span class="p">(</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">filter_expression</span><span class="o">=</span><span class="nb">filter</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_5">Explanation of Parameters</h4>
+<ul>
+<li><code>dataspace_version</code>: Specifies the version of the dataspace being used. Ensures compatibility with the EDC.</li>
+<li><code>filter</code>: A list of conditions used to filter the query results. Each condition specifies an operand, operator, and value.</li>
+<li><code>limit</code>: Specifies the maximum number of results to return.</li>
+<li><code>offset</code>: Specifies the starting point for the query results.</li>
+<li><code>sortOrder</code>: Specifies the order in which the results should be sorted. Possible values are <code>ASC</code> (ascending) or <code>DESC</code> (descending).</li>
+<li><code>sortField</code>: Specifies the field by which the results should be sorted.</li>
+</ul>
+<h3 id="transfer-process-model">Transfer Process Model</h3>
+<p>The Transfer Process Model represents the metadata and configuration required to initiate and manage data transfers in the Eclipse Dataspace Connector (EDC). The transfer process is a critical step in the dataspace, enabling the secure and compliant exchange of data between parties.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.models.connector.model_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelFactory</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">transfer_process_model</span> <span class="o">=</span> <span class="n">ModelFactory</span><span class="o">.</span><span class="n">get_transfer_process_model</span><span class="p">(</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">counter_party_address</span><span class="o">=</span><span class="n">counter_party_address</span><span class="p">,</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="n">contract_id</span><span class="o">=</span><span class="s2">&quot;6d869fc1-2538-4888-a687-249a9016e6a6&quot;</span><span class="p">,</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="n">transfer_type</span><span class="o">=</span><span class="s2">&quot;HttpData-PULL&quot;</span><span class="p">,</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="n">data_destination</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;HttpProxy&quot;</span><span class="p">}</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_6">Explanation of Parameters</h4>
+<ul>
+<li><code>dataspace_version</code>: Specifies the version of the dataspace being used. Ensures compatibility with the EDC.</li>
+<li><code>counter_party_address</code>: The endpoint URL of the counterparty's transfer service. This is where the transfer request will be sent.</li>
+<li><code>contract_id</code>: The unique identifier of the contract associated with the data transfer. This ensures that the transfer complies with the agreed-upon terms.</li>
+<li><code>transfer_type</code>: Specifies the type of data transfer. For example, <code>"HttpData-PULL"</code> indicates a pull-based HTTP data transfer.</li>
+<li><code>data_destination</code>: A dictionary specifying the destination for the transferred data. For example, <code>{"type": "HttpProxy"}</code> indicates that the data will be sent to an HTTP proxy.</li>
+<li><code>callback_addresses</code>: A list of callback URLs to notify the client about the status or events of the transfer process. These URLs are invoked during specific stages of the transfer lifecycle, such as completion or failure.</li>
+</ul>
+<h2 id="services">Services</h2>
+<h3 id="edc-service">EDC Service</h3>
+<p>The EDC Service is a central component that provides access to various controllers in the Eclipse Dataspace Connector (EDC). These controllers allow you to manage assets, catalogs, contracts, policies, and data transfers in the dataspace. The BaseConnectorService acts as a wrapper, providing a unified interface to interact with the EDC's Data Management API.</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>from tractusx_sdk.dataspace.services.connector.v0_9_0.edc_service import ConnectorService
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>service = ConnectorService(base_url=self.base_url,
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>                            dma_path=self.dma_path,
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>                            headers=self.headers,)
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>service._asset_controller # alternative
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>service.assets()
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>service._catalog_controller # alternative
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>service.catalogs()
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>service._contract_agreement_controller # alternative
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>service.contract_agreements()
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>service._contract_definition_controller # alternative
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>service.contract_definitions()
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>service._contract_negotiation_controller # alternative
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>service.contract_negotiations()
+</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>service._edr_controller # alternative
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>service.edrs()
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>
+</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>service._policy_controller # alternative
+</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>service.policies()
+</span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>
+</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a>service._transfer_process_controller # alternative
+</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a>service.transfer_processes()
+</span></code></pre></div>
+<h4 id="available-controllers">Available Controllers</h4>
+<ul>
+<li><a href="#asset-controller"><code>service._asset_controller</code></a>: Manages assets in the EDC. This includes creating, updating, retrieving, and deleting assets.</li>
+<li><a href="#catalog-controller"><code>service._catalog_controller</code></a>: Interacts with the catalog of a counterparty to query and retrieve available assets.</li>
+<li><a href="#contract-agreement-controller"><code>service._contract_agreement_controller</code></a>: Manages contract agreements established after successful negotiations.</li>
+<li><a href="#contract-definition-controller"><code>service._contract_definition_controller</code></a>: Handles the creation, retrieval, updating, and deletion of contract definitions.</li>
+<li><a href="#contract-negotiation-controller"><code>service._contract_negotiation_controller</code></a>: Facilitates the initiation, tracking, and management of contract negotiations.</li>
+<li><a href="#edr-controller"><code>service._edr_controller</code></a>: Manages Endpoint Data References (EDRs) required for secure data transfers.</li>
+<li><a href="#policy-controller"><code>service._policy_controller</code></a>: Manages policies that define rules, constraints, and permissions for data access and usage.</li>
+<li><a href="#transfer-process-controller"><code>service._transfer_process_controller</code></a>: Handles the initiation, monitoring, and management of data transfer processes.</li>
+</ul>
+<h2 id="adapters">Adapters</h2>
+<h3 id="dma-adapter">DMA Adapter</h3>
+<p>The DMA Adapter (Data Management API Adapter) is a utility class used to interact with the Data Management API (DMA) of the Eclipse Dataspace Connector (EDC). It provides a convenient way to send requests to the DMA endpoints, such as managing assets, policies, and contracts.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.adapters.connector.adapter_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdapterFactory</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">adapter</span> <span class="o">=</span> <span class="n">AdapterFactory</span><span class="o">.</span><span class="n">get_dma_adapter</span><span class="p">(</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="n">base_url</span><span class="o">=</span><span class="n">edc_url</span><span class="p">,</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">dma_path</span><span class="o">=</span><span class="s2">&quot;management&quot;</span><span class="p">,</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;X-Api-Key&quot;</span><span class="p">:</span> <span class="s2">&quot;TEST2&quot;</span><span class="p">,</span> <span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">}</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_7">Explanation of Parameters</h4>
+<ul>
+<li><code>base_url</code>: The base URL of the EDC's control plane. This is the root endpoint for all API requests.</li>
+<li><code>dma_path</code>: The path to the Data Management API. This is appended to the base_url to form the full API endpoint.</li>
+<li><code>headers</code>: A dictionary of HTTP headers required for API requests.</li>
+</ul>
+<h2 id="controllers">Controllers</h2>
+<h3 id="asset-controller">Asset Controller</h3>
+<p>The Asset Controller is a component used to manage assets in the Eclipse Dataspace Connector (EDC). It provides methods for creating, updating, retrieving, and deleting assets, enabling seamless interaction with the EDC's Data Management API.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.controllers.connector.controller_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ControllerFactory</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">asset_controller</span> <span class="o">=</span> <span class="n">ControllerFactory</span><span class="o">.</span><span class="n">get_asset_controller</span><span class="p">(</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    <span class="n">adapter</span><span class="o">=</span><span class="n">adapter</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="asset-controller-methods">Asset Controller Methods</h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>create</td>
+<td>Registers a new asset in the EDC</td>
+<td>AssetModel</td>
+</tr>
+<tr>
+<td>update</td>
+<td>Updates the metadata or properties of an existing asset in the EDC</td>
+<td>AssetModel</td>
+</tr>
+<tr>
+<td>get_by_id</td>
+<td>Retrieves the details of a specific asset by its unique identifier (OID).</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>delete</td>
+<td>Deletes an asset from the EDC by its unique identifier (OID).</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>get_all</td>
+<td>Retrieves a list of all assets currently registered in the EDC</td>
+<td></td>
+</tr>
+<tr>
+<td>query</td>
+<td>Queries the EDC for an asset based on specific criteria.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="catalog-controller">Catalog Controller</h3>
+<p>The Catalog Controller is a component used to interact with the catalog of a counterparty in the Eclipse Dataspace Connector (EDC). It provides methods for querying and retrieving available assets, enabling asset discovery and negotiation in the dataspace.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.controllers.connector.controller_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ControllerFactory</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">catalog_controller</span> <span class="o">=</span> <span class="n">ControllerFactory</span><span class="o">.</span><span class="n">get_catalog_controller</span><span class="p">(</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="n">adapter</span><span class="o">=</span><span class="n">consumer_adapter</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="catalog-controller-methods">Catalog Controller Methods</h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>get_catalog</td>
+<td>Retrieves the catalog of available assets from a counterparty's endpoint.</td>
+<td>CatalogModel</td>
+</tr>
+</tbody>
+</table>
+<h3 id="contract-agreement-controller">Contract Agreement Controller</h3>
+<p>The Contract Agreement Controller is a component used to manage contract agreements in the Eclipse Dataspace Connector (EDC). Contract agreements are established after successful contract negotiations and define the terms and conditions under which data can be exchanged between parties.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.controllers.connector.controller_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ControllerFactory</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">contract_agreement_controller</span> <span class="o">=</span> <span class="n">ControllerFactory</span><span class="o">.</span><span class="n">get_contract_agreement_controller</span><span class="p">(</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="n">adapter</span><span class="o">=</span><span class="n">consumer_adapter</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="contract-agreement-controller-methods">Contract Agreement Controller Methods</h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>get_negotiation_by_id</td>
+<td>Retrieves the details of a specific contract negotiation by its unique identifier (OID).</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>get_by_id</td>
+<td>Retrieves the details of a specific contract agreement by its unique identifier (OID).</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>get_all</td>
+<td>Retrieves a list of all contract agreements or negotiations.</td>
+<td></td>
+</tr>
+<tr>
+<td>query</td>
+<td>Queries the EDC for a contract agreement based on specific criteria.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="contract-definition-controller">Contract Definition Controller</h3>
+<p>The Contract Definition Controller is a component used to manage contract definitions in the Eclipse Dataspace Connector (EDC). Contract definitions specify the terms, policies, and conditions under which data can be accessed and exchanged.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.controllers.connector.controller_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ControllerFactory</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">contract_definition_controller</span> <span class="o">=</span>  <span class="n">ControllerFactory</span><span class="o">.</span><span class="n">get_contract_definition_controller</span><span class="p">(</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>    <span class="n">adapter</span><span class="o">=</span><span class="n">adapter</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="contract-definition-controller-methods">Contract Definition Controller Methods</h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>create</td>
+<td>Registers a new contract definition in the EDC.</td>
+<td>ContractDefinitionModel</td>
+</tr>
+<tr>
+<td>update</td>
+<td>Updates the metadata or policies of an existing contract definition.</td>
+<td>ContractDefinitionModel</td>
+</tr>
+<tr>
+<td>get_by_id</td>
+<td>Retrieves the details of a specific contract definition by its unique identifier (OID).</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>delete</td>
+<td>Deletes an contract definition from the EDC by its unique identifier (OID).</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>get_all</td>
+<td>Retrieves a list of all contract definition currently registered in the EDC</td>
+<td></td>
+</tr>
+<tr>
+<td>query</td>
+<td>Queries the EDC for an contract definition based on specific criteria.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="contract-negotiation-controller">Contract Negotiation Controller</h3>
+<p>The Contract Negotiation Controller is a component used to manage contract negotiations in the Eclipse Dataspace Connector (EDC). Contract negotiations are a critical step in establishing agreements between parties for data exchange. This controller facilitates the process of initiating, tracking, and managing contract negotiations.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.controllers.connector.controller_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ControllerFactory</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">contract_negotiation_controller</span> <span class="o">=</span> <span class="n">ControllerFactory</span><span class="o">.</span><span class="n">get_contract_negotiation_controller</span><span class="p">(</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>    <span class="n">adapter</span><span class="o">=</span><span class="n">consumer_adapter</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="contract-negotiation-controller-methods">Contract Negotiation Controller Methods</h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>create</td>
+<td>Initiates a new contract negotiation with a counterparty.</td>
+<td>ContractNegotiationModel</td>
+</tr>
+<tr>
+<td>terminate_by_id</td>
+<td>Terminates an ongoing contract negotiation by its unique identifier (OID).</td>
+<td>ContractNegotiationModel</td>
+</tr>
+<tr>
+<td>get_agreement_by_negotiation_id</td>
+<td>Retrieves the contract agreement associated with a specific negotiation ID.</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>get_by_id</td>
+<td>Retrieves the details of a specific contract negotiation by its unique identifier (OID).</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>get_all</td>
+<td>Retrieves a list of all contract negotiations currently registered in the EDC.</td>
+<td></td>
+</tr>
+<tr>
+<td>get_state_by_id</td>
+<td>Retrieves the current state of a specific contract negotiation by its unique identifier (OID).</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>query</td>
+<td>Queries the EDC for a contract negotiation based on specific criteria.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="edr-controller">EDR Controller</h3>
+<p>The EDR Controller (Endpoint Data Reference Controller) is a component used to manage Endpoint Data References (EDRs) in the Eclipse Dataspace Connector (EDC). EDRs are critical for enabling secure and efficient data transfers between parties in the dataspace. They provide the necessary information, such as endpoints and credentials, to access the data being shared.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.controllers.connector.controller_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ControllerFactory</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="n">edr_controller</span> <span class="o">=</span> <span class="n">ControllerFactory</span><span class="o">.</span><span class="n">get_edr_controller</span><span class="p">(</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>    <span class="n">adapter</span><span class="o">=</span><span class="n">consumer_adapter</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="edr-controller-methods">EDR Controller Methods</h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>get_data_address</td>
+<td>Retrieves the data address associated with a specific asset or contract.</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>refresh</td>
+<td>Refreshes the Endpoint Data Reference (EDR) for a specific asset or contract.</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>create</td>
+<td>Creates a new Endpoint Data Reference (EDR) for a specific contract.</td>
+<td>ContractNegotiationModel</td>
+</tr>
+<tr>
+<td>get_all</td>
+<td>Retrieves a list of all Endpoint Data References (EDRs) currently registered in the EDC.</td>
+<td></td>
+</tr>
+<tr>
+<td>delete</td>
+<td>Deletes an Endpoint Data Reference (EDR) by its unique identifier.</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>query</td>
+<td>Queries the EDC for Endpoint Data References (EDRs) based on specific criteria.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="policy-controller">Policy Controller</h3>
+<p>The Policy Controller is a component used to manage policies in the Eclipse Dataspace Connector (EDC). Policies define the rules, constraints, and permissions for accessing and using data in the dataspace.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.controllers.connector.controller_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ControllerFactory</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">policy_controller</span> <span class="o">=</span> <span class="n">ControllerFactory</span><span class="o">.</span><span class="n">get_policy_controller</span><span class="p">(</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>    <span class="n">adapter</span><span class="o">=</span><span class="n">adapter</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="policy-controller-methods">Policy Controller Methods</h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>create</td>
+<td>Registers a new policy in the EDC.</td>
+<td>PolicyModel</td>
+</tr>
+<tr>
+<td>update</td>
+<td>Updates the metadata or rules of an existing policy in the EDC.</td>
+<td>PolicyModel</td>
+</tr>
+<tr>
+<td>get_by_id</td>
+<td>Retrieves the details of a specific policy by its unique identifier (OID).</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>delete</td>
+<td>Deletes a policy from the EDC by its unique identifier (OID).</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>get_all</td>
+<td>Retrieves a list of all policies currently registered in the EDC.</td>
+<td></td>
+</tr>
+<tr>
+<td>query</td>
+<td>Queries the EDC for policies based on specific criteria.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="transfer-process-controller">Transfer Process Controller</h3>
+<p>The Transfer Process Controller is a component used to manage data transfer processes in the Eclipse Dataspace Connector (EDC). It facilitates the initiation, monitoring, and management of data transfers between parties in the dataspace. This controller ensures that data transfers comply with the terms of the associated contract agreements.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.controllers.connector.controller_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ControllerFactory</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">transfer_process_controller</span> <span class="o">=</span> <span class="n">ControllerFactory</span><span class="o">.</span><span class="n">get_transfer_process_controller</span><span class="p">(</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">dataspace_version</span><span class="p">,</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>    <span class="n">adapter</span><span class="o">=</span><span class="n">consumer_adapter</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="transfer-process-controller-methods">Transfer Process Controller Methods</h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>create</td>
+<td>Initiates a new data transfer process.</td>
+<td>TransferProcessModel</td>
+</tr>
+<tr>
+<td>terminate_by_id</td>
+<td>Terminates an ongoing data transfer process by its unique identifier (OID).</td>
+<td>TransferProcessModel</td>
+</tr>
+<tr>
+<td>deprovision_by_id</td>
+<td>Deprovisions resources associated with a specific transfer process.</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>get_by_id</td>
+<td>Retrieves the details of a specific transfer process by its unique identifier (OID).</td>
+<td>oid</td>
+</tr>
+<tr>
+<td>get_all</td>
+<td>Retrieves a list of all transfer processes currently registered in the EDC.</td>
+<td></td>
+</tr>
+<tr>
+<td>query</td>
+<td>Queries the EDC for transfer processes based on specific criteria.</td>
+<td></td>
+</tr>
+<tr>
+<td>get_state_by_id</td>
+<td>Retrieves the current state of a specific transfer process by its unique identifier (OID).</td>
+<td>oid</td>
+</tr>
+</tbody>
+</table>
+<h3 id="dma-controller">DMA Controller</h3>
+<p>The DMA Controller (Data Management API Controller) is a component used to interact with the Data Management API (DMA) of the Eclipse Dataspace Connector (EDC). It provides access to various controllers for managing assets, policies, contracts, and other resources in the dataspace.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.controllers.connector.controller_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ControllerFactory</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="n">controllers</span> <span class="o">=</span> <span class="n">ControllerFactory</span><span class="o">.</span><span class="n">get_dma_controllers_for_version</span><span class="p">(</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>    <span class="n">dataspace_version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>    <span class="n">adapter</span><span class="o">=</span><span class="n">dma_adapter</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>This method retrieves a set of controllers compatible with the specified <code>dataspace_version</code>.</p>
+<h2 id="notice">NOTICE</h2>
+<p>This work is licensed under the <a href="https://creativecommons.org/licenses/by/4.0/legalcode">CC-BY-4.0</a>.</p>
+<ul>
+<li>SPDX-License-Identifier: CC-BY-4.0</li>
+<li>SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation</li>
+<li>Source URL: https://github.com/eclipse-tractusx/tractusx-sdk</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+<div class="custom-footer">
+  <div class="custom-footer__grid">
+    <!-- Eclipse Foundation Section -->
+    <div class="custom-footer__section">
+      <h3>Eclipse Foundation</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://www.eclipse.org/org/" target="_blank" rel="noopener">About</a></li>
+        <li><a href="https://www.eclipse.org/legal/privacy.php" target="_blank" rel="noopener">Privacy Policy</a></li>
+        <li><a href="https://www.eclipse.org/legal/termsofuse.php" target="_blank" rel="noopener">Terms of Use</a></li>
+        <li><a href="https://www.eclipse.org/legal/epl-2.0/" target="_blank" rel="noopener">Compliance</a></li>
+        <li><a href="https://www.eclipse.org/legal/" target="_blank" rel="noopener">Legal Resources</a></li>
+        <li><a href="https://www.eclipse.org/org/foundation/contact.php" target="_blank" rel="noopener">Contact</a></li>
+      </ul>
+    </div>
+    
+    <!-- Eclipse Tractus-X Section -->
+    <div class="custom-footer__section">
+      <h3>Eclipse Tractus-X</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://projects.eclipse.org/projects/automotive.tractusx" target="_blank" rel="noopener">Eclipse Project</a></li>
+        <li><a href="https://github.com/eclipse-tractusx" target="_blank" rel="noopener">GitHub Organization</a></li>
+        <li><a href="https://catena-x.net/" target="_blank" rel="noopener">Catena-X Automotive Network</a></li>
+        <li><a href="mailto:tractusx-dev@eclipse.org">Mailing List</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/issues/new" target="_blank" rel="noopener">Report a Bug</a></li>
+      </ul>
+    </div>
+    
+    <!-- More Section -->
+    <div class="custom-footer__section">
+      <h3>More</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/security/advisories/new" target="_blank" rel="noopener">Report a Vulnerability</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">How to Contribute</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/discussions" target="_blank" rel="noopener">Discussions</a></li>
+        <li><a href="https://chat.eclipse.org/#/room/#automotive.tractusx:matrix.eclipse.org" target="_blank" rel="noopener">Matrix Chat</a></li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="custom-footer__bottom">
+    <div class="custom-footer__copyright">
+      Copyright © 2025 Eclipse Tractus-X. Built with 
+      <a href="https://www.mkdocs.org/" target="_blank" rel="noopener">MkDocs</a> and 
+      <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">Material for MkDocs</a>.
+    </div>
+  </div>
+</div>
+
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "content.tabs.link", "toc.follow"], "search": "../../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>
