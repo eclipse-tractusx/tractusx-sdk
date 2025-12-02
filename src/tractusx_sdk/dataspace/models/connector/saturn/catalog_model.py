@@ -29,6 +29,7 @@ from ..base_catalog_model import BaseCatalogModel
 class CatalogModel(BaseCatalogModel):
     TYPE: str = Field(default="CatalogRequest", frozen=True)
     protocol: str = Field(default="dataspace-protocol-http:2025-1")
+    
 
     def to_data(self):
         """

@@ -122,7 +122,7 @@ class BaseConnectorConsumerService(BaseService):
 
         return headers
 
-    def get_edr(self, transfer_id: str) -> dict | None:
+    def get_edr(self, transfer_id: str, verify: bool = None) -> dict | None:
         """
         Gets and EDR Token.
 
@@ -131,6 +131,7 @@ class BaseConnectorConsumerService(BaseService):
 
         Parameters:
         transfer_id (str): The unique identifier for the transfer process.
+        verify (bool, optional): Whether to verify SSL certificates. If None, uses service default.
 
         Returns:
         dict | None: The response content from the GET request, or None if the request fails.
@@ -139,7 +140,10 @@ class BaseConnectorConsumerService(BaseService):
         Exception: If the EDC response is not successful (status code is not 200).
         """
         ## Build edr transfer url
-        response: Response = self.edrs.get_data_address(oid=transfer_id, params={"auto_refresh": True})
+        # Use service-level verify_ssl if verify not explicitly provided
+        if verify is None:
+            verify = getattr(self, 'verify_ssl', True)
+        response: Response = self.edrs.get_data_address(oid=transfer_id, params={"auto_refresh": True}, verify=verify)
         if (response is None or response.status_code != 200):
             raise ConnectionError(
                 "Connector Service It was not possible to get the edr because the EDC response was not successful!")
@@ -157,13 +161,14 @@ class BaseConnectorConsumerService(BaseService):
         return edr["endpoint"], edr["authorization"]
 
     def get_catalog(self, counter_party_id: str = None, counter_party_address: str = None,
-                    request: BaseCatalogModel = None, timeout=60) -> dict | None:
+                    request: BaseCatalogModel = None, timeout=60, verify: bool = None) -> dict | None:
         """
         Retrieves the EDC DCAT catalog. Allows to get the catalog without specifying the request, which can be overridden
         
         Parameters:
         counter_party_address (str): The URL of the EDC provider.
         request (BaseCatalogModel, optional): The request payload for the catalog API. If not provided, a default request will be used.
+        verify (bool, optional): Whether to verify SSL certificates. If None, uses service default.
 
         Returns:
         dict | None: The EDC catalog as a dictionary, or None if the request fails.
@@ -176,7 +181,10 @@ class BaseConnectorConsumerService(BaseService):
             request = self.get_catalog_request(counter_party_id=counter_party_id,
                                                counter_party_address=counter_party_address)
         ## Get catalog with configurable timeout
-        response: Response = self.catalogs.get_catalog(obj=request, timeout=timeout)
+        # Use service-level verify_ssl if verify not explicitly provided
+        if verify is None:
+            verify = getattr(self, 'verify_ssl', True)
+        response: Response = self.catalogs.get_catalog(obj=request, timeout=timeout, verify=verify)
         ## In case the response code is not successfull or the response is null
         if response is None or response.status_code != 200:
             raise ConnectionError(
@@ -283,7 +291,7 @@ class BaseConnectorConsumerService(BaseService):
         )
 
     def start_edr_negotiation(self, counter_party_id: str, counter_party_address: str, target: str,
-                              policy: dict) -> str | None:
+                              policy: dict, verify: bool = None) -> str | None:
         """
         Starts the edr negotiation and gives the negotation id
 
@@ -291,6 +299,7 @@ class BaseConnectorConsumerService(BaseService):
         @param counter_party_address: The URL of the EDC provider.
         @param target: The target asset for the negotiation.
         @param policy: The policy to be used for the negotiation.
+        @param verify: Whether to verify SSL certificates. If None, uses service default.
         @returns: negotiation_id:str or if Fail -> None
         """
 
@@ -301,7 +310,10 @@ class BaseConnectorConsumerService(BaseService):
                                                                                  policy=policy)
 
         ## Build catalog api url
-        response: Response = self.edrs.create(request)
+        # Use service-level verify_ssl if verify not explicitly provided
+        if verify is None:
+            verify = getattr(self, 'verify_ssl', True)
+        response: Response = self.edrs.create(request, verify=verify)
         ## In case the response code is not successfull or the response is null
         if (response is None or response.status_code != 200):
             return None
@@ -370,7 +382,7 @@ class BaseConnectorConsumerService(BaseService):
 
     ## Get catalog request with filter
     def get_catalog_with_filter(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
-                                timeout: int = None) -> dict:
+                                timeout: int = None, verify: bool = None) -> dict:
         """
         Retrieves a catalog from the EDC provider based on a specified filter.
 
@@ -380,6 +392,7 @@ class BaseConnectorConsumerService(BaseService):
         key (str): The key to filter the catalog entries by.
         value (str): The value to filter the catalog entries by.
         operator (str, optional): The comparison operator to use for filtering. Defaults to "=".
+        verify (bool, optional): Whether to verify SSL certificates. If None, uses service default.
 
         Returns:
         dict: The catalog entries that match the specified filter.
@@ -387,13 +400,14 @@ class BaseConnectorConsumerService(BaseService):
         return self.get_catalog(request=self.get_catalog_request_with_filter(counter_party_id=counter_party_id,
                                                                              counter_party_address=counter_party_address,
                                                                              filter_expression=filter_expression),
-                                timeout=timeout)
+                                timeout=timeout, verify=verify)
 
-    def get_edr_entry(self, negotiation_id: str) -> dict | None:
+    def get_edr_entry(self, negotiation_id: str, verify: bool = None) -> dict | None:
         """
         Gets the edr negotiation details for a given negotiation id
 
         @param negotiation_id: The unique identifier for the negotiation process.
+        @param verify: Whether to verify SSL certificates. If None, uses service default.
         
         @returns: EndpointDataReferenceEntry:dict or if Fail -> None
 
@@ -423,7 +437,10 @@ class BaseConnectorConsumerService(BaseService):
         request: BaseQuerySpecModel = self.get_edr_negotiation_filter(negotiation_id=negotiation_id)
 
         ## Build catalog api url
-        response: Response = self.edrs.query(request)
+        # Use service-level verify_ssl if verify not explicitly provided
+        if verify is None:
+            verify = getattr(self, 'verify_ssl', True)
+        response: Response = self.edrs.query(request, verify=verify)
         ## In case the response code is not successfull or the response is null
         if (response is None or response.status_code != 200):
             raise ConnectionError(f"Connector Service EDR Entry not found for the negotiation_id=[{negotiation_id}]!")

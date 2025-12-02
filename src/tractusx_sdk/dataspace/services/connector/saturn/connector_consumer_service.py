@@ -41,10 +41,12 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     _connector_discovery_controller: BaseDmaController
     DEFAULT_DCT_TYPE_KEY: str = "'http://purl.org/dc/terms/type'.'@id'"
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
-                 connection_manager: BaseConnectionManager = None, verbose: bool = True, logger: logging.Logger = None):
+                 connection_manager: BaseConnectionManager = None, verbose: bool = True, logger: logging.Logger = None,
+                 verify_ssl: bool = True):
         # Set attributes before accessing them
         self.verbose = verbose
         self.logger = logger
+        self.verify_ssl = verify_ssl
         
         # Validate dataspace_version is saturn
         if dataspace_version != "saturn":
@@ -89,7 +91,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return self._connector_discovery_controller
     
     def _resolve_counter_party_info(self, counter_party_id: str = None, counter_party_address: str = None, 
-                                   bpnl: str = None, protocol: str = DSP_2025, namespace: str = EDC_NAMESPACE) -> tuple[str, str, str]:
+                                   bpnl: str = None, protocol: str = DSP_2025, namespace: str = EDC_NAMESPACE, verify: bool = None) -> tuple[str, str, str]:
         """
         Internal helper to resolve counter party information from either direct parameters or BPNL discovery.
         
@@ -97,7 +99,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         tuple[str, str, str]: counter_party_address, counter_party_id, protocol
         """
         if bpnl is not None:
-            return self.get_discovery_info(bpnl=bpnl, counter_party_address=counter_party_address, namespace=namespace)
+            return self.get_discovery_info(bpnl=bpnl, counter_party_address=counter_party_address, namespace=namespace, verify=verify)
         else:
             # Use provided values and protocol
             return counter_party_address, counter_party_id, protocol
@@ -159,13 +161,13 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     def _get_catalog_internal(self, counter_party_id: str = None, counter_party_address: str = None,
                             bpnl: str = None, filter_expression: list[dict] = None, timeout: int = None,
                             protocol: str = DSP_2025, context: dict = DEFAULT_CONTEXT, 
-                            namespace: str = EDC_NAMESPACE) -> dict:
+                            namespace: str = EDC_NAMESPACE, verify: bool = None) -> dict:
         """
         Internal method to get catalog with optional BPNL resolution and filtering.
         """
         resolved_address, resolved_id, resolved_protocol = self._resolve_counter_party_info(
             counter_party_id=counter_party_id, counter_party_address=counter_party_address,
-            bpnl=bpnl, protocol=protocol, namespace=namespace
+            bpnl=bpnl, protocol=protocol, namespace=namespace, verify=verify
         )
         
         if filter_expression:
@@ -179,7 +181,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 protocol=resolved_protocol, context=context
             )
         
-        return self.get_catalog(request=catalog_request, timeout=timeout)
+        return self.get_catalog(request=catalog_request, timeout=timeout, verify=verify)
     
     def get_edr_negotiation_request(self, counter_party_id: str, counter_party_address: str, target: str,
                                     policy: dict, protocol: str = DSP_2025, context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> ContractNegotiationModel:
@@ -379,12 +381,15 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                       policy_checksum=current_policies_checksum,
                                                       connection_entry=edr_entry)
         
-    def discover_connector_protocol(self, bpnl: str, counter_party_address: str = None) -> dict | None:
+    def discover_connector_protocol(self, bpnl: str, counter_party_address: str = None, verify: bool = None) -> dict | None:
 
+        if verify is None:
+            verify = getattr(self, 'verify_ssl', True)
         response: Response = self.connector_discovery.get_discover(
             ModelFactory.get_connector_discovery_model(dataspace_version=self.dataspace_version,
                                                        bpnl=bpnl,
-                                                       counter_party_address=counter_party_address)
+                                                       counter_party_address=counter_party_address),
+            verify=verify
         )
         if response is None or response.status_code != 200:
             raise ConnectionError(
@@ -392,7 +397,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return response.json()
 
 
-    def get_discovery_info(self, bpnl: str, counter_party_address: str = None, namespace: str = EDC_NAMESPACE) -> tuple[str, str, str]:
+    def get_discovery_info(self, bpnl: str, counter_party_address: str = None, namespace: str = EDC_NAMESPACE, verify: bool = None) -> tuple[str, str, str]:
         """
         Retrieves the discovery information for the specified connector protocol.
         
@@ -401,17 +406,18 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address (str, optional): The URL of the EDC provider. If not
             provided, it will be discovered using the BPNL.
         namespace (str): The namespace for the returned keys. Default is "https://w3id.org/edc/v0.0.1/ns/".
+        verify (bool, optional): Whether to verify SSL certificates. If None, uses service default.
         
         Returns:
         tuple[str, str, str]: A tuple containing the counter party address, counter party ID, and protocol.
         """
-        discovery_info = self.discover_connector_protocol(bpnl=bpnl, counter_party_address=counter_party_address)
+        discovery_info = self.discover_connector_protocol(bpnl=bpnl, counter_party_address=counter_party_address, verify=verify)
         counter_party_address = discovery_info[f"{namespace}counterPartyAddress"]
         counter_party_id = discovery_info[f"{namespace}counterPartyId"]
         protocol = discovery_info[f"{namespace}protocol"]
         return counter_party_address, counter_party_id, protocol
 
-    def get_catalog_with_bpnl(self, bpnl: str, counter_party_address: str = None, namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT) -> dict | None:
+    def get_catalog_with_bpnl(self, bpnl: str, counter_party_address: str = None, namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT, verify: bool = None) -> dict | None:
         """
         Retrieves the Connector DCAT catalog using the BPNL to discover the connector protocol and address.
 
@@ -420,12 +426,13 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address (str, optional): The URL of the EDC provider. If not provided, it will be discovered using the BPNL.
         namespace (str): The namespace for the returned keys. Default is "https://w3id.org/edc/v0.0.1/ns/".
         context (dict, optional): The JSON-LD context to use in the catalog request.
+        verify (bool, optional): Whether to verify SSL certificates. If None, uses service default.
         
         Returns:
         dict | None: The EDC catalog as a dictionary, or None if the request fails.
         """
         return self._get_catalog_internal(bpnl=bpnl, counter_party_address=counter_party_address, 
-                                        context=context, namespace=namespace)
+                                        context=context, namespace=namespace, verify=verify)
 
     def get_catalog_request(self, counter_party_id: str, counter_party_address: str, protocol: str = DSP_2025, context=DEFAULT_CONTEXT) -> CatalogModel:
         ## Here it will autoselect the dataspace version based on the protocol

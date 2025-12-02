@@ -78,7 +78,8 @@ def initialize_provider_service():
         base_url=PROVIDER_CONNECTOR_CONFIG["base_url"],
         dma_path=PROVIDER_CONNECTOR_CONFIG["dma_path"],
         headers=provider_headers,
-        verbose=True
+        verbose=True,
+        verify_ssl=False  # Disable SSL verification for INT environment with self-signed certificates
     )
     
     print(f"✓ Provider service initialized")
@@ -112,7 +113,8 @@ def initialize_consumer_service(connection_manager=None):
         dma_path=CONSUMER_CONNECTOR_CONFIG["dma_path"],
         headers=consumer_headers,
         connection_manager=connection_manager,
-        verbose=True
+        verbose=True,
+        verify_ssl=False  # Disable SSL verification for INT environment with self-signed certificates
     )
     
     print(f"✓ Consumer service initialized")
@@ -153,16 +155,18 @@ def provision_data_on_provider(provider_service:BaseConnectorProviderService):
                 "action": "access",
                 "constraint": {
                     "leftOperand": "BusinessPartnerNumber",
-                    "operator": "eq",
+                    "operator": "isAnyOf",
                     "rightOperand": CONSUMER_CONNECTOR_CONFIG["bpn"]
                 }
             }]
         )
-        print(access_policy_response)
         print(f"✓ Access Policy created: {access_policy_id}")
         print(f"  - Restricts catalog visibility to BPN: {CONSUMER_CONNECTOR_CONFIG['bpn']}")
+        print(f"  - Response: {json.dumps(access_policy_response, indent=2)}")
     except Exception as e:
         print(f"✗ Failed to create access policy: {e}")
+        import traceback
+        traceback.print_exc()
         raise
     
     print("\nStep 1.2: Creating Usage Policy (Framework Agreement)")
@@ -185,7 +189,15 @@ def provision_data_on_provider(provider_service:BaseConnectorProviderService):
                             "leftOperand": "FrameworkAgreement",
                             "operator": "eq",
                             "rightOperand": "DataExchangeGovernance:1.0"
-                        }
+                        },
+                        {
+                            "leftOperand": "UsagePurpose",
+                            "operator": "isAnyOf",
+                            "rightOperand": [
+                                "cx.core.industrycore:1",
+                                "cx.circular.dpp:1"
+                            ]
+                        },
                     ]
                 }
             }]
@@ -276,10 +288,9 @@ def consume_data_as_consumer(consumer_service, asset_id):
     
     # Request Catalog from Provider
     try:
-        catalog_response = consumer_service.catalogs.get(
-            counter_party_id=PROVIDER_CONNECTOR_CONFIG["bpn"],
-            counter_party_address=PROVIDER_CONNECTOR_CONFIG["dsp_url"],
-            protocol="dataspace-protocol-http:2025-1"
+        catalog_response = consumer_service.get_catalog_with_bpnl(
+            bpnl=PROVIDER_CONNECTOR_CONFIG["bpn"],
+            counter_party_address=PROVIDER_CONNECTOR_CONFIG["dsp_url"]
         )
         
         if catalog_response.status_code != 200:

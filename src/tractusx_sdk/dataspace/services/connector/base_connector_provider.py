@@ -34,10 +34,11 @@ class BaseConnectorProviderService(BaseService):
     _contract_definition_controller: BaseDmaController
     _policy_controller: BaseDmaController
 
-    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verbose: bool = True, logger: logging.Logger = None):
+    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verbose: bool = True, logger: logging.Logger = None, verify_ssl: bool = True):
         self.dataspace_version = dataspace_version
         self.verbose = verbose
         self.logger = logger or logging.getLogger(__name__)
+        self.verify_ssl = verify_ssl
 
         dma_adapter = AdapterFactory.get_dma_adapter(
             dataspace_version=dataspace_version,
@@ -142,7 +143,7 @@ class BaseConnectorProviderService(BaseService):
             data_address=data_address
         )
 
-        asset_response = self.assets.create(obj=asset)
+        asset_response = self.assets.create(obj=asset, verify=self.verify_ssl)
 
         if asset_response.status_code != 200:
             self.logger.error(asset_response.text)
@@ -184,7 +185,7 @@ class BaseConnectorProviderService(BaseService):
             access_policy_id=access_policy_id
         )
 
-        created_contract = self.contract_definitions.create(obj=contract)
+        created_contract = self.contract_definitions.create(obj=contract, verify=self.verify_ssl)
 
         if created_contract.status_code != 200:
             raise ValueError(f"Failed to create contract {contract_id}. Status code: {created_contract.status_code}")
@@ -214,10 +215,10 @@ class BaseConnectorProviderService(BaseService):
             obligations=obligations
         )
 
-        created_policy = self.policies.create(obj=policy)
+        created_policy = self.policies.create(obj=policy, verify=self.verify_ssl)
 
         if created_policy.status_code != 200:
-            raise ValueError(f"Failed to create policy {policy_id}. Status code: {created_policy.status_code}")
+            raise ValueError(f"Failed to create policy {policy_id}. Status code: {created_policy.status_code}, Response: {created_policy.text}")
 
         if self.verbose:
             self.logger.info(f"Policy {policy_id} created successfully.")

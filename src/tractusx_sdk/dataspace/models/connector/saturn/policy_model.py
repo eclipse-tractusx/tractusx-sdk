@@ -35,7 +35,10 @@ class PolicyModel(BasePolicyModel):
     # ClassVar indicates this is a class constant, not a Pydantic model field
     DEFAULT_ODRL_CONTEXTS: ClassVar[list[str]] = [
         "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
-        "https://w3id.org/catenax/2025/9/policy/context.jsonld"
+        "https://w3id.org/catenax/2025/9/policy/context.jsonld",
+        {
+            "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+        }
     ]
 
     def to_data(self):
@@ -59,13 +62,96 @@ class PolicyModel(BasePolicyModel):
             "@id": self.oid,
             "policy": {
                 "@type": self.POLICY_TYPE,
-                "permission": self.permissions,
-                "prohibition": self.prohibitions,
-                "obligation": self.obligations
+                "permission": self._normalize_constraints(self.permissions),
+                "prohibition": self._normalize_constraints(self.prohibitions),
+                "obligation": self._normalize_constraints(self.obligations)
             }
         }
 
-        return jdumps(data)
+        # DEBUG: Print what we're about to send
+        import json
+        print("\n" + "="*80)
+        print("DEBUG: PolicyModel.to_data() - Data structure BEFORE jdumps:")
+        print("="*80)
+        print(json.dumps(data, indent=2))
+        print("="*80 + "\n")
+
+        result = jdumps(data)
+        
+        # DEBUG: Print the final JSON string
+        print("\n" + "="*80)
+        print("DEBUG: PolicyModel.to_data() - Final JSON string:")
+        print("="*80)
+        print(result)
+        print("="*80 + "\n")
+        
+        return result
+    
+    def _normalize_constraints(self, items):
+        """
+        Recursively normalize constraint values to ensure proper JSON-LD serialization.
+        
+        When rightOperand is a list, each item should remain as a simple value (string/number),
+        not wrapped in objects. The EDC will handle the proper ODRL formatting.
+        
+        :param items: permissions, prohibitions, or obligations list
+        :return: normalized items
+        """
+        # DEBUG: Print input
+        import json
+        print(f"\nDEBUG _normalize_constraints - INPUT type: {type(items)}")
+        print(f"DEBUG _normalize_constraints - INPUT value: {json.dumps(items, indent=2, default=str)}")
+        
+        if not items:
+            return items
+        
+        if isinstance(items, dict):
+            items = [items]
+        
+        normalized = []
+        for item in items:
+            if isinstance(item, dict):
+                normalized_item = {}
+                for key, value in item.items():
+                    if key == "constraint" and isinstance(value, dict):
+                        normalized_item[key] = self._normalize_constraint_dict(value)
+                    else:
+                        normalized_item[key] = value
+                normalized.append(normalized_item)
+            else:
+                normalized.append(item)
+        
+        # DEBUG: Print output
+        print(f"DEBUG _normalize_constraints - OUTPUT: {json.dumps(normalized, indent=2, default=str)}\n")
+        
+        return normalized
+    
+    def _normalize_constraint_dict(self, constraint):
+        """
+        Normalize a constraint dictionary, handling 'and'/'or' operators and rightOperand arrays.
+        
+        :param constraint: constraint dictionary
+        :return: normalized constraint
+        """
+        import json
+        print(f"\nDEBUG _normalize_constraint_dict - INPUT: {json.dumps(constraint, indent=2, default=str)}")
+        
+        result = {}
+        for key, value in constraint.items():
+            if key in ("and", "or") and isinstance(value, list):
+                # Recursively normalize nested constraints
+                result[key] = [self._normalize_constraint_dict(c) if isinstance(c, dict) else c for c in value]
+            elif key == "rightOperand":
+                # DEBUG: Check rightOperand type
+                print(f"DEBUG _normalize_constraint_dict - rightOperand type: {type(value)}")
+                print(f"DEBUG _normalize_constraint_dict - rightOperand value: {value}")
+                print(f"DEBUG _normalize_constraint_dict - rightOperand repr: {repr(value)}")
+                result[key] = value
+            else:
+                result[key] = value
+        
+        print(f"DEBUG _normalize_constraint_dict - OUTPUT: {json.dumps(result, indent=2, default=str)}\n")
+        return result
     
     def _build_context(self):
         """
@@ -114,7 +200,4 @@ class PolicyModel(BasePolicyModel):
         else:
             return [
                 *self.DEFAULT_ODRL_CONTEXTS,
-                {
-                    "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
-                }
             ]
