@@ -1,0 +1,4954 @@
+<!--
+  Eclipse Tractus-X - Industry Core Hub Frontend
+
+  Copyright (c) 2025 LKS Next
+  Copyright (c) 2025 Contributors to the Eclipse Foundation
+
+  See the NOTICE file(s) distributed with this work for additional
+  information regarding copyright ownership.
+ 
+  This program and the accompanying materials are made available under the
+  terms of the Apache License, Version 2.0 which is available at
+  https://www.apache.org/licenses/LICENSE-2.0.
+ 
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  either express or implied. See the
+  License for the specific language govern in permissions and limitations
+  under the License.
+ 
+  SPDX-License-Identifier: Apache-2.0
+-->
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A comprehensive SDK for Eclipse Tractus-X components">
+      
+      
+      
+      
+        <link rel="prev" href="../../discovery-services/bpn-discovery/">
+      
+      
+        <link rel="next" href="../submodel-server-sdk-usage/">
+      
+      
+      <link rel="icon" href="../../../../assets/images/logo_tractus-x-min.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.21">
+    
+    
+      
+        <title>DTR - Tractus-X SDK Documentation</title>
+      
+    
+    
+  
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.2a3383ac.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+  <link rel="stylesheet" href="../../../../assets/stylesheets/orange-black-theme.css">
+  <style>
+    /* Fix version number display and header spacing */
+    .md-header__inner {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex-wrap: nowrap !important;
+    }
+    
+    .md-header__title {
+      flex: 1 !important;
+      min-width: 0 !important;
+      margin-right: 16px !important;
+    }
+    
+
+    
+    .md-header__button {
+      margin-left: 4px !important;
+    }
+    
+    /* Move version selector next to GitHub repository info */
+    .md-version {
+      position: absolute !important;
+      right: -750px !important;
+      z-index: 1 !important;
+    }
+    
+    /* Keep search in center position */
+    .md-search {
+      margin-right: auto !important;
+      margin-left: auto !important;
+    }
+    
+    /* GitHub repo info on the far right */
+    .md-header__source {
+      margin-left: auto !important;
+      margin-right: 60px !important;
+    }
+    
+    /* Theme selector stays on far right */
+    .md-header__button.md-icon {
+      margin-left: auto !important;
+      margin-right: 8px !important;
+    }
+    
+    .md-version__current {
+      background-color: rgba(0, 0, 0, 0.3) !important;
+      border: 2px solid #FFD700 !important;
+      color: #FFD700 !important;
+      font-weight: 600 !important;
+      padding: 6px 16px !important;
+      border-radius: 6px !important;
+      min-width: 140px !important;
+      max-width: 200px !important;
+      text-align: center !important;
+      white-space: nowrap !important;
+      overflow: visible !important;
+      display: block !important;
+      line-height: 1.2 !important;
+    }
+    
+
+    
+    /* Responsive adjustments for better visibility */
+    @media screen and (max-width: 1220px) {
+      .md-header__title {
+        font-size: 1.5rem !important;
+      }
+      
+      .md-version__current {
+        min-width: 120px !important;
+        font-size: 0.9rem !important;
+        padding: 4px 12px !important;
+      }
+      
+      .md-header__option {
+        margin-right: 16px !important;
+      }
+    }
+    
+    @media screen and (max-width: 1024px) {
+      .md-header__title {
+        font-size: 1.3rem !important;
+      }
+      
+      .md-version__current {
+        min-width: 100px !important;
+        font-size: 0.85rem !important;
+        padding: 4px 10px !important;
+      }
+    }
+    
+    @media screen and (max-width: 768px) {
+      .md-header__title {
+        font-size: 1.1rem !important;
+      }
+      
+      .md-version__current {
+        min-width: 90px !important;
+        font-size: 0.8rem !important;
+        padding: 3px 8px !important;
+      }
+      
+      .md-header__option {
+        margin-right: 8px !important;
+        margin-left: 8px !important;
+      }
+    }
+    
+    /* Fix navigation tabs hover coverage */
+    .md-tabs__link {
+      padding: 16px 16px !important;
+      height: auto !important;
+      min-height: 48px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      line-height: 1.2 !important;
+      position: relative !important;
+    }
+    
+    .md-tabs__link:hover {
+      background-color: rgba(0, 0, 0, 0.2) !important;
+      border-radius: 0 !important;
+    }
+    
+    .md-tabs__link--active {
+      background-color: rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    /* Ensure full height coverage for tab text */
+    .md-tabs__item {
+      height: 100% !important;
+    }
+    
+    /* Make content links darker in light mode for better visibility */
+    [data-md-color-scheme="default"] .md-content a {
+      color: #ce970c !important; 
+    }
+    
+    [data-md-color-scheme="default"] .md-content a:hover {
+      color: #8B6914 !important;
+    }
+    
+    [data-md-color-scheme="default"] .md-nav__link:hover {
+      color: #8B6914 !important;
+    }
+    
+    [data-md-color-scheme="default"] .md-nav__link--active {
+      color: #654321 !important;
+      font-weight: 600 !important;
+    }
+    
+    [data-md-color-scheme="default"] .md-nav--secondary .md-nav__link:hover {
+      color: #8B6914 !important;
+    }
+    
+    /* Custom Footer Styles */
+    .md-footer {
+      background-color: #2c2c2c !important;
+      color: #ffffff !important;
+      border-top: 4px solid #FFD700 !important;
+    }
+    
+    .custom-footer {
+      background-color: #2c2c2c;
+      color: #ffffff;
+      padding: 40px 0 20px 0;
+      margin-top: 40px;
+    }
+    
+    .custom-footer__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .custom-footer__section h3 {
+      color: #FFD700 !important;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #FFD700;
+      padding-bottom: 8px;
+    }
+    
+    .custom-footer__links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .custom-footer__links li {
+      margin-bottom: 12px;
+    }
+    
+    .custom-footer__links a {
+      color: #cccccc !important;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      font-size: 0.9rem;
+    }
+    
+    .custom-footer__links a:hover {
+      color: #FFD700 !important;
+      text-decoration: none;
+    }
+    
+    .custom-footer__bottom {
+      border-top: 1px solid #555;
+      margin-top: 30px;
+      padding-top: 20px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .custom-footer__copyright {
+      font-size: 0.85rem;
+      color: #aaaaaa;
+    }
+    
+    .custom-footer__copyright a {
+      color: #FFD700 !important;
+      text-decoration: none;
+    }
+    
+    .custom-footer__copyright a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Responsive footer */
+    @media screen and (max-width: 768px) {
+      .custom-footer__grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        padding: 0 15px;
+      }
+      
+      .custom-footer__bottom {
+        flex-direction: column;
+        gap: 15px;
+      }
+    }
+  </style>
+
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/orange-black-theme.css">
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#industry-dtr-usage" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="Tractus-X SDK Documentation" class="md-header__button md-logo" aria-label="Tractus-X SDK Documentation" data-md-component="logo">
+      
+  <img src="../../../../assets/images/logo_tractus-x.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tractus-X SDK Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              DTR
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/eclipse-tractusx/tractusx-sdk" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    eclipse-tractusx/tractusx-sdk
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../tutorials/getting-started/" class="md-tabs__link">
+          
+  
+  
+  Tutorials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../how-to-guides/ic-hub-use-case/industry-core-hub-overview/" class="md-tabs__link">
+          
+  
+  
+  How-to Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../core-concepts/sdk-architecture/sdk-structure-and-components/" class="md-tabs__link">
+          
+  
+  
+  Core Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../../dataspace-library/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../contributing/contribution-guidelines/" class="md-tabs__link">
+          
+  
+  
+  Contributing
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="Tractus-X SDK Documentation" class="md-nav__button md-logo" aria-label="Tractus-X SDK Documentation" data-md-component="logo">
+      
+  <img src="../../../../assets/images/logo_tractus-x.svg" alt="logo">
+
+    </a>
+    Tractus-X SDK Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/eclipse-tractusx/tractusx-sdk" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    eclipse-tractusx/tractusx-sdk
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Tutorials
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../tutorials/getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation & Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../tutorials/create-first-asset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create First Asset
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    How-to Guides
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            How-to Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../how-to-guides/ic-hub-use-case/industry-core-hub-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Industry Core Hub Use Case
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../how-to-guides/other-use-case/other-use-case-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Other Use Case
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Core Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Core Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../core-concepts/sdk-architecture/sdk-structure-and-components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    SDK Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../core-concepts/dataspace-concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dataspace Concepts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../core-concepts/industry-concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Industry Concepts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../core-concepts/extensions-concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Extensions Concepts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../core-concepts/authentication-security/authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Authentication & Security
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Dataspace Library
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            Dataspace Library
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dataspace-library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1_2" id="__nav_5_1_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Connector
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            Connector
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dataspace-library/connector/services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Services
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dataspace-library/connector/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dataspace-library/connector/managers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Managers
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dataspace-library/connector/controllers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Controllers
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1_3" id="__nav_5_1_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Discovery Services
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            Discovery Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dataspace-library/discovery-services/discovery-finder-service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Discovery Finder Service
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dataspace-library/discovery-services/connector-discovery-service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Connector Discovery Service
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dataspace-library/tools/tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tools
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1_5" id="__nav_5_1_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Legacy
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            Legacy
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dataspace-library/legacy/edc-sdk-usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Connector
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Industry Library
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Industry Library
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2_2" id="__nav_5_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    DTR
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            DTR
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dtr/services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Services
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dtr/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2_3" id="__nav_5_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Submodel Server
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            Submodel Server
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_3_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2_3_1" id="__nav_5_2_3_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Adapters
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            Adapters
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../submodel-server/adapters/base-adapter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Base Adapter
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../submodel-server/adapters/file-system-adapter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    File System Adapter
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2_4" id="__nav_5_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Discovery Services
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            Discovery Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../discovery-services/bpn-discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    BPN Discovery
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5_2_5" id="__nav_5_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Legacy
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            Legacy
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    DTR
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    DTR
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#models" class="md-nav__link">
+    <span class="md-ellipsis">
+      Models
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      Endpoint
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Endpoint">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#protocolinformation" class="md-nav__link">
+    <span class="md-ellipsis">
+      ProtocolInformation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ProtocolInformation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#protocolinformationsecurityattributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      ProtocolInformationSecurityAttributes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ProtocolInformationSecurityAttributes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#protocolinformationsecurityattributestypes" class="md-nav__link">
+    <span class="md-ellipsis">
+      ProtocolInformationSecurityAttributesTypes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ProtocolInformationSecurityAttributesTypes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#possible-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Possible Values
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shelldescriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      ShellDescriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ShellDescriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#submodeldescriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      SubModelDescriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SubModelDescriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specificassetid" class="md-nav__link">
+    <span class="md-ellipsis">
+      SpecificAssetId
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SpecificAssetId">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reference
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#referencetypes" class="md-nav__link">
+    <span class="md-ellipsis">
+      ReferenceTypes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ReferenceTypes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#possible-values_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Possible Values
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#referencekey" class="md-nav__link">
+    <span class="md-ellipsis">
+      ReferenceKey
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ReferenceKey">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#referencekeytypes" class="md-nav__link">
+    <span class="md-ellipsis">
+      ReferenceKeyTypes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ReferenceKeyTypes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#possible-values_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Possible Values
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#result" class="md-nav__link">
+    <span class="md-ellipsis">
+      Result
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Services
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aas-service-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Aas Service Methods
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Aas Service Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get_all_asset_administration_shell_descriptors" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_all_asset_administration_shell_descriptors
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_all_asset_administration_shell_descriptors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_asset_administration_shell_descriptor_by_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_asset_administration_shell_descriptor_by_id
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_asset_administration_shell_descriptor_by_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_asset_administration_shell_descriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      update_asset_administration_shell_descriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="update_asset_administration_shell_descriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_asset_administration_shell_descriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      delete_asset_administration_shell_descriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="delete_asset_administration_shell_descriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_submodel_descriptors_by_aas_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_submodel_descriptors_by_aas_id
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_submodel_descriptors_by_aas_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_submodel_descriptor_by_ass_and_submodel_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_submodel_descriptor_by_ass_and_submodel_id
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_submodel_descriptor_by_ass_and_submodel_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_asset_administration_shell_descriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_asset_administration_shell_descriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="create_asset_administration_shell_descriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_submodel_descriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_submodel_descriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="create_submodel_descriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#returns_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_submodel_descriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      update_submodel_descriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="update_submodel_descriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_submodel_descriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      delete_submodel_descriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="delete_submodel_descriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_description" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_description
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_description">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#returns_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_assets_ids_by_asset_administration_shell_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_assets_ids_by_asset_administration_shell_id
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_assets_ids_by_asset_administration_shell_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_all_asset_ids_links_by_asset_administration_shell_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_all_asset_ids_links_by_asset_administration_shell_id
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="create_all_asset_ids_links_by_asset_administration_shell_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_all_asset_ids_links_by_asset_administration_shell_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      delete_all_asset_ids_links_by_asset_administration_shell_id
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="delete_all_asset_ids_links_by_asset_administration_shell_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      NOTICE
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../submodel-server-sdk-usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Submodel Server
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Extension Library
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            Extension Library
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../extension-library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../extension-library/semantics/semantics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Semantics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Contributing
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/contribution-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contribution Guidelines
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/code-of-conduct/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Code of Conduct
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Architectural Decision Records
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architectural Decision Records
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/architectural-decisions/0001-record-architecture-decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    1.- Record Architecture Decisions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/architectural-decisions/0002-data-storage-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    2.- Data Storage Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/architectural-decisions/0003-sdk-module-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    3.- SDK Module Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/architectural-decisions/0004-tractusx-sdk-services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    4.- Tractus-X SDK Service
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing/versioning/VERSIONING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Versioning
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#models" class="md-nav__link">
+    <span class="md-ellipsis">
+      Models
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      Endpoint
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Endpoint">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#protocolinformation" class="md-nav__link">
+    <span class="md-ellipsis">
+      ProtocolInformation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ProtocolInformation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#protocolinformationsecurityattributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      ProtocolInformationSecurityAttributes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ProtocolInformationSecurityAttributes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#protocolinformationsecurityattributestypes" class="md-nav__link">
+    <span class="md-ellipsis">
+      ProtocolInformationSecurityAttributesTypes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ProtocolInformationSecurityAttributesTypes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#possible-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Possible Values
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shelldescriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      ShellDescriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ShellDescriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#submodeldescriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      SubModelDescriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SubModelDescriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specificassetid" class="md-nav__link">
+    <span class="md-ellipsis">
+      SpecificAssetId
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SpecificAssetId">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reference
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#referencetypes" class="md-nav__link">
+    <span class="md-ellipsis">
+      ReferenceTypes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ReferenceTypes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#possible-values_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Possible Values
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#referencekey" class="md-nav__link">
+    <span class="md-ellipsis">
+      ReferenceKey
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ReferenceKey">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#referencekeytypes" class="md-nav__link">
+    <span class="md-ellipsis">
+      ReferenceKeyTypes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ReferenceKeyTypes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#possible-values_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Possible Values
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#result" class="md-nav__link">
+    <span class="md-ellipsis">
+      Result
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Services
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explanation-of-parameters_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explanation of Parameters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aas-service-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Aas Service Methods
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Aas Service Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get_all_asset_administration_shell_descriptors" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_all_asset_administration_shell_descriptors
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_all_asset_administration_shell_descriptors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_asset_administration_shell_descriptor_by_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_asset_administration_shell_descriptor_by_id
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_asset_administration_shell_descriptor_by_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_asset_administration_shell_descriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      update_asset_administration_shell_descriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="update_asset_administration_shell_descriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_asset_administration_shell_descriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      delete_asset_administration_shell_descriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="delete_asset_administration_shell_descriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_submodel_descriptors_by_aas_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_submodel_descriptors_by_aas_id
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_submodel_descriptors_by_aas_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_submodel_descriptor_by_ass_and_submodel_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_submodel_descriptor_by_ass_and_submodel_id
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_submodel_descriptor_by_ass_and_submodel_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_asset_administration_shell_descriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_asset_administration_shell_descriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="create_asset_administration_shell_descriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_submodel_descriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_submodel_descriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="create_submodel_descriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#returns_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_submodel_descriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      update_submodel_descriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="update_submodel_descriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_submodel_descriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      delete_submodel_descriptor
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="delete_submodel_descriptor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_description" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_description
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_description">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#returns_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_assets_ids_by_asset_administration_shell_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_assets_ids_by_asset_administration_shell_id
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_assets_ids_by_asset_administration_shell_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_all_asset_ids_links_by_asset_administration_shell_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_all_asset_ids_links_by_asset_administration_shell_id
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="create_all_asset_ids_links_by_asset_administration_shell_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_all_asset_ids_links_by_asset_administration_shell_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      delete_all_asset_ids_links_by_asset_administration_shell_id
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="delete_all_asset_ids_links_by_asset_administration_shell_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#args_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      Args
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      Returns
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raises_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raises
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      NOTICE
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/eclipse-tractusx/tractusx-sdk/edit/main/docs/api-reference/industry-library/legacy/dtr-sdk-usage.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<!--
+
+Eclipse Tractus-X - Software Development KIT
+
+Copyright (c) 2025 LKS Next
+Copyright (c) 2025 Contributors to the Eclipse Foundation
+
+See the NOTICE file(s) distributed with this work for additional
+information regarding copyright ownership.
+
+This work is made available under the terms of the
+Creative Commons Attribution 4.0 International (CC-BY-4.0) license,
+which is available at
+https://creativecommons.org/licenses/by/4.0/legalcode.
+
+SPDX-License-Identifier: CC-BY-4.0
+
+-->
+
+<!-- Part of this content was generated by Co-Pilot and reviewed by a human developer. -->
+
+<h1 id="industry-dtr-usage">Industry DTR Usage</h1>
+<ul>
+<li><a href="#models">Models</a><ul>
+<li><a href="#endpoint">Endpoint</a></li>
+<li><a href="#protocolinformation">ProtocolInformation</a></li>
+<li><a href="#protocolinformationsecurityattributes">ProtocolInformationSecurityAttributes</a></li>
+<li><a href="#protocolinformationsecurityattributestypes">ProtocolInformationSecurityAttributesTypes</a></li>
+<li><a href="#shelldescriptor">ShellDescriptor</a></li>
+<li><a href="#submodeldescriptor">SubModelDescriptor</a></li>
+<li><a href="#specificassetid">SpecificAssetId</a></li>
+<li><a href="#reference">Reference</a></li>
+<li><a href="#referencetypes">ReferenceTypes</a></li>
+<li><a href="#referencekey">ReferenceKey</a></li>
+<li><a href="#referencekeytypes">ReferenceKeyTypes</a></li>
+<li><a href="#result">Result</a></li>
+</ul>
+</li>
+<li><a href="#services">Services</a><ul>
+<li><a href="#aas-service-methods">AasService</a><ul>
+<li><a href="#get_all_asset_administration_shell_descriptors">get_all_asset_administration_shell_descriptors</a></li>
+<li><a href="#get_asset_administration_shell_descriptor_by_id">get_asset_administration_shell_descriptor_by_id</a></li>
+<li><a href="#update_asset_administration_shell_descriptor">update_asset_administration_shell_descriptor</a></li>
+<li><a href="#delete_asset_administration_shell_descriptor">delete_asset_administration_shell_descriptor</a></li>
+<li><a href="#get_submodel_descriptors_by_aas_id">get_submodel_descriptors_by_aas_id</a></li>
+<li><a href="#get_submodel_descriptor_by_ass_and_submodel_id">get_submodel_descriptor_by_ass_and_submodel_id</a></li>
+<li><a href="#create_asset_administration_shell_descriptor">create_asset_administration_shell_descriptor</a></li>
+<li><a href="#create_submodel_descriptor">create_submodel_descriptor</a></li>
+<li><a href="#update_submodel_descriptor">update_submodel_descriptor</a></li>
+<li><a href="#delete_submodel_descriptor">delete_submodel_descriptor</a></li>
+<li><a href="#get_description">get_description</a></li>
+<li><a href="#get_assets_ids_by_asset_administration_shell_id">get_assets_ids_by_asset_administration_shell_id</a></li>
+<li><a href="#create_all_asset_ids_links_by_asset_administration_shell_id">create_all_asset_ids_links_by_asset_administration_shell_id</a></li>
+<li><a href="#delete_all_asset_ids_links_by_asset_administration_shell_id">delete_all_asset_ids_links_by_asset_administration_shell_id</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="models">Models</h2>
+<h3 id="endpoint">Endpoint</h3>
+<p>The Endpoint model represents the access point for interacting with a specific resource or service in the Digital Twin Registry (DTR). It defines how external systems can communicate with a digital twin or its associated submodels.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.models.aas.v3</span><span class="w"> </span><span class="kn">import</span> <span class="n">Endpoint</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">endpoint</span> <span class="o">=</span> <span class="n">Endpoint</span><span class="p">(</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">interface</span><span class="o">=</span><span class="s2">&quot;SUBMODEL-3.0&quot;</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">protocolInformation</span><span class="o">=</span><span class="n">ProtocolInformation</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters">Explanation of Parameters</h4>
+<ul>
+<li><code>interface</code>: Specifies the interface type used by the endpoint. For example, "SUBMODEL-3.0" indicates that the endpoint adheres to the Submodel 3.0 interface specification.</li>
+<li><code>protocolInformation</code>: An instance of the ProtocolInformation model that provides details about the communication protocol, such as security attributes, endpoint type, and other protocol-specific configurations.</li>
+</ul>
+<h3 id="protocolinformation">ProtocolInformation</h3>
+<p>The ProtocolInformation model represents the details of the communication protocol used by an endpoint in the Digital Twin Registry (DTR). It provides the necessary metadata to define how external systems can interact with a digital twin or its submodels, including protocol type, version, security attributes, and additional protocol-specific configurations.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.models.aas.v3</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProtocolInformation</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">protocolInformation</span><span class="o">=</span><span class="n">ProtocolInformation</span><span class="p">(</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">href</span><span class="o">=</span><span class="n">href_url</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">endpointProtocol</span><span class="o">=</span><span class="s2">&quot;HTTP&quot;</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">endpointProtocolVersion</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;1.1&quot;</span><span class="p">],</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">subprotocol</span><span class="o">=</span><span class="s2">&quot;DSP&quot;</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">subprotocolBody</span><span class="o">=</span><span class="n">subprotocol_body_str</span><span class="p">,</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">subprotocolBodyEncoding</span><span class="o">=</span><span class="s2">&quot;plain&quot;</span><span class="p">,</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="n">securityAttributes</span><span class="o">=</span><span class="p">[</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        <span class="n">ProtocolInformationSecurityAttributes</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    <span class="p">],</span> 
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_1">Explanation of Parameters</h4>
+<ul>
+<li><code>href</code>: The URL or address of the endpoint. This is the primary access point for interacting with the resource.</li>
+<li><code>endpointProtocol</code>: Specifies the communication protocol used by the endpoint.</li>
+<li><code>endpointProtocolVersion</code>: A list of protocol versions supported by the endpoint.</li>
+<li><code>subprotocol</code>: Defines a subprotocol used in conjunction with the main protocol.</li>
+<li><code>subprotocolBody</code>: A string containing additional information or metadata specific to the subprotocol.</li>
+<li><code>subprotocolBodyEncoding</code>: Specifies the encoding format of the subprotocolBody.</li>
+<li><code>securityAttributes</code>: A list of security attributes (ProtocolInformationSecurityAttributes) that define the security requirements or configurations for the endpoint.</li>
+</ul>
+<h3 id="protocolinformationsecurityattributes">ProtocolInformationSecurityAttributes</h3>
+<p>The ProtocolInformationSecurityAttributes model represents the security attributes associated with an endpoint in the Digital Twin Registry (DTR). These attributes define the security requirements or configurations needed to interact with the endpoint, ensuring secure communication and data exchange.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.models.aas.v3</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProtocolInformationSecurityAttributes</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">ProtocolInformationSecurityAttributes</span><span class="p">(</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="nb">type</span><span class="o">=</span><span class="n">ProtocolInformationSecurityAttributesTypes</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;NONE&quot;</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">value</span><span class="o">=</span><span class="s2">&quot;NONE&quot;</span><span class="p">,</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_2">Explanation of Parameters</h4>
+<ul>
+<li><code>type</code>: Specifies the type of security attribute. This is an enumeration from ProtocolInformationSecurityAttributesTypes, which defines the available security attribute types.</li>
+<li><code>key</code>: Represents the key or identifier for the security attribute.</li>
+<li><code>value</code>: Represents the value associated with the security attribute.</li>
+</ul>
+<h3 id="protocolinformationsecurityattributestypes">ProtocolInformationSecurityAttributesTypes</h3>
+<p>The ProtocolInformationSecurityAttributesTypes is an enumeration (Enum) that defines the possible types of security attributes for endpoints in the Digital Twin Registry (DTR). These attributes specify the security mechanisms required to interact with an endpoint, ensuring secure communication and data exchange.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.models.aas.v3</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProtocolInformationSecurityAttributesTypes</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">type</span><span class="o">=</span><span class="n">ProtocolInformationSecurityAttributesTypes</span><span class="o">.</span><span class="n">NONE</span>
+</span></code></pre></div>
+<h4 id="possible-values">Possible Values</h4>
+<ol>
+<li><code>NONE</code>: Indicates that no specific security attributes are required for the endpoint.</li>
+<li><code>RFC_TLSA</code>: Refers to the use of TLSA (Transport Layer Security Authentication) as defined in RFC 6698.</li>
+<li><code>W3C_DID</code>: Refers to the use of Decentralized Identifiers (DIDs) as specified by the W3C DID specification.</li>
+</ol>
+<h3 id="shelldescriptor">ShellDescriptor</h3>
+<p>The ShellDescriptor model represents the metadata and structure of an Asset Administration Shell (AAS) in the Digital Twin Registry (DTR). It provides information about the digital twin, including its unique identifiers and associated specific asset identifiers.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.models.aas.v3</span><span class="w"> </span><span class="kn">import</span> <span class="n">ShellDescriptor</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">shell</span> <span class="o">=</span> <span class="n">ShellDescriptor</span><span class="p">(</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="nb">id</span><span class="o">=</span><span class="n">aas_id</span><span class="o">.</span><span class="n">urn</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">globalAssetId</span><span class="o">=</span><span class="n">global_id</span><span class="o">.</span><span class="n">urn</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">specificAssetIds</span><span class="o">=</span><span class="n">specific_asset_ids</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_3">Explanation of Parameters</h4>
+<ul>
+<li><code>id</code>: The unique identifier of the Asset Administration Shell (AAS).</li>
+<li><code>globalAssetId</code>: The global identifier of the asset associated with the shell.</li>
+<li><code>specificAssetIds</code>: A list of specific asset identifiers (SpecificAssetId objects) that provide additional identification details for the asset. These identifiers can include key-value pairs that uniquely describe the asset.</li>
+</ul>
+<h3 id="submodeldescriptor">SubModelDescriptor</h3>
+<p>The SubModelDescriptor model represents the metadata and access information for a specific submodel of a digital twin in the Digital Twin Registry (DTR). Submodels define specific aspects or views of a digital twin, and the SubModelDescriptor provides the necessary details to describe and access these submodels.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.models.aas.v3</span><span class="w"> </span><span class="kn">import</span> <span class="n">SubModelDescriptor</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">submodel</span> <span class="o">=</span> <span class="n">SubModelDescriptor</span><span class="p">(</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="nb">id</span><span class="o">=</span><span class="n">submodel_id</span><span class="o">.</span><span class="n">urn</span><span class="p">,</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">idShort</span><span class="o">=</span><span class="n">aspect_id_name</span><span class="p">,</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">semanticId</span><span class="o">=</span><span class="n">semantic_id_reference</span><span class="p">,</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">endpoints</span><span class="o">=</span><span class="p">[</span><span class="n">endpoint</span><span class="p">],</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_4">Explanation of Parameters</h4>
+<ul>
+<li><code>id</code>: The unique identifier of the submodel.</li>
+<li><code>idShort</code>: A human-readable short identifier for the submodel.</li>
+<li><code>semanticId</code>: A reference to the semantic definition of the submodel. This links the submodel to its semantic meaning or standard, ensuring interoperability and understanding across systems.</li>
+<li><code>endpoints</code>: A list of Endpoint objects that define how the submodel can be accessed. Each endpoint specifies the protocol, address, and other details required to interact with the submodel.</li>
+</ul>
+<h3 id="specificassetid">SpecificAssetId</h3>
+<p>The SpecificAssetId model represents a unique identifier for a specific asset in the Digital Twin Registry (DTR). It is used to link a digital twin to a physical or logical asset by providing additional identification details.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.models.aas.v3</span><span class="w"> </span><span class="kn">import</span> <span class="n">SpecificAssetId</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">specific_customer_part_asset_id</span> <span class="o">=</span> <span class="n">SpecificAssetId</span><span class="p">(</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;customerPartId&quot;</span><span class="p">,</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">value</span><span class="o">=</span><span class="n">customer_part_id</span><span class="p">,</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">externalSubjectId</span><span class="o">=</span><span class="n">Reference</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_5">Explanation of Parameters</h4>
+<ul>
+<li><code>name</code>: The key or name of the specific asset identifier. This describes the type of identifier being provided.</li>
+<li><code>value</code>: The value of the specific asset identifier.</li>
+<li><code>externalSubjectId</code>: A reference to an external subject associated with the asset.</li>
+</ul>
+<h3 id="reference">Reference</h3>
+<p>The Reference model represents a link to an external resource or entity in the Digital Twin Registry (DTR). It is used to associate elements, such as assets or submodels, with external definitions, systems, or identifiers. This ensures interoperability and traceability across different systems.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.models.aas.v3</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reference</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">externalSubjectId</span><span class="o">=</span><span class="n">Reference</span><span class="p">(</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="nb">type</span><span class="o">=</span><span class="n">ReferenceTypes</span><span class="p">,</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">keys</span><span class="o">=</span><span class="p">[</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>        <span class="n">ReferenceKey</span><span class="p">,</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="p">],</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_6">Explanation of Parameters</h4>
+<ul>
+<li><code>type</code>: Specifies the type of reference. This is an enumeration from ReferenceTypes, which defines the kind of reference being used.</li>
+<li><code>keys</code>: A list of ReferenceKey objects that define the components of the reference.</li>
+</ul>
+<h3 id="referencetypes">ReferenceTypes</h3>
+<p>The ReferenceTypes model is an enumeration (Enum) that defines the possible types of references used in the Digital Twin Registry (DTR). These reference types specify the context or purpose of a reference, enabling elements in the registry (such as assets or submodels) to be linked to external resources, systems, or definitions.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.models.aas.v3</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReferenceTypes</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">ReferenceTypes</span><span class="o">.</span><span class="n">EXTERNAL_REFERENCE</span>
+</span></code></pre></div>
+<h4 id="possible-values_1">Possible Values</h4>
+<ol>
+<li><code>MODEL_REFERENCE</code>: Indicates that the reference points to a specific model or definition within the context of the Asset Administration Shell (AAS).</li>
+<li><code>EXTERNAL_REFERENCE</code>: Indicates that the reference points to an external resource or entity outside the Digital Twin Registry.</li>
+</ol>
+<h3 id="referencekey">ReferenceKey</h3>
+<p>The ReferenceKey model represents a single key in a reference within the Digital Twin Registry (DTR). It is used to define the components of a Reference, specifying the type and value of the key. Each ReferenceKey contributes to forming a complete reference to an external or internal resource.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.models.aas.v3</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReferenceKey</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">ReferenceKey</span><span class="p">(</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="nb">type</span><span class="o">=</span><span class="n">ReferenceKeyTypes</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">bpn</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_7">Explanation of Parameters</h4>
+<ul>
+<li><code>type</code>: Specifies the type of the key.</li>
+<li><code>value</code>: The actual value of the key.</li>
+</ul>
+<h3 id="referencekeytypes">ReferenceKeyTypes</h3>
+<p>The ReferenceKeyTypes model is an enumeration (Enum) that defines the possible types of keys used in a ReferenceKey within the Digital Twin Registry (DTR). These key types specify the kind of resource or element being referenced, ensuring clarity and consistency when linking elements in the registry to internal or external resources.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.models.aas.v3</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReferenceKeyTypes</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="nb">type</span><span class="o">=</span><span class="n">ReferenceKeyTypes</span><span class="o">.</span><span class="n">GLOBAL_REFERENCE</span>
+</span></code></pre></div>
+<h4 id="possible-values_2">Possible Values</h4>
+<ol>
+<li><code>ANNOTATED_RELATIONSHIP_ELEMENT</code>: Represents a relationship element with additional annotations.</li>
+<li><code>ASSET_ADMINISTRATION_SHELL</code>: Refers to an Asset Administration Shell (AAS) itself.</li>
+<li><code>BASIC_EVENT_ELEMENT</code>: Represents a basic event element in the AAS, used to describe events triggered by the system.</li>
+<li><code>BLOB</code>: Refers to a Binary Large Object (BLOB) in the AAS, typically used to store binary data such as images or files.</li>
+<li><code>CAPABILITY</code>: Represents a capability element in the AAS, describing the ability of an asset to perform a specific function.</li>
+<li><code>CONCEPT_DESCRIPTION</code>: Refers to a semantic definition or concept in the AAS.</li>
+<li><code>DATA_ELEMENT</code>: Represents a generic data element in the AAS, used to store data values.</li>
+<li><code>ENTITY</code>: Represents an entity in the AAS, such as a physical or logical object.</li>
+<li><code>EVENT_ELEMENT</code>: Refers to an event element in the AAS, used to describe events triggered by the system.</li>
+<li><code>FILE</code>: Refers to a file element in the AAS.</li>
+<li><code>FRAGMENT_REFERENCE</code>: Represents a reference to a fragment of a resource or document.</li>
+<li><code>GLOBAL_REFERENCE</code>: Represents a globally recognized reference to an external resource or entity.</li>
+<li><code>IDENTIFIABLE</code>: Refers to an identifiable element in the AAS, which has a unique identifier.</li>
+<li><code>MULTI_LANGUAGE_PROPERTY</code>: Represents a property in the AAS that supports multiple languages.</li>
+<li><code>OPERATION</code>: Refers to an operation element in the AAS, describing a function or method that can be executed.</li>
+<li><code>PROPERTY</code>: Represents a property in the AAS, typically a single value or attribute.</li>
+<li><code>RANGE</code>: Refers to a range element in the AAS, used to define a range of values.</li>
+<li><code>REFERABLE</code>: Represents an element in the AAS that can be referred to by a unique identifier.</li>
+<li><code>REFERENCE_ELEMENT</code>: Refers to a reference element in the AAS, used to link to other elements or resources.</li>
+<li><code>RELATIONSHIP_ELEMENT</code>: Represents a relationship element in the AAS, describing a relationship between two entities.</li>
+<li><code>SUBMODEL</code>: Refers to a submodel in the Asset Administration Shell (AAS).</li>
+<li><code>SUBMODEL_ELEMENT</code>: Refers to an element within a submodel.</li>
+<li><code>SUBMODEL_ELEMENT_COLLECTION</code>: Refers to a collection of submodel elements.</li>
+<li><code>SUBMODEL_ELEMENT_LIST</code>: Represents a list of submodel elements in the AAS, used to group related elements.</li>
+</ol>
+<h3 id="result">Result</h3>
+<p>The Result model is used to represent the outcome of an operation or request in the Digital Twin Registry (DTR). Specifically, it is designed to handle cases where the response is not a successful 2XX HTTP status code. This model provides a structured way to capture and analyze error messages or other details about the failed operation.</p>
+<h2 id="services">Services</h2>
+<p>The AasService is a service class provided by the Tractus-X SDK to interact with the Digital Twin Registry (DTR). It provides a set of methods to manage Asset Administration Shells (AAS), submodels, and their associated metadata. This service simplifies communication with the DTR by abstracting API calls into high-level methods.</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.services</span><span class="w"> </span><span class="kn">import</span> <span class="n">AasService</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">aas_service</span> <span class="o">=</span> <span class="n">AasService</span><span class="p">(</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">base_url</span><span class="o">=</span><span class="n">dtr_url</span><span class="p">,</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="n">base_lookup_url</span><span class="o">=</span><span class="n">dtr_lookup_url</span><span class="p">,</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="n">api_path</span><span class="o">=</span><span class="n">api_path</span><span class="p">,</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="explanation-of-parameters_8">Explanation of Parameters</h4>
+<ul>
+<li><code>base_url</code>: The base URL of the Digital Twin Registry.</li>
+<li><code>base_lookup_url</code>: The base URL for lookup operations in the registry.</li>
+<li><code>api_path</code>: The API path for accessing the DTR endpoints.</li>
+</ul>
+<h3 id="aas-service-methods">Aas Service Methods</h3>
+<h4 id="get_all_asset_administration_shell_descriptors"><strong>get_all_asset_administration_shell_descriptors</strong></h4>
+<p>Retrieves all Asset Administration Shell (AAS) Descriptors from the Digital Twin Registry.</p>
+<h5 id="args">Args</h5>
+<ul>
+<li><code>limit</code> (int, optional): Specifies the maximum number of shell descriptors to return in a single response.</li>
+<li><code>cursor</code> (str, optional): A server-generated identifier used for pagination to retrieve the next set of results.</li>
+<li><code>asset_kind</code> (AssetKind_3_0, optional): Filters the results by the kind of asset.</li>
+<li><code>asset_type</code> (str, optional): Filters the results by the type of asset. The value is automatically BASE64-URL-encoded.</li>
+<li><code>bpn</code> (str, optional): The Business Partner Number (BPN) used for authorization and filtering</li>
+</ul>
+<h5 id="returns">Returns</h5>
+<ul>
+<li><code>GetAllShellDescriptorsResponse</code>: Contains the retrieved shell descriptors and pagination metadata.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises">Raises</h5>
+<ul>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h4 id="get_asset_administration_shell_descriptor_by_id"><strong>get_asset_administration_shell_descriptor_by_id</strong></h4>
+<p>Retrieves a specific Asset Administration Shell (AAS) Descriptor by its identifier.</p>
+<h5 id="args_1">Args</h5>
+<ul>
+<li><code>aas_identifier</code> (str): The unique identifier of the Asset Administration Shell.</li>
+<li><code>bpn</code> (str, optional): The Business Partner Number (BPN) used for authorization. If provided, it is added as an Edc-Bpn header to the request.</li>
+</ul>
+<h5 id="returns_1">Returns</h5>
+<ul>
+<li><code>ShellDescriptor</code>: The requested Asset Administration Shell Descriptor object containing metadata about the AAS.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises_1">Raises</h5>
+<ul>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h4 id="update_asset_administration_shell_descriptor"><strong>update_asset_administration_shell_descriptor</strong></h4>
+<p>Updates an existing Asset Administration Shell (AAS) Descriptor.</p>
+<h5 id="args_2">Args</h5>
+<ul>
+<li><code>aas_identifier</code> (str): The unique identifier of the Asset Administration Shell.</li>
+<li><code>shell_descriptor</code> (ShellDescriptor): The updated ShellDescriptor object containing the new metadata for the AAS.</li>
+<li><code>bpn</code> (str, optional): The Business Partner Number (BPN) used for authorization. If provided, it is added as an Edc-Bpn header to the request.</li>
+</ul>
+<h5 id="returns_2">Returns</h5>
+<ul>
+<li><code>None</code>: Returned if the request is successful.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises_2">Raises</h5>
+<ul>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h4 id="delete_asset_administration_shell_descriptor"><strong>delete_asset_administration_shell_descriptor</strong></h4>
+<p>Deletes an existing Asset Administration Shell (AAS) Descriptor.</p>
+<h5 id="args_3">Args</h5>
+<ul>
+<li><code>aas_identifier</code> (str): The unique identifier of the Asset Administration Shell.</li>
+<li><code>bpn</code> (str, optional): The Business Partner Number (BPN) used for authorization. If provided, it is added as an Edc-Bpn header to the request.</li>
+</ul>
+<h5 id="returns_3">Returns</h5>
+<ul>
+<li><code>None</code>: Returned if the request is successful.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises_3">Raises</h5>
+<ul>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h4 id="get_submodel_descriptors_by_aas_id"><strong>get_submodel_descriptors_by_aas_id</strong></h4>
+<p>Retrieves all Submodel Descriptors associated with a specific Asset Administration Shell (AAS).</p>
+<h5 id="args_4">Args</h5>
+<ul>
+<li><code>aas_identifier</code> (str): The unique identifier of the Asset Administration Shell.</li>
+<li><code>limit</code> (int, optional): Specifies the maximum number of shell descriptors to return in a single response.</li>
+<li><code>cursor</code> (str, optional): A server-generated identifier used for pagination to retrieve the next set of results.</li>
+<li><code>bpn</code> (str, optional): The Business Partner Number (BPN) used for authorization and filtering</li>
+</ul>
+<h5 id="returns_4">Returns</h5>
+<ul>
+<li><code>GetSubmodelDescriptorsByAssResponse</code>: A response object containing a list of SubModelDescriptor objects in the result field and a pagination metadata in the paging_metadata field.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises_4">Raises</h5>
+<ul>
+<li><code>ValueError</code>: Raised if the limit parameter is provided but is less than 1.</li>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h4 id="get_submodel_descriptor_by_ass_and_submodel_id"><strong>get_submodel_descriptor_by_ass_and_submodel_id</strong></h4>
+<p>Retrieves a specific Submodel Descriptor by its identifier and parent AAS identifier.</p>
+<h5 id="args_5">Args</h5>
+<ul>
+<li><code>aas_identifier</code> (str): The unique identifier of the Asset Administration Shell.</li>
+<li><code>submodel_identifier</code> (str): The unique identifier of the Submodel to retrieve.</li>
+<li><code>bpn</code> (str, optional): The Business Partner Number (BPN) used for authorization.</li>
+</ul>
+<h5 id="returns_5">Returns</h5>
+<ul>
+<li><code>SubModelDescriptor</code>: The requested Submodel Descriptor object containing metadata about the submodel.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises_5">Raises</h5>
+<ul>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h4 id="create_asset_administration_shell_descriptor"><strong>create_asset_administration_shell_descriptor</strong></h4>
+<p>Creates a new Asset Administration Shell (AAS) Descriptor in the Digital Twin Registry.</p>
+<h5 id="args_6">Args</h5>
+<ul>
+<li><code>shell_descriptor</code> (ShellDescriptor): The ShellDescriptor object containing the metadata for the new AAS to be created.</li>
+<li><code>bpn</code> (str, optional): The Business Partner Number (BPN) used for authorization.</li>
+</ul>
+<h5 id="returns_6">Returns</h5>
+<ul>
+<li><code>ShellDescriptor</code>: The created Asset Administration Shell Descriptor object, including server-assigned fields such as unique identifiers.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises_6">Raises</h5>
+<ul>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h4 id="create_submodel_descriptor"><strong>create_submodel_descriptor</strong></h4>
+<p>Creates a new Submodel Descriptor in the Digital Twin Registry.</p>
+<ul>
+<li><code>aas_identifier</code> (str): The unique identifier of the Asset Administration Shell.</li>
+<li><code>submodel_identifier</code> (str): The unique identifier of the Submodel to retrieve.</li>
+<li><code>bpn</code> (str, optional): The Business Partner Number (BPN) used for authorization.</li>
+</ul>
+<h5 id="returns_7">Returns</h5>
+<ul>
+<li><code>SubModelDescriptor</code>: The created Submodel Descriptor object, including server-assigned fields such as unique identifiers.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises_7">Raises</h5>
+<ul>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h4 id="update_submodel_descriptor"><strong>update_submodel_descriptor</strong></h4>
+<p>Updates an existing Submodel Descriptor.</p>
+<h5 id="args_7">Args</h5>
+<ul>
+<li><code>aas_identifier</code> (str): The unique identifier of the Asset Administration Shell.</li>
+<li><code>submodel_identifier</code> (str): The unique identifier of the Submodel to retrieve.</li>
+<li><code>submodel_descriptor</code> (SubModelDescriptor): The updated SubModelDescriptor object containing the new metadata for the Submodel.</li>
+<li><code>bpn</code> (str, optional): The Business Partner Number (BPN) used for authorization.</li>
+</ul>
+<h5 id="returns_8">Returns</h5>
+<ul>
+<li><code>None</code>: Returned if the request is successful.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises_8">Raises</h5>
+<ul>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h4 id="delete_submodel_descriptor"><strong>delete_submodel_descriptor</strong></h4>
+<p>Deletes an existing Submodel Descriptor.</p>
+<h5 id="args_8">Args</h5>
+<ul>
+<li><code>aas_identifier</code> (str): The unique identifier of the Asset Administration Shell.</li>
+<li><code>submodel_identifier</code> (str): The unique identifier of the Submodel to retrieve.</li>
+<li><code>bpn</code> (str, optional): The Business Partner Number (BPN) used for authorization.</li>
+</ul>
+<h5 id="returns_9">Returns</h5>
+<ul>
+<li><code>None</code>: Returned if the request is successful.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises_9">Raises</h5>
+<ul>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h4 id="get_description"><strong>get_description</strong></h4>
+<p>Retrieves the service description, which presents the capabilities of the server, in particular which profiles they implement.</p>
+<h5 id="returns_10">Returns</h5>
+<ul>
+<li><code>ServiceDescription</code>: A ServiceDescription object containing details about the server's capabilities if the request is successful.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises_10">Raises</h5>
+<ul>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h4 id="get_assets_ids_by_asset_administration_shell_id"><strong>get_assets_ids_by_asset_administration_shell_id</strong></h4>
+<p>Retrieves all asset IDs associated with a specific Asset Administration Shell (AAS).</p>
+<h5 id="args_9">Args</h5>
+<ul>
+<li><code>aas_identifier</code> (str): The unique identifier of the Asset Administration Shell.</li>
+<li><code>bpn</code> (str, optional): The Business Partner Number (BPN) used for authorization.</li>
+</ul>
+<h5 id="returns_11">Returns</h5>
+<ul>
+<li><code>List[SpecificAssetId]</code>: A list of SpecificAssetId objects if the request is successful. Each SpecificAssetId contains details such as the key and value of the asset ID.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises_11">Raises</h5>
+<ul>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h4 id="create_all_asset_ids_links_by_asset_administration_shell_id"><strong>create_all_asset_ids_links_by_asset_administration_shell_id</strong></h4>
+<p>Creates links between an Asset Administration Shell (AAS) and a list of assets IDs.</p>
+<h5 id="args_10">Args</h5>
+<ul>
+<li><code>aas_identifier</code> (str): The unique identifier of the Asset Administration Shell.</li>
+<li><code>list_of_asset_ids</code> (List[SpecificAssetId]): A list of SpecificAssetId objects representing the asset IDs to link to the AAS.</li>
+<li><code>bpn</code> (str, optional): The Business Partner Number (BPN) used for authorization.</li>
+</ul>
+<h5 id="returns_12">Returns</h5>
+<ul>
+<li><code>List[SpecificAssetId]</code>: A list of SpecificAssetId objects if the request is successful. Each SpecificAssetId contains details such as the key and value of the asset ID.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises_12">Raises</h5>
+<ul>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h4 id="delete_all_asset_ids_links_by_asset_administration_shell_id"><strong>delete_all_asset_ids_links_by_asset_administration_shell_id</strong></h4>
+<p>Deletes all links between an Asset Administration Shell (AAS) and its associated asset IDs.</p>
+<h5 id="args_11">Args</h5>
+<ul>
+<li><code>aas_identifier</code> (str): The unique identifier of the Asset Administration Shell.</li>
+<li><code>bpn</code> (str, optional): The Business Partner Number (BPN) used for authorization.</li>
+</ul>
+<h5 id="returns_13">Returns</h5>
+<ul>
+<li><code>None</code>: Returned if the request is successful.</li>
+<li><code>Result</code>: A result object is returned if the request fails with a non-2XX status code, providing details about the error.</li>
+</ul>
+<h5 id="raises_13">Raises</h5>
+<ul>
+<li><code>ConnectionError</code>: Raised if there is a network connectivity issue.</li>
+<li><code>TimeoutError</code>: Raised if the request times out.</li>
+<li><code>ValidationError</code>: Raised if the JSON response does not match the expected model.</li>
+</ul>
+<h2 id="notice">NOTICE</h2>
+<p>This work is licensed under the <a href="https://creativecommons.org/licenses/by/4.0/legalcode">CC-BY-4.0</a>.</p>
+<ul>
+<li>SPDX-License-Identifier: CC-BY-4.0</li>
+<li>SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation</li>
+<li>Source URL: https://github.com/eclipse-tractusx/tractusx-sdk</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+<div class="custom-footer">
+  <div class="custom-footer__grid">
+    <!-- Eclipse Foundation Section -->
+    <div class="custom-footer__section">
+      <h3>Eclipse Foundation</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://www.eclipse.org/org/" target="_blank" rel="noopener">About</a></li>
+        <li><a href="https://www.eclipse.org/legal/privacy.php" target="_blank" rel="noopener">Privacy Policy</a></li>
+        <li><a href="https://www.eclipse.org/legal/termsofuse.php" target="_blank" rel="noopener">Terms of Use</a></li>
+        <li><a href="https://www.eclipse.org/legal/epl-2.0/" target="_blank" rel="noopener">Compliance</a></li>
+        <li><a href="https://www.eclipse.org/legal/" target="_blank" rel="noopener">Legal Resources</a></li>
+        <li><a href="https://www.eclipse.org/org/foundation/contact.php" target="_blank" rel="noopener">Contact</a></li>
+      </ul>
+    </div>
+    
+    <!-- Eclipse Tractus-X Section -->
+    <div class="custom-footer__section">
+      <h3>Eclipse Tractus-X</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://projects.eclipse.org/projects/automotive.tractusx" target="_blank" rel="noopener">Eclipse Project</a></li>
+        <li><a href="https://github.com/eclipse-tractusx" target="_blank" rel="noopener">GitHub Organization</a></li>
+        <li><a href="https://catena-x.net/" target="_blank" rel="noopener">Catena-X Automotive Network</a></li>
+        <li><a href="mailto:tractusx-dev@eclipse.org">Mailing List</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/issues/new" target="_blank" rel="noopener">Report a Bug</a></li>
+      </ul>
+    </div>
+    
+    <!-- More Section -->
+    <div class="custom-footer__section">
+      <h3>More</h3>
+      <ul class="custom-footer__links">
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/security/advisories/new" target="_blank" rel="noopener">Report a Vulnerability</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">How to Contribute</a></li>
+        <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/discussions" target="_blank" rel="noopener">Discussions</a></li>
+        <li><a href="https://chat.eclipse.org/#/room/#automotive.tractusx:matrix.eclipse.org" target="_blank" rel="noopener">Matrix Chat</a></li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="custom-footer__bottom">
+    <div class="custom-footer__copyright">
+      Copyright © 2025 Eclipse Tractus-X. Built with 
+      <a href="https://www.mkdocs.org/" target="_blank" rel="noopener">MkDocs</a> and 
+      <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">Material for MkDocs</a>.
+    </div>
+  </div>
+</div>
+
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "content.tabs.link", "toc.follow"], "search": "../../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>
