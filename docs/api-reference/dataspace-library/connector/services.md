@@ -163,7 +163,7 @@ Combined:
 | `get_filter_expression`    | `filter_params`                                | Build filter expression for catalog queries      |
 | `contract_negotiations`    | `counter_party_id`, `asset_id`, `policies`     | List or manage contract negotiations             |
 | `transfer_processes`       | `contract_id`, `asset_id`                      | List or manage data transfer processes           |
-| `create_asset`             | `asset_id`, `base_url`, `dct_type`, `version`, `semantic_id` | Create and publish an asset                      |
+| `create_asset`             | `asset_id`, `base_url`, `dct_type`, `version`, `semantic_id`, `oauth2_config` | Create and publish an asset                      |
 | `create_contract`          | `contract_params`                              | Create a contract definition                     |
 | `create_policy`            | `policy_params`                                | Create a policy for data sharing                 |
 | `assets`                   | `asset_id`, `asset_data`                       | Manage assets (CRUD operations)                  |
