@@ -28,7 +28,7 @@ from ...managers import OAuth2Manager
 class DiscoveryFinderService:
     
     def __init__(self, url:str, oauth:OAuth2Manager, types_key:str="types", endpoints_key:str="endpoints", 
-                 endpoint_address_key:str="endpointAddress", return_type_key:str='type'):
+                 endpoint_address_key:str="endpointAddress", return_type_key:str='type', verbose:bool=False):
         """
         Initialize the Discovery Finder Service with URL, OAuth, and configurable response keys.
         
@@ -39,6 +39,7 @@ class DiscoveryFinderService:
             endpoints_key (str): Key for endpoints in discovery response (default: "endpoints").
             endpoint_address_key (str): Key for endpoint address in discovery response (default: "endpointAddress").
             return_type_key (str): Key for return type in discovery response (default: "type").
+            verbose (bool): Enable verbose debug logging (default: False).
         """
         self.url = url
         self.oauth = oauth
@@ -46,6 +47,7 @@ class DiscoveryFinderService:
         self.endpoints_key = endpoints_key
         self.endpoint_address_key = endpoint_address_key
         self.return_type_key = return_type_key
+        self.verbose = verbose
 
     def find_discovery_urls(self, keys:list=["bpn"]) -> dict:
         """
@@ -60,7 +62,7 @@ class DiscoveryFinderService:
 
         ## Check if IAM is connected
         if(not self.oauth.connected):
-            raise ConnectionError("[EDC Discovery Service] The authentication service is not connected! Please execute the oauth.connect() method")
+            raise ConnectionError("[Discovery Finder] The authentication service is not connected! Please execute the oauth.connect() method")
         
         ## Setup headers and body
         headers:dict = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})
@@ -71,12 +73,19 @@ class DiscoveryFinderService:
         response:Response = HttpTools.do_post(url=self.url, headers=headers, json=body)
         ## In case the response code is not successfull or the response is null
         if(response is None or response.status_code != 200):
-            raise Exception("[EDC Discovery Service] It was not possible to get the discovery service because the response was not successful!")
+            status_code = response.status_code if response else 'None'
+            error_msg = f"[Discovery Finder] Failed to get discovery service! Status: {status_code}"
+            if self.verbose and response is not None:
+                error_msg += f"\nURL: {self.url}"
+                error_msg += f"\nRequest body: {body}"
+                error_msg += f"\nResponse headers: {dict(response.headers)}"
+                error_msg += f"\nResponse body: {response.text}"
+            raise Exception(error_msg)
         
         data = response.json()
 
         if(not(self.endpoints_key in data) or len(data[self.endpoints_key]) == 0):
-            raise Exception("[EDC Discovery Service] No endpoints were found in the discovery service for this keys!")
+            raise Exception("[Discovery Finder] No endpoints were found in the discovery service for this keys!")
 
         # Map to every key the endpoint address
         return dict(map(lambda x: (x[self.return_type_key], x[self.endpoint_address_key]), data[self.endpoints_key]))
