@@ -60,7 +60,7 @@ pypi/pypi/-/paginate/0.5.7, MIT, approved, #13071
 pypi/pypi/-/pathspec/0.12.1, MPL-2.0 AND (Apache-2.0 AND MPL-2.0), approved, #13082
 pypi/pypi/-/platformdirs/4.4.0, MIT, approved, clearlydefined
 pypi/pypi/-/pluggy/1.5.0, MIT, approved, clearlydefined
-pypi/pypi/-/pyasn1/0.6.1, BSD-2-Clause AND (BSD-2-Clause AND BSD-3-Clause) AND (BSD-2-Clause AND MIT) AND BSD-3-Clause, approved, #22426
+pypi/pypi/-/pyasn1/0.6.2, BSD-2-Clause AND (BSD-2-Clause AND BSD-3-Clause) AND (BSD-2-Clause AND MIT) AND BSD-3-Clause, approved, #22426
 pypi/pypi/-/pycparser/2.22, LGPL-2.0-or-later AND BSD-3-Clause, approved, #14636
 pypi/pypi/-/pydantic/2.11.2, MIT, approved, clearlydefined
 pypi/pypi/-/pydantic_core/2.33.1, MIT, approved, clearlydefined
