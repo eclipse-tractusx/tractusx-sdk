@@ -74,7 +74,7 @@ pypi/pypi/-/python-dateutil/2.9.0.post0, Apache-2.0 AND BSD-3-Clause AND (Apache
 pypi/pypi/-/python-dotenv/1.1.0, BSD-3-Clause, approved, #20550
 pypi/pypi/-/python-jose/3.5.0, MIT, approved, #22425
 pypi/pypi/-/python-keycloak/4.7.3, MIT, approved, #20557
-pypi/pypi/-/python-multipart/0.0.20, Apache-2.0, approved, clearlydefined
+pypi/pypi/-/python-multipart/0.0.22, Apache-2.0, approved, #25779
 pypi/pypi/-/pyyaml_env_tag/1.1, MIT, approved, #23867
 pypi/pypi/-/referencing/0.36.2, MIT, approved, clearlydefined
 pypi/pypi/-/requests-mock/1.12.1, Apache-2.0, approved, clearlydefined
