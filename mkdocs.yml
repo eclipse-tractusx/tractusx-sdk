@@ -115,7 +115,8 @@ nav:
   - Home: index.md
   - Tutorials: 
     - Installation & Setup: tutorials/getting-started.md
-    - Create First Asset: tutorials/create-first-asset.md    
+    - Create First Asset: tutorials/create-first-asset.md
+    - Notification API: tutorials/notification-api.md
   - How-to Guides:
     - Industry Core Hub Use Case: how-to-guides/ic-hub-use-case/industry-core-hub-overview.md
     - Other Use Case: how-to-guides/other-use-case/other-use-case-overview.md
