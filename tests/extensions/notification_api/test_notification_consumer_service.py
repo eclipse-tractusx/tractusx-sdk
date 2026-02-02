@@ -635,4 +635,4 @@ class TestDigitalTwinEventApiType:
         )
         
         assert service.DIGITAL_TWIN_EVENT_API_TYPE == DIGITAL_TWIN_EVENT_API_TYPE
-        assert service.DIGITAL_TWIN_EVENT_API_TYPE == "cx-taxo:DigitalTwinEventAPI"
+        assert service.DIGITAL_TWIN_EVENT_API_TYPE == "https://w3id.org/catenax/taxonomy#DigitalTwinEventAPI"

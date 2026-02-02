@@ -90,7 +90,7 @@ class TestNotificationServiceConnectorIntegration:
         # Mock successful creation
         mock_connector_provider.create_asset.return_value = {
             "@id": "test-asset",
-            "properties": {"dct:type": {"@id": "cx-taxo:DigitalTwinEventAPI"}}
+            "properties": {"dct:type": {"@id": "https://w3id.org/catenax/taxonomy#DigitalTwinEventAPI"}}
         }
         
         result = service_with_connector.ensure_notification_asset_exists(
@@ -101,7 +101,7 @@ class TestNotificationServiceConnectorIntegration:
         mock_connector_provider.create_asset.assert_called_once()
         call_kwargs = mock_connector_provider.create_asset.call_args.kwargs
         assert call_kwargs["asset_id"] == "test-asset"
-        assert call_kwargs["dct_type"] == "cx-taxo:DigitalTwinEventAPI"
+        assert call_kwargs["dct_type"] == "https://w3id.org/catenax/taxonomy#DigitalTwinEventAPI"
     
     def test_ensure_notification_asset_exists_already_exists(
         self, service_with_connector, mock_connector_provider
@@ -112,7 +112,7 @@ class TestNotificationServiceConnectorIntegration:
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "@id": "test-asset",
-            "properties": {"dct:type": {"@id": "cx-taxo:DigitalTwinEventAPI"}}
+            "properties": {"dct:type": {"@id": "https://w3id.org/catenax/taxonomy#DigitalTwinEventAPI"}}
         }
         mock_connector_provider.assets.get_by_id.return_value = mock_response
         
@@ -141,7 +141,7 @@ class TestNotificationServiceConnectorIntegration:
         # Mock successful creation
         mock_connector_provider.create_asset.return_value = {
             "@id": "test-asset-new",
-            "properties": {"dct:type": {"@id": "cx-taxo:DigitalTwinEventAPI"}}
+            "properties": {"dct:type": {"@id": "https://w3id.org/catenax/taxonomy#DigitalTwinEventAPI"}}
         }
         
         service_with_connector.verbose = True  # Enable to test logging path
