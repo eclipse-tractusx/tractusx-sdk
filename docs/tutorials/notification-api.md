@@ -545,9 +545,9 @@ The complete example scripts are available in the SDK repository:
 
 ## Next Steps
 
-- **📚 API Reference**: Learn more about the [Notification API Extension](../api-reference/extension-library/notification-api.md)
+- **📚 API Reference**: Explore the [Extension Library](../api-reference/extension-library/index.md)
 - **🔧 Dataspace Services**: Explore [connector services](../api-reference/dataspace-library/connector/services.md)
-- **📖 Industry Core**: Understand [notification schemas](../core-concepts/industry-concepts/notifications.md)
+- **📖 Industry Concepts**: Learn about [Industry Core concepts](../core-concepts/industry-concepts/index.md)
 
 ---
 
