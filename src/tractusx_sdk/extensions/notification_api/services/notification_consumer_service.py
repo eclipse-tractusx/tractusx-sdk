@@ -371,7 +371,15 @@ class NotificationConsumerService:
                     f"Successfully sent notification {notification.header.message_id}"
                 )
             
-            return response.json() if response.text else {}
+            # Handle empty or non-JSON responses gracefully
+            if not response.text or not response.text.strip():
+                return {"status": "sent", "message_id": notification.header.message_id}
+            
+            try:
+                return response.json()
+            except Exception:
+                # Response is not JSON, return status info
+                return {"status": "sent", "message_id": notification.header.message_id}
             
         except NotificationError:
             raise
@@ -456,7 +464,15 @@ class NotificationConsumerService:
                     f"Successfully sent notification {notification.header.message_id}"
                 )
             
-            return response.json() if response.text else {}
+            # Handle empty or non-JSON responses gracefully
+            if not response.text or not response.text.strip():
+                return {"status": "sent", "message_id": notification.header.message_id}
+            
+            try:
+                return response.json()
+            except Exception:
+                # Response is not JSON, return status info
+                return {"status": "sent", "message_id": notification.header.message_id}
             
         except NotificationError:
             raise
