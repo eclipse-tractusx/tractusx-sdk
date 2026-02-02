@@ -29,7 +29,8 @@
 
 # Asset type for notification endpoints following Catena-X taxonomy
 # Used to identify DigitalTwinEventAPI assets in the connector catalog
-DIGITAL_TWIN_EVENT_API_TYPE = "cx-taxo:DigitalTwinEventAPI"
+# Full URL format required for catalog queries
+DIGITAL_TWIN_EVENT_API_TYPE = "https://w3id.org/catenax/taxonomy#DigitalTwinEventAPI"
 
 # =============================================================================
 # Catalog Query Constants
