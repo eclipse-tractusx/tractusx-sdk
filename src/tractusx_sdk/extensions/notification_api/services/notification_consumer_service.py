@@ -297,9 +297,8 @@ class NotificationConsumerService:
         Send a notification through the dataspace.
         
         Performs the complete flow:
-        1. Negotiate access to DigitalTwinEventAPI
-        2. Obtain EDR token
-        3. Send notification to the provider's endpoint
+        1. Negotiate access to DigitalTwinEventAPI (EDR)
+        2. Delegate the actual sending to send_notification_to_endpoint
         
         Args:
             provider_bpn: Business Partner Number of the provider
@@ -336,50 +335,14 @@ class NotificationConsumerService:
                 policies=policies,
             )
             
-            # Build full URL with optional path
-            if endpoint_path:
-                full_url = HttpTools.concat_into_url(endpoint, endpoint_path)
-            else:
-                full_url = endpoint
-            
-            # Prepare headers with authorization
-            headers = connector.get_data_plane_headers(
+            return self.send_notification_to_endpoint(
+                endpoint_url=endpoint,
                 access_token=token,
-                content_type="application/json",
-            )
-            
-            # Send notification
-            response = HttpTools.do_post(
-                url=full_url,
-                json=notification.to_data(),
-                headers=headers,
+                notification=notification,
+                endpoint_path=endpoint_path,
                 timeout=timeout,
-                verify=verify_ssl,
+                verify_ssl=verify_ssl,
             )
-            
-            if response.status_code not in (200, 201, 202, 204):
-                self.logger.error(
-                    f"Failed to send notification: {response.status_code} - {response.text}"
-                )
-                raise NotificationError(
-                    f"Failed to send notification {notification.header.message_id}. "
-                    f"Status code: {response.status_code}"
-                )
-            
-            if self.verbose:
-                self.logger.info(
-                    f"Successfully sent notification {notification.header.message_id}"
-                )
-            
-            # Handle empty or non-JSON responses gracefully
-            if not response.text or not response.text.strip():
-                return {"status": "sent", "message_id": notification.header.message_id}
-            
-            try:
-                return response.json()
-            except Exception:
-                # Response is not JSON, return status info
-                return {"status": "sent", "message_id": notification.header.message_id}
             
         except NotificationError:
             raise
