@@ -32,6 +32,9 @@
 # Full URL format required for catalog queries
 DIGITAL_TWIN_EVENT_API_TYPE = "https://w3id.org/catenax/taxonomy#DigitalTwinEventAPI"
 
+# Content type for notification assets
+NOTIFICATION_ASSET_CONTENT_TYPE = "application/json"
+
 # =============================================================================
 # Catalog Query Constants
 # =============================================================================
@@ -48,3 +51,6 @@ DEFAULT_HEADER_VERSION = "3.0.0"
 
 # BPN pattern constant (BPNL followed by 12 alphanumeric characters)
 BPN_PATTERN = r"^BPNL[a-zA-Z0-9]{12}$"
+
+# Management API path
+MANAGEMENT_API_PATH = "/management"

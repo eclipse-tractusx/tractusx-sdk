@@ -93,7 +93,7 @@ class TestNotificationServiceConnectorIntegration:
             "properties": {"dct:type": {"@id": "https://w3id.org/catenax/taxonomy#DigitalTwinEventAPI"}}
         }
         
-        result = service_with_connector.ensure_notification_asset_exists(
+        service_with_connector.ensure_notification_asset_exists(
             asset_id="test-asset",
             notification_endpoint_url="https://example.com/notifications",
         )
@@ -145,7 +145,7 @@ class TestNotificationServiceConnectorIntegration:
         }
         
         service_with_connector.verbose = True  # Enable to test logging path
-        result = service_with_connector.ensure_notification_asset_exists(
+        service_with_connector.ensure_notification_asset_exists(
             asset_id="test-asset",
             notification_endpoint_url="https://example.com/notifications",
         )

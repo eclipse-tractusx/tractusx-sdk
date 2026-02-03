@@ -319,7 +319,7 @@ class NotificationConsumerService:
         # Validate notification
         self._validate_notification(notification)
         
-        connector = self._ensure_connector_consumer()
+        self._ensure_connector_consumer()
         
         if self.verbose:
             self.logger.info(

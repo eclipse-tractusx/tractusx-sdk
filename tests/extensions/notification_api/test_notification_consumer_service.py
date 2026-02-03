@@ -391,7 +391,7 @@ class TestSendNotification:
         """Test validation error for invalid notification."""
         from pydantic import ValidationError
         
-        service = NotificationConsumerService(
+        NotificationConsumerService(
             connector_consumer=mock_connector_consumer,
         )
         
@@ -502,7 +502,7 @@ class TestSendToMultipleProviders:
         def dsp_side_effect(*args, **kwargs):
             if kwargs.get("counter_party_id") == "BPNL000000000001":
                 return ("https://dataplane.com", "token123")
-            raise Exception("Provider unavailable")
+            raise NotificationError("Provider unavailable")
         
         mock_connector_consumer.do_dsp_by_dct_type.side_effect = dsp_side_effect
         mock_connector_consumer.get_data_plane_headers.return_value = {}
@@ -610,7 +610,7 @@ class TestNotificationValidation:
         """Test validation error when context is missing."""
         from pydantic import ValidationError
         
-        service = NotificationConsumerService(
+        NotificationConsumerService(
             connector_consumer=mock_connector_consumer,
         )
         

@@ -49,6 +49,7 @@ from tractusx_sdk.extensions.notification_api import (
     NotificationError,
     NotificationValidationError,
 )
+from tractusx_sdk.extensions.notification_api.constants import MANAGEMENT_API_PATH, NOTIFICATION_ASSET_CONTENT_TYPE
 
 
 # Configure logging
@@ -68,7 +69,7 @@ def main():
     
     # Your connector settings (consumer side)
     connector_base_url = "https://your-connector-controlplane.example.com"
-    connector_dma_path = "/management"
+    connector_dma_path = MANAGEMENT_API_PATH
     connector_api_key = "your-api-key"
     dataspace_version = "jupiter"  # Available: "jupiter"
     
@@ -91,7 +92,7 @@ def main():
         dma_path=connector_dma_path,
         headers={
             "x-api-key": connector_api_key,
-            "Content-Type": "application/json",
+            "Content-Type": NOTIFICATION_ASSET_CONTENT_TYPE,
         },
         verbose=True,
         logger=logger,
@@ -190,7 +191,7 @@ def send_with_manual_endpoint():
     
     # Configuration
     connector_base_url = "https://your-connector.com"
-    connector_dma_path = "/management"  # Base path (version is added automatically)
+    connector_dma_path = MANAGEMENT_API_PATH
     connector_api_key = "your-api-key"
     dataspace_version = "jupiter"  # Available: "jupiter"
     sender_bpn = "BPNL000000000001"
@@ -204,7 +205,7 @@ def send_with_manual_endpoint():
         dma_path=connector_dma_path,
         headers={
             "x-api-key": connector_api_key,
-            "Content-Type": "application/json",
+            "Content-Type": NOTIFICATION_ASSET_CONTENT_TYPE,
         },
         verbose=True,
     )
@@ -233,7 +234,7 @@ def send_with_manual_endpoint():
             .build()
         )
         
-        result = notification_service.send_notification_to_endpoint(
+        notification_service.send_notification_to_endpoint(
             endpoint_url=endpoint_url,
             access_token=access_token,
             notification=notification,
@@ -252,7 +253,7 @@ def discover_and_inspect():
     
     # Configuration
     connector_base_url = "https://your-connector.com"
-    connector_dma_path = "/management"  # Base path (version is added automatically)
+    connector_dma_path = MANAGEMENT_API_PATH
     connector_api_key = "your-api-key"
     dataspace_version = "jupiter"  # Available: "jupiter"
     provider_bpn = "BPNL000000000002"
@@ -265,7 +266,7 @@ def discover_and_inspect():
         dma_path=connector_dma_path,
         headers={
             "x-api-key": connector_api_key,
-            "Content-Type": "application/json",
+            "Content-Type": NOTIFICATION_ASSET_CONTENT_TYPE,
         },
         verbose=True,
     )

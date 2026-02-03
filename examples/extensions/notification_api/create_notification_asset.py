@@ -175,7 +175,7 @@ def main():
         logger.info(f"Asset ID:    {asset_id}")
         logger.info(f"Policy ID:   {policy_id}")
         logger.info(f"Contract ID: {contract_id}")
-        logger.info(f"Asset Type:  cx-taxo:DigitalTwinEventAPI")
+        logger.info("Asset Type:  cx-taxo:DigitalTwinEventAPI")
         logger.info(f"Endpoint:    {notification_endpoint}")
         logger.info("=" * 60)
         logger.info("Other participants can now discover and send notifications!")
