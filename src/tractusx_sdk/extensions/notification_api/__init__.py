@@ -21,27 +21,21 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-"""
-Tractus-X SDK Extensions.
-
-This module contains extensions for the Tractus-X SDK, including:
-- notification_api: Industry Core Notifications services and models
-- semantics: Schema to context translation utilities
-"""
-
-__version__ = '0.6.1'
-__author__ = 'Eclipse Tractus-X Contributors'
-__license__ = "Apache License, Version 2.0"
-
-# Notification API Extension
-from .notification_api import (
-    # Models
+from .models import (
     NotificationHeader,
     NotificationContent,
     Notification,
-    # Services
+)
+from .services import (
     NotificationService,
-    # Exceptions
+    NotificationConsumerService,
+)
+from .constants import (
+    DIGITAL_TWIN_EVENT_API_TYPE,
+    DCT_TYPE_KEY,
+    DEFAULT_HEADER_VERSION,
+)
+from .exceptions import (
     NotificationError,
     NotificationValidationError,
     NotificationParsingError,
@@ -49,13 +43,18 @@ from .notification_api import (
 )
 
 __all__ = [
-    # Notification API Models
+    # Models
     "NotificationHeader",
     "NotificationContent",
     "Notification",
-    # Notification API Services
+    # Services
     "NotificationService",
-    # Notification API Exceptions
+    "NotificationConsumerService",
+    # Constants
+    "DIGITAL_TWIN_EVENT_API_TYPE",
+    "DCT_TYPE_KEY",
+    "DEFAULT_HEADER_VERSION",
+    # Exceptions
     "NotificationError",
     "NotificationValidationError",
     "NotificationParsingError",
