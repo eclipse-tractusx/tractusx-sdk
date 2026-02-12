@@ -95,7 +95,8 @@ class BaseConnectorProviderService(BaseService):
             "proxyBody": "false"
         },
         headers: dict = None,
-        private_properties: dict = None
+        private_properties: dict = None,
+        oauth2_config: dict = None
     ):
         if self.verbose:
             self.logger.info(f"Creating asset {asset_id} at {base_url}.")
@@ -115,6 +116,18 @@ class BaseConnectorProviderService(BaseService):
 
         if proxy_params is not None:
             data_address.update(proxy_params)
+
+        if oauth2_config is not None:
+            if "tokenUrl" not in oauth2_config or "clientId" not in oauth2_config:
+                raise ValueError(
+                    "During asset creation, OAuth2-protected data addresses require at least 'tokenUrl' and 'clientId' in the oauth2_config parameter."
+                )
+            data_address["edc:oauth2:tokenUrl"] = oauth2_config["tokenUrl"]
+            data_address["edc:oauth2:clientId"] = oauth2_config["clientId"]
+            if "clientSecretKey" in oauth2_config:
+                data_address["edc:oauth2:clientSecretKey"] = oauth2_config["clientSecretKey"]
+            if "scope" in oauth2_config:
+                data_address["edc:oauth2:scope"] = oauth2_config["scope"]
 
         if headers is not None:
             for key, value in headers.items():
