@@ -126,7 +126,7 @@ This SDK is designed for:
     Start with our [Getting Started Guide](tutorials/getting-started.md) to learn the basics of dataspace interaction in just 10 minutes!
 
 !!! info "Version Information"
-    **Current Version:** 0.6.1  
+    **Current Version:** 0.6.2  
     **Python Support:** 3.12+  
     **License:** Apache 2.0 (Code) / CC-BY-4.0 (Documentation)
 
