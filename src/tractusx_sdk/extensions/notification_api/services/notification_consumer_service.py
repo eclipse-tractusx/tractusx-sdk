@@ -116,6 +116,7 @@ class NotificationConsumerService:
         provider_bpn: str,
         provider_dsp_url: str,
         timeout: int = 60,
+        dct_type: str = DIGITAL_TWIN_EVENT_API_TYPE,
     ) -> List[Dict[str, Any]]:
         """
         Discover DigitalTwinEventAPI assets in a provider's catalog.
@@ -127,6 +128,7 @@ class NotificationConsumerService:
             provider_bpn: Business Partner Number of the provider
             provider_dsp_url: DSP endpoint URL of the provider connector
             timeout: Request timeout in seconds (default: 60)
+            dct_type: DCT type to filter by (default: DigitalTwinEventAPI)
             
         Returns:
             List of catalog datasets (assets) matching the notification type
@@ -146,7 +148,7 @@ class NotificationConsumerService:
             catalog = connector.get_catalog_by_dct_type(
                 counter_party_id=provider_bpn,
                 counter_party_address=provider_dsp_url,
-                dct_type=self.DIGITAL_TWIN_EVENT_API_TYPE,
+                dct_type=dct_type,
                 dct_type_key=DCT_TYPE_KEY,
                 timeout=timeout,
             )
@@ -174,6 +176,7 @@ class NotificationConsumerService:
         policies: Optional[List[Dict]] = None,
         max_retries: int = 6,
         retry_timeout: int = 10,
+        dct_type: str = DIGITAL_TWIN_EVENT_API_TYPE,
     ) -> Dict[str, Any]:
         """
         Negotiate access to a DigitalTwinEventAPI asset.
@@ -190,6 +193,7 @@ class NotificationConsumerService:
             policies: Optional list of allowed policies for negotiation
             max_retries: Maximum retries for EDR entry (default: 6)
             retry_timeout: Timeout between retries in seconds (default: 10)
+            dct_type: DCT type to filter by (default: DigitalTwinEventAPI)
             
         Returns:
             EDR entry dictionary containing transfer process ID and agreement details
@@ -208,7 +212,7 @@ class NotificationConsumerService:
             filter_expression = [
                 connector.get_filter_expression(
                     key=DCT_TYPE_KEY,
-                    value=self.DIGITAL_TWIN_EVENT_API_TYPE,
+                    value=dct_type,
                     operator="=",
                 )
             ]
@@ -240,6 +244,7 @@ class NotificationConsumerService:
         provider_bpn: str,
         provider_dsp_url: str,
         policies: Optional[List[Dict]] = None,
+        dct_type: str = DIGITAL_TWIN_EVENT_API_TYPE,
     ) -> tuple[str, str]:
         """
         Get the notification endpoint and access token.
@@ -251,6 +256,7 @@ class NotificationConsumerService:
             provider_bpn: Business Partner Number of the provider
             provider_dsp_url: DSP endpoint URL of the provider connector
             policies: Optional list of allowed policies for negotiation
+            dct_type: DCT type to filter by (default: DigitalTwinEventAPI)
             
         Returns:
             Tuple of (endpoint_url, authorization_token)
@@ -269,7 +275,7 @@ class NotificationConsumerService:
             endpoint, token = connector.do_dsp_by_dct_type(
                 counter_party_id=provider_bpn,
                 counter_party_address=provider_dsp_url,
-                dct_type=self.DIGITAL_TWIN_EVENT_API_TYPE,
+                dct_type=dct_type,
                 dct_type_key=DCT_TYPE_KEY,
                 policies=policies,
             )
