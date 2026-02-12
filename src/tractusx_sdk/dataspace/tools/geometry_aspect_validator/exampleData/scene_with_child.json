@@ -1,0 +1,39 @@
+{
+  "catenaXId": "urn:uuid:055c1128-0375-47c8-98de-7cf802c32413",
+  "childItems": [
+    {
+      "catenaXId": "urn:uuid:055c1128-0375-47c8-98de-7cf802c38547",
+      "semanticTags": [
+        "DetailLevel_0"
+      ]
+    }
+  ],
+  "modelItems": [
+    {
+      "semanticTags": [
+        "DetailLevel_0"
+      ],
+      "catenaXId": "urn:uuid:055c1128-0375-47c8-98de-7cf802c36542"
+    }
+  ],
+  "localTransform": {
+    "matrix4x4": [
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1
+    ]
+  }
+}
