@@ -26,7 +26,34 @@
 
 import copy
 
-from ..constants import DSP_DATASET_KEY, DSP_POLICY_KEY
+from ..constants import (
+    DSP_DATASET_KEY, DSP_POLICY_KEY,
+    DSP2025_DATASET_KEY, DSP2025_POLICY_KEY,
+)
+
+## Ordered lookup: try DSP 2025-1 (unprefixed) first, then legacy (prefixed).
+_DATASET_KEYS = (DSP2025_DATASET_KEY, DSP_DATASET_KEY)   # "dataset", "dcat:dataset"
+_POLICY_KEYS  = (DSP2025_POLICY_KEY,  DSP_POLICY_KEY)    # "hasPolicy", "odrl:hasPolicy"
+
+
+def _get_datasets(catalog: dict):
+    """Return the ``dataset`` value from a catalog, trying DSP 2025-1 and legacy keys."""
+    for key in _DATASET_KEYS:
+        value = catalog.get(key)
+        if value is not None:
+            return value
+    return None
+
+
+def _get_policies(dataset: dict):
+    """Return the ``hasPolicy`` value from a dataset, trying DSP 2025-1 and legacy keys."""
+    for key in _POLICY_KEYS:
+        value = dataset.get(key)
+        if value is not None:
+            return value
+    return None
+
+
 class DspTools:
     """
     Class responsible for doing trivial dsp operations.
@@ -46,12 +73,7 @@ class DspTools:
         if catalog is None:
             raise Exception("It was not possible to get the policy, because the catalog is empty!")
         
-        dataset:list|dict = catalog.get(DSP_DATASET_KEY)
-
-        if(allowed_policies is None):
-            print("It did not find a policy")
-            raise Exception("No policies are allowed for the DCAT Catalog!")
-        
+        dataset:list|dict = _get_datasets(catalog)
         ### Asset Evaluation
 
         valid_assets:list = []
@@ -82,7 +104,7 @@ class DspTools:
     
     @staticmethod
     def is_catalog_empty(catalog:dict) -> bool:
-        dataset:list|dict = catalog.get(DSP_DATASET_KEY)
+        dataset:list|dict = _get_datasets(catalog)
         if(dataset is None):
             return False
         
@@ -100,7 +122,7 @@ class DspTools:
         @returns: dict: the selected policy or None if no valid policy was found
         """
         ### Policy Evaluation
-        policies:dict|list = dataset.get(DSP_POLICY_KEY, None)    
+        policies:dict|list = _get_policies(dataset)    
 
         ## One Policy
         if isinstance(policies, dict):
@@ -117,20 +139,30 @@ class DspTools:
         return None
     
     @staticmethod
-    def is_policy_valid(policy:dict, allowed_policies:list=[]) -> bool:
+    def is_policy_valid(policy:dict, allowed_policies:list=None) -> bool:
         """
-        Checks if a policy is valid, checking if is in the allowed_policies (in operator), so if the order is another one would still be compared.
+        Checks whether a catalog offer policy is acceptable.
 
-        @returns: True if the policy is valid, False otherwise
+        allowed_policies semantics:
+          None  – any policy is valid (no filtering applied).
+          []    – no policy is valid; always returns False.
+          [...] – the policy (stripped of ``@id`` / ``@type``) must appear in the list.
+
+        @returns: True if the policy is accepted, False otherwise.
         """
-        ## In case the allowed_policies are empty then everything is allowed
-        if(allowed_policies is None or len(allowed_policies) == 0):
+        ## None → accept everything
+        if allowed_policies is None:
             return True
+
+        ## Empty list → reject everything
+        if len(allowed_policies) == 0:
+            return False
         
         to_compare:dict = copy.deepcopy(policy)
 
-        ##  Delete the policy unique attributes 
-        del to_compare["@id"],to_compare["@type"]
+        ## Delete the policy-instance-unique attributes before comparing.
+        to_compare.pop("@id", None)
+        to_compare.pop("@type", None)
 
         ## Check if the policy is in the list of allowed_policies
         ### TODO: This should maybe be enhanced to compare the actual constraints one by one

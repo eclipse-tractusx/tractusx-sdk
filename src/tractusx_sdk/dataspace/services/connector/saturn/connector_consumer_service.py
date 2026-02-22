@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025 Catena-X Automotive Network e.V.
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -36,10 +37,12 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     
     EDC_NAMESPACE= "https://w3id.org/edc/v0.0.1/ns/"
     DSP_2025="dataspace-protocol-http:2025-1"
-    DEFAULT_NEGOTIATION_CONTEXT:list=["https://w3id.org/tractusx/policy/v1.0.0","http://www.w3.org/ns/odrl.jsonld",{"@vocab": EDC_NAMESPACE, "edc": EDC_NAMESPACE}]
+    # Saturn / DSP-2025-1 uses Catena-X 2025-9 context URLs (replaces Jupiter-era tractusx/policy/v1.0.0 and w3.org/ns/odrl.jsonld)
+    DEFAULT_NEGOTIATION_CONTEXT:list=["https://w3id.org/catenax/2025/9/policy/odrl.jsonld","https://w3id.org/catenax/2025/9/policy/context.jsonld",{"@vocab": EDC_NAMESPACE}]
     DEFAULT_CONTEXT:dict = {"edc": EDC_NAMESPACE,"odrl": "http://www.w3.org/ns/odrl/2/","dct": "https://purl.org/dc/terms/"}
     _connector_discovery_controller: BaseDmaController
     DEFAULT_DCT_TYPE_KEY: str = "'http://purl.org/dc/terms/type'.'@id'"
+    DEFAULT_ID_KEY: str = "https://w3id.org/edc/v0.0.1/ns/id"
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
                  connection_manager: BaseConnectionManager = None, verbose: bool = True, logger: logging.Logger = None,
                  verify_ssl: bool = True):
@@ -98,9 +101,25 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         Returns:
         tuple[str, str, str]: counter_party_address, counter_party_id, protocol
         """
+        if self.logger:
+            self.logger.debug(
+                "[_resolve_counter_party_info] Inputs: bpnl=%s, counter_party_id=%s, counter_party_address=%s, protocol=%s",
+                bpnl, counter_party_id, counter_party_address, protocol
+            )
         if bpnl is not None:
-            return self.get_discovery_info(bpnl=bpnl, counter_party_address=counter_party_address, namespace=namespace, verify=verify)
+            result = self.get_discovery_info(bpnl=bpnl, counter_party_address=counter_party_address, namespace=namespace, verify=verify)
+            if self.logger:
+                self.logger.debug(
+                    "[_resolve_counter_party_info] Resolved via discovery: address=%s, id=%s, protocol=%s",
+                    result[0], result[1], result[2]
+                )
+            return result
         else:
+            if self.logger:
+                self.logger.debug(
+                    "[_resolve_counter_party_info] Using provided values: address=%s, id=%s, protocol=%s",
+                    counter_party_address, counter_party_id, protocol
+                )
             # Use provided values and protocol
             return counter_party_address, counter_party_id, protocol
     
@@ -169,6 +188,13 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             counter_party_id=counter_party_id, counter_party_address=counter_party_address,
             bpnl=bpnl, protocol=protocol, namespace=namespace, verify=verify
         )
+
+        if self.logger:
+            self.logger.debug(
+                "[_get_catalog_internal] Resolved: address=%s, id=%s, protocol=%s, filter=%s",
+                resolved_address, resolved_id, resolved_protocol,
+                filter_expression if filter_expression else "(none)"
+            )
         
         if filter_expression:
             catalog_request = self.get_catalog_request_with_filter(
@@ -180,7 +206,13 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 counter_party_id=resolved_id, counter_party_address=resolved_address,
                 protocol=resolved_protocol, context=context
             )
-        
+
+        if self.logger:
+            self.logger.debug(
+                "[_get_catalog_internal] Sending catalog request payload: %s",
+                catalog_request.to_data() if hasattr(catalog_request, 'to_data') else catalog_request
+            )
+
         return self.get_catalog(request=catalog_request, timeout=timeout, verify=verify)
     
     def get_edr_negotiation_request(self, counter_party_id: str, counter_party_address: str, target: str,
@@ -199,7 +231,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         """
         offer_id = policy.get("@id", None)
         if (offer_id is None):
-            raise ValueError("Connector Service Policy offer id is not available!")
+            raise ValueError("[Connector Service]: Policy offer id is not available!")
 
         return ModelFactory.get_contract_negotiation_model(
             dataspace_version=DataspaceVersionMapping.from_protocol(protocol).value,  # version is to be included in the BaseService class
@@ -231,6 +263,12 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                                                  policy=policy,
                                                                                  protocol=protocol,
                                                                                  context=context)
+        
+        if self.logger:
+            self.logger.debug(
+                "[start_edr_negotiation] Request payload: %s",
+                request.to_data() if hasattr(request, 'to_data') else request
+            )
 
         ## Build catalog api url
         response: Response = self.edrs.create(request)
@@ -245,82 +283,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
         return content.get("@id", None)
     
-    def negotiate_and_transfer(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
-                               policies: list = None, max_retries: int = 6, timeout: int = 10, protocol: str = DSP_2025, catalog_context: dict = DEFAULT_CONTEXT, negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> dict:
-        """
-        This method checks if there is a transfer process ID available, or if it needs to be negotiated.
-
-        @param counter_party_id: The identifier of the counterparty (Business Partner Number [BPN]).
-        @param counter_party_address: The URL of the EDC provider.
-        @param policies: The policies to be used for the transfer. Defaults to None.
-        @param dct_type: The DCT type to be used for the transfer. Defaults to "IndustryFlagService".
-        @returns: edr_entry:dict, if fails Exception
-        """
-        ##### 1. Get Catalog
-
-        catalog_response = self.get_catalog_with_filter(counter_party_id=counter_party_id,
-                                                        counter_party_address=counter_party_address,
-                                                        protocol=protocol,
-                                                        context=catalog_context,
-                                                        filter_expression=filter_expression)
-        if (catalog_response is None):
-            raise RuntimeError(
-                f"Connector Service [{counter_party_address}] It was not possible to retrieve the catalog from the edc provider! Catalog response is empty!")
-
-        ## Select Policy and Assetid
-        try:
-            valid_assets_policies = DspTools.filter_assets_and_policies(catalog=catalog_response,
-                                                                        allowed_policies=policies)
-        except Exception as e:
-            raise RuntimeError(
-                f"Connector Service [{counter_party_address}] It was not possible to find a valid policy in the catalog! Reason: [{str(e)}]")
-
-        if (len(valid_assets_policies) == 0):
-            raise RuntimeError(
-                f"Connector Service [{counter_party_address}] It was not possible to find a valid policy in the catalog! Asset ID and the Policy are empty!")
-
-        negotiation_id: str | None = None
-
-        for valid_asset_policy in valid_assets_policies:
-            ## Unwrap asset id and policy tuple
-            asset_id = valid_asset_policy[0]
-            policy = valid_asset_policy[1]
-
-            ##### 2. EDR Negotiation Start
-
-            negotiation_id = self.start_edr_negotiation(counter_party_id=counter_party_id,
-                                                        counter_party_address=counter_party_address, target=asset_id,
-                                                        policy=policy, protocol=protocol, context=negotiation_context)
-            if (negotiation_id is not None):
-                break
-
-        if (negotiation_id is None):
-            raise RuntimeError(
-                f"Connector Service [{counter_party_address}] It was not possible to start the EDR Negotiation! The negotiation id is empty!")
-
-        ##### 3. Get EDC Entry (details)
-
-        retries: int = 0
-        edr_entry: dict | None = None
-        while edr_entry is None and retries < max_retries:
-            edr_entry = self.get_edr_entry(negotiation_id=negotiation_id)
-            if edr_entry is not None:  ## If edr is found skip retry
-                break
-            ## Wait until the timeout has reached to retry again
-            if self.logger:
-                self.logger.info(
-                    f"Connector Service Attempt [{retries + 1}]/[{max_retries}]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] entry was not found! Waiting {timeout} seconds and retrying...")
-            op.wait(seconds=timeout)
-            retries += 1
-
-        if edr_entry is None:
-            raise TimeoutError(
-                f"Connector Service [{counter_party_address}] The EDR Negotiation [{negotiation_id}] has failed! The EDR entry was not found!")
-
-        return edr_entry
-
     def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
-                        policies: list = None, protocol: str = DSP_2025, catalog_context: dict = DEFAULT_CONTEXT, negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> str:
+                        policies: list = [], max_wait: int = 60, poll_interval: int = 1,
+                        protocol: str = DSP_2025, catalog_context: dict = DEFAULT_CONTEXT, negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> str:
 
         """
         Checks if the transfer is already available at the location or not...
@@ -328,7 +293,10 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         Parameters:
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
-        policies (list, optional): The policies to be used for the transfer. Defaults to None.
+        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
+            policy body without ``@id`` / ``@type``). Pass ``None`` to auto-select the first
+            available policy from the provider's catalog (test-only; avoid in production).
+            An empty list ``[]`` raises a ``ValueError`` immediately. Defaults to ``[]``.
         dct_type (str, optional): The DCT type to be used for the transfer
 
         Returns:
@@ -338,6 +306,62 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         Exception: If the EDR entry is not found or the transfer ID is not available.
         """
 
+        ## Fail immediately if policies is an empty list — means no policy has been selected.
+        if policies is not None and len(policies) == 0:
+            raise ValueError(
+                "No policy has been selected! Provide a list of accepted policies, "
+                "or set policies=None to accept any policy offered by the provider. (Recommended for test-only, do not use in production!)"
+            )
+
+        ## If policies is None, pre-fetch the catalog to discover and select a concrete policy.
+        ## This gives a stable, reusable cache key instead of hashing None.
+        if policies is None:
+            ## DISCLAIMER: policies=None means ANY policy offered by the provider will be
+            ## accepted automatically. This is intended for testing and development only.
+            ## Do NOT use policies=None in production — always specify an explicit allow-list
+            ## to ensure only approved usage policies are accepted.
+            if self.logger:
+                self.logger.warning(
+                    "\n%s\n"
+                    "  ATTENTION! — policies=None DETECTED\n"
+                    "%s\n"
+                    "  [Connector Service]: [%s]\n"
+                    "  ANY policy offered by the provider will be accepted automatically.\n"
+                    "  This bypasses all usage-policy enforcement.\n"
+                    "\n"
+                    "  ▶  RECOMMENDED FOR TESTING / DEVELOPMENT ONLY.\n"
+                    "  ▶  DO NOT USE IN PRODUCTION.\n"
+                    "     Always pass an explicit allow-list of accepted policies.\n"
+                    "%s",
+                    "=" * 72, "=" * 72, counter_party_address, "=" * 72)
+
+            catalog_response = self.get_catalog_with_filter(
+                counter_party_id=counter_party_id,
+                counter_party_address=counter_party_address,
+                protocol=protocol,
+                context=catalog_context,
+                filter_expression=filter_expression
+            )
+            if catalog_response is None:
+                raise RuntimeError(
+                    f"[Connector Service]: [{counter_party_address}] Could not retrieve the catalog to discover available policies!")
+            try:
+                valid_assets_policies = DspTools.filter_assets_and_policies(
+                    catalog=catalog_response, allowed_policies=None)
+            except Exception as e:
+                raise RuntimeError(
+                    f"[Connector Service]: [{counter_party_address}] No policy found in catalog: [{str(e)}]")
+            if not valid_assets_policies:
+                raise RuntimeError(
+                    f"[Connector Service]: [{counter_party_address}] No policy found in catalog!")
+            ## Use the first available policy; strip @id/@type for a consistent cache key.
+            _, raw_policy = valid_assets_policies[0]
+            policies = [{k: v for k, v in raw_policy.items() if k not in ['@id', '@type']}]
+            if self.logger:
+                self.logger.info(
+                    "[Connector Service]: [%s]: policies=None → auto-selected policy from catalog: %s",
+                    counter_party_address, policies)
+
         ## Hash the policies to get checksum. 
         current_policies_checksum = hashlib.sha3_256(str(policies).encode('utf-8')).hexdigest()
         filter_expression_checksum = hashlib.sha3_256(str(filter_expression).encode('utf-8')).hexdigest()
@@ -346,40 +370,43 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                                                       counter_party_address=counter_party_address,
                                                                                       query_checksum=filter_expression_checksum,
                                                                                       policy_checksum=current_policies_checksum)
+        
         ## If is there return the cached one, if the selection is the same the transfer id can be reused!
         if (transfer_process_id is not None):
             if self.logger:
                 self.logger.debug(
-                    "Connector Service [%s]: EDR transfer_id=[%s] found in the cache for counter_party_id=[%s], filter=[%s] and selected policies",
+                    "[Connector Service]: [%s]: EDR transfer_id=[%s] found in the cache for counter_party_id=[%s], filter=[%s] and selected policies",
                     counter_party_address, transfer_process_id, counter_party_id, filter_expression)
             return transfer_process_id
 
         if self.logger:
             self.logger.info(
-                "Connector Service The EDR was not found in the cache for counter_party_address=[%s], counter_party_id=[%s], filter=[%s] and selected policies, starting new contract negotiation!",
+                "[Connector Service]: The EDR was not found in the cache for counter_party_address=[%s], counter_party_id=[%s], filter=[%s] and selected policies, starting new contract negotiation!",
                 counter_party_address, counter_party_id, filter_expression)
 
         ## If not the contract negotiation MUST be done!
         edr_entry: dict = self.negotiate_and_transfer(counter_party_id=counter_party_id,
                                                       counter_party_address=counter_party_address, policies=policies,
                                                       filter_expression=filter_expression,
-                                                      protocol=protocol,
-                                                      catalog_context=catalog_context,
-                                                      negotiation_context=negotiation_context)
+                                                      protocol=protocol, 
+                                                      catalog_context=catalog_context, 
+                                                      negotiation_context=negotiation_context,
+                                                      max_wait=max_wait,
+                                                      poll_interval=poll_interval)
 
         ## Check if the edr entry is not none
         if (edr_entry is None):
-            raise RuntimeError("Connector Service Failed to get edr entry! Response was none!")
+            raise RuntimeError("[Connector Service]: Failed to get edr entry! Response was none!")
 
+        transfer_process_id = self.connection_manager.add_connection(counter_party_id=counter_party_id,
+                                                                      counter_party_address=counter_party_address,
+                                                                      query_checksum=filter_expression_checksum,
+                                                                      policy_checksum=current_policies_checksum,
+                                                                      connection_entry=edr_entry)
         if self.logger:
-            self.logger.info(f"Connector Service The EDR Entry was found! Transfer Process ID: [{transfer_process_id}]")
+            self.logger.info("[Connector Service]: The EDR Entry was found! Transfer Process ID: [%s]", transfer_process_id)
 
-        ## Check if the transfer id is available and return the transfer process id
-        return self.connection_manager.add_connection(counter_party_id=counter_party_id,
-                                                      counter_party_address=counter_party_address,
-                                                      query_checksum=filter_expression_checksum,
-                                                      policy_checksum=current_policies_checksum,
-                                                      connection_entry=edr_entry)
+        return transfer_process_id
         
     def discover_connector_protocol(self, bpnl: str, counter_party_address: str = None, verify: bool = None) -> dict | None:
 
@@ -393,7 +420,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         )
         if response is None or response.status_code != 200:
             raise ConnectionError(
-                f"Connector Service It was not possible to get the catalog from the EDC provider! Response code: [{response.status_code}]")
+                f"[Connector Service]: It was not possible to get the catalog from the EDC provider! Response code: [{response.status_code}]")
         return response.json()
 
 
@@ -412,18 +439,30 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         tuple[str, str, str]: A tuple containing the counter party address, counter party ID, and protocol.
         """
         discovery_info = self.discover_connector_protocol(bpnl=bpnl, counter_party_address=counter_party_address, verify=verify)
-        counter_party_address = discovery_info[f"{namespace}counterPartyAddress"]
-        counter_party_id = discovery_info[f"{namespace}counterPartyId"]
-        protocol = discovery_info[f"{namespace}protocol"]
+        if self.logger:
+            self.logger.debug("[get_discovery_info] Raw discovery response: %s", discovery_info)
+
+        def _get(key: str):
+            namespaced = f"{namespace}{key}"
+            if namespaced in discovery_info:
+                return discovery_info[namespaced]
+            if key in discovery_info:
+                return discovery_info[key]
+            raise KeyError(f"Key '{key}' not found in discovery response (tried '{namespaced}' and '{key}'). Keys: {list(discovery_info.keys())}")
+
+        counter_party_address = _get("counterPartyAddress")
+        counter_party_id = _get("counterPartyId")
+        protocol = _get("protocol")
         return counter_party_address, counter_party_id, protocol
 
-    def get_catalog_with_bpnl(self, bpnl: str, counter_party_address: str = None, namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT, verify: bool = None) -> dict | None:
+    def get_catalog_with_bpnl(self, bpnl: str, counter_party_address: str = None, filter_expression: list[dict] = None, namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT, verify: bool = None) -> dict | None:
         """
         Retrieves the Connector DCAT catalog using the BPNL to discover the connector protocol and address.
 
         Parameters:
         bpnl (str): The Business Partner Number (BPN) of the counterparty.
         counter_party_address (str, optional): The URL of the EDC provider. If not provided, it will be discovered using the BPNL.
+        filter_expression (list[dict], optional): A list of filter criteria to apply to the catalog request. Each entry is a dict with keys like "operandLeft", "operator", "operandRight".
         namespace (str): The namespace for the returned keys. Default is "https://w3id.org/edc/v0.0.1/ns/".
         context (dict, optional): The JSON-LD context to use in the catalog request.
         verify (bool, optional): Whether to verify SSL certificates. If None, uses service default.
@@ -431,7 +470,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         Returns:
         dict | None: The EDC catalog as a dictionary, or None if the request fails.
         """
-        return self._get_catalog_internal(bpnl=bpnl, counter_party_address=counter_party_address, 
+        return self._get_catalog_internal(bpnl=bpnl, counter_party_address=counter_party_address,
+                                        filter_expression=filter_expression,
                                         context=context, namespace=namespace, verify=verify)
 
     def get_catalog_request(self, counter_party_id: str, counter_party_address: str, protocol: str = DSP_2025, context=DEFAULT_CONTEXT) -> CatalogModel:
@@ -555,7 +595,60 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                           namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT):
         filter_expr = [self.get_filter_expression(key=dct_type_key, value=dct_type, operator=operator)]
         return self._get_catalog_internal(bpnl=bpnl, counter_party_address=counter_party_address,
-                                        filter_expression=filter_expr, timeout=timeout, 
+                                        filter_expression=filter_expr, timeout=timeout,
+                                        context=context, namespace=namespace)
+
+    def get_catalog_by_asset_id(self, counter_party_id: str, counter_party_address: str, asset_id: str,
+                          id_key: str = DEFAULT_ID_KEY, operator: str = "=", timeout: int = None,
+                          protocol: str = DSP_2025, context=DEFAULT_CONTEXT) -> dict:
+        """
+        Retrieves a catalog filtered by a specific asset ID.
+
+        Parameters:
+        counter_party_id (str): The BPN of the counterparty.
+        counter_party_address (str): The DSP URL of the EDC provider.
+        asset_id (str): The asset ID to filter by.
+        id_key (str): The operand key used to match the asset ID. Defaults to the EDC id namespace key.
+        operator (str): The filter operator. Defaults to "=".
+        timeout (int, optional): Request timeout in seconds.
+        protocol (str): DSP protocol version.
+        context (dict): JSON-LD context.
+
+        Returns:
+        dict | None: The filtered EDC catalog.
+        """
+        filter_expr = [self.get_filter_expression(key=id_key, value=asset_id, operator=operator)]
+        catalog_request = self.get_catalog_request_with_filter(
+            counter_party_id=counter_party_id,
+            counter_party_address=counter_party_address,
+            filter_expression=filter_expr,
+            protocol=protocol,
+            context=context
+        )
+        return self.get_catalog(request=catalog_request, timeout=timeout)
+
+    def get_catalog_by_asset_id_with_bpnl(self, bpnl: str, counter_party_address: str, asset_id: str,
+                                    id_key: str = DEFAULT_ID_KEY, operator: str = "=", timeout: int = None,
+                                    namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT) -> dict:
+        """
+        Retrieves a catalog filtered by a specific asset ID, discovering the connector via BPNL.
+
+        Parameters:
+        bpnl (str): The Business Partner Number of the counterparty used for discovery.
+        counter_party_address (str): The DSP base URL of the EDC provider.
+        asset_id (str): The asset ID to filter by.
+        id_key (str): The operand key used to match the asset ID. Defaults to the EDC id namespace key.
+        operator (str): The filter operator. Defaults to "=".
+        timeout (int, optional): Request timeout in seconds.
+        namespace (str): The namespace for returned keys.
+        context (dict): JSON-LD context.
+
+        Returns:
+        dict | None: The filtered EDC catalog.
+        """
+        filter_expr = [self.get_filter_expression(key=id_key, value=asset_id, operator=operator)]
+        return self._get_catalog_internal(bpnl=bpnl, counter_party_address=counter_party_address,
+                                        filter_expression=filter_expr, timeout=timeout,
                                         context=context, namespace=namespace)
 
     def get_catalog_with_filter_parallel(self, counter_party_id: str, counter_party_address: str,
@@ -608,7 +701,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return catalogs
     
     def do_dsp_with_bpnl(self, bpnl: str, counter_party_address: str = None, filter_expression: list[dict] = None,
-                        policies: list = None,
+                        policies: list = [],
+                        max_wait: int = 60, poll_interval: int = 1,
                         namespace: str = EDC_NAMESPACE,
                         catalog_context: dict = DEFAULT_CONTEXT,
                         negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> tuple[str, str]:
@@ -628,6 +722,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             counter_party_address=counter_party_address,
             filter_expression=filter_expression,
             policies=policies,
+            max_wait=max_wait,
+            poll_interval=poll_interval,
             protocol=protocol,
             catalog_context=catalog_context,
             negotiation_context=negotiation_context
@@ -640,6 +736,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         policies: list,
+        max_wait: int = 60,
+        poll_interval: int = 1,
         protocol: str = DSP_2025,
         catalog_context: dict = DEFAULT_CONTEXT,
         negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT
@@ -661,6 +759,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             counter_party_address=counter_party_address,
             policies=policies,
             filter_expression=filter_expression,
+            max_wait=max_wait,
+            poll_interval=poll_interval,
             protocol=protocol,
             catalog_context=catalog_context,
             negotiation_context=negotiation_context
@@ -674,7 +774,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        policies: list = None,
+        policies: list = [],
+        max_wait: int = 60,
+        poll_interval: int = 1,
         verify: bool = False,
         headers: dict = {},
         timeout: int = None,
@@ -693,7 +795,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
         path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
-        policies (list, optional): The policies to be used for the transfer. Defaults to None.
+        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
+            policy body without ``@id`` / ``@type``). Pass ``None`` to accept **any**
+            policy offered by the provider. Defaults to None (accept any). Accept any policy option is for test-only, do not use in production!
         dct_type (str, optional): The DCT type to be used for the transfer. Defaults to "IndustryFlagService".
 
         Returns:
@@ -704,13 +808,15 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             counter_party_address=counter_party_address,
             policies=policies,
             filter_expression=filter_expression,
+            max_wait=max_wait,
+            poll_interval=poll_interval,
             protocol=protocol,
             catalog_context=catalog_context,
             negotiation_context=negotiation_context
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("Connector Service No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
 
         return self._execute_http_request(
             method='GET', dataplane_url=dataplane_url, access_token=access_token, path=path,
@@ -724,7 +830,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        policies: list = None,
+        policies: list = [],
+        max_wait: int = 60,
+        poll_interval: int = 1,
         verify: bool = False,
         headers: dict = {},
         timeout: int = None,
@@ -742,7 +850,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
         path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
-        policies (list, optional): The policies to be used for the transfer. Defaults to None.
+        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
+            policy body without ``@id`` / ``@type``). Pass ``None`` to accept **any**
+            policy offered by the provider. Defaults to None (accept any). Accept any policy option is for test-only, do not use in production!
         dct_type (str, optional): The DCT type to be used for the transfer. Defaults to "IndustryFlagService".
 
         Returns:
@@ -753,12 +863,14 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             counter_party_address=counter_party_address,
             policies=policies,
             filter_expression=filter_expression,
+            max_wait=max_wait,
+            poll_interval=poll_interval,
             catalog_context=catalog_context,
             negotiation_context=negotiation_context
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("Connector Service No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
 
         return self._execute_http_request(
             method='GET', dataplane_url=dataplane_url, access_token=access_token, path=path,
@@ -775,7 +887,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         content_type: str = "application/json",
         json=None,
         data=None,
-        policies: list = None,
+        policies: list = [],
+        max_wait: int = 60,
+        poll_interval: int = 1,
         verify: bool = False,
         headers: dict = None,
         timeout: int = None,
@@ -798,8 +912,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         data (dict, optional): The data to be sent in the POST request.
         path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
         content_type (str, optional): The content type of the POST request. Defaults to "application/json".
-        policies (list, optional): The policies to be used for the transfer. Defaults to None.
-        dct_type (str, optional): The DCT type to be used for the transfer. Defaults to "IndustryFlagService".
+        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
+            policy body without ``@id`` / ``@type``). Pass ``None`` to accept **any**
+            policy offered by the provider. Defaults to None (accept any). Accept any policy option is for test-only, do not use in production!
 
         Returns:
         Response: The HTTP response from the POST request. If the request fails, an Exception is raised.
@@ -809,12 +924,14 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             counter_party_address=counter_party_address,
             policies=policies,
             filter_expression=filter_expression,
+            max_wait=max_wait,
+            poll_interval=poll_interval,
             catalog_context=catalog_context,
             negotiation_context=negotiation_context
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("Connector Service No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
 
         return self._execute_http_request(
             method='POST', dataplane_url=dataplane_url, access_token=access_token, path=path,
@@ -831,7 +948,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         content_type: str = "application/json",
         json=None,
         data=None,
-        policies: list = None,
+        policies: list = [],
+        max_wait: int = 60,
+        poll_interval: int = 1,
         verify: bool = False,
         headers: dict = None,
         timeout: int = None,
@@ -855,7 +974,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         data (dict, optional): The data to be sent in the POST request.
         path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
         content_type (str, optional): The content type of the POST request. Defaults to "application/json".
-        policies (list, optional): The policies to be used for the transfer. Defaults to None.
+        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
+            policy body without ``@id`` / ``@type``). Pass ``None`` to accept **any**
+            policy offered by the provider. Defaults to None (accept any). Accept any policy option is for test-only, do not use in production!
         dct_type (str, optional): The DCT type to be used for the transfer. Defaults to "IndustryFlagService".
 
         Returns:
@@ -866,13 +987,15 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             counter_party_address=counter_party_address,
             policies=policies,
             filter_expression=filter_expression,
+            max_wait=max_wait,
+            poll_interval=poll_interval,
             protocol=protocol,
             catalog_context=catalog_context,
             negotiation_context=negotiation_context
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("Connector Service No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
 
         return self._execute_http_request(
             method='POST', dataplane_url=dataplane_url, access_token=access_token, path=path,
@@ -889,7 +1012,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         content_type: str = "application/json",
         json=None,
         data=None,
-        policies: list = None,
+        policies: list = [],
+        max_wait: int = 60,
+        poll_interval: int = 1,
         verify: bool = False,
         headers: dict = None,
         timeout: int = None,
@@ -913,7 +1038,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         data (dict, optional): The data to be sent in the PUT request.
         path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
         content_type (str, optional): The content type of the PUT request. Defaults to "application/json".
-        policies (list, optional): The policies to be used for the transfer. Defaults to None.
+        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
+            policy body without ``@id`` / ``@type``). Pass ``None`` to accept **any**
+            policy offered by the provider. Defaults to None (accept any). Accept any policy option is for test-only, do not use in production!
         verify (bool, optional): Whether to verify SSL certificates. Defaults to False.
         headers (dict, optional): Additional headers to include in the request. Defaults to None.
         timeout (int, optional): Request timeout in seconds. Defaults to None.
@@ -930,12 +1057,14 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             counter_party_address=counter_party_address,
             policies=policies,
             filter_expression=filter_expression,
+            max_wait=max_wait,
+            poll_interval=poll_interval,
             catalog_context=catalog_context,
             negotiation_context=negotiation_context
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("Connector Service No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
 
         return self._execute_http_request(
             method='PUT', dataplane_url=dataplane_url, access_token=access_token, path=path,
@@ -952,7 +1081,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         content_type: str = "application/json",
         json=None,
         data=None,
-        policies: list = None,
+        policies: list = [],
+        max_wait: int = 60,
+        poll_interval: int = 1,
         verify: bool = False,
         headers: dict = None,
         timeout: int = None,
@@ -977,7 +1108,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         data (dict, optional): The data to be sent in the PUT request.
         path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
         content_type (str, optional): The content type of the PUT request. Defaults to "application/json".
-        policies (list, optional): The policies to be used for the transfer. Defaults to None.
+        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
+            policy body without ``@id`` / ``@type``). Pass ``None`` to accept **any**
+            policy offered by the provider. Defaults to None (accept any). Accept any policy option is for test-only, do not use in production!
         verify (bool, optional): Whether to verify SSL certificates. Defaults to False.
         headers (dict, optional): Additional headers to include in the request. Defaults to None.
         timeout (int, optional): Request timeout in seconds. Defaults to None.
@@ -995,13 +1128,15 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             counter_party_address=counter_party_address,
             policies=policies,
             filter_expression=filter_expression,
+            max_wait=max_wait,
+            poll_interval=poll_interval,
             protocol=protocol,
             catalog_context=catalog_context,
             negotiation_context=negotiation_context
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("Connector Service No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
 
         return self._execute_http_request(
             method='PUT', dataplane_url=dataplane_url, access_token=access_token, path=path,
