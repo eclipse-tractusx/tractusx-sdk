@@ -157,7 +157,7 @@ SAMPLE_DATA = {
 #
 # Example — restrict to the specific Tractus-X / legacy constraints provisioned above:
 #   ACCEPTED_POLICIES = [{
-#       "permission": [{"action": "use", "constraint": {"and": [
+#       "permission": [{"action": "use", "constraint": {"odrl:and": [
 #           {"leftOperand": "Membership",         "operator": "eq",      "rightOperand": "active"},
 #           {"leftOperand": "FrameworkAgreement", "operator": "eq",      "rightOperand": "DataExchangeGovernance:1.0"},
 #           {"leftOperand": "UsagePurpose",       "operator": "isAnyOf", "rightOperand": "cx.core.industrycore:1"},
@@ -212,7 +212,7 @@ def provision(provider: BaseConnectorProviderService) -> dict:
     provider.create_policy(
         policy_id=access_policy_id,
         permissions=[{
-            "action": "access",
+            "action": "odrl:use",
             "constraint": {
                 "leftOperand": "BusinessPartnerNumber",
                 "operator":    "isAnyOf",
@@ -225,12 +225,12 @@ def provision(provider: BaseConnectorProviderService) -> dict:
     provider.create_policy(
         policy_id=usage_policy_id,
         permissions=[{
-            "action": "use",
-            "constraint": {
-                "and": [
-                    {"leftOperand": "Membership",         "operator": "eq",      "rightOperand": "active"},
-                    {"leftOperand": "FrameworkAgreement", "operator": "eq",      "rightOperand": "DataExchangeGovernance:1.0"},
-                    {"leftOperand": "UsagePurpose",       "operator": "isAnyOf", "rightOperand": "cx.core.industrycore:1"},
+            "odrl:action": {"@id": "odrl:use"},
+            "odrl:constraint": {
+                "odrl:and": [
+                    {"odrl:leftOperand": "Membership",         "odrl:operator": "eq",      "odrl:rightOperand": "active"},
+                    {"odrl:leftOperand": "FrameworkAgreement", "odrl:operator": "eq",      "odrl:rightOperand": "DataExchangeGovernance:1.0"},
+                    {"odrl:leftOperand": "UsagePurpose",       "odrl:operator": "eq", "odrl:rightOperand": "cx.core.industrycore:1"},
                 ],
             },
         }],
