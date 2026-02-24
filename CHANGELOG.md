@@ -5,7 +5,7 @@ Further information can be found on the [README.md](README.md) file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.6.2] - R26.03
+## [0.6.2-rc1] - R26.03
 
 ### Added
 
