@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS NEXT
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,7 +21,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-# tractusx_sdk Package-level variables
-__version__ = '0.6.2-rc2'
-__author__ = 'Eclipse Tractus-X Contributors'
-__license__ = "Apache License, Version 2.0"
+"""
+Notification API Extension Tests.
+"""

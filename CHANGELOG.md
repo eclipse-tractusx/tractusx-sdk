@@ -5,7 +5,45 @@ Further information can be found on the [README.md](README.md) file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.5.0]
+## [0.6.2-rc1] - R26.03
+
+### Added
+
+- feat: implement notification api services in sdk by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/183
+
+### Changed
+
+- build(deps): bump filelock from 3.18.0 to 3.20.1 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/177
+- build(deps): bump urllib3 from 2.5.0 to 2.6.3 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/178
+- build(deps): bump filelock from 3.20.1 to 3.20.3 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/179
+- build(deps): bump pyasn1 from 0.6.1 to 0.6.2 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/180
+- build(deps): bump python-multipart from 0.0.20 to 0.0.22 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/181
+- build(deps): bump cryptography from 44.0.2 to 46.0.5 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/186
+
+## [0.6.1] - R25.12
+
+### Fixed
+
+- feat: bumped version and prepared dependencies for eclipse tractus-x R25.12 release
+
+## [0.6.0]
+
+### Added
+
+- docs: Introduce MkDocs for structured documentation by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/160
+- docs: Fill the missing documentation by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/161
+- chore(deps-dev): bump setuptools from 75.9.1 to 78.1.1 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/104
+- feat: Trivy filesystem scan workflow by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/163
+- chore(deps): bump requests from 2.32.3 to 2.32.4 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/116
+- chore(deps): bump urllib3 from 2.3.0 to 2.5.0 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/118
+- chore(deps): bump fastapi from 0.115.0 to 0.117 and starlette from 0.46.1 to 0.48.0 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/130
+- Changes in the documentation files. Imply a new structure for the doc… by @flarrinaga in https://github.com/eclipse-tractusx/tractusx-sdk/pull/164
+- build(deps): bump starlette from 0.48.0 to 0.49.1 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/166
+- feat: add GitHub Actions workflow for unit testing and coverage reporting by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/168
+- fix: amend README by @yuri1969 in https://github.com/eclipse-tractusx/tractusx-sdk/pull/165
+
+
+## [0.5.0] - 25.09
 
 ### Added
 
@@ -13,7 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - feat: added new Saturn apis and 2025-01 dsp protocol specifications by @matbmoser in https://github.com/eclipse-tractusx/tractusx-sdk/pull/158
 - feat: prepared final version of the ichub 0.5.0 and documentation by @matbmoser in https://github.com/eclipse-tractusx/tractusx-sdk/pull/156
 
-## [0.4.2]
+## [0.4.2] - 25.06
 
 ### Fixed
 

@@ -28,8 +28,8 @@ Users will see a version selector in the documentation header allowing them to s
 
 1. **For new releases**: Just create and push a git tag starting with `v`:
    ```bash
-   git tag v0.6.0
-   git push origin v0.6.0
+   git tag v0.6.1
+   git push origin v0.6.1
    ```
 
 2. **For development**: Simply push to main - docs are automatically updated
