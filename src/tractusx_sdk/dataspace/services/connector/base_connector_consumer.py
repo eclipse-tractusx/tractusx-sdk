@@ -516,6 +516,168 @@ class BaseConnectorConsumerService(BaseService):
 
         return data.pop()  ## Return last entry of the list (should be just one entry because of the filter)
 
+    def _build_optional_kwargs(self, protocol: str = None, context: dict = None, 
+                                protocol_key: str = 'protocol', context_key: str = 'context') -> dict:
+        """
+        Build optional keyword arguments dictionary, skipping None values.
+        
+        @param protocol: DSP protocol version (optional).
+        @param context: JSON-LD context (optional).
+        @param protocol_key: Key name for protocol in kwargs. Defaults to 'protocol'.
+        @param context_key: Key name for context in kwargs. Defaults to 'context'.
+        @returns: Dictionary containing only non-None parameters.
+        """
+        kwargs: dict = {}
+        if protocol is not None:
+            kwargs[protocol_key] = protocol
+        if context is not None:
+            kwargs[context_key] = context
+        return kwargs
+
+    def _fetch_and_validate_catalog(self, counter_party_id: str, counter_party_address: str,
+                                     filter_expression: list[dict], policies: list = None,
+                                     **catalog_kwargs) -> list:
+        """
+        Fetch catalog and validate that matching assets with acceptable policies exist.
+        
+        @param counter_party_id: The identifier of the counterparty.
+        @param counter_party_address: The URL of the EDC provider.
+        @param filter_expression: Catalog filter conditions.
+        @param policies: Allow-list of accepted usage policies.
+        @param catalog_kwargs: Additional arguments for catalog request.
+        @returns: List of (asset_id, policy) tuples.
+        @raises RuntimeError: If catalog retrieval or policy validation fails.
+        """
+        catalog_response = self.get_catalog_with_filter(
+            counter_party_id=counter_party_id,
+            counter_party_address=counter_party_address,
+            filter_expression=filter_expression,
+            **catalog_kwargs
+        )
+        
+        if catalog_response is None:
+            raise RuntimeError(
+                f"[Connector Service]: [{counter_party_address}] It was not possible to retrieve the catalog from the edc provider! Catalog response is empty!")
+
+        try:
+            valid_assets_policies = DspTools.filter_assets_and_policies(
+                catalog=catalog_response,
+                allowed_policies=policies
+            )
+        except Exception as e:
+            raise RuntimeError(
+                f"[Connector Service]: [{counter_party_address}] It was not possible to find a valid policy in the catalog! Reason: [{str(e)}]")
+
+        if len(valid_assets_policies) == 0:
+            raise RuntimeError(
+                f"[Connector Service]: [{counter_party_address}] It was not possible to find a valid policy in the catalog! Asset ID and the Policy are empty!")
+
+        return valid_assets_policies
+
+    def _start_negotiation_for_assets(self, counter_party_id: str, counter_party_address: str,
+                                       valid_assets_policies: list, **negotiation_kwargs) -> str:
+        """
+        Attempt to start negotiation for the first valid asset/policy pair.
+        
+        @param counter_party_id: The identifier of the counterparty.
+        @param counter_party_address: The URL of the EDC provider.
+        @param valid_assets_policies: List of (asset_id, policy) tuples.
+        @param negotiation_kwargs: Additional arguments for negotiation request.
+        @returns: Negotiation ID.
+        @raises RuntimeError: If no negotiation could be started.
+        """
+        for asset_id, policy in valid_assets_policies:
+            negotiation_id = self.start_edr_negotiation(
+                counter_party_id=counter_party_id,
+                counter_party_address=counter_party_address,
+                target=asset_id,
+                policy=policy,
+                **negotiation_kwargs
+            )
+            if negotiation_id is not None:
+                return negotiation_id
+
+        raise RuntimeError(
+            f"[Connector Service]: [{counter_party_address}] It was not possible to start the EDR Negotiation! The negotiation id is empty!")
+
+    def _poll_negotiation_state(self, negotiation_id: str, counter_party_address: str,
+                                 max_wait: int, poll_interval: int) -> None:
+        """
+        Poll negotiation status until it reaches FINALIZED state.
+        
+        @param negotiation_id: The unique identifier for the negotiation process.
+        @param counter_party_address: The URL of the EDC provider (for logging).
+        @param max_wait: Maximum seconds to wait.
+        @param poll_interval: Seconds to wait between poll attempts.
+        @raises TimeoutError: If negotiation doesn't reach FINALIZED within max_wait.
+        @raises RuntimeError: If negotiation is TERMINATED.
+        """
+        elapsed: float = 0.0
+        negotiation_state: str | None = None
+        last_logged_state: str | None = None
+        
+        while elapsed < max_wait:
+            try:
+                state_response = self.contract_negotiations.get_by_id(negotiation_id)
+                if state_response is not None and state_response.status_code == 200:
+                    state_data = state_response.json()
+                    negotiation_state = state_data.get("state", state_data.get("edc:state"))
+                    
+                    if self.logger and negotiation_state != last_logged_state:
+                        self.logger.info(
+                            "[Connector Service]: [%s] Negotiation [%s] state: %s",
+                            counter_party_address, negotiation_id, negotiation_state)
+                        last_logged_state = negotiation_state
+                    
+                    if negotiation_state == "FINALIZED":
+                        return
+                    if negotiation_state == "TERMINATED":
+                        raise RuntimeError(
+                            f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] was TERMINATED by the provider!")
+            except RuntimeError:
+                raise
+            except Exception as e:
+                if self.logger:
+                    self.logger.warning(
+                        "[Connector Service]: [%s] Failed to check negotiation state: %s",
+                        counter_party_address, e)
+            
+            op.wait(seconds=poll_interval)
+            elapsed += poll_interval
+
+        raise TimeoutError(
+            f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] did not reach FINALIZED state after {max_wait}s (last state: {negotiation_state})!")
+
+    def _wait_for_edr_entry(self, negotiation_id: str, counter_party_address: str,
+                            max_wait: int, poll_interval: int) -> dict:
+        """
+        Poll for EDR entry until it becomes available.
+        
+        @param negotiation_id: The unique identifier for the negotiation process.
+        @param counter_party_address: The URL of the EDC provider (for logging).
+        @param max_wait: Maximum seconds to wait.
+        @param poll_interval: Seconds to wait between poll attempts.
+        @returns: EDR entry dictionary.
+        @raises TimeoutError: If EDR entry is not found within max_wait.
+        """
+        elapsed: float = 0.0
+        
+        while elapsed < max_wait:
+            edr_entry = self.get_edr_entry(negotiation_id=negotiation_id)
+            if edr_entry is not None:
+                return edr_entry
+            
+            if self.logger:
+                self.logger.info(
+                    "[Connector Service]: [%s] EDR entry for negotiation [%s] not yet available, waiting %ss...",
+                    counter_party_address, negotiation_id, poll_interval)
+            
+            op.wait(seconds=poll_interval)
+            elapsed += poll_interval
+
+        raise TimeoutError(
+            f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] has failed! The EDR entry was not found after {max_wait}s!")
+
     def negotiate_and_transfer(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
                                policies: list = None, max_wait: int = 60, poll_interval: int = 1,
                                protocol: str = None, catalog_context: dict = None, negotiation_context: dict = None) -> dict:
@@ -538,113 +700,40 @@ class BaseConnectorConsumerService(BaseService):
         @param negotiation_context: JSON-LD context for negotiation requests. Pass ``None`` to use the subclass default. Defaults to None.
         @returns: edr_entry:dict, if fails Exception
         """
-        ##### 1. Get Catalog
+        # Phase 1: Fetch catalog and validate policies
+        catalog_kwargs = self._build_optional_kwargs(protocol=protocol, context=catalog_context)
+        valid_assets_policies = self._fetch_and_validate_catalog(
+            counter_party_id=counter_party_id,
+            counter_party_address=counter_party_address,
+            filter_expression=filter_expression,
+            policies=policies,
+            **catalog_kwargs
+        )
 
-        ## Build optional kwargs so None values don't override subclass-level defaults in overridden methods
-        catalog_kwargs: dict = {}
-        if protocol is not None:
-            catalog_kwargs['protocol'] = protocol
-        if catalog_context is not None:
-            catalog_kwargs['context'] = catalog_context
+        # Phase 2: Start negotiation for the first valid asset
+        negotiation_kwargs = self._build_optional_kwargs(protocol=protocol, context=negotiation_context)
+        negotiation_id = self._start_negotiation_for_assets(
+            counter_party_id=counter_party_id,
+            counter_party_address=counter_party_address,
+            valid_assets_policies=valid_assets_policies,
+            **negotiation_kwargs
+        )
 
-        catalog_response = self.get_catalog_with_filter(counter_party_id=counter_party_id,
-                                                        counter_party_address=counter_party_address,
-                                                        filter_expression=filter_expression,
-                                                        **catalog_kwargs)
-        if (catalog_response is None):
-            raise RuntimeError(
-                f"[Connector Service]: [{counter_party_address}] It was not possible to retrieve the catalog from the edc provider! Catalog response is empty!")
+        # Phase 3: Poll negotiation state until FINALIZED
+        self._poll_negotiation_state(
+            negotiation_id=negotiation_id,
+            counter_party_address=counter_party_address,
+            max_wait=max_wait,
+            poll_interval=poll_interval
+        )
 
-        ## Select Policy and Assetid
-        try:
-            valid_assets_policies = DspTools.filter_assets_and_policies(catalog=catalog_response,
-                                                                        allowed_policies=policies)
-        except Exception as e:
-            raise RuntimeError(
-                f"[Connector Service]: [{counter_party_address}] It was not possible to find a valid policy in the catalog! Reason: [{str(e)}]")
-
-        if (len(valid_assets_policies) == 0):
-            raise RuntimeError(
-                f"[Connector Service]: [{counter_party_address}] It was not possible to find a valid policy in the catalog! Asset ID and the Policy are empty!")
-
-        negotiation_id: str | None = None
-
-        for valid_asset_policy in valid_assets_policies:
-            ## Unwrap asset id and policy tuple
-            asset_id = valid_asset_policy[0]
-            policy = valid_asset_policy[1]
-
-            ##### 2. EDR Negotiation Start
-
-            negotiation_kwargs: dict = {}
-            if protocol is not None:
-                negotiation_kwargs['protocol'] = protocol
-            if negotiation_context is not None:
-                negotiation_kwargs['context'] = negotiation_context
-
-            negotiation_id = self.start_edr_negotiation(counter_party_id=counter_party_id,
-                                                        counter_party_address=counter_party_address, target=asset_id,
-                                                        policy=policy, **negotiation_kwargs)
-            if (negotiation_id is not None):
-                break
-
-        if (negotiation_id is None):
-            raise RuntimeError(
-                f"[Connector Service]: [{counter_party_address}] It was not possible to start the EDR Negotiation! The negotiation id is empty!")
-
-        ##### 3. Poll negotiation state until FINALIZED
-
-        elapsed: float = 0.0
-        negotiation_state: str | None = None
-        last_logged_state: str | None = None
-        while elapsed < max_wait:
-            try:
-                state_response = self.contract_negotiations.get_by_id(negotiation_id)
-                if state_response is not None and state_response.status_code == 200:
-                    state_data = state_response.json()
-                    negotiation_state = state_data.get("state", state_data.get("edc:state"))
-                    if self.logger and negotiation_state != last_logged_state:
-                        self.logger.info(
-                            "[Connector Service]: [%s] Negotiation [%s] state: %s",
-                            counter_party_address, negotiation_id, negotiation_state)
-                        last_logged_state = negotiation_state
-                    if negotiation_state == "FINALIZED":
-                        break
-                    elif negotiation_state == "TERMINATED":
-                        raise RuntimeError(
-                            f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] was TERMINATED by the provider!")
-            except RuntimeError:
-                raise
-            except Exception as e:
-                if self.logger:
-                    self.logger.warning(
-                        "[Connector Service]: [%s] Failed to check negotiation state: %s",
-                        counter_party_address, e)
-            op.wait(seconds=poll_interval)
-            elapsed += poll_interval
-
-        if negotiation_state != "FINALIZED":
-            raise TimeoutError(
-                f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] did not reach FINALIZED state after {max_wait}s (last state: {negotiation_state})!")
-
-        ##### 4. Get EDR Entry (details)
-
-        elapsed = 0.0
-        edr_entry: dict | None = None
-        while elapsed < max_wait:
-            edr_entry = self.get_edr_entry(negotiation_id=negotiation_id)
-            if edr_entry is not None:  ## If edr is found skip retry
-                break
-            if self.logger:
-                self.logger.info(
-                    "[Connector Service]: [%s] EDR entry for negotiation [%s] not yet available, waiting %ss...",
-                    counter_party_address, negotiation_id, poll_interval)
-            op.wait(seconds=poll_interval)
-            elapsed += poll_interval
-
-        if edr_entry is None:
-            raise TimeoutError(
-                f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] has failed! The EDR entry was not found after {max_wait}s!")
+        # Phase 4: Wait for EDR entry to become available
+        edr_entry = self._wait_for_edr_entry(
+            negotiation_id=negotiation_id,
+            counter_party_address=counter_party_address,
+            max_wait=max_wait,
+            poll_interval=poll_interval
+        )
 
         return edr_entry
 

@@ -101,24 +101,23 @@ PROVIDER_CONNECTOR_CONFIG = {
     "api_key_header": "X-Api-Key",  # API key header name
     "api_key": "TEST2",  # Umbrella Provider API key from values.yaml
     "dataspace_version": "saturn",  # "jupiter" or "saturn"
-    "bpn": "BPNL00000003AYRE",  # Umbrella Provider BPN (tx-data-provider)
-    "dsp_url": "http://dataprovider-controlplane.tx.test/api/v1/dsp",  # Provider DSP base URL — do NOT include the protocol version suffix (e.g. /2025-01), the consumer EDC appends it internally
-    "did": "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AYRE"  # Umbrella Provider DID
+    "dsp_url": "http://dataprovider-controlplane.tx.test/api/v1/dsp/2025-1", # Append here the /2025-1
+    "did": "did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL0000000093Q7"  # PLACEHOLDER: Provider DID
 }
 
 # Consumer Connector Configuration
 CONSUMER_CONNECTOR_CONFIG = {
-    "base_url": "http://dataconsumer-1-controlplane.tx.test",  # Tractus-X Umbrella: dataconsumerOne EDC Control Plane
+    "base_url": "https://edc-consumer-ichub-control.int.catena-x.net",  # PLACEHOLDER: Consumer EDC Control Plane URL
     "dma_path": "/management",  # Management API path
     "api_key_header": "X-Api-Key",  # API key header name
-    "api_key": "TEST1",  # Umbrella Consumer API key from values.yaml
+    "api_key": "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC",  # PLACEHOLDER: Consumer API key
     "dataspace_version": "saturn",  # "jupiter" or "saturn"
-    "did": "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AZQP"  # Umbrella Consumer DID (dataconsumerOne)
+    "did": "did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL00000003CRHK"  # PLACEHOLDER: Consumer DID
 }
 
 # Backend Data Source Configuration (for Provider Asset)
 BACKEND_CONFIG = {
-    "base_url": f"http://dataprovider-submodelserver.tx.test/urn:uuid:{uuid.uuid4()}",  # Umbrella Submodel Server with UUID generated fresh per test run
+    "base_url": f"https://storage-ichub.int.catena-x.net/urn:uuid:{uuid.uuid4()}",  # UUID generated fresh per test run
     "api_key_header": "X-Api-Key",  # Optional: API key header name (if backend requires authentication)
     "api_key": "",  # Optional: API key (leave empty if not needed)
 }
@@ -129,21 +128,51 @@ BACKEND_CONFIG = {
 
 # Access Policy Configuration - Controls catalog visibility
 # Saturn policies with Catena-X 2025-9 context + Tractus-X v2.0.0 extension
+#
+# Access Policy Configuration - Controls catalog visibility
+# Saturn policies with Catena-X 2025-9 context + Tractus-X v2.0.0 extension
+#
+# NOTE: BusinessPartnerDID is NOT YET ALLOWED in current EDC implementation.
+# For DID-only interactions, use BusinessPartnerNumber (BPN) or Membership constraints instead.
+# Follow the feature proposal here:
+# 
+# See: hhttps://github.com/eclipse-tractusx/tractusx-edc/issues/2614
+# PR: https://github.com/eclipse-tractusx/tractusx-edc/pull/2615
+#
+# ACCESS_POLICY_CONFIG = {
+#     "context": [
+#         "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
+#         "https://w3id.org/catenax/2025/9/policy/context.jsonld",
+#         {
+#            "tx-policy": "https://w3id.org/tractusx/policy/v2.0.0",
+#             "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+#         }
+#     ],
+#     "permissions": [{
+#         "action": "access",
+#         "constraint": {
+#             "leftOperand": "tx-policy:BusinessPartnerDID",
+#             "operator": "isAnyOf",
+#             "rightOperand": None  # Will be set to CONSUMER_CONNECTOR_CONFIG["did"] at runtime
+#         }
+#     }]
+# }
+
+# Use Membership-based access policy (allows any active member)
 ACCESS_POLICY_CONFIG = {
     "context": [
         "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
         "https://w3id.org/catenax/2025/9/policy/context.jsonld",
         {
-            "tx": "https://w3id.org/tractusx/policy/v2.0.0",
             "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
         }
     ],
     "permissions": [{
         "action": "access",
         "constraint": {
-            "leftOperand": "BusinessPartnerDID",
-            "operator": "isAnyOf",
-            "rightOperand": None  # Will be set to CONSUMER_CONNECTOR_CONFIG["did"] at runtime
+            "leftOperand": "Membership",
+            "operator": "eq",
+            "rightOperand": "active"
         }
     }]
 }
@@ -315,7 +344,7 @@ def initialize_provider_service(provider_config=None):
     logger.info("✓ Provider service initialized")
     logger.info("  - Base URL: %s", provider_config['base_url'])
     logger.info("  - Dataspace Version: %s", provider_config['dataspace_version'])
-    logger.info("  - BPN: %s", provider_config['bpn'])
+    logger.info("  - DID: %s", provider_config['did'])
     
     return provider_service
 
@@ -356,7 +385,7 @@ def initialize_consumer_service(consumer_config=None, connection_manager=None):
     logger.info("✓ Consumer service initialized")
     logger.info("  - Base URL: %s", consumer_config['base_url'])
     logger.info("  - Dataspace Version: %s", consumer_config['dataspace_version'])
-    logger.info("  - BPN: %s", consumer_config['bpn'])
+    logger.info("  - DID: %s", consumer_config['did'])
     
     return consumer_service
 
@@ -402,21 +431,21 @@ def provision_data_on_provider(
     usage_policy_id = f"usage-policy-framework-{timestamp}"
     contract_def_id = f"contract-def-{timestamp}"
     
-    logger.info("Step 1.1: Creating Access Policy (DID-based)")
+    logger.info("Step 1.1: Creating Access Policy (Membership/DID-based)")
     logger.info("%s", "-" * 80)
     
     # Create Access Policy - Controls who can see the asset in catalog
+    # NOTE: For DID-only interactions, use Membership or DID credentials (not BPN)
+    # BusinessPartnerDID is not yet supported in current EDC implementation
     try:
-        # Set consumer DID in access policy
+        # Only substitute DID if leftOperand contains "BusinessPartnerDID"
+        # For Membership or other credentials, use as-is without substitution
         access_permissions = [p.copy() for p in access_policy_config["permissions"]]
-        access_permissions[0]["constraint"]["rightOperand"] = consumer_config["did"]
+        constraint = access_permissions[0]["constraint"]
+        left_operand = constraint.get("leftOperand", "")
+        if "BusinessPartnerDID" in left_operand:
+            constraint["rightOperand"] = consumer_config["did"]
         
-        access_policy_payload = {
-            "policy_id": access_policy_id,
-            "context": access_policy_config.get("context"),
-            "permissions": access_permissions
-        }
-        logger.info("[ACCESS POLICY REQUEST]:\n%s", json.dumps(access_policy_payload, indent=2))
         
         access_policy_response = provider_service.create_policy(
             policy_id=access_policy_id,
@@ -424,7 +453,13 @@ def provision_data_on_provider(
             permissions=access_permissions
         )
         logger.info("✓ Access Policy created: %s", access_policy_id)
-        logger.info("  - Restricts catalog visibility to DID: %s", consumer_config['did'])
+        left_operand = constraint.get("leftOperand", "")
+        if "BusinessPartnerDID" in left_operand:
+            logger.info("  - Restricts catalog visibility to DID: %s", consumer_config.get('did', 'N/A'))
+        elif left_operand == "Membership":
+            logger.info("  - Allows access to: %s members", constraint.get("rightOperand", "any"))
+        else:
+            logger.info("  - Policy constraint: %s %s %s", left_operand, constraint.get("operator"), constraint.get("rightOperand"))
         logger.info("  - Response: %s", json.dumps(access_policy_response, indent=2))
     except Exception as e:
         logger.exception("✗ Failed to create access policy: %s", e)
@@ -458,16 +493,6 @@ def provision_data_on_provider(
     
     # Create Asset with backend data source configuration
     try:
-        asset_payload = {
-            "asset_id": asset_id,
-            "base_url": backend_config["base_url"],
-            "dct_type": asset_config["dct_type"],
-            "semantic_id": asset_config["semantic_id"],
-            "version": asset_config["version"],
-            "proxy_params": asset_config["proxy_params"]
-        }
-        logger.info("[ASSET REQUEST]:\n%s", json.dumps(asset_payload, indent=2))
-        
         asset_response = provider_service.create_asset(
             asset_id=asset_id,
             base_url=backend_config["base_url"],
@@ -490,14 +515,6 @@ def provision_data_on_provider(
     
     # Create Contract Definition - Links Asset with Policies
     try:
-        contract_def_payload = {
-            "contract_id": contract_def_id,
-            "usage_policy_id": usage_policy_id,
-            "access_policy_id": access_policy_id,
-            "asset_id": asset_id
-        }
-        logger.info("[CONTRACT DEFINITION REQUEST]:\n%s", json.dumps(contract_def_payload, indent=2))
-        
         contract_def_response = provider_service.create_contract(
             contract_id=contract_def_id,
             usage_policy_id=usage_policy_id,
@@ -518,7 +535,13 @@ def provision_data_on_provider(
     logger.info("%s", "=" * 80)
     logger.info("Provider has made the data available in the dataspace:")
     logger.info("  - Asset ID: %s", asset_id)
-    logger.info("  - Visible to: %s", consumer_config['bpn'])
+    left_operand = constraint.get("leftOperand", "")
+    if "BusinessPartnerDID" in left_operand:
+        logger.info("  - Visible to DID: %s", consumer_config.get('did', 'N/A'))
+    elif left_operand == "Membership":
+        logger.info("  - Visible to: %s members", constraint.get("rightOperand", "any"))
+    else:
+        logger.info("  - Access policy: %s %s %s", left_operand, constraint.get("operator"), constraint.get("rightOperand"))
     logger.info("  - Contract Terms: Active Membership + Framework Agreement")
     
     return {
@@ -550,7 +573,7 @@ def consume_data_as_consumer(consumer_service, asset_id, provider_config=None, c
     
     logger.info("Step 2.1: Discovering Provider Catalog (using DID directly)")
     logger.info("%s", "-" * 80)
-    logger.info("Skipping BPNL discovery - using provider DID: %s", provider_config["did"])
+    logger.info("Requesting catalog using provider DID: %s", provider_config["did"])
     
     # Request Catalog from Provider using DID
     try:

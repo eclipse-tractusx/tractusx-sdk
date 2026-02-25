@@ -101,9 +101,8 @@ PROVIDER_CONFIG = {
     "api_key_header":     "X-Api-Key",
     "api_key":            "TEST2",
     "dataspace_version":  "saturn",
-    "bpn":                "BPNL00000003AYRE",
-    "dsp_url":            "http://dataprovider-controlplane.tx.test/api/v1/dsp",
-    "did":                "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AYRE",
+    "dsp_url":            "http://dataprovider-controlplane.tx.test/api/v1/dsp/2025-1", # Append here the /2025-1
+    "did": "did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL0000000093Q7"  # PLACEHOLDER: Provider DID
 }
 
 CONSUMER_CONFIG = {
@@ -112,11 +111,11 @@ CONSUMER_CONFIG = {
     "api_key_header":     "X-Api-Key",
     "api_key":            "TEST1",
     "dataspace_version":  "saturn",
-    "bpn":                "BPNL00000003AZQP",
+    "did": "did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL00000003CRHK"  # PLACEHOLDER: Consumer DID
 }
 
 BACKEND_CONFIG = {
-    "base_url":        f"http://dataprovider-submodelserver.tx.test/urn:uuid:{uuid.uuid4()}",  # Umbrella Submodel Server with UUID generated fresh per test run
+    "base_url":        f"https://storage-ichub.int.catena-x.net/urn:uuid:{uuid.uuid4()}",  # UUID generated fresh per test run
     "api_key_header": "X-Api-Key",  # Optional: API key header name (if backend requires authentication)
     "api_key":         "",  # Optional: API key (leave empty if not needed)
 }
@@ -124,23 +123,50 @@ BACKEND_CONFIG = {
 # ============================================================================
 # POLICY & ASSET CONFIGURATION
 # ============================================================================
-# NOTE: Saturn (Catena-X 2025-9) with Tractus-X v2.0.0 extension
+# Access Policy Configuration - Controls catalog visibility
+# Saturn policies with Catena-X 2025-9 context + Tractus-X v2.0.0 extension
+#
+# NOTE: BusinessPartnerDID is NOT YET ALLOWED in current EDC implementation.
+# For DID-only interactions, use BusinessPartnerNumber (BPN) or Membership constraints instead.
+# Follow the feature proposal here:
+# 
+# See: hhttps://github.com/eclipse-tractusx/tractusx-edc/issues/2614
+# PR: https://github.com/eclipse-tractusx/tractusx-edc/pull/2615
+#
+# ACCESS_POLICY_CONFIG = {
+#     "context": [
+#         "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
+#         "https://w3id.org/catenax/2025/9/policy/context.jsonld",
+#         {
+#             "tx-policy": "https://w3id.org/tractusx/policy/v2.0.0",
+#             "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+#         }
+#     ],
+#     "permissions": [{
+#         "action": "access",
+#         "constraint": {
+#             "leftOperand": "tx-policy:BusinessPartnerDID",
+#             "operator": "isAnyOf",
+#             "rightOperand": None  # Will be set to CONSUMER_CONNECTOR_CONFIG["did"] at runtime
+#         }
+#     }]
+# }
 
+# Use Membership-based access policy (allows any active member)
 ACCESS_POLICY_CONFIG = {
     "context": [
         "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
         "https://w3id.org/catenax/2025/9/policy/context.jsonld",
         {
-            "tx": "https://w3id.org/tractusx/policy/v2.0.0",
             "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
         }
     ],
     "permissions": [{
         "action": "access",
         "constraint": {
-            "leftOperand": "BusinessPartnerDID",
-            "operator": "isAnyOf",
-            "rightOperand": None  # Will be set to CONSUMER_CONFIG["did"] at runtime
+            "leftOperand": "Membership",
+            "operator": "eq",
+            "rightOperand": "active"
         }
     }]
 }
@@ -321,9 +347,13 @@ def provision(
     usage_policy_id  = f"simple-e2e-usage-{ts}"
     contract_def_id  = f"simple-e2e-contract-{ts}"
 
-    # Set consumer DID in access policy
+    # Only substitute DID if leftOperand contains "BusinessPartnerDID"
+    # For Membership or other credentials, use as-is without substitution
     access_permissions = [p.copy() for p in access_policy_config["permissions"]]
-    access_permissions[0]["constraint"]["rightOperand"] = consumer_config["did"]
+    constraint = access_permissions[0]["constraint"]
+    left_operand = constraint.get("leftOperand", "")
+    if "BusinessPartnerDID" in left_operand:
+        constraint["rightOperand"] = consumer_config["did"]
 
     logger.info("[ACCESS POLICY REQUEST]: Creating policy %s", access_policy_id)
     provider.create_policy(

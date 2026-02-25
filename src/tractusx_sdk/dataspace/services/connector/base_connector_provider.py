@@ -214,7 +214,7 @@ class BaseConnectorProviderService(BaseService):
     def create_policy(
         self,
         policy_id: str,
-        context: dict | list[dict] = {},
+        context: dict | list[dict] = None,
         permissions: dict | list[dict] = [],
         prohibitions: dict | list[dict] = [],
         obligations: dict | list[dict] = [],
