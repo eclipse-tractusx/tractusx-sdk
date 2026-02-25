@@ -34,9 +34,10 @@ class BaseConnectorProviderService(BaseService):
     _contract_definition_controller: BaseDmaController
     _policy_controller: BaseDmaController
 
-    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verbose: bool = True, logger: logging.Logger = None, verify_ssl: bool = True):
+    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None, verify_ssl: bool = True):
         self.dataspace_version = dataspace_version
         self.verbose = verbose
+        self.debug = debug
         self.logger = logger or logging.getLogger(__name__)
         self.verify_ssl = verify_ssl
 
@@ -86,7 +87,7 @@ class BaseConnectorProviderService(BaseService):
         self,
         asset_id: str,
         base_url: str,
-        dct_type: str,
+        dct_type: str = None,
         version: str = "3.0",
         semantic_id: str = None,
         proxy_params: dict = {
@@ -96,21 +97,26 @@ class BaseConnectorProviderService(BaseService):
             "proxyBody": "false"
         },
         headers: dict = None,
-        private_properties: dict = None
+        private_properties: dict = None,
+        context: dict = None,
+        data_address_type: str = "HttpData",
+        **kwargs
     ):
         if self.verbose:
             self.logger.info(f"Creating asset {asset_id} at {base_url}.")
 
-        context = {
-            "edc": "https://w3id.org/edc/v0.0.1/ns/",
-            "cx-common": "https://w3id.org/catenax/ontology/common#",
-            "cx-taxo": "https://w3id.org/catenax/taxonomy#",
-            "dct": "http://purl.org/dc/terms/"
-        }
+        # Use provided context or default
+        if context is None:
+            context = {
+                "edc": "https://w3id.org/edc/v0.0.1/ns/",
+                "cx-common": "https://w3id.org/catenax/ontology/common#",
+                "cx-taxo": "https://w3id.org/catenax/taxonomy#",
+                "dct": "http://purl.org/dc/terms/"
+            }
 
         data_address = {
             "@type": "DataAddress",
-            "type": "HttpData",
+            "type": data_address_type,
             "baseUrl": base_url
         }
 
@@ -121,11 +127,12 @@ class BaseConnectorProviderService(BaseService):
             for key, value in headers.items():
                 data_address["header:" + key] = value
 
-        properties: dict = {
-            "dct:type": {
+        properties: dict = {}
+
+        if dct_type is not None:
+            properties["dct:type"] = {
                 "@id": dct_type
             }
-        }
 
         if version is not None:
             properties["cx-common:version"] = version
@@ -140,8 +147,12 @@ class BaseConnectorProviderService(BaseService):
             oid=asset_id,
             properties=properties,
             private_properties=private_properties,
-            data_address=data_address
+            data_address=data_address,
+            kwargs=kwargs
         )
+
+        if self.debug:
+            self.logger.info(f"[Connector Service] [ASSET REQUEST]: {asset.to_data()}")
 
         asset_response = self.assets.create(obj=asset, verify=self.verify_ssl)
 
@@ -159,7 +170,8 @@ class BaseConnectorProviderService(BaseService):
         contract_id: str,
         usage_policy_id: str,
         access_policy_id: str,
-        asset_id: str
+        asset_id: str,
+        **kwargs
     ) -> dict:
         if self.verbose:
             self.logger.info(f"Creating new contract with ID {contract_id}.")
@@ -182,8 +194,12 @@ class BaseConnectorProviderService(BaseService):
             oid=contract_id,
             assets_selector=asset_selector,
             contract_policy_id=usage_policy_id,
-            access_policy_id=access_policy_id
+            access_policy_id=access_policy_id,
+            kwargs=kwargs
         )
+
+        if self.debug:
+            self.logger.info(f"[Connector Service] [CONTRACT DEFINITION REQUEST]: {contract.to_data()}")
 
         created_contract = self.contract_definitions.create(obj=contract, verify=self.verify_ssl)
 
@@ -201,7 +217,8 @@ class BaseConnectorProviderService(BaseService):
         context: dict | list[dict] = {},
         permissions: dict | list[dict] = [],
         prohibitions: dict | list[dict] = [],
-        obligations: dict | list[dict] = []
+        obligations: dict | list[dict] = [],
+        **kwargs
     ) -> dict:
         if self.verbose:
             self.logger.info(f"Creating new policy with ID {policy_id}.")
@@ -212,8 +229,12 @@ class BaseConnectorProviderService(BaseService):
             context=context,
             permissions=permissions,
             prohibitions=prohibitions,
-            obligations=obligations
+            obligations=obligations,
+            kwargs=kwargs
         )
+
+        if self.debug:
+            self.logger.info(f"[Connector Service] [POLICY REQUEST]: {policy.to_data()}")
 
         created_policy = self.policies.create(obj=policy, verify=self.verify_ssl)
 

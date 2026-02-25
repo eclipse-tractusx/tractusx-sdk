@@ -31,15 +31,17 @@ class PolicyModel(BasePolicyModel):
     TYPE: str = Field(default="PolicyDefinition", frozen=True)
     POLICY_TYPE: str = Field(default="Set", frozen=True)
     
-    # Default ODRL contexts for Saturn/Tractus-X EDC compatibility
+    # Default ODRL context URLs for Saturn/Tractus-X EDC compatibility
     # ClassVar indicates this is a class constant, not a Pydantic model field
     DEFAULT_ODRL_CONTEXTS: ClassVar[list[str]] = [
         "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
         "https://w3id.org/catenax/2025/9/policy/context.jsonld",
-        {
-            "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
-        }
     ]
+    
+    # Default @vocab context for EDC namespace
+    DEFAULT_VOCAB_CONTEXT: ClassVar[dict] = {
+        "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+    }
 
     def to_data(self):
         """
@@ -179,7 +181,7 @@ class PolicyModel(BasePolicyModel):
         if isinstance(context, list):
             result_context = []
             
-            # First, add ODRL contexts that are missing at the beginning
+            # First, add ODRL URL contexts that are missing at the beginning
             for odrl_ctx in self.DEFAULT_ODRL_CONTEXTS:
                 if odrl_ctx not in context:
                     result_context.append(odrl_ctx)
@@ -189,7 +191,7 @@ class PolicyModel(BasePolicyModel):
             result_context.extend(context)
             return result_context
         
-        # Case 2: User provided a dict or string - prepend ODRL contexts
+        # Case 2: User provided a dict or string - prepend ODRL URL contexts
         elif isinstance(context, (dict, str)):
             return [
                 *self.DEFAULT_ODRL_CONTEXTS,
@@ -200,4 +202,5 @@ class PolicyModel(BasePolicyModel):
         else:
             return [
                 *self.DEFAULT_ODRL_CONTEXTS,
+                self.DEFAULT_VOCAB_CONTEXT
             ]

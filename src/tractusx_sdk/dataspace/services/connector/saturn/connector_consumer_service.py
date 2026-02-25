@@ -44,10 +44,11 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     DEFAULT_DCT_TYPE_KEY: str = "'http://purl.org/dc/terms/type'.'@id'"
     DEFAULT_ID_KEY: str = "https://w3id.org/edc/v0.0.1/ns/id"
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
-                 connection_manager: BaseConnectionManager = None, verbose: bool = True, logger: logging.Logger = None,
+                 connection_manager: BaseConnectionManager = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None,
                  verify_ssl: bool = True):
         # Set attributes before accessing them
         self.verbose = verbose
+        self.debug = debug
         self.logger = logger
         self.verify_ssl = verify_ssl
         
@@ -86,6 +87,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             headers=headers,
             connection_manager=connection_manager,
             verbose=verbose,
+            debug=debug,
             logger=logger
         )
         
@@ -750,6 +752,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         @param counter_party_address: The URL of the EDC provider.
         @param policies: The policies to be used for the transfer.
         @param dct_type: The DCT type to be used for the transfer. Defaults to "IndustryFlagService".
+        @param protocol: The protocol to be used for the transfer. Defaults to DSP_2025.
         @returns: tuple[dataplane_endpoint:str, edr_access_token:str] or if fail Exception
         """
 
