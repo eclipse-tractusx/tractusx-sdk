@@ -70,24 +70,7 @@ class PolicyModel(BasePolicyModel):
             }
         }
 
-        # DEBUG: Print what we're about to send
-        import json
-        print("\n" + "="*80)
-        print("DEBUG: PolicyModel.to_data() - Data structure BEFORE jdumps:")
-        print("="*80)
-        print(json.dumps(data, indent=2))
-        print("="*80 + "\n")
-
-        result = jdumps(data)
-        
-        # DEBUG: Print the final JSON string
-        print("\n" + "="*80)
-        print("DEBUG: PolicyModel.to_data() - Final JSON string:")
-        print("="*80)
-        print(result)
-        print("="*80 + "\n")
-        
-        return result
+        return jdumps(data)
     
     def _normalize_constraints(self, items):
         """
@@ -99,11 +82,6 @@ class PolicyModel(BasePolicyModel):
         :param items: permissions, prohibitions, or obligations list
         :return: normalized items
         """
-        # DEBUG: Print input
-        import json
-        print(f"\nDEBUG _normalize_constraints - INPUT type: {type(items)}")
-        print(f"DEBUG _normalize_constraints - INPUT value: {json.dumps(items, indent=2, default=str)}")
-        
         if not items:
             return items
         
@@ -123,9 +101,6 @@ class PolicyModel(BasePolicyModel):
             else:
                 normalized.append(item)
         
-        # DEBUG: Print output
-        print(f"DEBUG _normalize_constraints - OUTPUT: {json.dumps(normalized, indent=2, default=str)}\n")
-        
         return normalized
     
     def _normalize_constraint_dict(self, constraint):
@@ -135,24 +110,16 @@ class PolicyModel(BasePolicyModel):
         :param constraint: constraint dictionary
         :return: normalized constraint
         """
-        import json
-        print(f"\nDEBUG _normalize_constraint_dict - INPUT: {json.dumps(constraint, indent=2, default=str)}")
-        
         result = {}
         for key, value in constraint.items():
             if key in ("and", "or") and isinstance(value, list):
                 # Recursively normalize nested constraints
                 result[key] = [self._normalize_constraint_dict(c) if isinstance(c, dict) else c for c in value]
             elif key == "rightOperand":
-                # DEBUG: Check rightOperand type
-                print(f"DEBUG _normalize_constraint_dict - rightOperand type: {type(value)}")
-                print(f"DEBUG _normalize_constraint_dict - rightOperand value: {value}")
-                print(f"DEBUG _normalize_constraint_dict - rightOperand repr: {repr(value)}")
                 result[key] = value
             else:
                 result[key] = value
         
-        print(f"DEBUG _normalize_constraint_dict - OUTPUT: {json.dumps(result, indent=2, default=str)}\n")
         return result
     
     def _build_context(self):

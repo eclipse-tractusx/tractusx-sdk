@@ -101,28 +101,28 @@ def _finalize_log(result: str):
 #          https://github.com/eclipse-tractusx/tractus-x-umbrella/tree/main/simple-data-backend
 
 PROVIDER_CONNECTOR_CONFIG = {
-    "base_url": "https://jupiter-edc-provider-ichub-control.int.catena-x.net",  # PLACEHOLDER: Provider EDC Control Plane URL
+    "base_url": "http://dataprovider-controlplane.tx.test",  # Tractus-X Umbrella reference: tx-data-provider EDC Control Plane
     "dma_path": "/management",  # Management API path
     "api_key_header": "X-Api-Key",  # API key header name
-    "api_key": "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC",  # PLACEHOLDER: Provider API key
+    "api_key": "TEST2",  # Umbrella Provider API key from values.yaml
     "dataspace_version": "jupiter",  # "jupiter" or "saturn"
-    "bpn": "BPNL0000000093Q7",  # PLACEHOLDER: Provider BPN
-    "dsp_url": "https://jupiter-edc-provider-ichub-control.int.catena-x.net/api/v1/dsp"  # PLACEHOLDER: Provider DSP base URL — do NOT include the protocol version suffix (e.g. /2025-01), the consumer EDC appends it internally
+    "bpn": "BPNL00000003AYRE",  # Umbrella Provider BPN (tx-data-provider)
+    "dsp_url": "http://dataprovider-controlplane.tx.test/api/v1/dsp"  # Provider DSP base URL — do NOT include the protocol version suffix (e.g. /2025-01), the consumer EDC appends it internally
 }
 
 # Consumer Connector Configuration
 CONSUMER_CONNECTOR_CONFIG = {
-    "base_url": "https://jupiter-edc-consumer-ichub-control.int.catena-x.net",  # PLACEHOLDER: Consumer EDC Control Plane URL
+    "base_url": "http://dataconsumer-1-controlplane.tx.test",  # Tractus-X Umbrella reference: dataconsumerOne EDC Control Plane
     "dma_path": "/management",  # Management API path
     "api_key_header": "X-Api-Key",  # API key header name
-    "api_key": "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC",  # PLACEHOLDER: Consumer API key
+    "api_key": "TEST1",  # Umbrella Consumer API key from values.yaml
     "dataspace_version": "jupiter",  # "jupiter" or "saturn"
-    "bpn": "BPNL00000003CRHK"  # PLACEHOLDER: Consumer BPN
+    "bpn": "BPNL00000003AZQP"  # Umbrella Consumer BPN (dataconsumerOne)
 }
 
 # Backend Data Source Configuration (for Provider Asset)
 BACKEND_CONFIG = {
-    "base_url": f"https://jupiter-storage-ichub.int.catena-x.net/urn:uuid:{uuid.uuid4()}",  # UUID generated fresh per test run
+    "base_url": f"http://dataprovider-submodelserver.tx.test/urn:uuid:{uuid.uuid4()}",  # Umbrella Submodel Server with UUID generated fresh per test run
     "api_key_header": "X-Api-Key",  # Optional: API key header name (if backend requires authentication)
     "api_key": "",  # Optional: API key (leave empty if not needed)
 }
@@ -420,7 +420,7 @@ def provision_data_on_provider(
     logger.info("%s", "-" * 80)
     try:
         # Set consumer BPN in access policy
-        access_permissions = access_policy_config["permissions"].copy()
+        access_permissions = [p.copy() for p in access_policy_config["permissions"]]
         access_permissions[0]["constraint"]["rightOperand"] = consumer_config["bpn"]
         
         access_policy_response = provider_service.create_policy(

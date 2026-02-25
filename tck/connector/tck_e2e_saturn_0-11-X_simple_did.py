@@ -96,27 +96,27 @@ def _finalize_log(result: str):
 
 
 PROVIDER_CONFIG = {
-    "base_url":           "https://edc-provider-ichub-control.int.catena-x.net",
+    "base_url":           "http://dataprovider-controlplane.tx.test",
     "dma_path":           "/management",
     "api_key_header":     "X-Api-Key",
-    "api_key":            "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC",
+    "api_key":            "TEST2",
     "dataspace_version":  "saturn",
-    "bpn":                "BPNL0000000093Q7",
-    "dsp_url":            "https://edc-provider-ichub-control.int.catena-x.net/api/v1/dsp",
-    "did":                "did:web:edc-provider-ichub-control.int.catena-x.net",  # PLACEHOLDER: Provider DID
+    "bpn":                "BPNL00000003AYRE",
+    "dsp_url":            "http://dataprovider-controlplane.tx.test/api/v1/dsp",
+    "did":                "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AYRE",
 }
 
 CONSUMER_CONFIG = {
-    "base_url":           "https://edc-consumer-ichub-control.int.catena-x.net",
+    "base_url":           "http://dataconsumer-1-controlplane.tx.test",
     "dma_path":           "/management",
     "api_key_header":     "X-Api-Key",
-    "api_key":            "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC",
+    "api_key":            "TEST1",
     "dataspace_version":  "saturn",
-    "bpn":                "BPNL00000003CRHK",
+    "bpn":                "BPNL00000003AZQP",
 }
 
 BACKEND_CONFIG = {
-    "base_url":        f"https://storage-ichub.int.catena-x.net/urn:uuid:{uuid.uuid4()}",  # UUID generated fresh per test run
+    "base_url":        f"http://dataprovider-submodelserver.tx.test/urn:uuid:{uuid.uuid4()}",  # Umbrella Submodel Server with UUID generated fresh per test run
     "api_key_header": "X-Api-Key",  # Optional: API key header name (if backend requires authentication)
     "api_key":         "",  # Optional: API key (leave empty if not needed)
 }
@@ -124,15 +124,23 @@ BACKEND_CONFIG = {
 # ============================================================================
 # POLICY & ASSET CONFIGURATION
 # ============================================================================
-# NOTE: Saturn (Catena-X 2025-9) uses implicit default context - no "context" key needed
+# NOTE: Saturn (Catena-X 2025-9) with Tractus-X v2.0.0 extension
 
 ACCESS_POLICY_CONFIG = {
+    "context": [
+        "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
+        "https://w3id.org/catenax/2025/9/policy/context.jsonld",
+        {
+            "tx": "https://w3id.org/tractusx/policy/v2.0.0",
+            "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+        }
+    ],
     "permissions": [{
         "action": "access",
         "constraint": {
-            "leftOperand": "BusinessPartnerNumber",
+            "leftOperand": "BusinessPartnerDID",
             "operator": "isAnyOf",
-            "rightOperand": None  # Will be set to CONSUMER_CONFIG["bpn"] at runtime
+            "rightOperand": None  # Will be set to CONSUMER_CONFIG["did"] at runtime
         }
     }]
 }
@@ -313,13 +321,14 @@ def provision(
     usage_policy_id  = f"simple-e2e-usage-{ts}"
     contract_def_id  = f"simple-e2e-contract-{ts}"
 
-    # Set consumer BPN in access policy
-    access_permissions = access_policy_config["permissions"].copy()
-    access_permissions[0]["constraint"]["rightOperand"] = consumer_config["bpn"]
+    # Set consumer DID in access policy
+    access_permissions = [p.copy() for p in access_policy_config["permissions"]]
+    access_permissions[0]["constraint"]["rightOperand"] = consumer_config["did"]
 
     logger.info("[ACCESS POLICY REQUEST]: Creating policy %s", access_policy_id)
     provider.create_policy(
         policy_id=access_policy_id,
+        context=access_policy_config.get("context"),
         permissions=access_permissions
     )
     logger.info("✓ Access policy:      %s", access_policy_id)

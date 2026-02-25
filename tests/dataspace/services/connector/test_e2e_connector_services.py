@@ -20,6 +20,7 @@ import json
 import time
 from unittest.mock import Mock, patch, MagicMock
 from tractusx_sdk.dataspace.services.connector.service_factory import ServiceFactory
+from tractusx_sdk.dataspace.controllers.connector.controller_factory import ControllerType
 
 
 # ============================================================================
@@ -428,9 +429,9 @@ class TestE2EConnectorServicesMocked:
         mock_contract_controller = MagicMock()
         
         mock_controller_factory.get_dma_controllers_for_version.return_value = {
-            "ASSET": mock_asset_controller,
-            "POLICY": mock_policy_controller,
-            "CONTRACT_DEFINITION": mock_contract_controller
+            ControllerType.ASSET: mock_asset_controller,
+            ControllerType.POLICY: mock_policy_controller,
+            ControllerType.CONTRACT_DEFINITION: mock_contract_controller
         }
         
         # Mock successful responses
@@ -504,10 +505,10 @@ class TestE2EConnectorServicesMocked:
         mock_transfer_controller = MagicMock()
         
         mock_controller_factory.get_dma_controllers_for_version.return_value = {
-            "CATALOG": mock_catalog_controller,
-            "EDR": mock_edr_controller,
-            "CONTRACT_NEGOTIATION": mock_negotiation_controller,
-            "TRANSFER_PROCESS": mock_transfer_controller
+            ControllerType.CATALOG: mock_catalog_controller,
+            ControllerType.EDR: mock_edr_controller,
+            ControllerType.CONTRACT_NEGOTIATION: mock_negotiation_controller,
+            ControllerType.TRANSFER_PROCESS: mock_transfer_controller
         }
         
         # Mock catalog response

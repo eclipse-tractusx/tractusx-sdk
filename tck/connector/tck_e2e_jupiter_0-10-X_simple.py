@@ -102,25 +102,26 @@ def _finalize_log(result: str):
 
 
 PROVIDER_CONFIG = {
-    "base_url":           "https://jupiter-edc-provider-ichub-control.int.catena-x.net",
+    "base_url":           "http://dataprovider-controlplane.tx.test",
     "dma_path":           "/management",
     "api_key_header":     "X-Api-Key",
-    "api_key":            "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC",
+    "api_key":            "TEST2",
     "dataspace_version":  "jupiter",
-    "bpn":                "BPNL0000000093Q7",
-    "dsp_url":            "https://jupiter-edc-provider-ichub-control.int.catena-x.net/api/v1/dsp",
+    "bpn":                "BPNL00000003AYRE",
+    "dsp_url":            "http://dataprovider-controlplane.tx.test/api/v1/dsp",
 }
 
 CONSUMER_CONFIG = {
-    "base_url":           "https://jupiter-edc-consumer-ichub-control.int.catena-x.net",
+    "base_url":           "http://dataconsumer-1-controlplane.tx.test",
     "dma_path":           "/management",
     "api_key_header":     "X-Api-Key",
-    "api_key":            "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC",
+    "api_key":            "TEST1",
     "dataspace_version":  "jupiter",
-    "bpn":                "BPNL00000003CRHK",
+    "bpn":                "BPNL00000003AZQP",
 }
+
 BACKEND_CONFIG = {
-    "base_url":        f"https://jupiter-storage-ichub.int.catena-x.net/urn:uuid:{uuid.uuid4()}",  # UUID generated fresh per test run
+    "base_url":        f"http://dataprovider-submodelserver.tx.test/urn:uuid:{uuid.uuid4()}",  # Umbrella Submodel Server with UUID generated fresh per test run
     "api_key_header": "X-Api-Key",  # Optional: API key header name (if backend requires authentication)
     "api_key":         "",  # Optional: API key (leave empty if not needed)
 }

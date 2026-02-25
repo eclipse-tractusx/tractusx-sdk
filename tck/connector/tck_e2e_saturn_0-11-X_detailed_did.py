@@ -96,29 +96,29 @@ def _finalize_log(result: str):
 #          https://github.com/eclipse-tractusx/tractus-x-umbrella/tree/main/simple-data-backend
 
 PROVIDER_CONNECTOR_CONFIG = {
-    "base_url": "https://edc-provider-ichub-control.int.catena-x.net",  # PLACEHOLDER: Provider EDC Control Plane URL
+    "base_url": "http://dataprovider-controlplane.tx.test",  # Tractus-X Umbrella: tx-data-provider EDC Control Plane
     "dma_path": "/management",  # Management API path
     "api_key_header": "X-Api-Key",  # API key header name
-    "api_key": "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC",  # PLACEHOLDER: Provider API key
+    "api_key": "TEST2",  # Umbrella Provider API key from values.yaml
     "dataspace_version": "saturn",  # "jupiter" or "saturn"
-    "bpn": "BPNL0000000093Q7",  # PLACEHOLDER: Provider BPN
-    "dsp_url": "https://edc-provider-ichub-control.int.catena-x.net/api/v1/dsp",  # PLACEHOLDER: Provider DSP base URL — do NOT include the protocol version suffix (e.g. /2025-01), the consumer EDC appends it internally
-    "did": "did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL0000000093Q7"  # PLACEHOLDER: Provider DID
+    "bpn": "BPNL00000003AYRE",  # Umbrella Provider BPN (tx-data-provider)
+    "dsp_url": "http://dataprovider-controlplane.tx.test/api/v1/dsp",  # Provider DSP base URL — do NOT include the protocol version suffix (e.g. /2025-01), the consumer EDC appends it internally
+    "did": "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AYRE"  # Umbrella Provider DID
 }
 
 # Consumer Connector Configuration
 CONSUMER_CONNECTOR_CONFIG = {
-    "base_url": "https://edc-consumer-ichub-control.int.catena-x.net",  # PLACEHOLDER: Consumer EDC Control Plane URL
+    "base_url": "http://dataconsumer-1-controlplane.tx.test",  # Tractus-X Umbrella: dataconsumerOne EDC Control Plane
     "dma_path": "/management",  # Management API path
     "api_key_header": "X-Api-Key",  # API key header name
-    "api_key": "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC",  # PLACEHOLDER: Consumer API key
+    "api_key": "TEST1",  # Umbrella Consumer API key from values.yaml
     "dataspace_version": "saturn",  # "jupiter" or "saturn"
-    "did": "did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL0000000093Q7"  # PLACEHOLDER: Consumer BPN
+    "did": "did:web:ssi-dim-wallet-stub.tx.test:BPNL00000003AZQP"  # Umbrella Consumer DID (dataconsumerOne)
 }
 
 # Backend Data Source Configuration (for Provider Asset)
 BACKEND_CONFIG = {
-    "base_url": f"https://storage-ichub.int.catena-x.net/urn:uuid:{uuid.uuid4()}",  # UUID generated fresh per test run
+    "base_url": f"http://dataprovider-submodelserver.tx.test/urn:uuid:{uuid.uuid4()}",  # Umbrella Submodel Server with UUID generated fresh per test run
     "api_key_header": "X-Api-Key",  # Optional: API key header name (if backend requires authentication)
     "api_key": "",  # Optional: API key (leave empty if not needed)
 }
@@ -128,14 +128,22 @@ BACKEND_CONFIG = {
 # ============================================================================
 
 # Access Policy Configuration - Controls catalog visibility
-# Saturn policies use default Catena-X 2025-9 context (no explicit context parameter needed)
+# Saturn policies with Catena-X 2025-9 context + Tractus-X v2.0.0 extension
 ACCESS_POLICY_CONFIG = {
+    "context": [
+        "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
+        "https://w3id.org/catenax/2025/9/policy/context.jsonld",
+        {
+            "tx": "https://w3id.org/tractusx/policy/v2.0.0",
+            "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+        }
+    ],
     "permissions": [{
         "action": "access",
         "constraint": {
-            "leftOperand": "BusinessPartnerNumber",
+            "leftOperand": "BusinessPartnerDID",
             "operator": "isAnyOf",
-            "rightOperand": None  # Will be set to CONSUMER_CONNECTOR_CONFIG["bpn"] at runtime
+            "rightOperand": None  # Will be set to CONSUMER_CONNECTOR_CONFIG["did"] at runtime
         }
     }]
 }
@@ -394,27 +402,29 @@ def provision_data_on_provider(
     usage_policy_id = f"usage-policy-framework-{timestamp}"
     contract_def_id = f"contract-def-{timestamp}"
     
-    logger.info("Step 1.1: Creating Access Policy (BPN-based)")
+    logger.info("Step 1.1: Creating Access Policy (DID-based)")
     logger.info("%s", "-" * 80)
     
     # Create Access Policy - Controls who can see the asset in catalog
     try:
-        # Set consumer BPN in access policy
-        access_permissions = access_policy_config["permissions"].copy()
-        access_permissions[0]["constraint"]["rightOperand"] = consumer_config["bpn"]
+        # Set consumer DID in access policy
+        access_permissions = [p.copy() for p in access_policy_config["permissions"]]
+        access_permissions[0]["constraint"]["rightOperand"] = consumer_config["did"]
         
         access_policy_payload = {
             "policy_id": access_policy_id,
+            "context": access_policy_config.get("context"),
             "permissions": access_permissions
         }
         logger.info("[ACCESS POLICY REQUEST]:\n%s", json.dumps(access_policy_payload, indent=2))
         
         access_policy_response = provider_service.create_policy(
             policy_id=access_policy_id,
+            context=access_policy_config.get("context"),
             permissions=access_permissions
         )
         logger.info("✓ Access Policy created: %s", access_policy_id)
-        logger.info("  - Restricts catalog visibility to BPN: %s", consumer_config['bpn'])
+        logger.info("  - Restricts catalog visibility to DID: %s", consumer_config['did'])
         logger.info("  - Response: %s", json.dumps(access_policy_response, indent=2))
     except Exception as e:
         logger.exception("✗ Failed to create access policy: %s", e)
