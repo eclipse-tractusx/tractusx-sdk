@@ -95,31 +95,30 @@ def _finalize_log(result: str):
 # Backend: Uses simple-data-backend from Tractus-X Umbrella
 #          https://github.com/eclipse-tractusx/tractus-x-umbrella/tree/main/simple-data-backend
 
+
 PROVIDER_CONNECTOR_CONFIG = {
-    "base_url": "http://dataprovider-controlplane.tx.test",  # Tractus-X Umbrella: tx-data-provider EDC Control Plane
-    "dma_path": "/management",  # Management API path
-    "api_key_header": "X-Api-Key",  # API key header name
-    "api_key": "TEST2",  # Umbrella Provider API key from values.yaml
-    "dataspace_version": "saturn",  # "jupiter" or "saturn"
-    "dsp_url": "http://dataprovider-controlplane.tx.test/api/v1/dsp/2025-1", # Append here the /2025-1
+    "base_url":           "http://dataprovider-controlplane.tx.test",
+    "dma_path":           "/management",
+    "api_key_header":     "X-Api-Key",
+    "api_key":            "TEST2",
+    "dataspace_version":  "saturn",
+    "dsp_url":            "http://dataprovider-controlplane.tx.test/api/v1/dsp/2025-1", # Append here the /2025-1
     "did": "did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL0000000093Q7"  # PLACEHOLDER: Provider DID
 }
 
-# Consumer Connector Configuration
 CONSUMER_CONNECTOR_CONFIG = {
-    "base_url": "https://edc-consumer-ichub-control.int.catena-x.net",  # PLACEHOLDER: Consumer EDC Control Plane URL
-    "dma_path": "/management",  # Management API path
-    "api_key_header": "X-Api-Key",  # API key header name
-    "api_key": "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC",  # PLACEHOLDER: Consumer API key
-    "dataspace_version": "saturn",  # "jupiter" or "saturn"
+    "base_url":           "http://dataconsumer-1-controlplane.tx.test",
+    "dma_path":           "/management",
+    "api_key_header":     "X-Api-Key",
+    "api_key":            "TEST1",
+    "dataspace_version":  "saturn",
     "did": "did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL00000003CRHK"  # PLACEHOLDER: Consumer DID
 }
 
-# Backend Data Source Configuration (for Provider Asset)
 BACKEND_CONFIG = {
-    "base_url": f"https://storage-ichub.int.catena-x.net/urn:uuid:{uuid.uuid4()}",  # UUID generated fresh per test run
+    "base_url":        f"https://storage-ichub.int.catena-x.net/urn:uuid:{uuid.uuid4()}",  # UUID generated fresh per test run
     "api_key_header": "X-Api-Key",  # Optional: API key header name (if backend requires authentication)
-    "api_key": "",  # Optional: API key (leave empty if not needed)
+    "api_key":         "",  # Optional: API key (leave empty if not needed)
 }
 
 # ============================================================================
