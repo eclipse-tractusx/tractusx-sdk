@@ -1072,6 +1072,51 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Components
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      Further Reading
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#notice" class="md-nav__link">
     <span class="md-ellipsis">
       NOTICE
@@ -2507,6 +2552,51 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Components
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      Further Reading
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#notice" class="md-nav__link">
     <span class="md-ellipsis">
       NOTICE
@@ -2543,6 +2633,7 @@
 
 Eclipse Tractus-X - Software Development KIT
 
+Copyright (c) 2026 Mondragon Unibertsitatea
 Copyright (c) 2025 LKS Next
 Copyright (c) 2025 Contributors to the Eclipse Foundation
 
@@ -2557,8 +2648,53 @@ https://creativecommons.org/licenses/by/4.0/legalcode.
 SPDX-License-Identifier: CC-BY-4.0
 
 -->
+
 <h1 id="industry-library">Industry Library</h1>
-<p>TBD</p>
+<p>The <strong>Industry Library</strong> provides comprehensive tools and services for handling essential Tractus-X dataspace components. It enables seamless integration with the Digital Twin Registry (DTR) and Submodel Server, allowing you to embed DTR logic and submodel management capabilities into your application.</p>
+<h2 id="overview">Overview</h2>
+<p>The Industry Library abstracts complex Asset Administration Shell (AAS) interactions and offers:</p>
+<ul>
+<li><strong>AAS Service</strong>: Interact with the Digital Twin Registry (DTR) to manage shell and submodel descriptors.</li>
+<li><strong>Submodel Adapters</strong>: Handle HTTP communication with different submodel server implementations.</li>
+<li><strong>Submodel Adapter Factory</strong>: Dynamically create adapters for supported submodel server types.</li>
+<li><strong>Discovery Services</strong>: Discover available digital twins and submodels in the dataspace.</li>
+<li><strong>Models &amp; Schemas</strong>: Define asset administration shells, submodels, and related AAS entities.</li>
+<li><strong>Managers</strong>: Handle configuration, connection, and lifecycle management for AAS components.</li>
+</ul>
+<h2 id="architecture">Architecture</h2>
+<p>The library follows a modular, layered architecture:</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>tractusx_sdk/industry/
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── adapters/           # HTTP communication adapters
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   ├── submodel_adapter.py
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   ├── submodel_adapter_factory.py
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   └── submodel_adapters/
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>├── managers/           # Configuration and connection management
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>├── models/             # Data models and schemas
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│   └── aas/            # Asset Administration Shell models (v3)
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>├── services/           # High-level business logic
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│   ├── aas_service.py
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│   └── discovery/      # Discovery service integrations
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>└── tools/              # Utility functions and helpers
+</span></code></pre></div>
+<p>For a deeper dive into the SDK structure, see <a href="../sdk-architecture/sdk-structure-and-components/">SDK Structure and Components</a>.</p>
+<h2 id="key-components">Key Components</h2>
+<ul>
+<li><strong>AAS Service</strong>: Core service for Digital Twin Registry interactions (<a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/src/tractusx_sdk/industry/services/aas_service.py">aas_service.py</a>). Provides methods for retrieving and creating shell descriptors, submodel descriptors, and managing digital twins.</li>
+<li><strong>Submodel Adapter Factory</strong>: Dynamically creates adapters for supported submodel server types (<a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/src/tractusx_sdk/industry/adapters/submodel_adapter_factory.py">submodel_adapter_factory.py</a>).</li>
+<li><strong>Submodel Adapter</strong>: Base HTTP communication adapter for submodel server interactions (<a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/src/tractusx_sdk/industry/adapters/submodel_adapter.py">submodel_adapter.py</a>).</li>
+<li><strong>Discovery Services</strong>: Locate and identify digital twins and submodels within the dataspace.</li>
+</ul>
+<h2 id="usage">Usage</h2>
+<p>To get started, install the SDK and import the AAS service:</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.services</span><span class="w"> </span><span class="kn">import</span> <span class="n">AasService</span>
+</span></code></pre></div>
+<p>See the <a href="../../tutorials/getting-started/">Getting Started</a> for setup instructions and first steps.</p>
+<h2 id="further-reading">Further Reading</h2>
+<ul>
+<li><a href="../../api-reference/industry-library/dtr/services/">Industry Library API Reference</a></li>
+<li><a href="../sdk-architecture/sdk-structure-and-components/">SDK Structure and Components</a></li>
+<li><a href="../../">Tractus-X SDK Documentation</a></li>
+</ul>
 <h2 id="notice">NOTICE</h2>
 <p>This work is licensed under the <a href="https://creativecommons.org/licenses/by/4.0/legalcode">CC-BY-4.0</a>.</p>
 <ul>
