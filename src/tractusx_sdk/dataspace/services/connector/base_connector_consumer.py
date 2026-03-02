@@ -25,7 +25,6 @@
 import hashlib
 import threading
 import logging
-import json
 
 from requests import Response
 
@@ -600,6 +599,38 @@ class BaseConnectorConsumerService(BaseService):
         raise RuntimeError(
             f"[Connector Service]: [{counter_party_address}] It was not possible to start the EDR Negotiation! The negotiation id is empty!")
 
+    def _check_single_negotiation_state(self, negotiation_id: str, counter_party_address: str, 
+                                        last_logged_state: str | None) -> tuple[str | None, str | None]:
+        """
+        Check negotiation state for a single poll attempt.
+        
+        @param negotiation_id: The unique identifier for the negotiation process.
+        @param counter_party_address: The URL of the EDC provider (for logging).
+        @param last_logged_state: The last state that was logged.
+        @returns: Tuple of (negotiation_state, updated_last_logged_state).
+        @raises RuntimeError: If negotiation is TERMINATED.
+        """
+        state_response = self.contract_negotiations.get_by_id(negotiation_id)
+        if state_response is None or state_response.status_code != 200:
+            return None, last_logged_state
+            
+        state_data = state_response.json()
+        negotiation_state = state_data.get("state", state_data.get("edc:state"))
+        
+        # Log state change if logger is available and state changed
+        if self.logger and negotiation_state != last_logged_state:
+            self.logger.info(
+                "[Connector Service]: [%s] Negotiation [%s] state: %s",
+                counter_party_address, negotiation_id, negotiation_state)
+            last_logged_state = negotiation_state
+        
+        # Check terminal states
+        if negotiation_state == "TERMINATED":
+            raise RuntimeError(
+                f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] was TERMINATED by the provider!")
+        
+        return negotiation_state, last_logged_state
+
     def _poll_negotiation_state(self, negotiation_id: str, counter_party_address: str,
                                  max_wait: int, poll_interval: int) -> None:
         """
@@ -618,22 +649,11 @@ class BaseConnectorConsumerService(BaseService):
         
         while elapsed < max_wait:
             try:
-                state_response = self.contract_negotiations.get_by_id(negotiation_id)
-                if state_response is not None and state_response.status_code == 200:
-                    state_data = state_response.json()
-                    negotiation_state = state_data.get("state", state_data.get("edc:state"))
-                    
-                    if self.logger and negotiation_state != last_logged_state:
-                        self.logger.info(
-                            "[Connector Service]: [%s] Negotiation [%s] state: %s",
-                            counter_party_address, negotiation_id, negotiation_state)
-                        last_logged_state = negotiation_state
-                    
-                    if negotiation_state == "FINALIZED":
-                        return
-                    if negotiation_state == "TERMINATED":
-                        raise RuntimeError(
-                            f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] was TERMINATED by the provider!")
+                negotiation_state, last_logged_state = self._check_single_negotiation_state(
+                    negotiation_id, counter_party_address, last_logged_state)
+                
+                if negotiation_state == "FINALIZED":
+                    return
             except RuntimeError:
                 raise
             except Exception as e:
@@ -762,21 +782,20 @@ class BaseConnectorConsumerService(BaseService):
         Exception: If the EDR entry is not found or the transfer ID is not available.
         """
 
-        if policies is None:
-            if self.logger:
-                self.logger.warning(
-                    "\n%s\n"
-                    "  ATTENTION! — policies=None DETECTED\n"
-                    "%s\n"
-                    "  [Connector Service]: [%s]\n"
-                    "  ANY policy offered by the provider will be accepted automatically.\n"
-                    "  This bypasses all usage-policy enforcement.\n"
-                    "\n"
-                    "  \u25b6  RECOMMENDED FOR TESTING / DEVELOPMENT ONLY.\n"
-                    "  \u25b6  DO NOT USE IN PRODUCTION.\n"
-                    "     Always pass an explicit allow-list of accepted policies.\n"
-                    "%s",
-                    "=" * 72, "=" * 72, counter_party_address, "=" * 72)
+        if policies is None and self.logger:
+            self.logger.warning(
+                "\n%s\n"
+                "  ATTENTION! — policies=None DETECTED\n"
+                "%s\n"
+                "  [Connector Service]: [%s]\n"
+                "  ANY policy offered by the provider will be accepted automatically.\n"
+                "  This bypasses all usage-policy enforcement.\n"
+                "\n"
+                "  \u25b6  RECOMMENDED FOR TESTING / DEVELOPMENT ONLY.\n"
+                "  \u25b6  DO NOT USE IN PRODUCTION.\n"
+                "     Always pass an explicit allow-list of accepted policies.\n"
+                "%s",
+                "=" * 72, "=" * 72, counter_party_address, "=" * 72)
 
         ## Hash the policies to get checksum.
         current_policies_checksum = hashlib.sha3_256(str(policies).encode('utf-8')).hexdigest()
@@ -787,11 +806,11 @@ class BaseConnectorConsumerService(BaseService):
                                                                                       query_checksum=filter_expression_checksum,
                                                                                       policy_checksum=current_policies_checksum)
         ## If is there return the cached one, if the selection is the same the transfer id can be reused!
-        if (transfer_process_id is not None):
-            if self.logger:
-                self.logger.debug(
-                    "[Connector Service]: [%s]: EDR transfer_id=[%s] found in the cache for counter_party_id=[%s], filter=[%s] and selected policies",
-                    counter_party_address, transfer_process_id, counter_party_id, filter_expression)
+        if transfer_process_id is not None and self.logger:
+            self.logger.debug(
+                "[Connector Service]: [%s]: EDR transfer_id=[%s] found in the cache for counter_party_id=[%s], filter=[%s] and selected policies",
+                counter_party_address, transfer_process_id, counter_party_id, filter_expression)
+        if transfer_process_id is not None:
             return transfer_process_id
 
         if self.logger:
@@ -1222,7 +1241,7 @@ class BaseConnectorConsumerService(BaseService):
             catalog = self.get_catalog_with_filter(counter_party_id=counter_party_id,
                                                    counter_party_address=counter_party_address,
                                                    filter_expression=filter_expression, timeout=timeout)
-        except Exception as e:
+        except Exception:
             raise ConnectionError(
                 f"[Connector Service]: Failed to get catalog for counter_party_id=[{counter_party_id}], counter_party_address=[{counter_party_address}], filter_expression=[{filter_expression}]")
 
