@@ -41,7 +41,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     DEFAULT_CONTEXT: dict = {
         "edc": EDC_NAMESPACE,
         "odrl": "http://www.w3.org/ns/odrl/2/",
-        "dct": "https://purl.org/dc/terms/",
+        "dct": "http://purl.org/dc/terms/",
     }
     DEFAULT_DCT_TYPE_KEY: str = "'http://purl.org/dc/terms/type'.'@id'"
     DEFAULT_ID_KEY: str = "https://w3id.org/edc/v0.0.1/ns/id"
