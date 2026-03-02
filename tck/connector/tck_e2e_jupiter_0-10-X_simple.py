@@ -78,6 +78,8 @@ logging.basicConfig(level=logging.INFO, handlers=[_console_handler, _file_handle
 logger = logging.getLogger(_test_case_name)
 logger.info("Logging to file: %s", _log_file)
 
+# Constants
+CONTENT_TYPE_JSON = "application/json"
 
 def _finalize_log(result: str):
     """Flush and close log handlers, then rename log file with PASS or FAIL result."""
@@ -288,7 +290,7 @@ def upload_sample_data(backend_config=None) -> None:
         
     _sep("PHASE 0: Upload Sample Data to Backend")
     
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": CONTENT_TYPE_JSON}
     
     # Add API key if provided
     if backend_config.get("api_key"):
@@ -298,7 +300,7 @@ def upload_sample_data(backend_config=None) -> None:
         backend_config["base_url"],
         json=SAMPLE_DATA,
         headers=headers,
-        verify=False,
+        verify=True,
         timeout=30,
     )
     if response.status_code not in (200, 201, 204):
@@ -550,7 +552,9 @@ def _print_summary(steps: list[dict], overall_result: str, total_elapsed: float,
         "║" + "  " + "-" * (W - 6) + "  ║"[:-2] + "║",
     ]
     for s in steps:
-        icon = "✓" if s["result"] == "PASS" else ("✗" if s["result"] == "FAIL" else "-")
+        is_pass = s["result"] == "PASS"
+        is_fail = s["result"] == "FAIL"
+        icon = "✓" if is_pass else ("✗" if is_fail else "-")
         dur  = f"{s['duration_s']:.1f}s" if s["duration_s"] is not None else "  -"
         line = f"  {icon} {s['name']:<{col_name - 2}} {s['result']:>{col_res}}  {dur:>{col_dur}}"
         lines.append("║" + line.ljust(W - 2) + "║")
@@ -624,7 +628,7 @@ def main(
         dma_path=provider_config["dma_path"],
         headers={
             provider_config["api_key_header"]: provider_config["api_key"],
-            "Content-Type": "application/json",
+            "Content-Type": CONTENT_TYPE_JSON,
         },
         verbose=True,
         debug=True,
@@ -639,7 +643,7 @@ def main(
         dma_path=consumer_config["dma_path"],
         headers={
             consumer_config["api_key_header"]: consumer_config["api_key"],
-            "Content-Type": "application/json",
+            "Content-Type": CONTENT_TYPE_JSON,
         },
         verbose=True,
         debug=True,

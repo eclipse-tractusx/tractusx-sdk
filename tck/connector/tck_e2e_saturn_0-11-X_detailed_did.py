@@ -74,6 +74,13 @@ logging.basicConfig(level=logging.INFO, handlers=[_console_handler, _file_handle
 logger = logging.getLogger(_test_case_name)
 logger.info("Logging to file: %s", _log_file)
 
+# ============================================================================
+# CONSTANTS — Common strings used throughout the script
+# ============================================================================
+MANAGEMENT_PATH = "/management"
+CONTENT_TYPE_JSON = "application/json"
+LOG_RESPONSE_SUFFIX = " - Response: %s"
+
 def _finalize_log(result: str):
     """Flush and close log handlers, then rename log file with PASS or FAIL result."""
     global _log_file
@@ -98,7 +105,7 @@ def _finalize_log(result: str):
 
 PROVIDER_CONNECTOR_CONFIG = {
     "base_url":           "http://dataprovider-controlplane.tx.test",
-    "dma_path":           "/management",
+    "dma_path":           MANAGEMENT_PATH,
     "api_key_header":     "X-Api-Key",
     "api_key":            "TEST2",
     "dataspace_version":  "saturn",
@@ -108,7 +115,7 @@ PROVIDER_CONNECTOR_CONFIG = {
 
 CONSUMER_CONNECTOR_CONFIG = {
     "base_url":           "http://dataconsumer-1-controlplane.tx.test",
-    "dma_path":           "/management",
+    "dma_path":           MANAGEMENT_PATH,
     "api_key_header":     "X-Api-Key",
     "api_key":            "TEST1",
     "dataspace_version":  "saturn",
@@ -277,7 +284,7 @@ def upload_sample_data_to_backend(backend_config=None):
     print_header("PHASE 0: Uploading Sample Data to Backend Storage")
 
     headers = {
-        "Content-Type": "application/json"
+        "Content-Type": CONTENT_TYPE_JSON
     }
     
     # Add API key if provided
@@ -294,14 +301,14 @@ def upload_sample_data_to_backend(backend_config=None):
             backend_config["base_url"],
             data=payload,
             headers=headers,
-            verify=False,
+            verify=True,
             timeout=30
         )
         logger.info("[UPLOAD RESPONSE] Status: %s", response.status_code)
         logger.info("[UPLOAD RESPONSE] Body:\n%s", response.text)
 
         if response.status_code not in (200, 201, 204):
-            raise Exception(f"Backend upload failed with status {response.status_code}: {response.text}")
+            raise ValueError(f"Backend upload failed with status {response.status_code}: {response.text}")
 
         logger.info("✓ Sample data uploaded successfully to backend storage")
     except Exception as e:
@@ -326,7 +333,7 @@ def initialize_provider_service(provider_config=None):
     
     provider_headers = {
         provider_config["api_key_header"]: provider_config["api_key"],
-        "Content-Type": "application/json"
+        "Content-Type": CONTENT_TYPE_JSON
     }
     
     provider_service = ServiceFactory.get_connector_provider_service(
@@ -366,7 +373,7 @@ def initialize_consumer_service(consumer_config=None, connection_manager=None):
     
     consumer_headers = {
         consumer_config["api_key_header"]: consumer_config["api_key"],
-        "Content-Type": "application/json"
+        "Content-Type": CONTENT_TYPE_JSON
     }
     
     consumer_service = ServiceFactory.get_connector_consumer_service(
@@ -459,7 +466,7 @@ def provision_data_on_provider(
             logger.info("  - Allows access to: %s members", constraint.get("rightOperand", "any"))
         else:
             logger.info("  - Policy constraint: %s %s %s", left_operand, constraint.get("operator"), constraint.get("rightOperand"))
-        logger.info("  - Response: %s", json.dumps(access_policy_response, indent=2))
+        logger.info(" " + LOG_RESPONSE_SUFFIX, json.dumps(access_policy_response, indent=2))
     except Exception as e:
         logger.exception("✗ Failed to create access policy: %s", e)
         raise
@@ -482,7 +489,7 @@ def provision_data_on_provider(
         logger.info("✓ Usage Policy created: %s", usage_policy_id)
         logger.info("  - Requires: Active Membership")
         logger.info("  - Requires: Framework Agreement DataExchangeGovernance:1.0")
-        logger.info("  - Response: %s", json.dumps(usage_policy_response, indent=2))
+        logger.info(" " + LOG_RESPONSE_SUFFIX, json.dumps(usage_policy_response, indent=2))
     except Exception as e:
         logger.exception("✗ Failed to create usage policy: %s", e)
         raise
@@ -504,7 +511,7 @@ def provision_data_on_provider(
         logger.info("  - Backend URL: %s", backend_config['base_url'])
         logger.info("  - Type: Submodel")
         logger.info("  - Version: 1.0")
-        logger.info("  - Response: %s", json.dumps(asset_response, indent=2))
+        logger.info(" " + LOG_RESPONSE_SUFFIX, json.dumps(asset_response, indent=2))
     except Exception as e:
         logger.exception("✗ Failed to create asset: %s", e)
         raise
@@ -524,7 +531,7 @@ def provision_data_on_provider(
         logger.info("  - Asset: %s", asset_id)
         logger.info("  - Access Policy: %s", access_policy_id)
         logger.info("  - Usage Policy: %s", usage_policy_id)
-        logger.info("  - Response: %s", json.dumps(contract_def_response, indent=2))
+        logger.info(" " + LOG_RESPONSE_SUFFIX, json.dumps(contract_def_response, indent=2))
     except Exception as e:
         logger.exception("✗ Failed to create contract definition: %s", e)
         raise
@@ -621,7 +628,7 @@ def consume_data_as_consumer(consumer_service, asset_id, provider_config=None, c
                 break
         
         if target_dataset is None:
-            raise Exception(f"Asset {asset_id} not found in catalog")
+            raise ValueError(f"Asset {asset_id} not found in catalog")
         
         # Extract offer details
         offer_policy = target_dataset["hasPolicy"][0]
@@ -678,7 +685,7 @@ def consume_data_as_consumer(consumer_service, asset_id, provider_config=None, c
         logger.info("[NEGOTIATION RESPONSE] Body:\n%s", json.dumps(negotiation_response.json(), indent=2))
 
         if negotiation_response.status_code != 200:
-            raise Exception(f"Contract negotiation failed with status {negotiation_response.status_code}")
+            raise RuntimeError(f"Contract negotiation failed with status {negotiation_response.status_code}")
         
         negotiation_data = negotiation_response.json()
         negotiation_id = negotiation_data.get("@id")
@@ -722,13 +729,13 @@ def consume_data_as_consumer(consumer_service, asset_id, provider_config=None, c
                     break
                 elif state == "TERMINATED":
                     logger.info("[NEGOTIATION STATE RESPONSE]:\n%s", json.dumps(status_data, indent=2))
-                    raise Exception(f"Contract negotiation was TERMINATED")
+                    raise RuntimeError("Contract negotiation was TERMINATED")
             
             if elapsed >= max_wait:
-                raise Exception("Contract negotiation timeout")
+                raise TimeoutError("Contract negotiation timeout")
         
         if contract_agreement_id is None:
-            raise Exception("Contract agreement ID not received")
+            raise RuntimeError("Contract agreement ID not received")
             
     except Exception as e:
         logger.exception("\n✗ Contract negotiation failed: %s", e)
@@ -758,7 +765,7 @@ def consume_data_as_consumer(consumer_service, asset_id, provider_config=None, c
         logger.info("[TRANSFER RESPONSE] Body:\n%s", json.dumps(transfer_response.json(), indent=2))
 
         if transfer_response.status_code != 200:
-            raise Exception(f"Transfer process failed with status {transfer_response.status_code}")
+            raise RuntimeError(f"Transfer process failed with status {transfer_response.status_code}")
         
         transfer_data = transfer_response.json()
         transfer_id = transfer_data.get("@id")
@@ -803,13 +810,13 @@ def consume_data_as_consumer(consumer_service, asset_id, provider_config=None, c
                         logger.info("✓ EDR received!")
                         break
                 elif state == "TERMINATED":
-                    raise Exception(f"Transfer process was TERMINATED")
+                    raise RuntimeError("Transfer process was TERMINATED")
             
             if elapsed >= max_wait:
-                raise Exception("EDR retrieval timeout")
+                raise TimeoutError("EDR retrieval timeout")
         
         if edr_data is None:
-            raise Exception("EDR not available")
+            raise RuntimeError("EDR not available")
         
         # Extract EDR details
         dataplane_url = edr_data.get("endpoint", edr_data.get("edc:endpoint"))
@@ -983,7 +990,9 @@ def _print_summary(steps: list[dict], overall_result: str, total_elapsed: float,
         "║" + "  " + "-" * (W - 4) + "  ║"[:-2] + "║",
     ]
     for s in steps:
-        icon   = "✓" if s["result"] == "PASS" else ("✗" if s["result"] == "FAIL" else "-")
+        is_pass = s["result"] == "PASS"
+        is_fail = s["result"] == "FAIL"
+        icon   = "✓" if is_pass else ("✗" if is_fail else "-")
         dur    = f"{s['duration_s']:.1f}s" if s["duration_s"] is not None else "  -"
         line   = f"  {icon} {s['name']:<{col_name - 2}} {s['result']:>{col_result}}  {dur:>{col_dur}}"
         lines.append("║" + line.ljust(W - 2) + "║")
@@ -1068,7 +1077,7 @@ def main(
             result = fn()
             steps.append({"name": name, "result": "PASS", "duration_s": time.time() - t0})
             return result
-        except Exception as exc:
+        except Exception:
             steps.append({"name": name, "result": "FAIL", "duration_s": time.time() - t0})
             raise
 

@@ -79,6 +79,13 @@ logger = logging.getLogger(_test_case_name)
 logger.info("Logging to file: %s", _log_file)
 
 
+# ============================================================================
+# CONSTANTS — Common strings used throughout the script
+# ============================================================================
+CONTENT_TYPE_JSON = "application/json"
+LOG_RESPONSE_SUFFIX = " - Response: %s"
+
+
 def _finalize_log(result: str):
     """Flush and close log handlers, then rename log file with PASS or FAIL result."""
     global _log_file
@@ -259,7 +266,7 @@ def upload_sample_data_to_backend(backend_config=None):
 
     print_header("PHASE 0: Uploading Sample Data to Backend Storage")
 
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": CONTENT_TYPE_JSON}
     
     # Add API key if provided
     if backend_config.get("api_key"):
@@ -275,7 +282,7 @@ def upload_sample_data_to_backend(backend_config=None):
             backend_config["base_url"],
             data=payload,
             headers=headers,
-            verify=False,
+            verify=True,  # Enable SSL verification for production
             timeout=30,
         )
         logger.info("[UPLOAD RESPONSE] Status: %s", response.status_code)
@@ -317,7 +324,7 @@ def initialize_provider_service(provider_config=None) -> BaseConnectorProviderSe
         dma_path=provider_config["dma_path"],
         headers={
             provider_config["api_key_header"]: provider_config["api_key"],
-            "Content-Type": "application/json",
+            "Content-Type": CONTENT_TYPE_JSON,
         },
         verbose=True,
         debug=True,
@@ -354,7 +361,7 @@ def initialize_consumer_service(consumer_config=None, connection_manager=None) -
         dma_path=consumer_config["dma_path"],
         headers={
             consumer_config["api_key_header"]: consumer_config["api_key"],
-            "Content-Type": "application/json",
+            "Content-Type": CONTENT_TYPE_JSON,
         },
         connection_manager=connection_manager,
         verbose=True,
@@ -431,7 +438,7 @@ def provision_data_on_provider(
         )
         logger.info("✓ Access Policy created: %s", access_policy_id)
         logger.info("  - Restricts catalog visibility to BPN: %s", consumer_config["bpn"])
-        logger.info("  - Response: %s", json.dumps(access_policy_response, indent=2))
+        logger.info(LOG_RESPONSE_SUFFIX, json.dumps(access_policy_response, indent=2))
     except Exception as e:
         logger.exception("✗ Failed to create access policy: %s", e)
         raise
@@ -449,7 +456,7 @@ def provision_data_on_provider(
         logger.info("✓ Usage Policy created: %s", usage_policy_id)
         logger.info("  - Requires: Active Membership")
         logger.info("  - Requires: Framework Agreement DataExchangeGovernance:1.0")
-        logger.info("  - Response: %s", json.dumps(usage_policy_response, indent=2))
+        logger.info(LOG_RESPONSE_SUFFIX, json.dumps(usage_policy_response, indent=2))
     except Exception as e:
         logger.exception("✗ Failed to create usage policy: %s", e)
         raise
@@ -470,7 +477,7 @@ def provision_data_on_provider(
         logger.info("  - Backend URL: %s", backend_config["base_url"])
         logger.info("  - Type: Submodel")
         logger.info("  - Version: 1.0")
-        logger.info("  - Response: %s", json.dumps(asset_response, indent=2))
+        logger.info(LOG_RESPONSE_SUFFIX, json.dumps(asset_response, indent=2))
     except Exception as e:
         logger.exception("✗ Failed to create asset: %s", e)
         raise
@@ -490,7 +497,7 @@ def provision_data_on_provider(
         logger.info("  - Asset: %s", asset_id)
         logger.info("  - Access Policy: %s", access_policy_id)
         logger.info("  - Usage Policy: %s", usage_policy_id)
-        logger.info("  - Response: %s", json.dumps(contract_def_response, indent=2))
+        logger.info(LOG_RESPONSE_SUFFIX, json.dumps(contract_def_response, indent=2))
     except Exception as e:
         logger.exception("✗ Failed to create contract definition: %s", e)
         raise
@@ -915,7 +922,9 @@ def _print_summary(steps: list[dict], overall_result: str, total_elapsed: float,
         "║" + "  " + "-" * (W - 4) + "  ║"[:-2] + "║",
     ]
     for s in steps:
-        icon = "✓" if s["result"] == "PASS" else ("✗" if s["result"] == "FAIL" else "-")
+        is_pass = s["result"] == "PASS"
+        is_fail = s["result"] == "FAIL"
+        icon = "✓" if is_pass else ("✗" if is_fail else "-")
         dur  = f"{s['duration_s']:.1f}s" if s["duration_s"] is not None else "  -"
         line = f"  {icon} {s['name']:<{col_name - 2}} {s['result']:>{col_result}}  {dur:>{col_dur}}"
         lines.append("║" + line.ljust(W - 2) + "║")
@@ -1002,7 +1011,7 @@ def main(
             result = fn()
             steps.append({"name": name, "result": "PASS", "duration_s": time.time() - t0})
             return result
-        except Exception as exc:
+        except Exception:
             steps.append({"name": name, "result": "FAIL", "duration_s": time.time() - t0})
             raise
 

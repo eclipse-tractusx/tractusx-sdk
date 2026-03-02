@@ -43,6 +43,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     _connector_discovery_controller: BaseDmaController
     DEFAULT_DCT_TYPE_KEY: str = "'http://purl.org/dc/terms/type'.'@id'"
     DEFAULT_ID_KEY: str = "https://w3id.org/edc/v0.0.1/ns/id"
+    ERROR_NO_DATAPLANE_OR_TOKEN: str = "[Connector Service]: No dataplane URL or access_token was able to be retrieved!"
+    APPLICATION_JSON_CONTENT_TYPE: str = "application/json"
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
                  connection_manager: BaseConnectionManager = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None,
                  verify_ssl: bool = True):
@@ -126,7 +128,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             return counter_party_address, counter_party_id, protocol
     
     def _execute_http_request(self, method: str, dataplane_url: str, access_token: str, path: str = "/",
-                            content_type: str = "application/json", json=None, data=None, 
+                            content_type: str = APPLICATION_JSON_CONTENT_TYPE, json=None, data=None, 
                             verify: bool = False, headers: dict = None, timeout: int = None,
                             params: dict = None, allow_redirects: bool = False, session=None) -> Response:
         """
@@ -778,14 +780,14 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         filter_expression: list[dict],
         path: str = "/",
         policies: list = [],
-        max_wait: int = 60,
-        poll_interval: int = 1,
         verify: bool = False,
         headers: dict = {},
         timeout: int = None,
         params: dict = None,
         allow_redirects: bool = False,
         session=None,
+        max_wait: int = 60,
+        poll_interval: int = 1,
         protocol: str = DSP_2025,
         catalog_context: dict = DEFAULT_CONTEXT,
         negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT
@@ -819,7 +821,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError(self.ERROR_NO_DATAPLANE_OR_TOKEN)
 
         return self._execute_http_request(
             method='GET', dataplane_url=dataplane_url, access_token=access_token, path=path,
@@ -873,21 +875,21 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError(self.ERROR_NO_DATAPLANE_OR_TOKEN)
 
         return self._execute_http_request(
             method='GET', dataplane_url=dataplane_url, access_token=access_token, path=path,
             verify=verify, headers=headers, timeout=timeout, params=params,
             allow_redirects=allow_redirects, session=session
         )
-        
+    
     def do_post_with_bpnl(
         self,
         bpnl: str,
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        content_type: str = "application/json",
+        content_type: str = APPLICATION_JSON_CONTENT_TYPE,
         json=None,
         data=None,
         policies: list = [],
@@ -934,7 +936,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError(self.ERROR_NO_DATAPLANE_OR_TOKEN)
 
         return self._execute_http_request(
             method='POST', dataplane_url=dataplane_url, access_token=access_token, path=path,
@@ -948,17 +950,17 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        content_type: str = "application/json",
+        content_type: str = APPLICATION_JSON_CONTENT_TYPE,
         json=None,
         data=None,
         policies: list = [],
-        max_wait: int = 60,
-        poll_interval: int = 1,
         verify: bool = False,
         headers: dict = None,
         timeout: int = None,
         allow_redirects: bool = False,
         session=None,
+        max_wait: int = 60,
+        poll_interval: int = 1,
         protocol: str = DSP_2025,
         catalog_context: dict = DEFAULT_CONTEXT,
         negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT
@@ -998,7 +1000,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError(self.ERROR_NO_DATAPLANE_OR_TOKEN)
 
         return self._execute_http_request(
             method='POST', dataplane_url=dataplane_url, access_token=access_token, path=path,
@@ -1012,7 +1014,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        content_type: str = "application/json",
+        content_type: str = APPLICATION_JSON_CONTENT_TYPE,
         json=None,
         data=None,
         policies: list = [],
@@ -1067,7 +1069,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError(self.ERROR_NO_DATAPLANE_OR_TOKEN)
 
         return self._execute_http_request(
             method='PUT', dataplane_url=dataplane_url, access_token=access_token, path=path,
@@ -1081,17 +1083,17 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        content_type: str = "application/json",
+        content_type: str = APPLICATION_JSON_CONTENT_TYPE,
         json=None,
         data=None,
         policies: list = [],
-        max_wait: int = 60,
-        poll_interval: int = 1,
         verify: bool = False,
         headers: dict = None,
         timeout: int = None,
         allow_redirects: bool = False,
         session=None,
+        max_wait: int = 60,
+        poll_interval: int = 1,
         protocol: str = DSP_2025,
         catalog_context: dict = DEFAULT_CONTEXT,
         negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT
