@@ -132,8 +132,8 @@ def _apply_cli_to_simple_config(
     if getattr(args, "backend_api_key", None):
         cfg.backend.api_key = args.backend_api_key
 
-    # Runtime overrides
-    if hasattr(args, "cleanup"):
+    # Runtime overrides — only override if the user explicitly passed --no-cleanup
+    if getattr(args, "cleanup", None) is not None:
         cfg.cleanup = args.cleanup
 
     return cfg
@@ -177,8 +177,8 @@ def _apply_cli_to_detailed_config(
     if getattr(args, "backend_api_key", None):
         cfg.backend.api_key = args.backend_api_key
 
-    # Runtime overrides
-    if hasattr(args, "cleanup"):
+    # Runtime overrides — only override if the user explicitly passed --no-cleanup
+    if getattr(args, "cleanup", None) is not None:
         cfg.cleanup = args.cleanup
 
     return cfg
@@ -285,43 +285,46 @@ def run_simple_test(config: SimpleTckConfig, script_dir: str) -> str:
         time.sleep(3)
 
         # Phase 2 — consumer consumes data
-        if is_did:
-            consume_fn = lambda: consume_simple_did(
-                logger,
-                consumer,
-                ids["asset_id"],
-                provider_dict,
-                config.accepted_policies,
-                header_fn=sep,
-                verify=config.verify_ssl,
-            )
-        else:
-            consume_fn = lambda: consume_simple_bpnl(
-                logger,
-                consumer,
-                ids["asset_id"],
-                provider_dict,
-                config.accepted_policies,
-                header_fn=sep,
-                verify=config.verify_ssl,
-            )
-
-        response = run_step(steps, phase2_name, consume_fn)
-
-        http_status = response.status_code
-        if response.status_code == 200:
+        def _consume_and_validate(fn):
+            resp = fn()
+            if resp.status_code != 200:
+                raise RuntimeError(
+                    f"Unexpected HTTP {resp.status_code}: {resp.text}"
+                )
             try:
                 logger.info(
                     "Response body:\n%s",
-                    json.dumps(response.json(), indent=2),
+                    json.dumps(resp.json(), indent=2),
                 )
             except Exception:
-                logger.info("Response body:\n%s", response.text)
-            overall_result = "PASS"
+                logger.info("Response body:\n%s", resp.text)
+            return resp
+
+        if is_did:
+            consume_fn = lambda: _consume_and_validate(lambda: consume_simple_did(
+                logger,
+                consumer,
+                ids["asset_id"],
+                provider_dict,
+                config.accepted_policies,
+                header_fn=sep,
+                verify=config.verify_ssl,
+            ))
         else:
-            raise RuntimeError(
-                f"Unexpected HTTP {response.status_code}: {response.text}"
-            )
+            consume_fn = lambda: _consume_and_validate(lambda: consume_simple_bpnl(
+                logger,
+                consumer,
+                ids["asset_id"],
+                provider_dict,
+                config.accepted_policies,
+                header_fn=sep,
+                verify=config.verify_ssl,
+            ))
+
+        response = run_step(steps, phase2_name, consume_fn)
+
+        http_status = response.status_code if response is not None else None
+        overall_result = "PASS"
 
     except Exception as exc:
         logger.exception("✗ Simple E2E FAILED: %s", exc)
@@ -496,17 +499,19 @@ def run_detailed_test(config: DetailedTckConfig, script_dir: str) -> str:
         )
 
         # ── Phase 3: Access data with EDR ─────────────────────────────
-        run_step(
-            steps,
-            _PHASE_3_NAME,
-            lambda: access_data_with_edr(
+        def _access_and_validate():
+            resp = access_data_with_edr(
                 logger,
                 dataplane_url=consumption_result["dataplane_url"],
                 access_token=consumption_result["access_token"],
                 header_fn=hdr,
                 verify=config.verify_ssl,
-            ),
-        )
+            )
+            if resp is not None and resp.status_code != 200:
+                raise RuntimeError(f"Unexpected HTTP {resp.status_code}: {resp.text}")
+            return resp
+
+        run_step(steps, _PHASE_3_NAME, _access_and_validate)
 
         overall_result = "PASS"
 
@@ -586,11 +591,12 @@ def _provision_detailed(
 
     header_fn("PHASE 1: Provider Data Provision")
 
-    ts = int(_time.time())
-    asset_id = f"e2e-asset-{ts}"
-    access_policy_id = f"e2e-access-policy-{ts}"
-    usage_policy_id = f"e2e-usage-policy-{ts}"
-    contract_def_id = f"e2e-contract-def-{ts}"
+    import uuid as _uuid
+    run_id = f"{int(_time.time())}-{_uuid.uuid4().hex[:6]}"
+    asset_id = f"e2e-asset-{run_id}"
+    access_policy_id = f"e2e-access-policy-{run_id}"
+    usage_policy_id = f"e2e-usage-policy-{run_id}"
+    contract_def_id = f"e2e-contract-def-{run_id}"
 
     access_permissions = _resolve_access_permissions(access_policy_config, consumer_config)
     access_kwargs = _extract_policy_kwargs(access_policy_config)
@@ -613,11 +619,10 @@ def _provision_detailed(
             **access_kwargs,
         )
         logger.info("✓ Access policy created: %s", access_policy_id)
-        if hasattr(access_policy_response, "json"):
-            logger.info(
-                "[ACCESS POLICY RESPONSE]:\n%s",
-                json.dumps(access_policy_response.json(), indent=2),
-            )
+        logger.info(
+            "[ACCESS POLICY RESPONSE]:\n%s",
+            json.dumps(access_policy_response, indent=2),
+        )
     except Exception as exc:
         logger.exception("✗ Failed to create access policy: %s", exc)
         raise
@@ -639,11 +644,10 @@ def _provision_detailed(
             **usage_kwargs,
         )
         logger.info("✓ Usage policy created: %s", usage_policy_id)
-        if hasattr(usage_policy_response, "json"):
-            logger.info(
-                "[USAGE POLICY RESPONSE]:\n%s",
-                json.dumps(usage_policy_response.json(), indent=2),
-            )
+        logger.info(
+            "[USAGE POLICY RESPONSE]:\n%s",
+            json.dumps(usage_policy_response, indent=2),
+        )
     except Exception as exc:
         logger.exception("✗ Failed to create usage policy: %s", exc)
         raise
@@ -670,11 +674,10 @@ def _provision_detailed(
             proxy_params=asset_config.get("proxy_params"),
         )
         logger.info("✓ Asset created: %s", asset_id)
-        if hasattr(asset_response, "json"):
-            logger.info(
-                "[ASSET RESPONSE]:\n%s",
-                json.dumps(asset_response.json(), indent=2),
-            )
+        logger.info(
+            "[ASSET RESPONSE]:\n%s",
+            json.dumps(asset_response, indent=2),
+        )
     except Exception as exc:
         logger.exception("✗ Failed to create asset: %s", exc)
         raise
@@ -701,11 +704,10 @@ def _provision_detailed(
         logger.info("  - Asset: %s", asset_id)
         logger.info("  - Access Policy: %s", access_policy_id)
         logger.info("  - Usage Policy: %s", usage_policy_id)
-        if hasattr(contract_def_response, "json"):
-            logger.info(
-                "[CONTRACT DEF RESPONSE]:\n%s",
-                json.dumps(contract_def_response.json(), indent=2),
-            )
+        logger.info(
+            "[CONTRACT DEF RESPONSE]:\n%s",
+            json.dumps(contract_def_response, indent=2),
+        )
     except Exception as exc:
         logger.exception("✗ Failed to create contract definition: %s", exc)
         raise
@@ -738,6 +740,14 @@ def _step_discover_provider(logger, consumer_service, provider_config, is_did):
         logger.info("Step 2.0: Using Provider DID directly (no BPNL discovery)")
         logger.info("%s", "-" * 80)
         logger.info("  - Provider DID: %s", provider_config.get("did", "N/A"))
+        logger.info("  - DSP URL: %s", provider_config.get("dsp_url", "N/A"))
+        return
+
+    is_jupiter = provider_config.get("dataspace_version") == "jupiter"
+    if is_jupiter:
+        logger.info("Step 2.0: Jupiter protocol — using DSP URL directly (no discovery service)")
+        logger.info("%s", "-" * 80)
+        logger.info("  - BPN: %s", provider_config.get("bpn", "N/A"))
         logger.info("  - DSP URL: %s", provider_config.get("dsp_url", "N/A"))
         return
 

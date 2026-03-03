@@ -336,7 +336,7 @@ def upload_sample_data(
                 backend_config["base_url"],
                 data=json.dumps(sample_data, indent=2),
                 headers=headers,
-                verify=True,
+                verify=False,
                 timeout=30,
             )
         else:
@@ -345,7 +345,7 @@ def upload_sample_data(
                 backend_config["base_url"],
                 json=sample_data,
                 headers=headers,
-                verify=True,
+                verify=False,
                 timeout=30,
             )
 
@@ -690,6 +690,7 @@ def build_tck_cli_parser(
         "--no-cleanup",
         action="store_false",
         dest="cleanup",
+        default=None,  # None = not explicitly set; config value takes precedence
         help="Skip cleanup of provider resources and backend data (cleanup enabled by default)",
     )
     # Provider configuration
@@ -838,11 +839,12 @@ def provision_simple(
 
     header_fn("PHASE 1: Provider Data Provision")
 
-    ts = int(time.time())
-    asset_id = f"simple-{id_prefix}-asset-{ts}"
-    access_policy_id = f"simple-{id_prefix}-access-{ts}"
-    usage_policy_id = f"simple-{id_prefix}-usage-{ts}"
-    contract_def_id = f"simple-{id_prefix}-contract-{ts}"
+    import uuid as _uuid
+    run_id = f"{int(time.time())}-{_uuid.uuid4().hex[:6]}"
+    asset_id = f"simple-{id_prefix}-asset-{run_id}"
+    access_policy_id = f"simple-{id_prefix}-access-{run_id}"
+    usage_policy_id = f"simple-{id_prefix}-usage-{run_id}"
+    contract_def_id = f"simple-{id_prefix}-contract-{run_id}"
 
     # Handle constraint substitution (BPN or DID)
     access_permissions = [p.copy() for p in access_policy_config["permissions"]]
@@ -866,24 +868,27 @@ def provision_simple(
     if "profile" in usage_policy_config:
         usage_kwargs["profile"] = usage_policy_config["profile"]
 
+    import json as _json
     logger.info("[ACCESS POLICY REQUEST]: Creating policy %s", access_policy_id)
-    provider.create_policy(
+    access_policy_resp = provider.create_policy(
         policy_id=access_policy_id,
         permissions=access_permissions,
         **access_kwargs,
     )
     logger.info("✓ Access policy:      %s", access_policy_id)
+    logger.info("[ACCESS POLICY RESPONSE]:\n%s", _json.dumps(access_policy_resp, indent=2))
 
     logger.info("[USAGE POLICY REQUEST]: Creating policy %s", usage_policy_id)
-    provider.create_policy(
+    usage_policy_resp = provider.create_policy(
         policy_id=usage_policy_id,
         permissions=usage_policy_config["permissions"],
         **usage_kwargs,
     )
     logger.info("✓ Usage policy:       %s", usage_policy_id)
+    logger.info("[USAGE POLICY RESPONSE]:\n%s", _json.dumps(usage_policy_resp, indent=2))
 
     logger.info("[ASSET REQUEST]: Creating asset %s", asset_id)
-    provider.create_asset(
+    asset_resp = provider.create_asset(
         asset_id=asset_id,
         base_url=backend_config["base_url"],
         dct_type=asset_config["dct_type"],
@@ -892,15 +897,17 @@ def provision_simple(
         proxy_params=asset_config["proxy_params"],
     )
     logger.info("✓ Asset:              %s", asset_id)
+    logger.info("[ASSET RESPONSE]:\n%s", _json.dumps(asset_resp, indent=2))
 
     logger.info("[CONTRACT DEFINITION REQUEST]: Creating contract %s", contract_def_id)
-    provider.create_contract(
+    contract_resp = provider.create_contract(
         contract_id=contract_def_id,
         usage_policy_id=usage_policy_id,
         access_policy_id=access_policy_id,
         asset_id=asset_id,
     )
     logger.info("✓ Contract def:       %s", contract_def_id)
+    logger.info("[CONTRACT DEFINITION RESPONSE]:\n%s", _json.dumps(contract_resp, indent=2))
 
     return {
         "asset_id": asset_id,
