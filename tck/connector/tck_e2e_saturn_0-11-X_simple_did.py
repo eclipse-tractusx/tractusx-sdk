@@ -47,7 +47,8 @@ from tractusx_sdk.extensions.tck.connector import (
 
 config = SimpleTckConfig(
     test_name="tck_e2e_saturn_0-11-X_simple_did",
-    provider=saturn.provider,
+    config_section="saturn",
+    provider=saturn.provider_did,
     consumer=saturn.consumer,
     backend=saturn.backend(),
     # NOTE: BusinessPartnerDID is NOT YET ALLOWED in current EDC implementation.

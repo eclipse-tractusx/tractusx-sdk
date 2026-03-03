@@ -224,6 +224,7 @@ class SimpleTckConfig:
     verify_ssl: bool = False
     banner_title: str = ""
     summary_title: str = ""
+    config_section: str = ""  # YAML section name (e.g. "jupiter", "saturn") used by --config
 
 
 @dataclass
@@ -271,3 +272,4 @@ class DetailedTckConfig:
     negotiation_context: Optional[list] = None
     banner_title: str = ""
     summary_title: str = ""
+    config_section: str = ""  # YAML section name (e.g. "jupiter", "saturn") used by --config

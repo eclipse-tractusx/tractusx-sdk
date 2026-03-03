@@ -49,12 +49,14 @@
 jupiter:
   provider:
     base_url: "http://dataprovider-controlplane.tx.test"
+    dma_path: "/management"
     api_key: "TEST2"
     bpn: "BPNL00000003AYRE"
     dsp_url: "http://dataprovider-controlplane.tx.test/api/v1/dsp"
     did: ~
   consumer:
     base_url: "http://dataconsumer-1-controlplane.tx.test"
+    dma_path: "/management"
     api_key: "TEST1"
     bpn: "BPNL00000003AZQP"
     did: ~
@@ -108,12 +110,15 @@ jupiter:
 saturn:
   provider:
     base_url: "http://dataprovider-controlplane.tx.test"
+    dma_path: "/management"
     api_key: "TEST2"
     bpn: "BPNL00000003AYRE"
-    dsp_url: "http://dataprovider-controlplane.tx.test/api/v1/dsp/2025-1"
+    dsp_url: "http://dataprovider-controlplane.tx.test/api/v1/dsp"
+    dsp_url_did: "http://dataprovider-controlplane.tx.test/api/v1/dsp/2025-1"
     did: "did:web:portal-backend.tx.test:api:administration:staticdata:did:BPNL00000003AYRE"
   consumer:
     base_url: "http://dataconsumer-1-controlplane.tx.test"
+    dma_path: "/management"
     api_key: "TEST1"
     bpn: "BPNL00000003AZQP"
     did: "did:web:portal-backend.tx.test:api:administration:staticdata:did:BPNL00000003AZQP"

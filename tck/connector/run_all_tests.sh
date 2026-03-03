@@ -24,12 +24,40 @@
 # Run all 6 TCK E2E connector tests in parallel with a live real-time dashboard.
 #
 # Usage:
-#   ./tck/connector/run_all_tests.sh [--no-cleanup]
+#   ./tck/connector/run_all_tests.sh [OPTIONS]
 #
 # Options:
-#   --no-cleanup   Skip cleanup of provider resources and backend data
+#   --no-cleanup                 Skip cleanup of provider resources and backend data
+#   --config <path>              Path to a YAML config file to use instead of the
+#                                default tck-config.yaml.  All connectivity values
+#                                (URLs, keys, BPNs, DIDs, policies) are loaded from
+#                                the given file.  Each script loads its own section
+#                                automatically (jupiter / saturn).
+#   --config-section <name>      Override the section name to load from the YAML file.
+#                                Each script has a built-in default (e.g. "saturn").
+#   --provider-url <url>         Override provider EDC base URL for all tests
+#   --consumer-url <url>         Override consumer EDC base URL for all tests
+#   --backend-url <url>          Override backend storage URL for all tests
+#   --provider-api-key <key>     Override provider API key for all tests
+#   --consumer-api-key <key>     Override consumer API key for all tests
+#   --provider-bpn <bpn>         Override provider BPN for all tests
+#   --consumer-bpn <bpn>         Override consumer BPN for all tests
+#   --provider-did <did>         Override provider DID for DID-based tests
+#   --consumer-did <did>         Override consumer DID for DID-based tests
 #
-# Logs are written to tck/connector/logs/<test_name>_run.log
+# All options are forwarded verbatim to each of the 6 test scripts.
+#
+# Examples:
+#   # Use a custom config file (e.g. for INT environment):
+#   ./run_all_tests.sh --config /path/to/int_config.yaml
+#
+#   # Quick ad-hoc URL override without editing any file:
+#   ./run_all_tests.sh --provider-url http://my-provider.example.com
+#
+#   # Skip cleanup:
+#   ./run_all_tests.sh --no-cleanup
+#
+# Logs are written to tck/connector/logs/run_all_tests/<date>/<run-id>/
 
 set -uo pipefail
 

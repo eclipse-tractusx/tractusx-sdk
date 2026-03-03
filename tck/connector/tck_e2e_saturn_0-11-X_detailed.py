@@ -50,6 +50,7 @@ from tractusx_sdk.extensions.tck.connector import (
 
 config = DetailedTckConfig(
     test_name="tck_e2e_saturn_0-11-X_detailed",
+    config_section="saturn",
     provider=saturn.provider,
     consumer=saturn.consumer,
     backend=saturn.backend(),

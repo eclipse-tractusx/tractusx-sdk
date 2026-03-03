@@ -35,9 +35,18 @@ from __future__ import annotations
 
 import copy
 import json
+import os
+import os
 import sys
 import time
+import uuid as _uuid
 from typing import TYPE_CHECKING
+
+try:
+    import yaml as _yaml
+    _YAML_AVAILABLE = True
+except ImportError:
+    _YAML_AVAILABLE = False
 
 from .helpers import (
     SAMPLE_ASPECT_MODEL_DATA,
@@ -94,6 +103,78 @@ _POLL_INTERVAL = 2
 # ============================================================================
 
 
+def _load_yaml_section(yaml_path: str, section: str) -> dict:
+    """Load a single section from a YAML config file.
+
+    Args:
+        yaml_path: Path to the YAML config file.
+        section: Section key to load (e.g. 'jupiter', 'saturn').
+
+    Returns:
+        Raw dict for that section.
+
+    Raises:
+        ImportError: If PyYAML is not installed.
+        KeyError: If the section is not found.
+    """
+    if not _YAML_AVAILABLE:
+        raise ImportError(
+            "PyYAML is required to use --config.\n"
+            "Install it with: pip install pyyaml"
+        )
+    with open(yaml_path, "r", encoding="utf-8") as fh:
+        data = _yaml.safe_load(fh)
+    if section not in data:
+        available = ", ".join(str(k) for k in data.keys())
+        raise KeyError(
+            f"Section '{section}' not found in '{yaml_path}'. "
+            f"Available sections: {available}"
+        )
+    return data[section]
+
+
+def _yaml_section_to_config(raw: dict, cfg_provider, cfg_consumer, cfg_backend,
+                             cfg_access_policy, cfg_usage_policy):
+    """Apply a raw YAML section dict onto existing config field objects in-place."""
+    from .models import ConnectorConfig, BackendConfig, PolicyConfig
+
+    def _mk_connector(src: dict) -> ConnectorConfig:
+        return ConnectorConfig(
+            base_url=src.get("base_url", ""),
+            dma_path=src.get("dma_path") or "/management",
+            api_key=src.get("api_key") or "",
+            dataspace_version=cfg_provider.dataspace_version,
+            bpn=src.get("bpn") or None,
+            dsp_url=src.get("dsp_url") or None,
+            did=src.get("did") or None,
+        )
+
+    def _mk_policy(src: dict) -> PolicyConfig:
+        return PolicyConfig(
+            context=src.get("context") or None,
+            permissions=src.get("permissions") or [],
+            profile=src.get("profile") or None,
+        )
+
+    new_provider = _mk_connector(raw.get("provider", {}))
+    new_consumer = _mk_connector(raw.get("consumer", {}))
+
+    backend_raw = raw.get("backend", {})
+    backend_base = (backend_raw.get("base_url") or "").rstrip("/")
+    new_backend = BackendConfig(
+        base_url=f"{backend_base}/urn:uuid:{_uuid.uuid4()}" if backend_base else cfg_backend.base_url,
+        api_key=backend_raw.get("api_key") or None,
+    )
+
+    pol = raw.get("policies", {})
+    new_access = _mk_policy(pol.get("access_policy") or {})
+    new_usage = _mk_policy(pol.get("usage_policy") or {})
+    protocol = pol.get("protocol") or None
+    negotiation_context = pol.get("negotiation_context") or None
+
+    return new_provider, new_consumer, new_backend, new_access, new_usage, protocol, negotiation_context
+
+
 def _apply_cli_to_simple_config(
     args,
     config: SimpleTckConfig,
@@ -101,24 +182,55 @@ def _apply_cli_to_simple_config(
     """Apply CLI argument overrides to a :class:`SimpleTckConfig`.
 
     Returns a deep copy — the original config is never mutated.
+
+    If ``--config <path>`` is given, connectivity and policy values are
+    reloaded from that YAML file first; individual ``--provider-url`` etc.
+    args then take precedence over the YAML values.
     """
     cfg = copy.deepcopy(config)
 
+    # ── YAML config file reload (--config) ───────────────────────────
+    yaml_path = getattr(args, "config", None)
+    if yaml_path:
+        section = getattr(args, "config_section", None) or cfg.config_section
+        if not section:
+            raise ValueError(
+                "--config requires --config-section (or a config_section set on the test config)."
+            )
+        raw = _load_yaml_section(yaml_path, section)
+        (cfg.provider, cfg.consumer, cfg.backend,
+         cfg.access_policy, cfg.usage_policy, _, _) = _yaml_section_to_config(
+            raw, cfg.provider, cfg.consumer, cfg.backend,
+            cfg.access_policy, cfg.usage_policy,
+        )
+        # DID-mode: prefer dsp_url_did over dsp_url when available
+        if cfg.discovery_mode == "did":
+            _dsp_url_did = raw.get("provider", {}).get("dsp_url_did")
+            if _dsp_url_did:
+                cfg.provider.dsp_url = _dsp_url_did
+
+    # ── Individual field overrides (take precedence over YAML) ──────
     # Provider overrides
     if getattr(args, "provider_url", None):
         cfg.provider.base_url = args.provider_url
+    if getattr(args, "provider_dma_path", None):
+        cfg.provider.dma_path = args.provider_dma_path
     if getattr(args, "provider_api_key", None):
         cfg.provider.api_key = args.provider_api_key
     if getattr(args, "provider_bpn", None):
         cfg.provider.bpn = args.provider_bpn
     if getattr(args, "provider_dsp_url", None):
         cfg.provider.dsp_url = args.provider_dsp_url
+    if getattr(args, "provider_dsp_url_did", None) and cfg.discovery_mode == "did":
+        cfg.provider.dsp_url = args.provider_dsp_url_did
     if getattr(args, "provider_did", None):
         cfg.provider.did = args.provider_did
 
     # Consumer overrides
     if getattr(args, "consumer_url", None):
         cfg.consumer.base_url = args.consumer_url
+    if getattr(args, "consumer_dma_path", None):
+        cfg.consumer.dma_path = args.consumer_dma_path
     if getattr(args, "consumer_api_key", None):
         cfg.consumer.api_key = args.consumer_api_key
     if getattr(args, "consumer_bpn", None):
@@ -146,24 +258,60 @@ def _apply_cli_to_detailed_config(
     """Apply CLI argument overrides to a :class:`DetailedTckConfig`.
 
     Returns a deep copy — the original config is never mutated.
+
+    If ``--config <path>`` is given, connectivity and policy values are
+    reloaded from that YAML file first; individual ``--provider-url`` etc.
+    args then take precedence over the YAML values.
     """
     cfg = copy.deepcopy(config)
 
+    # ── YAML config file reload (--config) ───────────────────────────
+    yaml_path = getattr(args, "config", None)
+    if yaml_path:
+        section = getattr(args, "config_section", None) or cfg.config_section
+        if not section:
+            raise ValueError(
+                "--config requires --config-section (or a config_section set on the test config)."
+            )
+        raw = _load_yaml_section(yaml_path, section)
+        (cfg.provider, cfg.consumer, cfg.backend,
+         cfg.access_policy, cfg.usage_policy,
+         new_protocol, new_negotiation_context) = _yaml_section_to_config(
+            raw, cfg.provider, cfg.consumer, cfg.backend,
+            cfg.access_policy, cfg.usage_policy,
+        )
+        # DID-mode: prefer dsp_url_did over dsp_url when available
+        if cfg.discovery_mode == "did":
+            _dsp_url_did = raw.get("provider", {}).get("dsp_url_did")
+            if _dsp_url_did:
+                cfg.provider.dsp_url = _dsp_url_did
+        if new_protocol:
+            cfg.protocol = new_protocol
+        if new_negotiation_context:
+            cfg.negotiation_context = new_negotiation_context
+
+    # ── Individual field overrides (take precedence over YAML) ──────
     # Provider overrides
     if getattr(args, "provider_url", None):
         cfg.provider.base_url = args.provider_url
+    if getattr(args, "provider_dma_path", None):
+        cfg.provider.dma_path = args.provider_dma_path
     if getattr(args, "provider_api_key", None):
         cfg.provider.api_key = args.provider_api_key
     if getattr(args, "provider_bpn", None):
         cfg.provider.bpn = args.provider_bpn
     if getattr(args, "provider_dsp_url", None):
         cfg.provider.dsp_url = args.provider_dsp_url
+    if getattr(args, "provider_dsp_url_did", None) and cfg.discovery_mode == "did":
+        cfg.provider.dsp_url = args.provider_dsp_url_did
     if getattr(args, "provider_did", None):
         cfg.provider.did = args.provider_did
 
     # Consumer overrides
     if getattr(args, "consumer_url", None):
         cfg.consumer.base_url = args.consumer_url
+    if getattr(args, "consumer_dma_path", None):
+        cfg.consumer.dma_path = args.consumer_dma_path
     if getattr(args, "consumer_api_key", None):
         cfg.consumer.api_key = args.consumer_api_key
     if getattr(args, "consumer_bpn", None):
@@ -217,6 +365,10 @@ def run_simple_test(config: SimpleTckConfig, script_dir: str) -> str:
         include_did=config.discovery_mode == "did",
     )
     args = parser.parse_args()
+    # Resolve --config relative to the script's own directory so that a
+    # bare filename like 'tck-int-config.yaml' works regardless of cwd.
+    if getattr(args, "config", None) and not os.path.isabs(args.config):
+        args.config = os.path.normpath(os.path.join(script_dir, args.config))
     config = _apply_cli_to_simple_config(args, config)
 
     # ── 2. Logging ────────────────────────────────────────────────────
@@ -410,6 +562,10 @@ def run_detailed_test(config: DetailedTckConfig, script_dir: str) -> str:
         include_did=config.discovery_mode == "did",
     )
     args = parser.parse_args()
+    # Resolve --config relative to the script's own directory so that a
+    # bare filename like 'tck-int-config.yaml' works regardless of cwd.
+    if getattr(args, "config", None) and not os.path.isabs(args.config):
+        args.config = os.path.normpath(os.path.join(script_dir, args.config))
     config = _apply_cli_to_detailed_config(args, config)
 
     # ── 2. Logging ────────────────────────────────────────────────────

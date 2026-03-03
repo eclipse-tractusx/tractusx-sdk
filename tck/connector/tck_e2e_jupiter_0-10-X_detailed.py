@@ -57,6 +57,7 @@ from tractusx_sdk.extensions.tck.connector import (
 
 config = DetailedTckConfig(
     test_name="tck_e2e_jupiter_0-10-X_detailed",
+    config_section="jupiter",
     provider=jupiter.provider,
     consumer=jupiter.consumer,
     backend=jupiter.backend(),

@@ -29,14 +29,16 @@ The TCK validates:
 
 ## TCK Test Scripts
 
-The TCK provides **4 test scripts** covering two protocol versions and two complexity levels:
+The TCK provides **6 test scripts** covering two protocol versions, two complexity levels, and two discovery modes:
 
-| Script | Protocol | EDC Version | Complexity | Purpose |
-| -------- | ---------- | ------------- | ------------ | --------- |
-| `tck_e2e_saturn_0-11-X_detailed.py` | Saturn (DSP 2025-1) | 0.11.x+ | Detailed | Step-by-step validation of each phase |
-| `tck_e2e_saturn_0-11-X_simple.py` | Saturn (DSP 2025-1) | 0.11.x+ | Simple | Single-call validation via `do_get_with_bpnl()` |
-| `tck_e2e_jupiter_0-10-X_detailed.py` | Jupiter (Legacy DSP) | 0.8.x–0.10.x | Detailed | Step-by-step validation (legacy protocol) |
-| `tck_e2e_jupiter_0-10-X_simple.py` | Jupiter (Legacy DSP) | 0.8.x–0.10.x | Simple | Single-call validation (legacy protocol) |
+| Script | Protocol | EDC Version | Discovery | Complexity | Purpose |
+| -------- | ---------- | ------------- | ----------- | ------------ | --------- |
+| `tck_e2e_saturn_0-11-X_detailed.py` | Saturn (DSP 2025-1) | 0.11.x+ | BPNL | Detailed | Step-by-step validation of each phase |
+| `tck_e2e_saturn_0-11-X_simple.py` | Saturn (DSP 2025-1) | 0.11.x+ | BPNL | Simple | Single-call validation via `do_get_with_bpnl()` |
+| `tck_e2e_saturn_0-11-X_detailed_did.py` | Saturn (DSP 2025-1) | 0.11.x+ | DID | Detailed | Step-by-step validation using DID-based discovery |
+| `tck_e2e_saturn_0-11-X_simple_did.py` | Saturn (DSP 2025-1) | 0.11.x+ | DID | Simple | Single-call validation using DID-based discovery |
+| `tck_e2e_jupiter_0-10-X_detailed.py` | Jupiter (Legacy DSP) | 0.8.x–0.10.x | BPNL | Detailed | Step-by-step validation (legacy protocol) |
+| `tck_e2e_jupiter_0-10-X_simple.py` | Jupiter (Legacy DSP) | 0.8.x–0.10.x | BPNL | Simple | Single-call validation (legacy protocol) |
 
 ### Detailed vs. Simple Tests
 
@@ -97,52 +99,65 @@ sequenceDiagram
 
 ## Configuration
 
-Each TCK script requires configuration for:
+All 6 TCK scripts share a single YAML configuration file — **`tck-config.yaml`** — as their source of truth.  Edit only this file when switching environments; the scripts read it automatically at startup.
 
-1. **Provider EDC Connector**
-2. **Consumer EDC Connector**
-3. **Backend Data Source** (for storing test data)
+An **INT environment template** is provided in `tck_int_config.yaml`.  Fill in the `<PLACEHOLDER>` tokens and pass it to any test via `--config` (see [CLI Reference](#command-line-options)).
 
-### Example Configuration
+### Config File Structure
 
-```python
-# Provider EDC Configuration
-PROVIDER_CONNECTOR_CONFIG = {
-    "base_url": "https://provider-edc.example.com",        # Control Plane URL
-    "dma_path": "/management",                             # Management API path
-    "api_key_header": "X-Api-Key",                         # API key header name
-    "api_key": "your-provider-api-key-here",               # Management API key
-    "dataspace_version": "saturn",                         # "jupiter" or "saturn"
-    "bpn": "BPNL000000000001",                             # Provider BPN
-    "dsp_url": "https://provider-edc.example.com/api/v1/dsp"  # DSP endpoint (no protocol suffix)
-}
-
-# Consumer EDC Configuration
-CONSUMER_CONNECTOR_CONFIG = {
-    "base_url": "https://consumer-edc.example.com",        # Control Plane URL
-    "dma_path": "/management",                             # Management API path
-    "api_key_header": "X-Api-Key",                         # API key header name
-    "api_key": "your-consumer-api-key-here",               # Management API key
-    "dataspace_version": "saturn",                         # "jupiter" or "saturn"
-    "bpn": "BPNL000000000002"                              # Consumer BPN
-}
-
-# Backend Storage Configuration
-BACKEND_CONFIG = {
-    "base_url": "https://storage.example.com",             # Backend API base URL
-    "api_key_header": "X-Api-Key",                         # Optional: API key header name
-    "api_key": ""                                          # Optional: API key (leave empty if not needed)
-}
+```
+tck/connector/
+├── tck-config.yaml          ← default (local umbrella / tx.test)
+├── tck_int_config.yaml      ← INT environment template (fill in placeholders)
+└── my_custom_config.yaml    ← any additional environment you create
 ```
 
-### Key Configuration Notes
+### YAML Sections
 
-⚠️ **IMPORTANT**:
+Each YAML file contains one or more **named sections** (e.g. `jupiter`, `saturn`).  Every test script knows its own section name, so no extra flag is needed when using the default file:
 
-- **DSP URL**: Do NOT include protocol version suffix (e.g., `/2025-1`). The consumer EDC appends this automatically when needed (the idea is to demonstrate backward compatibility)
-- **BPN Format**: Must match the format in your Discovery Service (e.g., `BPNL` prefix for legal entities).
-- **API Keys**: Ensure Management API keys have sufficient permissions for create/read operations.
-- **Backend Authentication**: If your backend requires authentication, provide the `api_key` and `api_key_header`. If left empty, no authentication headers are sent.
+| Section | Used by scripts | Protocol |
+|---------|-----------------|----------|
+| `jupiter` | `tck_e2e_jupiter_0-10-X_*.py` | `dataspace-protocol-http` |
+| `saturn`  | `tck_e2e_saturn_0-11-X_*.py` (all 4) | `dataspace-protocol-http:2025-1` |
+
+### Section Layout
+
+```yaml
+<section_name>:
+  provider:
+    base_url:  "https://your-provider-edc/management"
+    api_key:   "<key>"
+    bpn:       "BPNL..."
+    dsp_url:     "https://your-provider-edc/api/v1/dsp"          # BPNL scripts
+    dsp_url_did: "https://your-provider-edc/api/v1/dsp/2025-1"  # DID scripts only (saturn); omit if same as dsp_url
+    did:       "did:web:..."   # saturn DID-mode only; set to ~ otherwise
+
+  consumer:
+    base_url:  "https://your-consumer-edc/management"
+    api_key:   "<key>"
+    bpn:       "BPNL..."
+    did:       "did:web:..."   # saturn DID-mode only; set to ~ otherwise
+
+  backend:
+    base_url:  "https://your-backend/api/data"  # NO trailing UUID
+    api_key:   "<key>"   # set to ~ if no auth needed
+
+  policies:
+    protocol:            "dataspace-protocol-http"        # or :2025-1
+    negotiation_context: [ ... ]                          # ODRL @context array
+    access_policy:       { permissions: [...] }           # BPN / Membership rule
+    access_policy_did:   { context: [...], permissions: [...] }  # saturn DID only
+    usage_policy:        { permissions: [...] }           # framework / purpose rule
+```
+
+> **Backend `base_url`**: Do NOT append a UUID here.  Each test appends `/urn:uuid:<uuid4>` at runtime so every run gets a unique resource path.
+
+> **`dsp_url` / `dsp_url_did`**: Two separate DSP endpoint fields can be set under `provider` in the Saturn section when BPNL and DID modes use different paths.  BPNL scripts read `dsp_url`; DID scripts (`*_did.py`) read `dsp_url_did` and fall back to `dsp_url` if `dsp_url_did` is absent.  For Jupiter (BPNL only), only `dsp_url` is needed.  Do **not** include the protocol-version suffix in the Consumer `base_url` — the SDK and EDC handle it automatically.
+
+> **BPN Format**: Must match the format registered in your Discovery Service (`BPNL` prefix for legal entities).
+
+> **`access_policy_did`**: Only required in the `saturn` section.  Leave absent or `~` in the `jupiter` section.
 
 ## Running TCK Tests
 
@@ -188,53 +203,144 @@ BACKEND_CONFIG = {
 
 > **Important**: TCK tests assume all credential prerequisites are met. If tests fail during contract negotiation (stuck in `REQUESTING` or `TERMINATED` state), verify that both parties have valid credentials for the policies being tested.
 
-### Step 1: Configure Test Script
+### Step 1: Configure the Environment
 
-Edit the configuration section at the top of your chosen TCK script:
+**Option A — Edit the default config (local umbrella):**
 
 ```bash
-# For Saturn detailed test
-vim tck/connector/tck_e2e_saturn_0-11-X_detailed.py
-
-# Update these sections:
-# - PROVIDER_CONNECTOR_CONFIG
-# - CONSUMER_CONNECTOR_CONFIG
-# - BACKEND_DATA_SOURCE_CONFIG
+# Open the shared YAML config (one file for all 6 scripts)
+vim tck/connector/tck-config.yaml
 ```
 
-Replace all `PLACEHOLDER` values with your actual environment details.
-
-### Step 2: Run the Test
+**Option B — Fill in the INT template:**
 
 ```bash
-# Navigate to TCK directory
+# Copy and populate the INT template
+cp tck/connector/tck_int_config.yaml tck/connector/my_config.yaml
+vim tck/connector/my_config.yaml
+# Replace every <PLACEHOLDER> token with a real value
+```
+
+**Option C — One-off overrides via CLI flags** (no file editing needed):
+
+```bash
+# Override individual fields directly on the command line
+python tck_e2e_saturn_0-11-X_simple.py \
+  --provider-url https://my-new-provider.example.com \
+  --provider-api-key MY_KEY
+```
+
+### Step 2: Run the Tests
+
+#### Run a single test
+
+```bash
 cd tck/connector
 
-# Run Saturn detailed test (debug and cleanup enabled by default)
+# Saturn — BPNL discovery (simple / detailed)
+python tck_e2e_saturn_0-11-X_simple.py
 python tck_e2e_saturn_0-11-X_detailed.py
 
-# Run Saturn simple test (debug and cleanup enabled by default)
-python tck_e2e_saturn_0-11-X_simple.py
+# Saturn — DID discovery
+python tck_e2e_saturn_0-11-X_simple_did.py
+python tck_e2e_saturn_0-11-X_detailed_did.py
 
-# Run Jupiter detailed test
-python tck_e2e_jupiter_0-10-X_detailed.py
-
-# Run Jupiter simple test
+# Jupiter (legacy protocol)
 python tck_e2e_jupiter_0-10-X_simple.py
+python tck_e2e_jupiter_0-10-X_detailed.py
+```
 
+#### Run with a custom YAML config
+
+```bash
+# Use the INT environment template (fill in placeholders first)
+python tck_e2e_saturn_0-11-X_simple.py --config my_config.yaml
+
+# Use a section with a non-default name
+python tck_e2e_saturn_0-11-X_simple.py --config my_config.yaml --config-section my_saturn
+```
+
+#### Run all 6 tests in parallel with a live dashboard
+
+```bash
+# Uses the default tck-config.yaml
+./run_all_tests.sh
+
+# Uses a custom YAML config for all 6 tests
+./run_all_tests.sh --config /absolute/path/to/my_config.yaml
+
+# Skip cleanup across all tests
+./run_all_tests.sh --no-cleanup
+
+# Combine options
+./run_all_tests.sh --config my_config.yaml --no-cleanup --no-debug
+```
+
+> The shell script launches all 6 tests in parallel, streams live status in a real-time table, and writes per-test logs to
+> `logs/run_all_tests/<date>/<run-id>/`.  All command-line arguments are forwarded verbatim to every test script.
+
+#### Common single-test options
+
+```bash
 # Disable debug logging for cleaner output
 python tck_e2e_saturn_0-11-X_detailed.py --no-debug
 
-# Disable cleanup to preserve resources for debugging
+# Keep provider resources after test (useful for manual inspection)
 python tck_e2e_saturn_0-11-X_detailed.py --no-cleanup
 
-# Disable both debug and cleanup
+# Combine
 python tck_e2e_saturn_0-11-X_detailed.py --no-debug --no-cleanup
 ```
 
 ### Command-Line Options
 
-All TCK tests support the following command-line options:
+All 6 TCK test scripts and `run_all_tests.sh` share the same CLI interface.
+
+#### Config file options
+
+| Flag | Argument | Description |
+|------|----------|-------------|
+| `--config` | `PATH` | Load all connectivity and policy values from `PATH` instead of the default `tck-config.yaml`. Supports absolute and relative paths. |
+| `--config-section` | `SECTION` | Section name to read from the YAML file (e.g. `jupiter`, `saturn`). Each script has a built-in default; use this flag only when your YAML uses a different section name. |
+
+```bash
+# Run against INT environment using the provided template
+python tck_e2e_saturn_0-11-X_simple.py --config tck_int_config.yaml
+
+# Use a custom section name inside your YAML
+python tck_e2e_saturn_0-11-X_simple.py \
+  --config my_env.yaml \
+  --config-section saturn_int
+```
+
+#### Individual field overrides
+
+These flags override individual values **after** the YAML has been loaded and are applied to every test when passed to `run_all_tests.sh`:
+
+| Flag | Description |
+|------|-------------|
+| `--provider-url URL` | Provider EDC base URL (**without** `/management` suffix) |
+| `--provider-dma-path PATH` | Provider Management API path (default: `/management`) |
+| `--consumer-url URL` | Consumer EDC base URL (**without** `/management` suffix) |
+| `--consumer-dma-path PATH` | Consumer Management API path (default: `/management`) |
+| `--backend-url URL` | Backend storage base URL |
+| `--provider-api-key KEY` | Provider Management API key |
+| `--consumer-api-key KEY` | Consumer Management API key |
+| `--provider-bpn BPN` | Provider BPN (e.g. `BPNL00000000PROV`) |
+| `--consumer-bpn BPN` | Consumer BPN (e.g. `BPNL00000000CONS`) |
+| `--provider-dsp-url URL` | Provider DSP endpoint URL (BPNL-mode) |
+| `--provider-dsp-url-did URL` | Provider DSP URL for DID-mode scripts; overrides `--provider-dsp-url` when `discovery_mode=did` |
+| `--provider-did DID` | Provider DID (DID scripts only) |
+| `--consumer-did DID` | Consumer DID (DID scripts only) |
+
+```bash
+# Quick ad-hoc override without editing any file:
+python tck_e2e_saturn_0-11-X_simple.py \
+  --provider-url https://my-new-provider.example.com \
+  --provider-api-key NEW_KEY
+```
+
+#### Execution options
 
 **`--no-debug`**: Disable DEBUG-level logging (**debug enabled by default**)
 
@@ -484,12 +590,40 @@ access_policy = provider_service.create_policy(
 
 ### Parallel Test Execution
 
-Run multiple TCK tests in parallel for regression testing:
+The easiest way to run all 6 tests in parallel is the bundled shell script:
 
 ```bash
-# Run all Saturn tests in parallel
+cd tck/connector
+
+# Run all 6 tests — default config
+./run_all_tests.sh
+
+# Run all 6 tests — INT environment
+./run_all_tests.sh --config tck_int_config.yaml
+
+# Skip cleanup for all tests
+./run_all_tests.sh --no-cleanup
+```
+
+The script produces a **live real-time dashboard** in the terminal, updating each test's status as it progresses through phases.  Per-test logs and a combined summary are written to:
+
+```
+tck/connector/logs/run_all_tests/<YYYY-MM-DD>/<HHMMSS_<hex6>>/
+  ├── tck_e2e_jupiter_0-10-X_detailed.log
+  ├── tck_e2e_jupiter_0-10-X_simple.log
+  ├── tck_e2e_saturn_0-11-X_detailed.log
+  ├── tck_e2e_saturn_0-11-X_detailed_did.log
+  ├── tck_e2e_saturn_0-11-X_simple.log
+  ├── tck_e2e_saturn_0-11-X_simple_did.log
+  └── run_summary.log
+```
+
+To run a subset manually in parallel:
+
+```bash
+# Saturn BPNL + DID in parallel
 python tck_e2e_saturn_0-11-X_detailed.py &
-python tck_e2e_saturn_0-11-X_simple.py &
+python tck_e2e_saturn_0-11-X_detailed_did.py &
 wait
 
 # Check results

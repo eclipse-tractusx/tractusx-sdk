@@ -48,6 +48,7 @@ from tractusx_sdk.extensions.tck.connector import (
 
 config = SimpleTckConfig(
     test_name="tck_e2e_saturn_0-11-X_simple",
+    config_section="saturn",
     provider=saturn.provider,
     consumer=saturn.consumer,
     backend=saturn.backend(),

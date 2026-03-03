@@ -693,13 +693,42 @@ def build_tck_cli_parser(
         default=None,  # None = not explicitly set; config value takes precedence
         help="Skip cleanup of provider resources and backend data (cleanup enabled by default)",
     )
+    # YAML config file override
+    parser.add_argument(
+        "--config",
+        metavar="PATH",
+        default=None,
+        help=(
+            "Path to a YAML config file to use instead of the default tck-config.yaml. "
+            "Connectivity values (URLs, keys, BPNs, DIDs, policies) are loaded from the "
+            "given file.  Individual --provider-url / --consumer-url etc. args still "
+            "take precedence over the YAML values."
+        ),
+    )
+    parser.add_argument(
+        "--config-section",
+        metavar="SECTION",
+        default=None,
+        help=(
+            "Section name within the YAML config file to load "
+            "(e.g. 'jupiter', 'saturn'). "
+            "Defaults to the section the script was built with."
+        ),
+    )
     # Provider configuration
-    parser.add_argument("--provider-url", help="Provider EDC base URL")
+    parser.add_argument("--provider-url", help="Provider EDC base URL (no /management suffix)")
+    parser.add_argument("--provider-dma-path", metavar="PATH", default=None,
+                        help="Provider Management API path (default: /management)")
     parser.add_argument("--provider-api-key", help="Provider EDC API key")
     parser.add_argument("--provider-bpn", help="Provider Business Partner Number")
     parser.add_argument("--provider-dsp-url", help="Provider DSP endpoint URL")
+    parser.add_argument("--provider-dsp-url-did", metavar="URL", default=None,
+                        help="Provider DSP URL for DID-mode scripts (overrides --provider-dsp-url "
+                             "when discovery_mode=did, e.g. .../api/v1/dsp/2025-1)")
     # Consumer configuration
-    parser.add_argument("--consumer-url", help="Consumer EDC base URL")
+    parser.add_argument("--consumer-url", help="Consumer EDC base URL (no /management suffix)")
+    parser.add_argument("--consumer-dma-path", metavar="PATH", default=None,
+                        help="Consumer Management API path (default: /management)")
     parser.add_argument("--consumer-api-key", help="Consumer EDC API key")
     parser.add_argument("--consumer-bpn", help="Consumer Business Partner Number")
     # Backend configuration
