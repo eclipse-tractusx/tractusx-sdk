@@ -229,9 +229,11 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address (str): The URL of the EDC provider.
         target (str): The target asset identifier.
         policy (dict): The policy to be negotiated.
+        protocol (str, optional): DSP protocol version. Defaults to DSP_2025.
+        context (dict, optional): JSON-LD context for the negotiation request. Defaults to DEFAULT_NEGOTIATION_CONTEXT.
 
         Returns:
-        dict: The EDR negotiation request in the form of a dictionary.
+        ContractNegotiationModel: The EDR negotiation request model.
         """
         offer_id = policy.get("@id", None)
         if (offer_id is None):
@@ -251,12 +253,14 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     def start_edr_negotiation(self, counter_party_id: str, counter_party_address: str, target: str,
                               policy: dict, protocol: str = DSP_2025, context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> str | None:
         """
-        Starts the edr negotiation and gives the negotation id
+        Starts the edr negotiation and gives the negotiation id.
 
         @param counter_party_id: The identifier of the counterparty (Business Partner Number [BPN]).
         @param counter_party_address: The URL of the EDC provider.
         @param target: The target asset for the negotiation.
         @param policy: The policy to be used for the negotiation.
+        @param protocol: DSP protocol version. Defaults to DSP_2025.
+        @param context: JSON-LD context for the negotiation request. Defaults to DEFAULT_NEGOTIATION_CONTEXT.
         @returns: negotiation_id:str or if Fail -> None
         """
 
@@ -287,9 +291,66 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
         return content.get("@id", None)
     
+    def _resolve_policies_from_catalog(self, counter_party_id: str, counter_party_address: str,
+                                        filter_expression: list[dict], protocol: str,
+                                        catalog_context: dict) -> list:
+        """
+        Auto-discovers and selects a policy from the provider's catalog when policies=None.
+
+        DISCLAIMER: This accepts ANY policy offered by the provider automatically.
+        Intended for testing and development only. Do NOT use in production — always
+        specify an explicit allow-list of accepted policies.
+
+        Returns:
+        list: A single-element list containing the auto-selected policy.
+        """
+        if self.logger:
+            self.logger.warning(
+                "\n%s\n"
+                "  ATTENTION! — policies=None DETECTED\n"
+                "%s\n"
+                "  [Connector Service]: [%s]\n"
+                "  ANY policy offered by the provider will be accepted automatically.\n"
+                "  This bypasses all usage-policy enforcement.\n"
+                "\n"
+                "  ▶  RECOMMENDED FOR TESTING / DEVELOPMENT ONLY.\n"
+                "  ▶  DO NOT USE IN PRODUCTION.\n"
+                "     Always pass an explicit allow-list of accepted policies.\n"
+                "%s",
+                "=" * 72, "=" * 72, counter_party_address, "=" * 72)
+
+        catalog_response = self.get_catalog_with_filter(
+            counter_party_id=counter_party_id,
+            counter_party_address=counter_party_address,
+            protocol=protocol,
+            context=catalog_context,
+            filter_expression=filter_expression
+        )
+        if catalog_response is None:
+            raise RuntimeError(
+                f"[Connector Service]: [{counter_party_address}] Could not retrieve the catalog to discover available policies!")
+        try:
+            valid_assets_policies = DspTools.filter_assets_and_policies(
+                catalog=catalog_response, allowed_policies=None)
+        except Exception as e:
+            raise RuntimeError(
+                f"[Connector Service]: [{counter_party_address}] No policy found in catalog: [{str(e)}]")
+        if not valid_assets_policies:
+            raise RuntimeError(
+                f"[Connector Service]: [{counter_party_address}] No policy found in catalog!")
+        ## Use the first available policy; strip @id/@type for a consistent cache key.
+        _, raw_policy = valid_assets_policies[0]
+        policies = [{k: v for k, v in raw_policy.items() if k not in ['@id', '@type']}]
+        if self.logger:
+            self.logger.info(
+                "[Connector Service]: [%s]: policies=None → auto-selected policy from catalog: %s",
+                counter_party_address, policies)
+        return policies
+
     def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
                         policies: list = [], max_wait: int = 60, poll_interval: int = 1,
-                        protocol: str = DSP_2025, catalog_context: dict = DEFAULT_CONTEXT, negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> str:
+                        protocol: str = DSP_2025, catalog_context: dict = DEFAULT_CONTEXT,
+                        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> str:
 
         """
         Checks if the transfer is already available at the location or not...
@@ -297,11 +358,16 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         Parameters:
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
+        filter_expression (list[dict]): A list of filter conditions for the catalog request.
         policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
             policy body without ``@id`` / ``@type``). Pass ``None`` to auto-select the first
             available policy from the provider's catalog (test-only; avoid in production).
             An empty list ``[]`` raises a ``ValueError`` immediately. Defaults to ``[]``.
-        dct_type (str, optional): The DCT type to be used for the transfer
+        max_wait (int, optional): Maximum seconds to wait for negotiation / EDR. Defaults to 60.
+        poll_interval (int, optional): Seconds between status-poll attempts. Defaults to 1.
+        protocol (str, optional): DSP protocol version. Defaults to DSP_2025.
+        catalog_context (dict, optional): JSON-LD context for catalog requests.
+        negotiation_context (dict, optional): JSON-LD context for negotiation requests.
 
         Returns:
         str: The transfer ID.
@@ -318,58 +384,19 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             )
 
         ## If policies is None, pre-fetch the catalog to discover and select a concrete policy.
-        ## This gives a stable, reusable cache key instead of hashing None.
         if policies is None:
-            ## DISCLAIMER: policies=None means ANY policy offered by the provider will be
-            ## accepted automatically. This is intended for testing and development only.
-            ## Do NOT use policies=None in production — always specify an explicit allow-list
-            ## to ensure only approved usage policies are accepted.
-            if self.logger:
-                self.logger.warning(
-                    "\n%s\n"
-                    "  ATTENTION! — policies=None DETECTED\n"
-                    "%s\n"
-                    "  [Connector Service]: [%s]\n"
-                    "  ANY policy offered by the provider will be accepted automatically.\n"
-                    "  This bypasses all usage-policy enforcement.\n"
-                    "\n"
-                    "  ▶  RECOMMENDED FOR TESTING / DEVELOPMENT ONLY.\n"
-                    "  ▶  DO NOT USE IN PRODUCTION.\n"
-                    "     Always pass an explicit allow-list of accepted policies.\n"
-                    "%s",
-                    "=" * 72, "=" * 72, counter_party_address, "=" * 72)
-
-            catalog_response = self.get_catalog_with_filter(
+            policies = self._resolve_policies_from_catalog(
                 counter_party_id=counter_party_id,
                 counter_party_address=counter_party_address,
+                filter_expression=filter_expression,
                 protocol=protocol,
-                context=catalog_context,
-                filter_expression=filter_expression
+                catalog_context=catalog_context
             )
-            if catalog_response is None:
-                raise RuntimeError(
-                    f"[Connector Service]: [{counter_party_address}] Could not retrieve the catalog to discover available policies!")
-            try:
-                valid_assets_policies = DspTools.filter_assets_and_policies(
-                    catalog=catalog_response, allowed_policies=None)
-            except Exception as e:
-                raise RuntimeError(
-                    f"[Connector Service]: [{counter_party_address}] No policy found in catalog: [{str(e)}]")
-            if not valid_assets_policies:
-                raise RuntimeError(
-                    f"[Connector Service]: [{counter_party_address}] No policy found in catalog!")
-            ## Use the first available policy; strip @id/@type for a consistent cache key.
-            _, raw_policy = valid_assets_policies[0]
-            policies = [{k: v for k, v in raw_policy.items() if k not in ['@id', '@type']}]
-            if self.logger:
-                self.logger.info(
-                    "[Connector Service]: [%s]: policies=None → auto-selected policy from catalog: %s",
-                    counter_party_address, policies)
 
         ## Hash the policies to get checksum. 
         current_policies_checksum = hashlib.sha3_256(str(policies).encode('utf-8')).hexdigest()
         filter_expression_checksum = hashlib.sha3_256(str(filter_expression).encode('utf-8')).hexdigest()
-        ## If the countrer party id is already available and also the dct type is in the counter_party_id and the transfer key is also present
+        ## If the counter party id is already available and also the dct type is in the counter_party_id and the transfer key is also present
         transfer_process_id: str = self.connection_manager.get_connection_transfer_id(counter_party_id=counter_party_id,
                                                                                       counter_party_address=counter_party_address,
                                                                                       query_checksum=filter_expression_checksum,
@@ -498,6 +525,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
         filter_expression (list[dict]): A list of filter conditions, each represented as a dictionary.
+        timeout (int, optional): Request timeout in seconds. Defaults to None.
+        protocol (str, optional): DSP protocol version. Defaults to DSP_2025.
+        context (dict, optional): JSON-LD context for the catalog request. Defaults to DEFAULT_CONTEXT.
 
         Returns:
         dict | None: The EDC catalog as a dictionary, or None if the request fails.
@@ -514,9 +544,11 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
         filter_expression (list[dict]): A list of filter conditions, each represented as a dictionary.
+        protocol (str, optional): DSP protocol version. Defaults to DSP_2025.
+        context (dict, optional): JSON-LD context for the catalog request. Defaults to DEFAULT_CONTEXT.
 
         Returns:
-        dict: A catalog request with the filter condition included.
+        CatalogModel: A catalog request with the filter condition included.
         """
         catalog_request: CatalogModel = self.get_catalog_request(counter_party_id=counter_party_id,
                                     counter_party_address=counter_party_address, protocol=protocol, context=context)
@@ -742,9 +774,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         policies: list,
         max_wait: int = 60,
         poll_interval: int = 1,
-        protocol: str = DSP_2025,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT
+        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        protocol: str = DSP_2025
     ) -> tuple[str, str]:
         """
         Does all the dsp necessary operations until getting the edr.
@@ -752,8 +784,12 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
         @param counter_party_id: The identifier of the counterparty (Business Partner Number [BPN]).
         @param counter_party_address: The URL of the EDC provider.
+        @param filter_expression: The filter expression for the catalog request.
         @param policies: The policies to be used for the transfer.
-        @param dct_type: The DCT type to be used for the transfer. Defaults to "IndustryFlagService".
+        @param max_wait: Maximum seconds to wait for negotiation / EDR. Defaults to 60.
+        @param poll_interval: Seconds between status-poll attempts. Defaults to 1.
+        @param catalog_context: JSON-LD context for catalog requests.
+        @param negotiation_context: JSON-LD context for negotiation requests.
         @param protocol: The protocol to be used for the transfer. Defaults to DSP_2025.
         @returns: tuple[dataplane_endpoint:str, edr_access_token:str] or if fail Exception
         """
@@ -780,17 +816,11 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         filter_expression: list[dict],
         path: str = "/",
         policies: list = [],
-        verify: bool = False,
-        headers: dict = {},
-        timeout: int = None,
-        params: dict = None,
-        allow_redirects: bool = False,
-        session=None,
         max_wait: int = 60,
         poll_interval: int = 1,
-        protocol: str = DSP_2025,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT
+        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        **kwargs
     ) -> Response:
         """
         Executes a HTTP GET request to a asset behind an EDC!
@@ -799,15 +829,35 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         Parameters:
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
+        filter_expression (list[dict]): A list of filter conditions for the catalog request.
         path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
-        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
-            policy body without ``@id`` / ``@type``). Pass ``None`` to accept **any**
-            policy offered by the provider. Defaults to None (accept any). Accept any policy option is for test-only, do not use in production!
-        dct_type (str, optional): The DCT type to be used for the transfer. Defaults to "IndustryFlagService".
+        policies (list | None, optional): Allow-list of accepted usage policies.
+        max_wait (int, optional): Maximum seconds to wait for negotiation / EDR. Defaults to 60.
+        poll_interval (int, optional): Seconds between status-poll attempts. Defaults to 1.
+        catalog_context (dict, optional): JSON-LD context for catalog requests.
+        negotiation_context (dict, optional): JSON-LD context for negotiation requests.
+
+        Keyword Args:
+        protocol (str): DSP protocol version. Defaults to DSP_2025.
+        verify (bool): Whether to verify SSL certificates. Defaults to False.
+        headers (dict): Additional HTTP headers. Defaults to {}.
+        timeout (int): Request timeout in seconds. Defaults to None.
+        params (dict): URL query parameters. Defaults to None.
+        allow_redirects (bool): Whether to allow redirects. Defaults to False.
+        session: Session object for connection pooling. Defaults to None.
 
         Returns:
         Response: The HTTP response from the GET request. If the request fails, an Exception is raised.
         """
+        ## Extract request kwargs
+        protocol = kwargs.pop("protocol", self.DSP_2025)
+        verify = kwargs.pop("verify", False)
+        headers = kwargs.pop("headers", {})
+        timeout = kwargs.pop("timeout", None)
+        params = kwargs.pop("params", None)
+        allow_redirects = kwargs.pop("allow_redirects", False)
+        session = kwargs.pop("session", None)
+
         dataplane_url, access_token = self.do_dsp(
             counter_party_id=counter_party_id,
             counter_party_address=counter_party_address,
@@ -838,31 +888,44 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         policies: list = [],
         max_wait: int = 60,
         poll_interval: int = 1,
-        verify: bool = False,
-        headers: dict = {},
-        timeout: int = None,
-        params: dict = None,
-        allow_redirects: bool = False,
-        session=None,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT
+        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        **kwargs
     ) -> Response:
         """
         Executes a HTTP GET request to a asset behind an EDC!
         Abstracts everything for you doing the dsp exchange.
 
         Parameters:
-        counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
+        bpnl (str): The Business Partner Number (BPN) of the counterparty.
         counter_party_address (str): The URL of the EDC provider.
+        filter_expression (list[dict]): A list of filter conditions for the catalog request.
         path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
-        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
-            policy body without ``@id`` / ``@type``). Pass ``None`` to accept **any**
-            policy offered by the provider. Defaults to None (accept any). Accept any policy option is for test-only, do not use in production!
-        dct_type (str, optional): The DCT type to be used for the transfer. Defaults to "IndustryFlagService".
+        policies (list | None, optional): Allow-list of accepted usage policies.
+        max_wait (int, optional): Maximum seconds to wait for negotiation / EDR. Defaults to 60.
+        poll_interval (int, optional): Seconds between status-poll attempts. Defaults to 1.
+        catalog_context (dict, optional): JSON-LD context for catalog requests.
+        negotiation_context (dict, optional): JSON-LD context for negotiation requests.
+
+        Keyword Args:
+        verify (bool): Whether to verify SSL certificates. Defaults to False.
+        headers (dict): Additional HTTP headers. Defaults to {}.
+        timeout (int): Request timeout in seconds. Defaults to None.
+        params (dict): URL query parameters. Defaults to None.
+        allow_redirects (bool): Whether to allow redirects. Defaults to False.
+        session: Session object for connection pooling. Defaults to None.
 
         Returns:
         Response: The HTTP response from the GET request. If the request fails, an Exception is raised.
         """
+        ## Extract request kwargs
+        verify = kwargs.pop("verify", False)
+        headers = kwargs.pop("headers", {})
+        timeout = kwargs.pop("timeout", None)
+        params = kwargs.pop("params", None)
+        allow_redirects = kwargs.pop("allow_redirects", False)
+        session = kwargs.pop("session", None)
+
         dataplane_url, access_token = self.do_dsp_with_bpnl(
             bpnl=bpnl,
             counter_party_address=counter_party_address,
@@ -889,41 +952,50 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        content_type: str = APPLICATION_JSON_CONTENT_TYPE,
         json=None,
         data=None,
         policies: list = [],
         max_wait: int = 60,
         poll_interval: int = 1,
-        verify: bool = False,
-        headers: dict = None,
-        timeout: int = None,
-        allow_redirects: bool = False,
-        session=None,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT
+        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        **kwargs
     ) -> Response:
         """
         Performs a HTTP POST request to a specific asset behind an EDC.
 
-        This function abstracts the entire process of exchanging data with the EDC. It first negotiates the EDR (Endpoint Data Reference)
-        using the provided counterparty ID, EDC provider URL, policies, and DCT type. Then, it constructs the dataplane URL and access token
-        using the negotiated EDR. Finally, it sends a POST request to the dataplane URL with the provided data, headers, and content type.
-
         Parameters:
-        counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
+        bpnl (str): The Business Partner Number (BPN) of the counterparty.
         counter_party_address (str): The URL of the EDC provider.
+        filter_expression (list[dict]): A list of filter conditions for the catalog request.
+        path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
         json (dict, optional): The JSON data to be sent in the POST request.
         data (dict, optional): The data to be sent in the POST request.
-        path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
-        content_type (str, optional): The content type of the POST request. Defaults to "application/json".
-        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
-            policy body without ``@id`` / ``@type``). Pass ``None`` to accept **any**
-            policy offered by the provider. Defaults to None (accept any). Accept any policy option is for test-only, do not use in production!
+        policies (list | None, optional): Allow-list of accepted usage policies.
+        max_wait (int, optional): Maximum seconds to wait for negotiation / EDR. Defaults to 60.
+        poll_interval (int, optional): Seconds between status-poll attempts. Defaults to 1.
+        catalog_context (dict, optional): JSON-LD context for catalog requests.
+        negotiation_context (dict, optional): JSON-LD context for negotiation requests.
+
+        Keyword Args:
+        content_type (str): Content type of the request. Defaults to "application/json".
+        verify (bool): Whether to verify SSL certificates. Defaults to False.
+        headers (dict): Additional HTTP headers. Defaults to None.
+        timeout (int): Request timeout in seconds. Defaults to None.
+        allow_redirects (bool): Whether to allow redirects. Defaults to False.
+        session: Session object for connection pooling. Defaults to None.
 
         Returns:
         Response: The HTTP response from the POST request. If the request fails, an Exception is raised.
         """
+        ## Extract request kwargs
+        content_type = kwargs.pop("content_type", self.APPLICATION_JSON_CONTENT_TYPE)
+        verify = kwargs.pop("verify", False)
+        headers = kwargs.pop("headers", None)
+        timeout = kwargs.pop("timeout", None)
+        allow_redirects = kwargs.pop("allow_redirects", False)
+        session = kwargs.pop("session", None)
+
         dataplane_url, access_token = self.do_dsp_with_bpnl(
             bpnl=bpnl,
             counter_party_address=counter_party_address,
@@ -950,43 +1022,52 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        content_type: str = APPLICATION_JSON_CONTENT_TYPE,
         json=None,
         data=None,
         policies: list = [],
-        verify: bool = False,
-        headers: dict = None,
-        timeout: int = None,
-        allow_redirects: bool = False,
-        session=None,
         max_wait: int = 60,
         poll_interval: int = 1,
-        protocol: str = DSP_2025,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT
+        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        **kwargs
     ) -> Response:
         """
         Performs a HTTP POST request to a specific asset behind an EDC.
 
-        This function abstracts the entire process of exchanging data with the EDC. It first negotiates the EDR (Endpoint Data Reference)
-        using the provided counterparty ID, EDC provider URL, policies, and DCT type. Then, it constructs the dataplane URL and access token
-        using the negotiated EDR. Finally, it sends a POST request to the dataplane URL with the provided data, headers, and content type.
-
         Parameters:
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
+        filter_expression (list[dict]): A list of filter conditions for the catalog request.
+        path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
         json (dict, optional): The JSON data to be sent in the POST request.
         data (dict, optional): The data to be sent in the POST request.
-        path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
-        content_type (str, optional): The content type of the POST request. Defaults to "application/json".
-        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
-            policy body without ``@id`` / ``@type``). Pass ``None`` to accept **any**
-            policy offered by the provider. Defaults to None (accept any). Accept any policy option is for test-only, do not use in production!
-        dct_type (str, optional): The DCT type to be used for the transfer. Defaults to "IndustryFlagService".
+        policies (list | None, optional): Allow-list of accepted usage policies.
+        max_wait (int, optional): Maximum seconds to wait for negotiation / EDR. Defaults to 60.
+        poll_interval (int, optional): Seconds between status-poll attempts. Defaults to 1.
+        catalog_context (dict, optional): JSON-LD context for catalog requests.
+        negotiation_context (dict, optional): JSON-LD context for negotiation requests.
+
+        Keyword Args:
+        protocol (str): DSP protocol version. Defaults to DSP_2025.
+        content_type (str): Content type of the request. Defaults to "application/json".
+        verify (bool): Whether to verify SSL certificates. Defaults to False.
+        headers (dict): Additional HTTP headers. Defaults to None.
+        timeout (int): Request timeout in seconds. Defaults to None.
+        allow_redirects (bool): Whether to allow redirects. Defaults to False.
+        session: Session object for connection pooling. Defaults to None.
 
         Returns:
         Response: The HTTP response from the POST request. If the request fails, an Exception is raised.
         """
+        ## Extract request kwargs
+        protocol = kwargs.pop("protocol", self.DSP_2025)
+        content_type = kwargs.pop("content_type", self.APPLICATION_JSON_CONTENT_TYPE)
+        verify = kwargs.pop("verify", False)
+        headers = kwargs.pop("headers", None)
+        timeout = kwargs.pop("timeout", None)
+        allow_redirects = kwargs.pop("allow_redirects", False)
+        session = kwargs.pop("session", None)
+
         dataplane_url, access_token = self.do_dsp(
             counter_party_id=counter_party_id,
             counter_party_address=counter_party_address,
@@ -1014,49 +1095,50 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        content_type: str = APPLICATION_JSON_CONTENT_TYPE,
         json=None,
         data=None,
         policies: list = [],
         max_wait: int = 60,
         poll_interval: int = 1,
-        verify: bool = False,
-        headers: dict = None,
-        timeout: int = None,
-        allow_redirects: bool = False,
-        session=None,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT
+        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        **kwargs
     ) -> Response:
         """
         Performs a HTTP PUT request to a specific asset behind an EDC.
-
-        This function abstracts the entire process of exchanging data with the EDC. It first negotiates the EDR (Endpoint Data Reference)
-        using the provided counterparty ID, EDC provider URL, policies, and DCT type. Then, it constructs the dataplane URL and access token
-        using the negotiated EDR. Finally, it sends a PUT request to the dataplane URL with the provided data, headers, and content type.
 
         Parameters:
         bpnl (str): The Business Partner Number (BPN) of the counterparty.
         counter_party_address (str): The URL of the EDC provider.
         filter_expression (list[dict]): A list of filter conditions for the catalog request.
+        path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
         json (dict, optional): The JSON data to be sent in the PUT request.
         data (dict, optional): The data to be sent in the PUT request.
-        path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
-        content_type (str, optional): The content type of the PUT request. Defaults to "application/json".
-        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
-            policy body without ``@id`` / ``@type``). Pass ``None`` to accept **any**
-            policy offered by the provider. Defaults to None (accept any). Accept any policy option is for test-only, do not use in production!
-        verify (bool, optional): Whether to verify SSL certificates. Defaults to False.
-        headers (dict, optional): Additional headers to include in the request. Defaults to None.
-        timeout (int, optional): Request timeout in seconds. Defaults to None.
-        allow_redirects (bool, optional): Whether to allow redirects. Defaults to False.
-        session (optional): Session object for connection pooling. Defaults to None.
-        catalog_context (dict, optional): Context for catalog requests. Defaults to DEFAULT_CONTEXT.
-        negotiation_context (dict, optional): Context for negotiation requests. Defaults to DEFAULT_NEGOTIATION_CONTEXT.
+        policies (list | None, optional): Allow-list of accepted usage policies.
+        max_wait (int, optional): Maximum seconds to wait for negotiation / EDR. Defaults to 60.
+        poll_interval (int, optional): Seconds between status-poll attempts. Defaults to 1.
+        catalog_context (dict, optional): JSON-LD context for catalog requests.
+        negotiation_context (dict, optional): JSON-LD context for negotiation requests.
+
+        Keyword Args:
+        content_type (str): Content type of the request. Defaults to "application/json".
+        verify (bool): Whether to verify SSL certificates. Defaults to False.
+        headers (dict): Additional HTTP headers. Defaults to None.
+        timeout (int): Request timeout in seconds. Defaults to None.
+        allow_redirects (bool): Whether to allow redirects. Defaults to False.
+        session: Session object for connection pooling. Defaults to None.
 
         Returns:
         Response: The HTTP response from the PUT request. If the request fails, an Exception is raised.
         """
+        ## Extract request kwargs
+        content_type = kwargs.pop("content_type", self.APPLICATION_JSON_CONTENT_TYPE)
+        verify = kwargs.pop("verify", False)
+        headers = kwargs.pop("headers", None)
+        timeout = kwargs.pop("timeout", None)
+        allow_redirects = kwargs.pop("allow_redirects", False)
+        session = kwargs.pop("session", None)
+
         dataplane_url, access_token = self.do_dsp_with_bpnl(
             bpnl=bpnl,
             counter_party_address=counter_party_address,
@@ -1083,51 +1165,52 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        content_type: str = APPLICATION_JSON_CONTENT_TYPE,
         json=None,
         data=None,
         policies: list = [],
-        verify: bool = False,
-        headers: dict = None,
-        timeout: int = None,
-        allow_redirects: bool = False,
-        session=None,
         max_wait: int = 60,
         poll_interval: int = 1,
-        protocol: str = DSP_2025,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT
+        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        **kwargs
     ) -> Response:
         """
         Performs a HTTP PUT request to a specific asset behind an EDC.
-
-        This function abstracts the entire process of exchanging data with the EDC. It first negotiates the EDR (Endpoint Data Reference)
-        using the provided counterparty ID, EDC provider URL, policies, and DCT type. Then, it constructs the dataplane URL and access token
-        using the negotiated EDR. Finally, it sends a PUT request to the dataplane URL with the provided data, headers, and content type.
 
         Parameters:
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
         filter_expression (list[dict]): A list of filter conditions for the catalog request.
+        path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
         json (dict, optional): The JSON data to be sent in the PUT request.
         data (dict, optional): The data to be sent in the PUT request.
-        path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
-        content_type (str, optional): The content type of the PUT request. Defaults to "application/json".
-        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
-            policy body without ``@id`` / ``@type``). Pass ``None`` to accept **any**
-            policy offered by the provider. Defaults to None (accept any). Accept any policy option is for test-only, do not use in production!
-        verify (bool, optional): Whether to verify SSL certificates. Defaults to False.
-        headers (dict, optional): Additional headers to include in the request. Defaults to None.
-        timeout (int, optional): Request timeout in seconds. Defaults to None.
-        allow_redirects (bool, optional): Whether to allow redirects. Defaults to False.
-        session (optional): Session object for connection pooling. Defaults to None.
-        protocol (str, optional): The DSP protocol version to use. Defaults to DSP_2025.
-        catalog_context (dict, optional): Context for catalog requests. Defaults to DEFAULT_CONTEXT.
-        negotiation_context (dict, optional): Context for negotiation requests. Defaults to DEFAULT_NEGOTIATION_CONTEXT.
+        policies (list | None, optional): Allow-list of accepted usage policies.
+        max_wait (int, optional): Maximum seconds to wait for negotiation / EDR. Defaults to 60.
+        poll_interval (int, optional): Seconds between status-poll attempts. Defaults to 1.
+        catalog_context (dict, optional): JSON-LD context for catalog requests.
+        negotiation_context (dict, optional): JSON-LD context for negotiation requests.
+
+        Keyword Args:
+        protocol (str): DSP protocol version. Defaults to DSP_2025.
+        content_type (str): Content type of the request. Defaults to "application/json".
+        verify (bool): Whether to verify SSL certificates. Defaults to False.
+        headers (dict): Additional HTTP headers. Defaults to None.
+        timeout (int): Request timeout in seconds. Defaults to None.
+        allow_redirects (bool): Whether to allow redirects. Defaults to False.
+        session: Session object for connection pooling. Defaults to None.
 
         Returns:
         Response: The HTTP response from the PUT request. If the request fails, an Exception is raised.
         """
+        ## Extract request kwargs
+        protocol = kwargs.pop("protocol", self.DSP_2025)
+        content_type = kwargs.pop("content_type", self.APPLICATION_JSON_CONTENT_TYPE)
+        verify = kwargs.pop("verify", False)
+        headers = kwargs.pop("headers", None)
+        timeout = kwargs.pop("timeout", None)
+        allow_redirects = kwargs.pop("allow_redirects", False)
+        session = kwargs.pop("session", None)
+
         dataplane_url, access_token = self.do_dsp(
             counter_party_id=counter_party_id,
             counter_party_address=counter_party_address,
@@ -1141,7 +1224,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError(self.ERROR_NO_DATAPLANE_OR_TOKEN)
 
         return self._execute_http_request(
             method='PUT', dataplane_url=dataplane_url, access_token=access_token, path=path,

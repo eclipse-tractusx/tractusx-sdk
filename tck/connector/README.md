@@ -5,10 +5,12 @@
 The **Test Compatibility Kit (TCK)** provides comprehensive end-to-end (E2E) testing scripts to validate that Eclipse Dataspace Connector (EDC) implementations work correctly with the Tractus-X SDK. These tests verify the complete data exchange flow from provider data provision through consumer data consumption.
 
 The TCK is designed for use with:
+
 - **EDC**: [Eclipse Tractus-X EDC](https://github.com/eclipse-tractusx/tractusx-edc)
 - **Backend**: [simple-data-backend](https://github.com/eclipse-tractusx/tractus-x-umbrella/tree/main/simple-data-backend) from Tractus-X Umbrella
 
 The TCK supports both legacy and current EDC protocol versions:
+
 - **Jupiter Protocol**: Legacy DSP (`dataspace-protocol-http`) for EDC v0.8.0–0.10.x
 - **Saturn Protocol**: Current DSP 2025-1 (`dataspace-protocol-http:2025-1`) for EDC v0.11.x+
 
@@ -30,7 +32,7 @@ The TCK validates:
 The TCK provides **4 test scripts** covering two protocol versions and two complexity levels:
 
 | Script | Protocol | EDC Version | Complexity | Purpose |
-|--------|----------|-------------|------------|---------|
+| -------- | ---------- | ------------- | ------------ | --------- |
 | `tck_e2e_saturn_0-11-X_detailed.py` | Saturn (DSP 2025-1) | 0.11.x+ | Detailed | Step-by-step validation of each phase |
 | `tck_e2e_saturn_0-11-X_simple.py` | Saturn (DSP 2025-1) | 0.11.x+ | Simple | Single-call validation via `do_get_with_bpnl()` |
 | `tck_e2e_jupiter_0-10-X_detailed.py` | Jupiter (Legacy DSP) | 0.8.x–0.10.x | Detailed | Step-by-step validation (legacy protocol) |
@@ -39,12 +41,14 @@ The TCK provides **4 test scripts** covering two protocol versions and two compl
 ### Detailed vs. Simple Tests
 
 **Detailed Tests** (`*_detailed.py`):
+
 - Explicit control over each phase (provision, catalog, negotiate, transfer, access)
 - Validates individual API responses at each step
 - Comprehensive logging of all requests and responses
 - Best for: Debugging, learning the flow, verifying specific behaviors
 
 **Simple Tests** (`*_simple.py`):
+
 - Uses SDK's `do_get_with_bpnl()` convenience method
 - Entire consumer flow (catalog → negotiate → transfer → EDR → GET) in one call
 - Minimal code, maximum automation
@@ -94,6 +98,7 @@ sequenceDiagram
 ## Configuration
 
 Each TCK script requires configuration for:
+
 1. **Provider EDC Connector**
 2. **Consumer EDC Connector**
 3. **Backend Data Source** (for storing test data)
@@ -133,6 +138,7 @@ BACKEND_CONFIG = {
 ### Key Configuration Notes
 
 ⚠️ **IMPORTANT**:
+
 - **DSP URL**: Do NOT include protocol version suffix (e.g., `/2025-1`). The consumer EDC appends this automatically when needed (the idea is to demonstrate backward compatibility)
 - **BPN Format**: Must match the format in your Discovery Service (e.g., `BPNL` prefix for legal entities).
 - **API Keys**: Ensure Management API keys have sufficient permissions for create/read operations.
@@ -140,7 +146,8 @@ BACKEND_CONFIG = {
 
 ## Running TCK Tests
 
-> **💡 Quick Tips**: 
+> **💡 Quick Tips**:
+>
 > - **Debug logging**: Enabled by default. Use `--no-debug` to disable verbose output.
 > - **Cleanup**: Enabled by default. Use `--no-cleanup` to preserve resources after test completion.
 > - See [Command-Line Options](#command-line-options) for detailed information.
@@ -230,6 +237,7 @@ python tck_e2e_saturn_0-11-X_detailed.py --no-debug --no-cleanup
 All TCK tests support the following command-line options:
 
 **`--no-debug`**: Disable DEBUG-level logging (**debug enabled by default**)
+
 - By default, all TCK tests run with DEBUG-level logging enabled
 - This provides verbose logging for all HTTP requests and responses
 - Shows detailed SDK internal operations
@@ -237,6 +245,7 @@ All TCK tests support the following command-line options:
 - Example: `python tck_e2e_saturn_0-11-X_simple.py --no-debug`
 
 **`--no-cleanup`**: Skip resource cleanup after test (**cleanup enabled by default**)
+
 - By default, all TCK tests automatically clean up resources after completion
 - Cleanup includes:
   - All EDC provider resources (Contract Definitions, Assets, Policies)
@@ -329,6 +338,7 @@ TCK tests log all HTTP requests and responses with structured markers:
 ### PASS Criteria
 
 A test is marked **PASS** when all phases complete successfully:
+
 - ✅ Phase 0: Sample data uploaded to backend (HTTP 200)
 - ✅ Phase 1: All provider resources created (policies, asset, contract definition)
 - ✅ Phase 2: Consumer successfully negotiates and obtains EDR

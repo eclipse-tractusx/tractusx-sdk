@@ -41,13 +41,14 @@ from ...models.connector.base_queryspec_model import BaseQuerySpecModel
 from ...tools import HttpTools, DspTools, op
 
 EDC_NAMESPACE: str = "https://w3id.org/edc/v0.0.1/ns/"
+VOCAB_KEY: str = "@vocab"
 DSP_0_8: str = "dataspace-protocol-http"
 # Jupiter / legacy DSP uses Tractus-X v1.0.0 and W3C ODRL JSON-LD context URLs.
 # (Saturn replaces these with Catena-X 2025-9 URLs.)
 DEFAULT_NEGOTIATION_CONTEXT: list = [
     "https://w3id.org/tractusx/policy/v1.0.0",
     "http://www.w3.org/ns/odrl.jsonld",
-    {"@vocab": EDC_NAMESPACE},
+    {VOCAB_KEY: EDC_NAMESPACE},
 ]
 DEFAULT_CONTEXT: dict = {
     "edc": EDC_NAMESPACE,
@@ -56,6 +57,10 @@ DEFAULT_CONTEXT: dict = {
 }
 DEFAULT_DCT_TYPE_KEY: str = "'http://purl.org/dc/terms/type'.'@id'"
 DEFAULT_ID_KEY: str = "https://w3id.org/edc/v0.0.1/ns/id"
+
+_NO_DATAPLANE_ERROR: str = (
+    "[Connector Service]: No dataplane URL or access_token was able to be retrieved!"
+)
 
 
 class BaseConnectorConsumerService(BaseService):
@@ -105,7 +110,7 @@ class BaseConnectorConsumerService(BaseService):
 
         self.connection_manager = connection_manager if connection_manager is not None else MemoryConnectionManager()
 
-    class _Builder(BaseService._Builder):
+    class _Builder(BaseService._Builder):  # NOSONAR - used by ServiceFactory via BaseService._Builder pattern
         def dma_path(self, dma_path: str):
             self._data["dma_path"] = dma_path
             return self
@@ -244,7 +249,7 @@ class BaseConnectorConsumerService(BaseService):
     def get_query_spec(self, filter_expression: list[dict]) -> dict:
         return {
             "@context": {
-                "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+                VOCAB_KEY: EDC_NAMESPACE
             },
             "@type": "QuerySpec",
             "filterExpression": filter_expression
@@ -273,7 +278,7 @@ class BaseConnectorConsumerService(BaseService):
         return catalog_request
 
     def get_edr_negotiation_request(self, counter_party_id: str, counter_party_address: str, target: str,
-                                    policy: dict, protocol: str = DSP_0_8, context: dict = ["https://w3id.org/tractusx/policy/v1.0.0","http://www.w3.org/ns/odrl.jsonld",{"@vocab": "https://w3id.org/edc/v0.0.1/ns/"}]) -> BaseContractNegotiationModel:
+                                    policy: dict, protocol: str = DSP_0_8, context: dict = ["https://w3id.org/tractusx/policy/v1.0.0","http://www.w3.org/ns/odrl.jsonld",{VOCAB_KEY: EDC_NAMESPACE}]) -> BaseContractNegotiationModel:
         """
         Builds the EDR Negotiation Request.
 
@@ -303,7 +308,7 @@ class BaseConnectorConsumerService(BaseService):
 
         ## Simple catalog request without filter
 
-    def get_catalog_request(self, counter_party_id: str, counter_party_address: str, context={"edc": "https://w3id.org/edc/v0.0.1/ns/","odrl": "http://www.w3.org/ns/odrl/2/","dct": "https://purl.org/dc/terms/"}) -> BaseCatalogModel:
+    def get_catalog_request(self, counter_party_id: str, counter_party_address: str, context={"edc": EDC_NAMESPACE,"odrl": "http://www.w3.org/ns/odrl/2/","dct": "https://purl.org/dc/terms/"}) -> BaseCatalogModel:
         return ModelFactory.get_catalog_model(
             dataspace_version=self.dataspace_version,
             context=context,
@@ -363,7 +368,7 @@ class BaseConnectorConsumerService(BaseService):
         )
 
     def get_catalogs_by_dct_type(self, counter_party_id: str, edcs: list, dct_type: str,
-                                 dct_type_key: str = "'http://purl.org/dc/terms/type'.'@id'", timeout: int = None, **kwargs):
+                                 dct_type_key: str = DEFAULT_DCT_TYPE_KEY, timeout: int = None, **kwargs):
         return self.get_catalogs_with_filter(counter_party_id=counter_party_id, edcs=edcs, 
                                              filter_expression=[self.get_filter_expression(key=dct_type_key, value=dct_type, operator="=")],
                                              timeout=timeout, **kwargs)
@@ -396,14 +401,14 @@ class BaseConnectorConsumerService(BaseService):
         return catalogs
 
     def get_catalog_by_dct_type(self, counter_party_id: str, counter_party_address: str, dct_type: str,
-                                dct_type_key="'http://purl.org/dc/terms/type'.'@id'", operator="=", timeout=None, context=DEFAULT_CONTEXT, **kwargs):
+                                dct_type_key=DEFAULT_DCT_TYPE_KEY, operator="=", timeout=None, context=DEFAULT_CONTEXT, **kwargs):
         return self.get_catalog_with_filter(counter_party_id=counter_party_id,
                                             counter_party_address=counter_party_address, filter_expression=[
                 self.get_filter_expression(key=dct_type_key, value=dct_type, operator=operator)],
                                             timeout=timeout, context=context, **kwargs)
 
     def get_catalog_by_asset_id(self, counter_party_id: str, counter_party_address: str, asset_id: str,
-                                id_key: str = "https://w3id.org/edc/v0.0.1/ns/id", operator: str = "=", 
+                                id_key: str = DEFAULT_ID_KEY, operator: str = "=", 
                                 timeout: int = None, verify: bool = None, context=DEFAULT_CONTEXT, **kwargs) -> dict:
         """
         Retrieves a catalog filtered by a specific asset ID.
@@ -848,7 +853,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         dct_type: str,
         policies: list = None,
-        dct_type_key="'http://purl.org/dc/terms/type'.'@id'",
+        dct_type_key=DEFAULT_DCT_TYPE_KEY,
         operator="="
     ) -> tuple[str, str]:
         """
@@ -897,7 +902,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         asset_id: str,
         policies: list = None,
-        asset_id_key="https://w3id.org/edc/v0.0.1/ns/id",
+        asset_id_key=DEFAULT_ID_KEY,
         operator="="
     ) -> tuple[str, str]:
         """
@@ -946,7 +951,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         dct_type: str,
         policies: list = None,
-        dct_type_key="'http://purl.org/dc/terms/type'.'@id'",
+        dct_type_key=DEFAULT_DCT_TYPE_KEY,
         operator="=",
         session=None,
         **kwargs,
@@ -1005,7 +1010,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         asset_id: str,
         policies: list = None,
-        asset_id_key="https://w3id.org/edc/v0.0.1/ns/id",
+        asset_id_key=DEFAULT_ID_KEY,
         operator="=",
         session=None,
         **kwargs,
@@ -1067,7 +1072,7 @@ class BaseConnectorConsumerService(BaseService):
         json=None,
         data=None,
         policies: list = None,
-        dct_type_key="'http://purl.org/dc/terms/type'.'@id'",
+        dct_type_key=DEFAULT_DCT_TYPE_KEY,
         operator="=",
         session=None,
         **kwargs,
@@ -1134,7 +1139,7 @@ class BaseConnectorConsumerService(BaseService):
         json=None,
         data=None,
         policies: list = None,
-        asset_id_key="https://w3id.org/edc/v0.0.1/ns/id",
+        asset_id_key=DEFAULT_ID_KEY,
         operator="=",
         session=None,
         **kwargs
@@ -1250,24 +1255,18 @@ class BaseConnectorConsumerService(BaseService):
 
         return not DspTools.is_catalog_empty(catalog=catalog)
 
-    def do_get(  # NOSONAR pylint: disable=too-many-arguments
+    def do_get(
         self,
         counter_party_id: str,
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
         policies: list = None,
-        verify: bool = False,
-        headers: dict = {},
-        timeout: int = None,
-        params: dict = None,
-        allow_redirects: bool = False,
-        session=None,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
         negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
-        protocol: str = DSP_0_8
+        **kwargs
     ) -> Response:
         """
         Executes a HTTP GET request to a asset behind an EDC!
@@ -1278,12 +1277,31 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address (str): The URL of the EDC provider.
         path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
         policies (list, optional): The policies to be used for the transfer. Defaults to None.
-        dct_type (str, optional): The DCT type to be used for the transfer. Defaults to "IndustryFlagService".
+        max_wait (int, optional): Maximum seconds to wait for negotiation / EDR. Defaults to 60.
+        poll_interval (int, optional): Seconds between status-poll attempts. Defaults to 1.
+        catalog_context (dict, optional): JSON-LD context for catalog requests.
+        negotiation_context (dict, optional): JSON-LD context for negotiation requests.
+
+        Keyword Args:
+        protocol (str): DSP protocol version. Defaults to DSP_0_8.
+        verify (bool): Whether to verify SSL certificates. Defaults to False.
+        headers (dict): Additional HTTP headers. Defaults to {}.
+        timeout (int): Request timeout in seconds. Defaults to None.
+        params (dict): URL query parameters. Defaults to None.
+        allow_redirects (bool): Whether to allow redirects. Defaults to False.
+        session: Session object for connection pooling. Defaults to None.
 
         Returns:
         Response: The HTTP response from the GET request. If the request fails, an Exception is raised.
         """
-        ## If policies are empty use default policies
+        ## Extract request kwargs
+        protocol = kwargs.pop("protocol", DSP_0_8)
+        verify = kwargs.pop("verify", False)
+        headers = kwargs.pop("headers", {})
+        timeout = kwargs.pop("timeout", None)
+        params = kwargs.pop("params", None)
+        allow_redirects = kwargs.pop("allow_redirects", False)
+        session = kwargs.pop("session", None)
 
         dataplane_url, access_token = self.do_dsp(
             counter_party_id=counter_party_id,
@@ -1298,15 +1316,15 @@ class BaseConnectorConsumerService(BaseService):
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError(_NO_DATAPLANE_ERROR)
 
         ## Build edr transfer url
         url: str = dataplane_url + path
 
         dataplane_headers: dict = self.get_data_plane_headers(access_token=access_token)
         merged_headers: dict = (headers | dataplane_headers)
-        
-        if(session):
+
+        if session:
             return HttpTools.do_get_with_session(
                 url=url,
                 headers=merged_headers,
@@ -1315,7 +1333,7 @@ class BaseConnectorConsumerService(BaseService):
                 allow_redirects=allow_redirects,
                 session=session
             )
-            
+
         ## Do get request to get a response!
         return HttpTools.do_get(
             url=url,
@@ -1326,26 +1344,20 @@ class BaseConnectorConsumerService(BaseService):
             allow_redirects=allow_redirects
         )
 
-    def do_post(  # NOSONAR pylint: disable=too-many-arguments
+    def do_post(
         self,
         counter_party_id: str,
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        content_type: str = "application/json",
         json=None,
         data=None,
         policies: list = None,
-        verify: bool = False,
-        headers: dict = None,
-        timeout: int = None,
-        allow_redirects: bool = False,
-        session=None,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
         negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
-        protocol: str = DSP_0_8
+        **kwargs
     ) -> Response:
         """
         Performs a HTTP POST request to a specific asset behind an EDC.
@@ -1357,17 +1369,35 @@ class BaseConnectorConsumerService(BaseService):
         Parameters:
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
+        path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
         json (dict, optional): The JSON data to be sent in the POST request.
         data (dict, optional): The data to be sent in the POST request.
-        path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
-        content_type (str, optional): The content type of the POST request. Defaults to "application/json".
         policies (list, optional): The policies to be used for the transfer. Defaults to None.
-        dct_type (str, optional): The DCT type to be used for the transfer. Defaults to "IndustryFlagService".
+        max_wait (int, optional): Maximum seconds to wait for negotiation / EDR. Defaults to 60.
+        poll_interval (int, optional): Seconds between status-poll attempts. Defaults to 1.
+        catalog_context (dict, optional): JSON-LD context for catalog requests.
+        negotiation_context (dict, optional): JSON-LD context for negotiation requests.
+
+        Keyword Args:
+        protocol (str): DSP protocol version. Defaults to DSP_0_8.
+        content_type (str): Content type of the request. Defaults to "application/json".
+        verify (bool): Whether to verify SSL certificates. Defaults to False.
+        headers (dict): Additional HTTP headers. Defaults to None.
+        timeout (int): Request timeout in seconds. Defaults to None.
+        allow_redirects (bool): Whether to allow redirects. Defaults to False.
+        session: Session object for connection pooling. Defaults to None.
 
         Returns:
         Response: The HTTP response from the POST request. If the request fails, an Exception is raised.
         """
-        ## If policies are empty use default policies
+        ## Extract request kwargs
+        protocol = kwargs.pop("protocol", DSP_0_8)
+        content_type = kwargs.pop("content_type", "application/json")
+        verify = kwargs.pop("verify", False)
+        headers = kwargs.pop("headers", None)
+        timeout = kwargs.pop("timeout", None)
+        allow_redirects = kwargs.pop("allow_redirects", False)
+        session = kwargs.pop("session", None)
 
         dataplane_url, access_token = self.do_dsp(
             counter_party_id=counter_party_id,
@@ -1382,16 +1412,15 @@ class BaseConnectorConsumerService(BaseService):
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError(_NO_DATAPLANE_ERROR)
 
         ## Build edr transfer url
         url: str = dataplane_url + path
 
         dataplane_headers: dict = self.get_data_plane_headers(access_token=access_token, content_type=content_type)
-        merged_headers: dict = (headers | dataplane_headers)
-        ## Do get request to get a response!
-        
-        if(session):
+        merged_headers: dict = (headers | dataplane_headers) if headers else dataplane_headers
+
+        if session:
             return HttpTools.do_post_with_session(
                 url=url,
                 json=json,
@@ -1412,48 +1441,60 @@ class BaseConnectorConsumerService(BaseService):
             timeout=timeout,
             allow_redirects=allow_redirects
         )
-    def do_put(  # NOSONAR pylint: disable=too-many-arguments
+    def do_put(
         self,
         counter_party_id: str,
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        content_type: str = "application/json",
         json=None,
         data=None,
         policies: list = None,
-        verify: bool = False,
-        headers: dict = None,
-        timeout: int = None,
-        allow_redirects: bool = False,
-        session=None,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
         negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
-        protocol: str = DSP_0_8
+        **kwargs
     ) -> Response:
         """
         Performs a HTTP PUT request to a specific asset behind an EDC.
 
         This function abstracts the entire process of exchanging data with the EDC. It first negotiates the EDR (Endpoint Data Reference)
         using the provided counterparty ID, EDC provider URL, policies, and DCT type. Then, it constructs the dataplane URL and access token
-        using the negotiated EDR. Finally, it sends a POST request to the dataplane URL with the provided data, headers, and content type.
+        using the negotiated EDR. Finally, it sends a PUT request to the dataplane URL with the provided data, headers, and content type.
 
         Parameters:
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
-        json (dict, optional): The JSON data to be sent in the POST request.
-        data (dict, optional): The data to be sent in the POST request.
         path (str, optional): The path to be appended to the dataplane URL. Defaults to "/".
-        content_type (str, optional): The content type of the POST request. Defaults to "application/json".
+        json (dict, optional): The JSON data to be sent in the PUT request.
+        data (dict, optional): The data to be sent in the PUT request.
         policies (list, optional): The policies to be used for the transfer. Defaults to None.
-        dct_type (str, optional): The DCT type to be used for the transfer. Defaults to "IndustryFlagService".
+        max_wait (int, optional): Maximum seconds to wait for negotiation / EDR. Defaults to 60.
+        poll_interval (int, optional): Seconds between status-poll attempts. Defaults to 1.
+        catalog_context (dict, optional): JSON-LD context for catalog requests.
+        negotiation_context (dict, optional): JSON-LD context for negotiation requests.
+
+        Keyword Args:
+        protocol (str): DSP protocol version. Defaults to DSP_0_8.
+        content_type (str): Content type of the request. Defaults to "application/json".
+        verify (bool): Whether to verify SSL certificates. Defaults to False.
+        headers (dict): Additional HTTP headers. Defaults to None.
+        timeout (int): Request timeout in seconds. Defaults to None.
+        allow_redirects (bool): Whether to allow redirects. Defaults to False.
+        session: Session object for connection pooling. Defaults to None.
 
         Returns:
-        Response: The HTTP response from the POST request. If the request fails, an Exception is raised.
+        Response: The HTTP response from the PUT request. If the request fails, an Exception is raised.
         """
-        ## If policies are empty use default policies
+        ## Extract request kwargs
+        protocol = kwargs.pop("protocol", DSP_0_8)
+        content_type = kwargs.pop("content_type", "application/json")
+        verify = kwargs.pop("verify", False)
+        headers = kwargs.pop("headers", None)
+        timeout = kwargs.pop("timeout", None)
+        allow_redirects = kwargs.pop("allow_redirects", False)
+        session = kwargs.pop("session", None)
 
         dataplane_url, access_token = self.do_dsp(
             counter_party_id=counter_party_id,
@@ -1468,16 +1509,15 @@ class BaseConnectorConsumerService(BaseService):
         )
 
         if dataplane_url is None or access_token is None:
-            raise RuntimeError("[Connector Service]: No dataplane URL or access_token was able to be retrieved!")
+            raise RuntimeError(_NO_DATAPLANE_ERROR)
 
         ## Build edr transfer url
         url: str = dataplane_url + path
 
         dataplane_headers: dict = self.get_data_plane_headers(access_token=access_token, content_type=content_type)
-        merged_headers: dict = (headers | dataplane_headers)
-        ## Do get request to get a response!
-        
-        if(session):
+        merged_headers: dict = (headers | dataplane_headers) if headers else dataplane_headers
+
+        if session:
             return HttpTools.do_put_with_session(
                 url=url,
                 json=json,
