@@ -39,12 +39,9 @@ For the simplified one-call version see: tck_e2e_saturn_0-11-X_simple_did.py
 """
 
 import os
-import uuid
 
+from tck_config import saturn
 from tractusx_sdk.extensions.tck.connector import (
-    ConnectorConfig,
-    BackendConfig,
-    PolicyConfig,
     DetailedTckConfig,
     run_detailed_test,
 )
@@ -55,63 +52,16 @@ from tractusx_sdk.extensions.tck.connector import (
 
 config = DetailedTckConfig(
     test_name="tck_e2e_saturn_0-11-X_detailed_did",
-    provider=ConnectorConfig(
-        base_url="http://dataprovider-controlplane.tx.test",
-        api_key="TEST2",
-        dataspace_version="saturn",
-        dsp_url="http://dataprovider-controlplane.tx.test/api/v1/dsp/2025-1",
-        did="did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL0000000093Q7",
-    ),
-    consumer=ConnectorConfig(
-        base_url="http://dataconsumer-1-controlplane.tx.test",
-        api_key="TEST1",
-        dataspace_version="saturn",
-        did="did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL00000003CRHK",
-    ),
-    backend=BackendConfig(
-        base_url=f"https://storage-ichub.int.catena-x.net/urn:uuid:{uuid.uuid4()}",
-    ),
-    # Saturn DID: explicit Catena-X 2025-9 context for Membership-based access
-    #
+    provider=saturn.provider,
+    consumer=saturn.consumer,
+    backend=saturn.backend(),
     # NOTE: BusinessPartnerDID is NOT YET ALLOWED in current EDC implementation.
     # See: https://github.com/eclipse-tractusx/tractusx-edc/issues/2614
     # PR:  https://github.com/eclipse-tractusx/tractusx-edc/pull/2615
-    access_policy=PolicyConfig(
-        context=[
-            "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
-            "https://w3id.org/catenax/2025/9/policy/context.jsonld",
-            {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"},
-        ],
-        permissions=[{
-            "action": "access",
-            "constraint": {
-                "leftOperand": "Membership",
-                "operator": "eq",
-                "rightOperand": "active",
-            },
-        }],
-    ),
-    usage_policy=PolicyConfig(
-        permissions=[{
-            "action": "use",
-            "constraint": {
-                "and": [
-                    {"leftOperand": "Membership", "operator": "eq", "rightOperand": "active"},
-                    {"leftOperand": "FrameworkAgreement", "operator": "eq",
-                     "rightOperand": "DataExchangeGovernance:1.0"},
-                    {"leftOperand": "UsagePurpose", "operator": "isAnyOf",
-                     "rightOperand": "cx.core.industrycore:1"},
-                ],
-            },
-        }],
-    ),
-    # Saturn DID protocol and negotiation context
-    protocol="dataspace-protocol-http:2025-1",
-    negotiation_context=[
-        "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
-        "https://w3id.org/catenax/2025/9/policy/context.jsonld",
-        {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"},
-    ],
+    access_policy=saturn.access_policy_did,
+    usage_policy=saturn.usage_policy,
+    protocol=saturn.protocol,
+    negotiation_context=saturn.negotiation_context,
     discovery_mode="did",
     banner_title="Saturn Connector Services — Detailed E2E (DID-based)",
     summary_title="E2E TEST RUN SUMMARY  (detailed DID-based)",

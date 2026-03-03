@@ -44,12 +44,9 @@ For the Saturn (DSP 2025-1) equivalent see: tck_e2e_saturn_0-11-X_detailed.py
 """
 
 import os
-import uuid
 
+from tck_config import jupiter
 from tractusx_sdk.extensions.tck.connector import (
-    ConnectorConfig,
-    BackendConfig,
-    PolicyConfig,
     DetailedTckConfig,
     run_detailed_test,
 )
@@ -60,69 +57,13 @@ from tractusx_sdk.extensions.tck.connector import (
 
 config = DetailedTckConfig(
     test_name="tck_e2e_jupiter_0-10-X_detailed",
-    provider=ConnectorConfig(
-        base_url="http://dataprovider-controlplane.tx.test",
-        api_key="TEST2",
-        dataspace_version="jupiter",
-        bpn="BPNL00000003AYRE",
-        dsp_url="http://dataprovider-controlplane.tx.test/api/v1/dsp",
-    ),
-    consumer=ConnectorConfig(
-        base_url="http://dataconsumer-1-controlplane.tx.test",
-        api_key="TEST1",
-        dataspace_version="jupiter",
-        bpn="BPNL00000003AZQP",
-    ),
-    backend=BackendConfig(
-        base_url=f"http://dataprovider-submodelserver.tx.test/urn:uuid:{uuid.uuid4()}",
-    ),
-    # Jupiter: Tractus-X v1.0.0 + W3C ODRL context and profile on both policies
-    access_policy=PolicyConfig(
-        context=[
-            "https://w3id.org/tractusx/policy/v1.0.0",
-            "http://www.w3.org/ns/odrl.jsonld",
-            {
-                "tx": "https://w3id.org/tractusx/v0.0.1/ns/",
-                "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
-            },
-        ],
-        permissions=[{
-            "action": "use",
-            "constraint": {
-                "leftOperand": "tx:BusinessPartnerNumber",
-                "operator": "eq",
-                "rightOperand": None,  # Auto-set to consumer BPN at runtime
-            },
-        }],
-        profile="cx-policy:profile2405",
-    ),
-    usage_policy=PolicyConfig(
-        context=[
-            "https://w3id.org/tractusx/policy/v1.0.0",
-            "http://www.w3.org/ns/odrl.jsonld",
-            {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"},
-        ],
-        permissions=[{
-            "action": "use",
-            "constraint": {
-                "and": [
-                    {"leftOperand": "Membership", "operator": "eq", "rightOperand": "active"},
-                    {"leftOperand": "FrameworkAgreement", "operator": "eq",
-                     "rightOperand": "DataExchangeGovernance:1.0"},
-                    {"leftOperand": "UsagePurpose", "operator": "eq",
-                     "rightOperand": "cx.core.industrycore:1"},
-                ],
-            },
-        }],
-        profile="cx-policy:profile2405",
-    ),
-    # Jupiter protocol and negotiation context
-    protocol="dataspace-protocol-http",
-    negotiation_context=[
-        "https://w3id.org/tractusx/policy/v1.0.0",
-        "http://www.w3.org/ns/odrl.jsonld",
-        {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"},
-    ],
+    provider=jupiter.provider,
+    consumer=jupiter.consumer,
+    backend=jupiter.backend(),
+    access_policy=jupiter.access_policy,
+    usage_policy=jupiter.usage_policy,
+    protocol=jupiter.protocol,
+    negotiation_context=jupiter.negotiation_context,
     discovery_mode="bpnl",
     banner_title="Jupiter Connector Services — Detailed E2E",
 )

@@ -1,0 +1,163 @@
+#################################################################################
+# Eclipse Tractus-X - Software Development KIT
+#
+# Copyright (c) 2026 Catena-X Automotive Network e.V.
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+#################################################################################
+#
+# TCK Connector — Shared Environment Configuration
+#
+# This file is the single source of truth for all connectivity values used
+# across the 6 TCK E2E test scripts.  Edit only this file when switching
+# between environments (local umbrella, INT, PRE-PROD, etc.).
+#
+# Sections
+# --------
+#   jupiter     → used by: tck_e2e_jupiter_0-10-X_simple|detailed
+#   saturn      → used by: tck_e2e_saturn_0-11-X_simple|detailed  (BPNL discovery)
+#   saturn_did  → used by: tck_e2e_saturn_0-11-X_simple_did|detailed_did  (DID discovery)
+#
+# Backend base_url
+# ----------------
+#   Do NOT include a UUID here.  The test loader appends /urn:uuid:<uuid4> at
+#   runtime so that every run gets a unique resource path.
+#
+# Null / optional fields
+# ----------------------
+#   Leave optional fields as ~ (YAML null) to let the SDK use its default.
+#   Example: a section that uses BPN discovery does not need a "did" field.
+#################################################################################
+
+# ---------------------------------------------------------------------------
+# Jupiter  (EDC 0.8–0.10.x  |  protocol: dataspace-protocol-http)
+# ---------------------------------------------------------------------------
+jupiter:
+  provider:
+    base_url: "http://dataprovider-controlplane.tx.test"
+    api_key: "TEST2"
+    bpn: "BPNL00000003AYRE"
+    dsp_url: "http://dataprovider-controlplane.tx.test/api/v1/dsp"
+    did: ~
+  consumer:
+    base_url: "http://dataconsumer-1-controlplane.tx.test"
+    api_key: "TEST1"
+    bpn: "BPNL00000003AZQP"
+    did: ~
+  backend:
+    base_url: "http://dataprovider-submodelserver.tx.test"
+    api_key: ~
+  policies:
+    protocol: "dataspace-protocol-http"
+    negotiation_context:
+      - "https://w3id.org/tractusx/policy/v1.0.0"
+      - "http://www.w3.org/ns/odrl.jsonld"
+      - "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+    access_policy:
+      profile: "cx-policy:profile2405"
+      context:
+        - "https://w3id.org/tractusx/policy/v1.0.0"
+        - "http://www.w3.org/ns/odrl.jsonld"
+        - tx: "https://w3id.org/tractusx/v0.0.1/ns/"
+          "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+      permissions:
+        - action: "use"
+          constraint:
+            leftOperand: "tx:BusinessPartnerNumber"
+            operator: "eq"
+            rightOperand: ~    # Auto-set to consumer BPN at runtime
+    usage_policy:
+      profile: "cx-policy:profile2405"
+      context:
+        - "https://w3id.org/tractusx/policy/v1.0.0"
+        - "http://www.w3.org/ns/odrl.jsonld"
+        - "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+      permissions:
+        - action: "use"
+          constraint:
+            and:
+              - leftOperand: "Membership"
+                operator: "eq"
+                rightOperand: "active"
+              - leftOperand: "FrameworkAgreement"
+                operator: "eq"
+                rightOperand: "DataExchangeGovernance:1.0"
+              - leftOperand: "UsagePurpose"
+                operator: "eq"
+                rightOperand: "cx.core.industrycore:1"
+
+# ---------------------------------------------------------------------------
+# Saturn  (EDC 0.11.x - 0.12.x+  |  protocol: dataspace-protocol-http:2025-1)
+# Supports both BPNL discovery and DID discovery — bpn and did are both set.
+# BPNL scripts use discovery_mode="bpnl"; DID scripts use discovery_mode="did".
+# ---------------------------------------------------------------------------
+saturn:
+  provider:
+    base_url: "http://dataprovider-controlplane.tx.test"
+    api_key: "TEST2"
+    bpn: "BPNL00000003AYRE"
+    dsp_url: "http://dataprovider-controlplane.tx.test/api/v1/dsp/2025-1"
+    did: "did:web:portal-backend.tx.test:api:administration:staticdata:did:BPNL00000003AYRE"
+  consumer:
+    base_url: "http://dataconsumer-1-controlplane.tx.test"
+    api_key: "TEST1"
+    bpn: "BPNL00000003AZQP"
+    did: "did:web:portal-backend.tx.test:api:administration:staticdata:did:BPNL00000003AZQP"
+  backend:
+    base_url: "http://dataprovider-submodelserver.tx.test"
+    api_key: ~
+  policies:
+    protocol: "dataspace-protocol-http:2025-1"
+    negotiation_context:
+      - "https://w3id.org/catenax/2025/9/policy/odrl.jsonld"
+      - "https://w3id.org/catenax/2025/9/policy/context.jsonld"
+      - "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+    # BPNL discovery: BusinessPartnerNumber-based access, implicit default context
+    access_policy:
+      permissions:
+        - action: "access"
+          constraint:
+            leftOperand: "BusinessPartnerNumber"
+            operator: "isAnyOf"
+            rightOperand: ~    # Auto-set to consumer BPN at runtime
+    # DID discovery: Membership-based access with explicit Catena-X 2025-9 context
+    access_policy_did:
+      context:
+        - "https://w3id.org/catenax/2025/9/policy/odrl.jsonld"
+        - "https://w3id.org/catenax/2025/9/policy/context.jsonld"
+        - "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+      permissions:
+        - action: "access"
+          constraint:
+            leftOperand: "Membership"
+            operator: "eq"
+            rightOperand: "active"
+    # Shared usage policy for both BPNL and DID discovery modes
+    usage_policy:
+      permissions:
+        - action: "use"
+          constraint:
+            and:
+              - leftOperand: "Membership"
+                operator: "eq"
+                rightOperand: "active"
+              - leftOperand: "FrameworkAgreement"
+                operator: "eq"
+                rightOperand: "DataExchangeGovernance:1.0"
+              - leftOperand: "UsagePurpose"
+                operator: "isAnyOf"
+                rightOperand: "cx.core.industrycore:1"

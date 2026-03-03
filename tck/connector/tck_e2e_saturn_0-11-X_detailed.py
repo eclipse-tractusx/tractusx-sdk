@@ -37,12 +37,9 @@ For the simplified one-call version see: tck_e2e_saturn_0-11-X_simple.py
 """
 
 import os
-import uuid
 
+from tck_config import saturn
 from tractusx_sdk.extensions.tck.connector import (
-    ConnectorConfig,
-    BackendConfig,
-    PolicyConfig,
     DetailedTckConfig,
     run_detailed_test,
 )
@@ -53,54 +50,13 @@ from tractusx_sdk.extensions.tck.connector import (
 
 config = DetailedTckConfig(
     test_name="tck_e2e_saturn_0-11-X_detailed",
-    provider=ConnectorConfig(
-        base_url="http://dataprovider-controlplane.tx.test",
-        api_key="TEST2",
-        dataspace_version="saturn",
-        bpn="BPNL00000003AYRE",
-        dsp_url="http://dataprovider-controlplane.tx.test/api/v1/dsp",
-    ),
-    consumer=ConnectorConfig(
-        base_url="http://dataconsumer-1-controlplane.tx.test",
-        api_key="TEST1",
-        dataspace_version="saturn",
-        bpn="BPNL00000003AZQP",
-    ),
-    backend=BackendConfig(
-        base_url=f"http://dataprovider-submodelserver.tx.test/urn:uuid:{uuid.uuid4()}",
-    ),
-    # NOTE: Saturn (Catena-X 2025-9) uses implicit default context — no "context" key needed
-    access_policy=PolicyConfig(
-        permissions=[{
-            "action": "access",
-            "constraint": {
-                "leftOperand": "BusinessPartnerNumber",
-                "operator": "isAnyOf",
-                "rightOperand": None,  # Auto-set to consumer BPN at runtime
-            },
-        }],
-    ),
-    usage_policy=PolicyConfig(
-        permissions=[{
-            "action": "use",
-            "constraint": {
-                "and": [
-                    {"leftOperand": "Membership", "operator": "eq", "rightOperand": "active"},
-                    {"leftOperand": "FrameworkAgreement", "operator": "eq",
-                     "rightOperand": "DataExchangeGovernance:1.0"},
-                    {"leftOperand": "UsagePurpose", "operator": "isAnyOf",
-                     "rightOperand": "cx.core.industrycore:1"},
-                ],
-            },
-        }],
-    ),
-    # Saturn BPNL protocol and negotiation context
-    protocol="dataspace-protocol-http:2025-1",
-    negotiation_context=[
-        "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
-        "https://w3id.org/catenax/2025/9/policy/context.jsonld",
-        {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"},
-    ],
+    provider=saturn.provider,
+    consumer=saturn.consumer,
+    backend=saturn.backend(),
+    access_policy=saturn.access_policy,
+    usage_policy=saturn.usage_policy,
+    protocol=saturn.protocol,
+    negotiation_context=saturn.negotiation_context,
     discovery_mode="bpnl",
     banner_title="Saturn Connector Services — Detailed E2E",
 )

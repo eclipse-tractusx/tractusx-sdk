@@ -35,12 +35,9 @@ For the full step-by-step version see: tck_e2e_saturn_0-11-X_detailed.py
 """
 
 import os
-import uuid
 
+from tck_config import saturn
 from tractusx_sdk.extensions.tck.connector import (
-    ConnectorConfig,
-    BackendConfig,
-    PolicyConfig,
     SimpleTckConfig,
     run_simple_test,
 )
@@ -51,47 +48,11 @@ from tractusx_sdk.extensions.tck.connector import (
 
 config = SimpleTckConfig(
     test_name="tck_e2e_saturn_0-11-X_simple",
-    provider=ConnectorConfig(
-        base_url="http://dataprovider-controlplane.tx.test",
-        api_key="TEST2",
-        dataspace_version="saturn",
-        bpn="BPNL00000003AYRE",
-        dsp_url="http://dataprovider-controlplane.tx.test/api/v1/dsp",
-    ),
-    consumer=ConnectorConfig(
-        base_url="http://dataconsumer-1-controlplane.tx.test",
-        api_key="TEST1",
-        dataspace_version="saturn",
-        bpn="BPNL00000003AZQP",
-    ),
-    backend=BackendConfig(
-        base_url=f"http://dataprovider-submodelserver.tx.test/urn:uuid:{uuid.uuid4()}",
-    ),
-    # NOTE: Saturn (Catena-X 2025-9) uses implicit default context — no "context" key needed
-    access_policy=PolicyConfig(
-        permissions=[{
-            "action": "access",
-            "constraint": {
-                "leftOperand": "BusinessPartnerNumber",
-                "operator": "isAnyOf",
-                "rightOperand": None,  # Auto-set to consumer BPN at runtime
-            },
-        }],
-    ),
-    usage_policy=PolicyConfig(
-        permissions=[{
-            "action": "use",
-            "constraint": {
-                "and": [
-                    {"leftOperand": "Membership", "operator": "eq", "rightOperand": "active"},
-                    {"leftOperand": "FrameworkAgreement", "operator": "eq",
-                     "rightOperand": "DataExchangeGovernance:1.0"},
-                    {"leftOperand": "UsagePurpose", "operator": "isAnyOf",
-                     "rightOperand": "cx.core.industrycore:1"},
-                ],
-            },
-        }],
-    ),
+    provider=saturn.provider,
+    consumer=saturn.consumer,
+    backend=saturn.backend(),
+    access_policy=saturn.access_policy,
+    usage_policy=saturn.usage_policy,
     # accepted_policies=None → accept any policy offered by the provider
     discovery_mode="bpnl",
     banner_title="Saturn Connector Services — Simple E2E",
