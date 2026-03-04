@@ -1,6 +1,6 @@
 [
   {"version": "Development", "title": "Development", "aliases": ["latest"]},
-  {"version": "0.7.0-rc1", "title": "0.7.0-rc1", "aliases": []},
+  {"version": "0.7.0", "title": "0.7.0", "aliases": []},
   {"version": "0.6.2-rc1", "title": "0.6.2-rc1", "aliases": []},
   {"version": "0.6.1", "title": "0.6.1", "aliases": []},
   {"version": "0.6.0", "title": "0.6.0", "aliases": []},
