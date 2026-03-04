@@ -142,6 +142,7 @@ nav:
     - Extensions Concepts: core-concepts/extensions-concepts/index.md
     - Authentication & Security: core-concepts/authentication-security/authentication.md
   - API Reference:
+    - Overview: api-reference/README.md
     - Dataspace Library: 
       - Overview: api-reference/dataspace-library/index.md
       - Connector:
@@ -161,6 +162,7 @@ nav:
         - Services: api-reference/industry-library/dtr/services.md
         - Models: api-reference/industry-library/dtr/models.md
       - Submodel Server:
+        - Adapters Overview: api-reference/industry-library/submodel-server/adapters.md
         - Adapters:
           - Base Adapter: api-reference/industry-library/submodel-server/adapters/base-adapter.md
           - File System Adapter: api-reference/industry-library/submodel-server/adapters/file-system-adapter.md

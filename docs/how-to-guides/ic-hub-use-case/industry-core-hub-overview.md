@@ -230,7 +230,7 @@ See the [IC Hub Deployment Configuration](https://github.com/eclipse-tractusx/in
 Join the weekly Industry Core Hub & Tractus-X SDK meetings to discuss use cases, share feedback, and collaborate:
 
 - **Meeting Link:** [Open Meetings Calendar](https://eclipse-tractusx.github.io/community/open-meetings#Industry%20Core%20Hub%20&%20Tractus-X%20SDK%20Weekly)
-- **Matrix Chat (shared with IC-Hub):** [#tractusx-industry-core-hub](#tractusx-industry-core-hub:matrix.eclipse.org)
+- **Matrix Chat (shared with IC-Hub):** [#tractusx-industry-core-hub:matrix.eclipse.org](https://matrix.to/#/#tractusx-industry-core-hub:matrix.eclipse.org)
 - **GitHub Discussions:** [SDK Discussions](https://github.com/eclipse-tractusx/tractusx-sdk/discussions)
 
 ---

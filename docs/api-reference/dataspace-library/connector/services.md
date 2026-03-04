@@ -451,7 +451,7 @@ provider.create_contract(
 
 ## Further Reading
 
-- [Backward Compatibility Guide](../../../index.md#protocol-backward-compatibility-guide) - Side-by-side Jupiter vs Saturn code patterns, policy syntax migration, and version-agnostic wrappers
+- [Backward Compatibility Guide](../../../how-to-guides/backward-compatibility.md) - Side-by-side Jupiter vs Saturn code patterns, policy syntax migration, and version-agnostic wrappers
 
 - [Dataspace Library Overview](../index.md)
 - [SDK Structure and Components](../../../core-concepts/sdk-architecture/sdk-structure-and-components.md)

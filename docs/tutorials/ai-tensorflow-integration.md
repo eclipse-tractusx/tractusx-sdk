@@ -1,10 +1,11 @@
 # Training AI Models with TensorFlow Using Tractus-X SDK
 
 !!! warning "Experimental - Not Standardized"
-    **This AI/ML integration approach is NOT part of the official Catena-X standard.**
+    **This AI/ML integration approach is NOT part of the official Catena-X standard or Eclipse Tractus-X KIT**
     
     - This tutorial demonstrates a **custom implementation** for training TensorFlow models using dataspace data
-    - There is currently **no standardized framework** for AI/ML integration in Catena-X
+    - There is currently **no standardized framework** for AI/ML integration in Catena-X.
+    - Currently there is one similar documetation for AI Agents in a dataspace which is covered by the [AI Service KIT](https://eclipse-tractusx.github.io/docs-kits/next/kits/ai-service-kit/adoption-view)
     - Data schemas, model formats, and sharing mechanisms shown here are **examples only**
     - **Do not use in production** without establishing proper governance and agreements with dataspace participants
     - Consult with your legal and compliance teams before implementing AI/ML workflows using dataspace data
