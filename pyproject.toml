@@ -39,8 +39,9 @@ dependencies = [
 ]
 
 [project.urls]
-repository = "https://github.com/eclipse-tractusx/tractusx-sdk"
-documentation = "https://github.com/eclipse-tractusx/tractusx-sdk/tree/main/docs"
+"Homepage" = "https://eclipse-tractusx.github.io/tractusx-sdk/main/"
+"Repository" = "https://github.com/eclipse-tractusx/tractusx-sdk"
+"Documentation" = "https://eclipse-tractusx.github.io/tractusx-sdk/main/"
 "Issues" = "https://github.com/eclipse-tractusx/tractusx-sdk/issues"
 "Changelog" = "https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CHANGELOG.md"
 

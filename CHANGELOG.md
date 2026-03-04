@@ -5,10 +5,13 @@ Further information can be found on the [README.md](README.md) file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.6.2-rc1] - R26.03
+## [0.7.0] - R26.03
 
 ### Added
 
+- feat/tck-docs: improved documentation of TCK in official website & improve stability of docs by @matbmoser in https://github.com/eclipse-tractusx/tractusx-sdk/pull/189
+- Complete Core Concepts and API References sections documentation (Industry Library and Extension Library) by @flarrinaga in https://github.com/eclipse-tractusx/tractusx-sdk/pull/185
+- Feat/saturn-changes: dsp 2025-1 support, new saturn policies support and v0.11.X EDC support + added TCK by @matbmoser in https://github.com/eclipse-tractusx/tractusx-sdk/pull/170
 - feat: implement notification api services in sdk by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/183
 
 ### Changed
