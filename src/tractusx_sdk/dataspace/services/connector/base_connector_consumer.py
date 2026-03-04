@@ -3,7 +3,7 @@
 #
 # Copyright (c) 2026 Catena-X Automotive Network e.V.
 # Copyright (c) 2025 CGI Deutschland B.V. & Co. KG
-# Copyright (c) 2026 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
