@@ -29,10 +29,6 @@ The SDK was developed with the following use cases in mind, but we hope it is us
 
 We encourage users to explore and adapt the SDK to their specific needs!
 
-# Usage tutorials
-
-TBD
-
 # Implementation Examples
 
 - [Industry Core Hub (Dataspace Connector)](https://github.com/eclipse-tractusx/industry-core-hub/blob/main/ichub-backend/managers/enablement_services/connector_manager.py)
