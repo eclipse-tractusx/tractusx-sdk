@@ -78,7 +78,7 @@ provider_connector_service: BaseConnectorProviderService = ServiceFactory.get_co
 
 # Step 5: Test the connection
 try:
-    print("🔗 Connecting to dataspace...")
+    print(" Connecting to dataspace...")
 
     assets = provider_connector_service.assets.get_all()
     
@@ -86,20 +86,20 @@ try:
     if hasattr(assets, 'json'):
         # If it's a Response object, get the JSON data
         assets_data = assets.json()
-        print("📦 Assets data:")
+        print(" Assets data:")
         print(assets_data)
     elif hasattr(assets, 'status_code'):
         # If it's a Response object but JSON parsing fails
-        print(f"✅ Response status: {assets.status_code}")
-        print(f"📄 Raw response text: {assets.text}")
+        print(f" Response status: {assets.status_code}")
+        print(f" Raw response text: {assets.text}")
     else:
         # If it's already parsed data
-        print("📦 Assets:")
+        print(" Assets:")
         print(assets)
 
 except Exception as e:
-    print(f"❌ Connection failed: {e}")
-    print("💡 Check your configuration values and network connection")
+    print(f" Connection failed: {e}")
+    print(" Check your configuration values and network connection")
 ```
 
 Run this script to test your connection:
@@ -119,9 +119,9 @@ python connect.py
     Contact your dataspace administrator for these values.
 
 !!! tip "Connection Tips"
-    🔧 **Start simple**: Test connection before building complex features  
-    📦 **Check assets**: See what data is available in your dataspace  
-    📞 **Get help**: Contact your dataspace administrator if connection fails
+     **Start simple**: Test connection before building complex features  
+     **Check assets**: See what data is available in your dataspace  
+     **Get help**: Contact your dataspace administrator if connection fails
 
 ### Create an Asset
 
@@ -165,24 +165,24 @@ provider_connector_service: BaseConnectorProviderService = ServiceFactory.get_co
 
 # Step 5: Test the connection
 try:
-    print("🔗 Connecting to dataspace...")
+    print(" Connecting to dataspace...")
 
     # assets = provider_connector_service.assets.get_all()
     
     # # Check if assets is a Response object and extract the data
     # if hasattr(assets, 'json'):
-    #     # If it's a Response object, get the JSON data
-    #     assets_data = assets.json()
-    #     print("📦 Assets data:")
-    #     print(assets_data)
+    # # If it's a Response object, get the JSON data
+    # assets_data = assets.json()
+    # print(" Assets data:")
+    # print(assets_data)
     # elif hasattr(assets, 'status_code'):
-    #     # If it's a Response object but JSON parsing fails
-    #     print(f"✅ Response status: {assets.status_code}")
-    #     print(f"📄 Raw response text: {assets.text}")
+    # # If it's a Response object but JSON parsing fails
+    # print(f" Response status: {assets.status_code}")
+    # print(f" Raw response text: {assets.text}")
     # else:
-    #     # If it's already parsed data
-    #     print("📦 Assets:")
-    #     print(assets)
+    # # If it's already parsed data
+    # print(" Assets:")
+    # print(assets)
 
     response = provider_connector_service.create_asset(
         asset_id="test-asset-001",
@@ -191,13 +191,13 @@ try:
         version="3.0"
     )
 
-    print("✅ Connection successful!")
-    print("📦 Created Asset:")
+    print(" Connection successful!")
+    print(" Created Asset:")
     print(response)
 
 except Exception as e:
-    print(f"❌ Connection failed: {e}")
-    print("💡 Check your configuration values and network connection")
+    print(f" Connection failed: {e}")
+    print(" Check your configuration values and network connection")
 ```
 
 Run the script:
@@ -251,44 +251,44 @@ provider_connector_service: BaseConnectorProviderService = ServiceFactory.get_co
 
 # Step 5: Test the connection
 try:
-    print("🔗 Connecting to dataspace...")
+    print(" Connecting to dataspace...")
 
     # assets = provider_connector_service.assets.get_all()
     
     # # Check if assets is a Response object and extract the data
     # if hasattr(assets, 'json'):
-    #     # If it's a Response object, get the JSON data
-    #     assets_data = assets.json()
-    #     print("📦 Assets data:")
-    #     print(assets_data)
+    # # If it's a Response object, get the JSON data
+    # assets_data = assets.json()
+    # print(" Assets data:")
+    # print(assets_data)
     # elif hasattr(assets, 'status_code'):
-    #     # If it's a Response object but JSON parsing fails
-    #     print(f"✅ Response status: {assets.status_code}")
-    #     print(f"📄 Raw response text: {assets.text}")
+    # # If it's a Response object but JSON parsing fails
+    # print(f" Response status: {assets.status_code}")
+    # print(f" Raw response text: {assets.text}")
     # else:
-    #     # If it's already parsed data
-    #     print("📦 Assets:")
-    #     print(assets)
+    # # If it's already parsed data
+    # print(" Assets:")
+    # print(assets)
 
     # response = provider_connector_service.create_asset(
-    #     asset_id="test-asset-001",
-    #     base_url="https://example.com/data",
-    #     dct_type="example-type",
-    #     version="3.0"
+    # asset_id="test-asset-001",
+    # base_url="https://example.com/data",
+    # dct_type="example-type",
+    # version="3.0"
     # )
 
-    # print("✅ Connection successful!")
-    # print("📦 Created Asset:")
+    # print(" Connection successful!")
+    # print(" Created Asset:")
     # print(response)
 
     response_specific = provider_connector_service.assets.get_by_id("test-asset-001")
-    print("✅ Connection successful!")
-    print("📦 Retrieved Asset by ID:")
+    print(" Connection successful!")
+    print(" Retrieved Asset by ID:")
     print(response_specific.json())
 
 except Exception as e:
-    print(f"❌ Connection failed: {e}")
-    print("💡 Check your configuration values and network connection")
+    print(f" Connection failed: {e}")
+    print(" Check your configuration values and network connection")
 ```
 
 Run the script:
@@ -326,15 +326,18 @@ If you encounter issues, here are common solutions:
 
 Now that you have the SDK installed and verified:
 
-1. **📚 Explore Libraries**: Learn about the [Dataspace Library](../api-reference/dataspace-library/index.md) for connector services
-2. **🔍 Read Services Documentation**: Check out [connector services](../api-reference/dataspace-library/connector/services.md) for detailed API reference
-3. **📖 SDK Structure**: Understand the [SDK architecture](../core-concepts/sdk-architecture/sdk-structure-and-components.md)
-4. **🤝 Join Community**: Connect with other developers in our [discussions](https://github.com/eclipse-tractusx/tractusx-sdk/discussions)
+1. ** Explore Libraries**: Learn about the [Dataspace Library](../api-reference/dataspace-library/index.md) for connector services
+2. ** Read Services Documentation**: Check out [connector services](../api-reference/dataspace-library/connector/services.md) for detailed API reference
+3. ** SDK Structure**: Understand the [SDK architecture](../core-concepts/sdk-architecture/sdk-structure-and-components.md)
+4. ** Join Community**: Connect with other developers in our [discussions](https://github.com/eclipse-tractusx/tractusx-sdk/discussions)
 
 ## NOTICE
 
 This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
 - SPDX-License-Identifier: CC-BY-4.0
-- SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation
-- Source URL: https://github.com/eclipse-tractusx/tractusx-sdk
+- SPDX-FileCopyrightText: 2025, 2026 Contributors to the Eclipse Foundation
+- SPDX-FileCopyrightText: 2025, 2026 Catena-X Automotive Network e.V.
+- SPDX-FileCopyrightText: 2025, 2026 LKS Next
+- SPDX-FileCopyrightText: 2025, 2026 Mondragon Unibertsitatea
+- Source URL: [https://github.com/eclipse-tractusx/tractusx-sdk](https://github.com/eclipse-tractusx/tractusx-sdk)

@@ -27,6 +27,9 @@
 #   ./tck/connector/run_all_tests.sh [OPTIONS]
 #
 # Options:
+#   --local                      Install the SDK from the local workspace before
+#                                running tests (runs: pip install -e . --quiet).
+#                                By default no installation is performed.
 #   --no-cleanup                 Skip cleanup of provider resources and backend data
 #   --config <path>              Path to a YAML config file to use instead of the
 #                                default tck-config.yaml.  All connectivity values
@@ -48,8 +51,8 @@
 # All options are forwarded verbatim to each of the 6 test scripts.
 #
 # Examples:
-#   # Use a custom config file (e.g. for INT environment):
-#   ./run_all_tests.sh --config /path/to/int_config.yaml
+#   # Install local SDK and use a custom config file (e.g. for INT environment):
+#   ./run_all_tests.sh --local --config /path/to/int_config.yaml
 #
 #   # Quick ad-hoc URL override without editing any file:
 #   ./run_all_tests.sh --provider-url http://my-provider.example.com
@@ -64,7 +67,17 @@ set -uo pipefail
 # ── Paths ─────────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-EXTRA_ARGS="${*:-}"
+
+# ── Parse --local flag (consumed here, not forwarded to child scripts) ────────
+INSTALL_LOCAL=false
+EXTRA_ARGS=""
+for arg in "$@"; do
+    if [[ "${arg}" == "--local" ]]; then
+        INSTALL_LOCAL=true
+    else
+        EXTRA_ARGS="${EXTRA_ARGS:+${EXTRA_ARGS} }${arg}"
+    fi
+done
 
 # ── Unique run directory: logs/run_all_tests/<date>/<HHMMSS_hex6>/ ────────────
 RUN_DATE="$(date '+%Y-%m-%d')"
@@ -74,11 +87,13 @@ LOG_DIR="${SCRIPT_DIR}/logs/run_all_tests/${RUN_DATE}/${RUN_ID}"
 cd "${REPO_ROOT}"
 mkdir -p "${LOG_DIR}"
 
-# ── Install the SDK from the current workspace ────────────────────────────────
-echo "Installing tractusx-sdk from local workspace..."
-pip install -e . --quiet
-echo "Installation complete."
-echo ""
+# ── Optionally install the SDK from the local workspace ───────────────────────
+if [[ "${INSTALL_LOCAL}" == "true" ]]; then
+    echo "Installing tractusx-sdk from local workspace (--local)..."
+    pip install -e . --quiet
+    echo "Installation complete."
+    echo ""
+fi
 echo "Run ID  : ${RUN_ID}"
 echo "Log dir : ${LOG_DIR}"
 echo ""

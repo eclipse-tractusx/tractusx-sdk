@@ -44,26 +44,26 @@ More information on how to contribute to Eclipse Tractus-X is available at [Ecli
 
 ## Quick Links and Resources
 
-### 🚀 **Getting Started**
+### **Getting Started**
 - [Installation Guide](../tutorials/getting-started.md) - Set up your development environment
 - [First step: Creation of an asset](../tutorials/getting-started.md) - Build your first dataspace application
 
-### 📚 **Core Concepts**
+### **Core Concepts**
 - [Dataspace Library](../core-concepts/dataspace-concepts/index.md) - Core connector services and Eclipse Tractus-X Connector integration
 - [Industry Library](../core-concepts/industry-concepts/index.md) - Digital Twin Registry and Submodel Server integration
 - [Extension Library](../api-reference/extension-library/semantics/semantics.md) - Use case-specific extensions and add-on functionality
 
-### 🛠️ **Development**
+### **Development**
 - [GitHub Repository](https://github.com/eclipse-tractusx/tractusx-sdk) - Source code and issues
 - [PyPI Package](https://pypi.org/project/tractusx-sdk/) - Latest releases
 - [Changelog](https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CHANGELOG.md) - Version history
 
-### 🤝 **Community**
+### **Community**
 - [Discussions](https://github.com/eclipse-tractusx/tractusx-sdk/discussions) - Ask questions and share ideas
 - [Contributing Guidelines](https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CONTRIBUTING.md) - How to contribute
 - [Community Meetings](https://eclipse-tractusx.github.io/community/open-meetings#Industry%20Core%20Hub%20&%20Tractus-X%20SDK%20Weekly) - Weekly developer meetings
 
-### 📖 **Additional Resources**
+### **Additional Resources**
 - [Eclipse Tractus-X](https://eclipse-tractusx.github.io/) - Official project website
 - [Tractus-X KITs](https://eclipse-tractusx.github.io/Kits) - Standard specifications
 
@@ -72,5 +72,8 @@ More information on how to contribute to Eclipse Tractus-X is available at [Ecli
 This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
 - SPDX-License-Identifier: CC-BY-4.0
-- SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation
-- Source URL: https://github.com/eclipse-tractusx/tractusx-sdk
+- SPDX-FileCopyrightText: 2025, 2026 Contributors to the Eclipse Foundation
+- SPDX-FileCopyrightText: 2025, 2026 Catena-X Automotive Network e.V.
+- SPDX-FileCopyrightText: 2025, 2026 LKS Next
+- SPDX-FileCopyrightText: 2025, 2026 Mondragon Unibertsitatea
+- Source URL: [https://github.com/eclipse-tractusx/tractusx-sdk](https://github.com/eclipse-tractusx/tractusx-sdk)
