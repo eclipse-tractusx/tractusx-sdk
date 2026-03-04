@@ -26,7 +26,7 @@ The SDK is organized into three main libraries, each serving distinct purposes:
 
 <div class="grid cards" markdown>
 
--   :material-database:{ .lg .middle } **Dataspace Library**
+- :material-database:{ .lg .middle } **Dataspace Library**
 
     ---
 
@@ -34,7 +34,7 @@ The SDK is organized into three main libraries, each serving distinct purposes:
 
     [:octicons-arrow-right-24: Learn more](../../api-reference/dataspace-library/index.md)
 
--   :material-factory:{ .lg .middle } **Industry Library**
+- :material-factory:{ .lg .middle } **Industry Library**
 
     ---
 
@@ -42,7 +42,7 @@ The SDK is organized into three main libraries, each serving distinct purposes:
 
     [:octicons-arrow-right-24: Learn more](../../api-reference/industry-library/dtr/services.md)
 
--   :material-puzzle:{ .lg .middle } **Extensions Library**
+- :material-puzzle:{ .lg .middle } **Extensions Library**
 
     ---
 
@@ -58,10 +58,10 @@ The SDK implements a **layered architecture** that promotes clean code organizat
 
 ```mermaid
 graph LR
-    A["🎯 Your App"] --> B["📋 Services"]
-    B --> C["🎮 Controllers"]
-    C --> D["🔌 Adapters"]
-    D --> E["🌐 EDC Connector"]
+    A[" Your App"] --> B[" Services"]
+    B --> C[" Controllers"]
+    C --> D[" Adapters"]
+    D --> E[" EDC Connector"]
     
     style A fill:#e1f5fe
     style B fill:#f3e5f5
@@ -76,19 +76,19 @@ The foundation layer for all dataspace interactions:
 
 ```
 tractusx_sdk/dataspace/
-├── adapters/          # HTTP communication adapters
-│   └── connector/     # Connector-specific adapters
-├── controllers/       # API request handlers
-│   └── connector/     # Connector API controllers
-├── managers/          # Authentication and connection management
-│   └── connection/    # Connection lifecycle management
-├── models/            # Data models and schemas
-│   ├── connection/    # Connection-related models
-│   └── connector/     # Connector data models
-├── services/          # High-level business logic
-│   ├── connector/     # Connector service implementations
-│   └── discovery/     # Discovery service integrations
-└── tools/             # Utility functions and helpers
+ adapters/          # HTTP communication adapters
+    connector/     # Connector-specific adapters
+ controllers/       # API request handlers
+    connector/     # Connector API controllers
+ managers/          # Authentication and connection management
+    connection/    # Connection lifecycle management
+ models/            # Data models and schemas
+    connection/    # Connection-related models
+    connector/     # Connector data models
+ services/          # High-level business logic
+    connector/     # Connector service implementations
+    discovery/     # Discovery service integrations
+ tools/             # Utility functions and helpers
 ```
 
 **Key Components:**
@@ -105,13 +105,13 @@ Specialized components for industry-specific use cases:
 
 ```
 tractusx_sdk/industry/
-├── adapters/          # Industry-specific adapters
-│   └── submodel_adapters/  # Submodel service adapters
-├── models/            # Industry data models
-│   ├── aas/          # Asset Administration Shell models
-│   └── v3/           # Version 3 specific models
-└── services/          # Industry services
-    └── discovery/     # Industry discovery services
+ adapters/          # Industry-specific adapters
+    submodel_adapters/  # Submodel service adapters
+ models/            # Industry data models
+    aas/          # Asset Administration Shell models
+    v3/           # Version 3 specific models
+ services/          # Industry services
+     discovery/     # Industry discovery services
 ```
 
 **Key Features:**
@@ -128,7 +128,7 @@ Extensible framework for custom use cases:
 
 ```
 tractusx_sdk/extensions/
-└── semantics/         # Semantic model extensions
+ semantics/         # Semantic model extensions
 ```
 
 **Capabilities:**
@@ -217,25 +217,25 @@ graph TD
 
 <div class="grid cards" markdown>
 
--   :material-rocket-launch:{ .lg .middle } **Quick to Start**
+- :material-rocket-launch:{ .lg .middle } **Quick to Start**
 
     ---
 
     Get up and running in **under 5 minutes** with minimal configuration.
 
--   :material-cog:{ .lg .middle } **Easy to Use** 
+- :material-cog:{ .lg .middle } **Easy to Use** 
 
     ---
 
     Pythonic API with **type hints**, **auto-completion**, and **comprehensive examples**.
 
--   :material-security:{ .lg .middle } **Production Ready**
+- :material-security:{ .lg .middle } **Production Ready**
 
     ---
 
     Built-in **authentication**, **error handling**, and **retry mechanisms**.
 
--   :material-puzzle:{ .lg .middle } **Extensible**
+- :material-puzzle:{ .lg .middle } **Extensible**
 
     ---
 
@@ -245,15 +245,18 @@ graph TD
 
 !!! tip "Development Tips"
     
-    🚀 **Start Simple**: Begin with basic connector operations before adding complexity  
-    🔄 **Reuse Services**: Create service instances once and reuse them  
-    📝 **Enable Logging**: Use verbose mode during development for better debugging  
-    🧪 **Test Incrementally**: Test each component separately before integration
+     **Start Simple**: Begin with basic connector operations before adding complexity  
+     **Reuse Services**: Create service instances once and reuse them  
+     **Enable Logging**: Use verbose mode during development for better debugging  
+     **Test Incrementally**: Test each component separately before integration
 
 ## NOTICE
 
 This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
 - SPDX-License-Identifier: CC-BY-4.0
-- SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation
-- Source URL: https://github.com/eclipse-tractusx/tractusx-sdk
+- SPDX-FileCopyrightText: 2025, 2026 Contributors to the Eclipse Foundation
+- SPDX-FileCopyrightText: 2025, 2026 Catena-X Automotive Network e.V.
+- SPDX-FileCopyrightText: 2025, 2026 LKS Next
+- SPDX-FileCopyrightText: 2025, 2026 Mondragon Unibertsitatea
+- Source URL: [https://github.com/eclipse-tractusx/tractusx-sdk](https://github.com/eclipse-tractusx/tractusx-sdk)

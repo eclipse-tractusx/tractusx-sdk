@@ -29,6 +29,7 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  language: en
   favicon: assets/images/logo_tractus-x-min.ico
   logo: assets/images/logo_tractus-x.svg
   custom_dir: docs/overrides
@@ -92,7 +93,6 @@ markdown_extensions:
   - pymdownx.highlight:  # Syntax highlighting for code blocks
       anchor_linenums: true  # Makes line numbers clickable links
       line_spans: __span
-      pygments_lang_class: true
       use_pygments: true
       pygments_style: monokai  # VS Code-like dark theme
       auto_title: true  # Automatically adds language title to code blocks
@@ -112,14 +112,29 @@ markdown_extensions:
   - pymdownx.caret  # Superscript
 
 nav:
-  - Home: index.md
+  - Home:
+    - Welcome: index.md
+    - Overview: home/overview.md
+    - Quick Start: home/quick-start.md
   - Tutorials: 
     - Installation & Setup: tutorials/getting-started.md
     - Create First Asset: tutorials/create-first-asset.md
     - Notification API: tutorials/notification-api.md
+    - Experimental:
+      - AI/ML with TensorFlow: tutorials/ai-tensorflow-integration.md
   - How-to Guides:
+    - Backward Compatibility: how-to-guides/backward-compatibility.md
     - Industry Core Hub Use Case: how-to-guides/ic-hub-use-case/industry-core-hub-overview.md
     - Other Use Case: how-to-guides/other-use-case/other-use-case-overview.md
+  - TCK:
+    - Overview: tck/index.md
+    - Connector TCK:
+      - Overview: tck/connector/index.md
+      - Configuration: tck/connector/configuration.md
+      - Running Tests: tck/connector/running-tests.md
+      - CI/CD Integration: tck/connector/cicd-integration.md
+      - Interpreting Results: tck/connector/interpreting-results.md
+      - API Reference: tck/connector/api-reference.md
   - Core Concepts:
     - SDK Architecture: core-concepts/sdk-architecture/sdk-structure-and-components.md
     - Dataspace Concepts: core-concepts/dataspace-concepts/index.md
@@ -127,6 +142,7 @@ nav:
     - Extensions Concepts: core-concepts/extensions-concepts/index.md
     - Authentication & Security: core-concepts/authentication-security/authentication.md
   - API Reference:
+    - Overview: api-reference/README.md
     - Dataspace Library: 
       - Overview: api-reference/dataspace-library/index.md
       - Connector:
@@ -146,6 +162,7 @@ nav:
         - Services: api-reference/industry-library/dtr/services.md
         - Models: api-reference/industry-library/dtr/models.md
       - Submodel Server:
+        - Adapters Overview: api-reference/industry-library/submodel-server/adapters.md
         - Adapters:
           - Base Adapter: api-reference/industry-library/submodel-server/adapters/base-adapter.md
           - File System Adapter: api-reference/industry-library/submodel-server/adapters/file-system-adapter.md
@@ -168,4 +185,4 @@ nav:
     - Versioning: contributing/versioning/VERSIONING.md
 
 copyright: >
-  Copyright &copy; 2025 Eclipse Tractus-X
+  Copyright &copy; 2026 Eclipse Tractus-X Contributors

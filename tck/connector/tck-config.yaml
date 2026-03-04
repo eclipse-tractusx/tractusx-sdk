@@ -28,9 +28,13 @@
 #
 # Sections
 # --------
-#   jupiter     → used by: tck_e2e_jupiter_0-10-X_simple|detailed
-#   saturn      → used by: tck_e2e_saturn_0-11-X_simple|detailed  (BPNL discovery)
-#   saturn_did  → used by: tck_e2e_saturn_0-11-X_simple_did|detailed_did  (DID discovery)
+#   jupiter  → used by: tck_e2e_jupiter_0-10-X_simple|detailed (BPNL discovery)
+#   saturn   → used by: all four saturn scripts (BPNL + DID discovery modes)
+#              - BPNL scripts (*_simple.py, *_detailed.py) use:
+#                  saturn.provider, saturn.access_policy
+#              - DID scripts (*_simple_did.py, *_detailed_did.py) use:
+#                  saturn.provider_did, saturn.access_policy_did
+#              Both modes share the same saturn section with dual config fields.
 #
 # Backend base_url
 # ----------------

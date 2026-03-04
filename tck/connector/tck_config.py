@@ -31,20 +31,35 @@ Usage
 -----
 ::
 
-    from tck_config import jupiter, saturn, saturn_did
+    from tck_config import jupiter, saturn
 
+    # Jupiter scripts (BPNL discovery)
     config = SimpleTckConfig(
         provider=jupiter.provider,
         consumer=jupiter.consumer,
         backend=jupiter.backend(),   # fresh UUID per call
+        access_policy=jupiter.access_policy,
+        ...
+    )
+    
+    # Saturn BPNL scripts
+    config = SimpleTckConfig(
+        provider=saturn.provider,
+        access_policy=saturn.access_policy,
+        ...
+    )
+    
+    # Saturn DID scripts
+    config = SimpleTckConfig(
+        provider=saturn.provider_did,        # uses dsp_url_did
+        access_policy=saturn.access_policy_did,  # Membership-based
         ...
     )
 
 Sections
 --------
-- ``jupiter``     — EDC 0.8–0.10.x, BPNL discovery
-- ``saturn``      — EDC 0.11.x+-0.12.x+,    BPNL discovery
-- ``saturn_did``  — EDC 0.11.x+-0.12.x+,    DID  discovery
+- ``jupiter``     — EDC 0.8–0.10.x, BPNL discovery only
+- ``saturn``      — EDC 0.11.x+, supports both BPNL and DID discovery modes
 """
 
 from __future__ import annotations

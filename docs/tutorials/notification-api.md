@@ -35,20 +35,20 @@ The Notification API enables secure, standardized communication between business
 ### Architecture
 
 ```
-┌─────────────────┐                           ┌─────────────────┐
-│   Consumer      │                           │    Provider     │
-│   (Sender)      │                           │   (Receiver)    │
-├─────────────────┤                           ├─────────────────┤
-│ NotificationCon-│    DSP Protocol           │ Notification    │
-│ sumerService    │ ◄─────────────────────►   │ Asset + Policy  │
-│                 │                           │ + Contract      │
-│ BaseConnector   │    Catalog/Negotiate/     │                 │
-│ ConsumerService │    Transfer               │ Notification    │
-└────────┬────────┘                           │ Endpoint        │
-         │                                    └────────┬────────┘
-         │                                             │
-         │              HTTP POST                      │
-         └─────────────────────────────────────────────┘
+                           
+   Consumer                                     Provider     
+   (Sender)                                    (Receiver)    
+                           
+ NotificationCon-    DSP Protocol            Notification    
+ sumerService         Asset + Policy  
+                                             + Contract      
+ BaseConnector       Catalog/Negotiate/                      
+ ConsumerService     Transfer                Notification    
+                            Endpoint        
+                                             
+                                                      
+                       HTTP POST                      
+         
                     (via Data Plane)
 ```
 
@@ -545,9 +545,9 @@ The complete example scripts are available in the SDK repository:
 
 ## Next Steps
 
-- **📚 API Reference**: Explore the [Extension Library](../api-reference/extension-library/index.md)
-- **🔧 Dataspace Services**: Explore [connector services](../api-reference/dataspace-library/connector/services.md)
-- **📖 Industry Concepts**: Learn about [Industry Core concepts](../core-concepts/industry-concepts/index.md)
+- **API Reference**: Explore the [Extension Library](../api-reference/extension-library/index.md)
+- **Dataspace Services**: Explore [connector services](../api-reference/dataspace-library/connector/services.md)
+- **Industry Concepts**: Learn about [Industry Core concepts](../core-concepts/industry-concepts/index.md)
 
 ---
 
@@ -556,6 +556,8 @@ The complete example scripts are available in the SDK repository:
 This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
 - SPDX-License-Identifier: CC-BY-4.0
-- SPDX-FileCopyrightText: 2026 Contributors to the Eclipse Foundation
-- SPDX-FileCopyrightText: 2026 LKS Next
-- Source URL: https://github.com/eclipse-tractusx/tractusx-sdk
+- SPDX-FileCopyrightText: 2025, 2026 Contributors to the Eclipse Foundation
+- SPDX-FileCopyrightText: 2025, 2026 Catena-X Automotive Network e.V.
+- SPDX-FileCopyrightText: 2025, 2026 LKS Next
+- SPDX-FileCopyrightText: 2025, 2026 Mondragon Unibertsitatea
+- Source URL: [https://github.com/eclipse-tractusx/tractusx-sdk](https://github.com/eclipse-tractusx/tractusx-sdk)
