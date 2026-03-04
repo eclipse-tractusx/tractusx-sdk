@@ -613,3 +613,12 @@ def validate_data(df: pd.DataFrame) -> pd.DataFrame:
 - [Catena-X Standards](https://catena-x.net/association/standardization/)
 - [Tractus-X SDK API Reference](../api-reference/dataspace-library/index.md)
 - [Privacy-Preserving ML](https://www.tensorflow.org/responsible_ai/privacy)
+
+## NOTICE
+
+This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
+
+- SPDX-License-Identifier: CC-BY-4.0
+- SPDX-FileCopyrightText: 2025, 2026 Contributors to the Eclipse Foundation
+- SPDX-FileCopyrightText: 2025, 2026 Catena-X Automotive Network e.V.
+- Source URL: [https://github.com/eclipse-tractusx/tractusx-sdk](https://github.com/eclipse-tractusx/tractusx-sdk)
