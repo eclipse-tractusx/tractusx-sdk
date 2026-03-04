@@ -1,3 +1,21 @@
+<!--
+
+Eclipse Tractus-X - Software Development KIT
+
+Copyright (c) 2025 Threedy GmbH
+
+See the NOTICE file(s) distributed with this work for additional
+information regarding copyright ownership.
+
+This work is made available under the terms of the
+Creative Commons Attribution 4.0 International (CC-BY-4.0) license,
+which is available at
+https://creativecommons.org/licenses/by/4.0/legalcode.
+
+SPDX-License-Identifier: CC-BY-4.0
+
+-->
+
 # Geometry Validation
 
 This tool validates geometry scene files in JSON format against the Catena-X SingleLevelSceneNode schema. The validator checks your JSON files against the official [Catena-X SingleLevelSceneNode schema version 1.0.0](https://github.com/eclipse-tractusx/sldt-semantic-models/blob/main/io.catenax.single_level_scene_node/1.0.0/gen/SingleLevelSceneNode-schema.json).
@@ -91,3 +109,16 @@ python validateGeometry.py exampleData/scene.json -d ./exampleData -v warning -s
 # Show help
 python validateGeometry.py --help
 ```
+
+## Licenses
+
+- [Apache-2.0](https://raw.githubusercontent.com/eclipse-tractusx/tractusx-sdk/main/LICENSE) for code
+- [CC-BY-4.0](https://spdx.org/licenses/CC-BY-4.0.html) for non-code
+
+## NOTICE
+
+This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
+
+- SPDX-License-Identifier: CC-BY-4.0
+- SPDX-FileCopyrightText: 2025 Threedy GmbH
+- Source URL: https://github.com/eclipse-tractusx/tractusx-sdk
