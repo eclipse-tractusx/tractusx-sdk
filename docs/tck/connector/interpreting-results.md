@@ -86,10 +86,10 @@ TCK tests annotate all HTTP interactions with structured markers:
 
 A test is marked **PASS** when all four phases complete successfully:
 
-- ✅ **Phase 0**: Sample data uploaded to backend (HTTP 200)
-- ✅ **Phase 1**: All provider resources created (policies, asset, contract definition)
-- ✅ **Phase 2**: Consumer successfully negotiates and obtains an EDR token
-- ✅ **Phase 3**: Data retrieved using the EDR matches the uploaded payload
+- **Phase 0**: Sample data uploaded to backend (HTTP 200)
+- **Phase 1**: All provider resources created (policies, asset, contract definition)
+- **Phase 2**: Consumer successfully negotiates and obtains an EDR token
+- **Phase 3**: Data retrieved using the EDR matches the uploaded payload
 
 ## Troubleshooting
 
@@ -222,47 +222,19 @@ Transfer state: REQUESTED (polling timeout)
 curl -v https://backend.example.com/api/data
 ```
 
-## Validation Checklist
+## Common Issues
 
-Use this checklist when debugging TCK failures:
+**Connection Problems**
 
-### Provider Configuration
-- [ ] Management API accessible from test machine
-- [ ] API key valid and has create permissions
-- [ ] BPN format matches Discovery Service registration (`BPNL…`)
-- [ ] DSP URL does **not** include a protocol-version suffix
+Most failures come down to network paths. Make sure your Consumer EDC can actually reach the Provider's DSP endpoint, and the Provider Data Plane can hit your backend storage. Firewall rules are usually the culprit.
 
-### Consumer Configuration
-- [ ] Management API accessible from test machine
-- [ ] API key valid and has create permissions
-- [ ] BPN registered in Discovery Service (Saturn only)
-- [ ] Can reach the Provider DSP endpoint over the network
+**Credential Validation**
 
-### Backend Configuration
-- [ ] Storage API accessible from test machine
-- [ ] API key valid if authentication is required
-- [ ] Backend accepts requests from the Provider Data Plane
+For Saturn tests, both organizations need to be properly onboarded with valid BPN credentials. If contract negotiation gets terminated, check that the Consumer has the required Framework Agreement VCs (like `DataExchangeGovernance:1.0`) and that the claims match your policy constraints.
 
-### Network Connectivity
-- [ ] Test machine → Provider Control Plane (HTTPS)
-- [ ] Test machine → Consumer Control Plane (HTTPS)
-- [ ] Consumer EDC → Provider DSP endpoint (HTTPS)
-- [ ] Provider Data Plane → Backend Storage (HTTPS)
+**Negotiation Trouble shooting**
 
-### Dataspace Onboarding & Credentials
-- [ ] Provider organization onboarded in Catena-X dataspace
-- [ ] Consumer organization onboarded in Catena-X dataspace
-- [ ] Provider has valid BPN Verifiable Credential
-- [ ] Consumer has valid BPN Verifiable Credential
-- [ ] Consumer has required Framework Agreement VCs (e.g., `Traceability:1.0`)
-- [ ] All VC claims match policy constraints (`leftOperand` values)
-- [ ] EDC connectors configured with SSI/credential validation
-- [ ] Credential issuers are trusted by both parties
-
-### Protocol Compatibility
-- [ ] EDC versions match (Jupiter: 0.8.x–0.10.x, Saturn: 0.11.x+)
-- [ ] ODRL context URLs match the EDC version
-- [ ] DSP protocol string matches (Jupiter: no version suffix, Saturn: `:2025-1`)
+If negotiation get stuck in `REQUESTED` state, verify on the logs of the control plane what went wrong. In case the transfer works and no data is retrieved, double-check API keys and that the backend accepts requests from the Data Plane.
 
 ## Documentation References
 

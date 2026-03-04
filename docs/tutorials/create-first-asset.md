@@ -326,10 +326,10 @@ If you encounter issues, here are common solutions:
 
 Now that you have the SDK installed and verified:
 
-1. ** Explore Libraries**: Learn about the [Dataspace Library](../api-reference/dataspace-library/index.md) for connector services
-2. ** Read Services Documentation**: Check out [connector services](../api-reference/dataspace-library/connector/services.md) for detailed API reference
-3. ** SDK Structure**: Understand the [SDK architecture](../core-concepts/sdk-architecture/sdk-structure-and-components.md)
-4. ** Join Community**: Connect with other developers in our [discussions](https://github.com/eclipse-tractusx/tractusx-sdk/discussions)
+1. **Explore Libraries**: Learn about the [Dataspace Library](../api-reference/dataspace-library/index.md) for connector services
+2. **Read Services Documentation**: Check out [connector services](../api-reference/dataspace-library/connector/services.md) for detailed API reference
+3. **SDK Structure**: Understand the [SDK architecture](../core-concepts/sdk-architecture/sdk-structure-and-components.md)
+4. **Join Community**: Connect with other developers in our [discussions](https://github.com/eclipse-tractusx/tractusx-sdk/discussions)
 
 ## NOTICE
 

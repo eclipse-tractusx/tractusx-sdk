@@ -366,7 +366,7 @@ def create_federated_data(
 
 ## Step 6: Publish Results to Dataspace
 
-!!! danger "Critical Warning - Publishing ML Results"
+!!! danger "Attention! - Publishing ML Results"
     **Publishing AI/ML model results to the dataspace requires extreme caution!**
     
     **Legal and Compliance Risks:**

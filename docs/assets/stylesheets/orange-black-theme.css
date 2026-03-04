@@ -198,6 +198,213 @@
   border-bottom: 1px solid #FFD700;
 }
 
+/* Vibrant purple styling for "Recommended Approach" tip admonitions */
+.md-typeset .admonition.tip {
+  border-left: 6px solid #a855f7 !important;
+  border-right: 2px solid rgba(168, 85, 247, 0.3) !important;
+  border-top: 2px solid rgba(168, 85, 247, 0.3) !important;
+  border-bottom: 2px solid rgba(168, 85, 247, 0.3) !important;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(147, 51, 234, 0.12) 100%) !important;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 4px 12px rgba(147, 51, 234, 0.2), inset 0 0 30px rgba(168, 85, 247, 0.05) !important;
+  border-radius: 6px !important;
+}
+
+.md-typeset .admonition.tip > .admonition-title {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%) !important;
+  border-bottom: 2px solid #7c3aed !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.5), 0 0 30px rgba(147, 51, 234, 0.3) !important;
+  border-radius: 0 4px 0 0 !important;
+}
+
+.md-typeset .admonition.tip > .admonition-title::before {
+  color: #ffffff !important;
+  background-color: #ffffff !important;
+  -webkit-mask-image: var(--md-admonition-icon--tip);
+  mask-image: var(--md-admonition-icon--tip);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 12px rgba(168, 85, 247, 0.8)) !important;
+}
+
+/* Make all SVG icons in tip admonitions white with purple glow */
+.md-typeset .admonition.tip svg {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.9)) !important;
+}
+
+/* Target Material icon font if used */
+.md-typeset .admonition.tip .admonition-title .md-icon {
+  color: #ffffff !important;
+  filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.9)) !important;
+}
+
+/* Vibrant blue styling for info admonitions */
+.md-typeset .admonition.info,
+.md-typeset .admonition.note {
+  border-left: 6px solid #0288d1 !important;
+  border-right: 2px solid rgba(2, 136, 209, 0.3) !important;
+  border-top: 2px solid rgba(2, 136, 209, 0.3) !important;
+  border-bottom: 2px solid rgba(2, 136, 209, 0.3) !important;
+  background: linear-gradient(135deg, rgba(2, 136, 209, 0.08) 0%, rgba(1, 87, 155, 0.12) 100%) !important;
+  box-shadow: 0 0 20px rgba(2, 136, 209, 0.3), 0 4px 12px rgba(1, 87, 155, 0.2), inset 0 0 30px rgba(2, 136, 209, 0.05) !important;
+  border-radius: 6px !important;
+}
+
+.md-typeset .admonition.info > .admonition-title,
+.md-typeset .admonition.note > .admonition-title {
+  background: linear-gradient(135deg, #0288d1 0%, #01579b 100%) !important;
+  border-bottom: 2px solid #01579b !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 15px rgba(2, 136, 209, 0.5), 0 0 30px rgba(1, 87, 155, 0.3) !important;
+  border-radius: 0 4px 0 0 !important;
+}
+
+.md-typeset .admonition.info > .admonition-title::before,
+.md-typeset .admonition.note > .admonition-title::before {
+  color: #ffffff !important;
+  background-color: #ffffff !important;
+  -webkit-mask-image: var(--md-admonition-icon--info);
+  mask-image: var(--md-admonition-icon--info);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 12px rgba(14, 165, 233, 0.8)) !important;
+}
+
+.md-typeset .admonition.info svg,
+.md-typeset .admonition.note svg {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  filter: drop-shadow(0 0 6px rgba(14, 165, 233, 0.9)) !important;
+}
+
+.md-typeset .admonition.info .admonition-title .md-icon,
+.md-typeset .admonition.note .admonition-title .md-icon {
+  color: #ffffff !important;
+  filter: drop-shadow(0 0 6px rgba(14, 165, 233, 0.9)) !important;
+}
+
+/* Vibrant green styling for success admonitions */
+.md-typeset .admonition.success {
+  border-left: 6px solid #10b981 !important;
+  border-right: 2px solid rgba(16, 185, 129, 0.3) !important;
+  border-top: 2px solid rgba(16, 185, 129, 0.3) !important;
+  border-bottom: 2px solid rgba(16, 185, 129, 0.3) !important;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.12) 100%) !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3), 0 4px 12px rgba(5, 150, 105, 0.2), inset 0 0 30px rgba(16, 185, 129, 0.05) !important;
+  border-radius: 6px !important;
+}
+
+.md-typeset .admonition.success > .admonition-title {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  border-bottom: 2px solid #047857 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.5), 0 0 30px rgba(5, 150, 105, 0.3) !important;
+  border-radius: 0 4px 0 0 !important;
+}
+
+.md-typeset .admonition.success > .admonition-title::before {
+  color: #ffffff !important;
+  background-color: #ffffff !important;
+  -webkit-mask-image: var(--md-admonition-icon--success);
+  mask-image: var(--md-admonition-icon--success);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 12px rgba(16, 185, 129, 0.8)) !important;
+}
+
+.md-typeset .admonition.success svg {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.9)) !important;
+}
+
+.md-typeset .admonition.success .admonition-title .md-icon {
+  color: #ffffff !important;
+  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.9)) !important;
+}
+
+/* Vibrant orange/yellow styling for warning admonitions */
+.md-typeset .admonition.warning {
+  border-left: 6px solid #f59e0b !important;
+  border-right: 2px solid rgba(245, 158, 11, 0.3) !important;
+  border-top: 2px solid rgba(245, 158, 11, 0.3) !important;
+  border-bottom: 2px solid rgba(245, 158, 11, 0.3) !important;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.12) 100%) !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3), 0 4px 12px rgba(217, 119, 6, 0.2), inset 0 0 30px rgba(245, 158, 11, 0.05) !important;
+  border-radius: 6px !important;
+}
+
+.md-typeset .admonition.warning > .admonition-title {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  border-bottom: 2px solid #b45309 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.5), 0 0 30px rgba(217, 119, 6, 0.3) !important;
+  border-radius: 0 4px 0 0 !important;
+}
+
+.md-typeset .admonition.warning > .admonition-title::before {
+  color: #ffffff !important;
+  background-color: #ffffff !important;
+  -webkit-mask-image: var(--md-admonition-icon--warning);
+  mask-image: var(--md-admonition-icon--warning);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 12px rgba(245, 158, 11, 0.8)) !important;
+}
+
+.md-typeset .admonition.warning svg {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.9)) !important;
+}
+
+.md-typeset .admonition.warning .admonition-title .md-icon {
+  color: #ffffff !important;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.9)) !important;
+}
+
+/* Vibrant red styling for danger/error admonitions */
+.md-typeset .admonition.danger,
+.md-typeset .admonition.error {
+  border-left: 6px solid #ef4444 !important;
+  border-right: 2px solid rgba(239, 68, 68, 0.3) !important;
+  border-top: 2px solid rgba(239, 68, 68, 0.3) !important;
+  border-bottom: 2px solid rgba(239, 68, 68, 0.3) !important;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(220, 38, 38, 0.12) 100%) !important;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), 0 4px 12px rgba(220, 38, 38, 0.2), inset 0 0 30px rgba(239, 68, 68, 0.05) !important;
+  border-radius: 6px !important;
+}
+
+.md-typeset .admonition.danger > .admonition-title,
+.md-typeset .admonition.error > .admonition-title {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  border-bottom: 2px solid #b91c1c !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5), 0 0 30px rgba(220, 38, 38, 0.3) !important;
+  border-radius: 0 4px 0 0 !important;
+}
+
+.md-typeset .admonition.danger > .admonition-title::before,
+.md-typeset .admonition.error > .admonition-title::before {
+  color: #ffffff !important;
+  background-color: #ffffff !important;
+  -webkit-mask-image: var(--md-admonition-icon--danger);
+  mask-image: var(--md-admonition-icon--danger);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 12px rgba(239, 68, 68, 0.8)) !important;
+}
+
+.md-typeset .admonition.danger svg,
+.md-typeset .admonition.error svg {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.9)) !important;
+}
+
+.md-typeset .admonition.danger .admonition-title .md-icon,
+.md-typeset .admonition.error .admonition-title .md-icon {
+  color: #ffffff !important;
+  filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.9)) !important;
+}
+
 /* Change "Table of contents" to "On this Page" in TOC sidebar */
 .md-nav--secondary .md-nav__title {
   font-size: 0 !important;
