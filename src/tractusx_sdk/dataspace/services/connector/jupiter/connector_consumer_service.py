@@ -21,8 +21,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from multiprocessing import context
-
 from requests import Response
 from ..base_connector_consumer import BaseConnectorConsumerService
 
