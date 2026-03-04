@@ -668,7 +668,6 @@ class TestE2EConnectorServicesMocked:
     def test_model_serialization_for_connector_services(self):
         """Test that models serialize correctly for connector service usage"""
         from tractusx_sdk.dataspace.models.connector.model_factory import ModelFactory
-        import json
         
         # Test PolicyModel serialization
         policy = ModelFactory.get_policy_model(
