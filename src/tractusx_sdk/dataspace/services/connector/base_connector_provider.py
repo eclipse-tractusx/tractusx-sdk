@@ -34,10 +34,12 @@ class BaseConnectorProviderService(BaseService):
     _contract_definition_controller: BaseDmaController
     _policy_controller: BaseDmaController
 
-    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verbose: bool = True, logger: logging.Logger = None):
+    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None, verify_ssl: bool = True):
         self.dataspace_version = dataspace_version
         self.verbose = verbose
+        self.debug = debug
         self.logger = logger or logging.getLogger(__name__)
+        self.verify_ssl = verify_ssl
 
         dma_adapter = AdapterFactory.get_dma_adapter(
             dataspace_version=dataspace_version,
@@ -85,7 +87,7 @@ class BaseConnectorProviderService(BaseService):
         self,
         asset_id: str,
         base_url: str,
-        dct_type: str,
+        dct_type: str = None,
         version: str = "3.0",
         semantic_id: str = None,
         proxy_params: dict = {
@@ -95,21 +97,26 @@ class BaseConnectorProviderService(BaseService):
             "proxyBody": "false"
         },
         headers: dict = None,
-        private_properties: dict = None
+        private_properties: dict = None,
+        context: dict = None,
+        data_address_type: str = "HttpData",
+        **kwargs
     ):
         if self.verbose:
             self.logger.info(f"Creating asset {asset_id} at {base_url}.")
 
-        context = {
-            "edc": "https://w3id.org/edc/v0.0.1/ns/",
-            "cx-common": "https://w3id.org/catenax/ontology/common#",
-            "cx-taxo": "https://w3id.org/catenax/taxonomy#",
-            "dct": "http://purl.org/dc/terms/"
-        }
+        # Use provided context or default
+        if context is None:
+            context = {
+                "edc": "https://w3id.org/edc/v0.0.1/ns/",
+                "cx-common": "https://w3id.org/catenax/ontology/common#",
+                "cx-taxo": "https://w3id.org/catenax/taxonomy#",
+                "dct": "http://purl.org/dc/terms/"
+            }
 
         data_address = {
             "@type": "DataAddress",
-            "type": "HttpData",
+            "type": data_address_type,
             "baseUrl": base_url
         }
 
@@ -120,11 +127,12 @@ class BaseConnectorProviderService(BaseService):
             for key, value in headers.items():
                 data_address["header:" + key] = value
 
-        properties: dict = {
-            "dct:type": {
+        properties: dict = {}
+
+        if dct_type is not None:
+            properties["dct:type"] = {
                 "@id": dct_type
             }
-        }
 
         if version is not None:
             properties["cx-common:version"] = version
@@ -139,10 +147,14 @@ class BaseConnectorProviderService(BaseService):
             oid=asset_id,
             properties=properties,
             private_properties=private_properties,
-            data_address=data_address
+            data_address=data_address,
+            kwargs=kwargs
         )
 
-        asset_response = self.assets.create(obj=asset)
+        if self.debug:
+            self.logger.info(f"[Connector Service] [ASSET REQUEST]: {asset.to_data()}")
+
+        asset_response = self.assets.create(obj=asset, verify=self.verify_ssl)
 
         if asset_response.status_code != 200:
             self.logger.error(asset_response.text)
@@ -158,7 +170,8 @@ class BaseConnectorProviderService(BaseService):
         contract_id: str,
         usage_policy_id: str,
         access_policy_id: str,
-        asset_id: str
+        asset_id: str,
+        **kwargs
     ) -> dict:
         if self.verbose:
             self.logger.info(f"Creating new contract with ID {contract_id}.")
@@ -181,10 +194,14 @@ class BaseConnectorProviderService(BaseService):
             oid=contract_id,
             assets_selector=asset_selector,
             contract_policy_id=usage_policy_id,
-            access_policy_id=access_policy_id
+            access_policy_id=access_policy_id,
+            kwargs=kwargs
         )
 
-        created_contract = self.contract_definitions.create(obj=contract)
+        if self.debug:
+            self.logger.info(f"[Connector Service] [CONTRACT DEFINITION REQUEST]: {contract.to_data()}")
+
+        created_contract = self.contract_definitions.create(obj=contract, verify=self.verify_ssl)
 
         if created_contract.status_code != 200:
             raise ValueError(f"Failed to create contract {contract_id}. Status code: {created_contract.status_code}")
@@ -197,10 +214,11 @@ class BaseConnectorProviderService(BaseService):
     def create_policy(
         self,
         policy_id: str,
-        context: dict | list[dict] = {},
+        context: dict | list[dict] = None,
         permissions: dict | list[dict] = [],
         prohibitions: dict | list[dict] = [],
-        obligations: dict | list[dict] = []
+        obligations: dict | list[dict] = [],
+        **kwargs
     ) -> dict:
         if self.verbose:
             self.logger.info(f"Creating new policy with ID {policy_id}.")
@@ -211,13 +229,17 @@ class BaseConnectorProviderService(BaseService):
             context=context,
             permissions=permissions,
             prohibitions=prohibitions,
-            obligations=obligations
+            obligations=obligations,
+            kwargs=kwargs
         )
 
-        created_policy = self.policies.create(obj=policy)
+        if self.debug:
+            self.logger.info(f"[Connector Service] [POLICY REQUEST]: {policy.to_data()}")
+
+        created_policy = self.policies.create(obj=policy, verify=self.verify_ssl)
 
         if created_policy.status_code != 200:
-            raise ValueError(f"Failed to create policy {policy_id}. Status code: {created_policy.status_code}")
+            raise ValueError(f"Failed to create policy {policy_id}. Status code: {created_policy.status_code}, Response: {created_policy.text}")
 
         if self.verbose:
             self.logger.info(f"Policy {policy_id} created successfully.")

@@ -387,6 +387,45 @@ connector_service.consumer.get_catalog(...)
 connector_service.provider.assets.create(...)
 ```
 
+## Test Compliance Kits (TCKs)
+
+The `tck/connector/` directory contains Test Compliance Kits for validating end-to-end connector functionality across different Eclipse Tractus-X EDC versions and deployment scenarios.
+
+### Available TCKs
+
+**Saturn Protocol (EDC v0.11.x - DSP 2025-1):**
+- `tck_e2e_saturn_0-11-X_simple_did.py` - Simple one-call using `do_get()` (DID-based)
+- `tck_e2e_saturn_0-11-X_detailed_did.py` - Detailed step-by-step flow (DID-based)
+- `tck_e2e_umbrella_saturn_simple_did.py` - Umbrella Helm chart (simple)
+- `tck_e2e_umbrella_saturn_detailed.py` - Umbrella Helm chart (detailed)
+
+**Jupiter Protocol (EDC v0.8.x - 0.10.x - Legacy DSP):**
+- `tck_e2e_jupiter_0-10-X_simple.py` - Simple one-call (BPNL-based)
+- `tck_e2e_jupiter_0-10-X_detailed.py` - Detailed step-by-step flow (BPNL-based)
+
+### Running TCKs
+
+```bash
+# Install dependencies
+poetry install
+
+# Run a TCK example
+python tck/connector/tck_e2e_umbrella_saturn_simple_did.py
+```
+
+TCKs demonstrate the complete data exchange flow:
+1. **Provider**: Provisions data (Asset + Policies + Contract Definition)
+2. **Consumer**: Discovers, negotiates, transfers, and accesses data
+3. **Backend**: Simple data storage for testing
+
+Each TCK generates timestamped logs in `logs/<tck_name>/<date>/` with request/response details, policy configurations, and test results.
+
+### Deployment Scenarios
+
+**Tractus-X Umbrella**: TCKs are pre-configured with [Tractus-X Umbrella](https://github.com/eclipse-tractusx/tractus-x-umbrella) Helm chart values, providing a complete Catena-X dataspace environment with EDC connectors, SSI DIM Wallet, Digital Twin Registry, and test data.
+
+**Standalone EDC**: TCKs can be adapted for custom EDC deployments by updating connector URLs, API keys, and BPN/DID values.
+
 ## Roadmap
 
 The development roadmap is the same as the industry core hub.
