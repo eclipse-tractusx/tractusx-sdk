@@ -59,127 +59,349 @@
 
 
     
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/stylesheets/orange-black-theme.css">
   <style>
-    /* Fix version number display and header spacing */
+    /*
+     * Header layout — single row using flexbox
+     * DOM order: Logo → Hamburger → Title → Palette → SearchIcon → Search → Source
+     * Visual order: Logo | Title+docs | ———— Search (centered) ———— | Version | Palette | Source
+     */
     .md-header__inner {
       display: flex !important;
       align-items: center !important;
-      justify-content: space-between !important;
       flex-wrap: nowrap !important;
+      height: 3rem !important;
+      padding: 0 0.1rem !important;
+      gap: 0 !important;
+      position: relative !important;
     }
-    
-    .md-header__title {
-      flex: 1 !important;
-      min-width: 0 !important;
-      margin-right: 16px !important;
-    }
-    
 
-    
-    .md-header__button {
-      margin-left: 4px !important;
+    /* 1. Logo — stays left */
+    .md-header__button.md-logo {
+      order: 1 !important;
+      flex: 0 0 auto !important;
+      margin: 0 !important;
+      padding: 0.2rem 0.1rem !important;
+      display: inline-flex !important;
+      align-items: center !important;
     }
-    
-    /* Move version selector next to GitHub repository info */
-    .md-version {
-      position: absolute !important;
-      right: -750px !important;
+
+    /* 2. Hamburger (mobile drawer toggle) - hidden on desktop by default */
+    .md-header__button[for="__drawer"] {
+      order: 2 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0.2rem !important;
+      display: none !important; /* Hidden on desktop */
+    }
+
+    /* Show hamburger on smaller screens (handled by Material theme) */
+    @media screen and (max-width: 1220px) {
+      .md-header__button[for="__drawer"] {
+        display: inline-flex !important;
+      }
+    }
+
+    /* 3. Title — next to logo, vertically centered */
+    .md-header__title {
+      order: 3 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0 0 0.15rem !important;
+      overflow: visible !important;
+      font-family: 'Manrope', sans-serif !important;
+      font-weight: 700 !important;
+      font-size: 1.2rem !important;
+      letter-spacing: -0.02em !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 0.5rem !important;
+      line-height: 3rem !important;
+      height: 3rem !important;
+    }
+
+    /* Hide original title text (site_name) */
+    .md-header__title .md-header__ellipsis {
+      font-size: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      display: none !important;
+    }
+
+    /* Custom title text */
+    .md-header__title::before {
+      content: "Tractus-X SDK" !important;
+      color: #ffffff !important;
+      font-size: 1.2rem !important;
+      font-weight: 700 !important;
+      white-space: nowrap !important;
+    }
+
+    /* Modern "docs" sub-label */
+    .md-header__title::after {
+      content: "docs" !important;
+      color: rgba(255, 215, 0, 0.7) !important;
+      font-size: 0.5rem !important;
+      font-weight: 500 !important;
+      background: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      border: none !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.12em !important;
+      white-space: nowrap !important;
+      align-self: flex-start !important;
+      margin-top: 0.55rem !important;
+      margin-left: -0.2rem !important;
+    }
+
+    /* 4. Search — fills available header space */
+    .md-search {
+      order: 5 !important;
+      flex: 1 1 auto !important;
+      max-width: none !important;
+      width: auto !important;
+      margin: 0 0 0 0.75rem !important;
+      position: relative !important;
+      left: auto !important;
+      top: auto !important;
+      transform: none !important;
       z-index: 1 !important;
     }
-    
-    /* Keep search in center position */
-    .md-search {
-      margin-right: auto !important;
-      margin-left: auto !important;
-    }
-    
-    /* GitHub repo info on the far right */
-    .md-header__source {
-      margin-left: auto !important;
-      margin-right: 60px !important;
-    }
-    
-    /* Theme selector stays on far right */
-    .md-header__button.md-icon {
-      margin-left: auto !important;
-      margin-right: 8px !important;
-    }
-    
-    .md-version__current {
-      background-color: rgba(0, 0, 0, 0.3) !important;
-      border: 2px solid #FFD700 !important;
-      color: #FFD700 !important;
-      font-weight: 600 !important;
-      padding: 6px 16px !important;
-      border-radius: 6px !important;
-      min-width: 140px !important;
-      max-width: 200px !important;
-      text-align: center !important;
-      white-space: nowrap !important;
-      overflow: visible !important;
-      display: block !important;
-      line-height: 1.2 !important;
-    }
-    
 
+    /* Ensure search form fills the container */
+    .md-search__form {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+
+    /* Ensure search input fills the form */
+    .md-search__input {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+
+    /* Override Material's default search input width */
+    .md-search__inner {
+      width: 100% !important;
+    }
+
+    /* Ensure search output (results) container doesn't limit width */
+    .md-search__output {
+      width: 100% !important;
+    }
+
+    /* Search icon button (the magnifying glass) */
+    label[for="__search"] {
+      order: 4 !important;
+      flex: 0 0 auto !important;
+    }
+
+    /* 5. Version selector — minimal, right side */
+    .md-header .md-version {
+      order: 6 !important;
+      flex: 0 0 auto !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      margin: 0 0.4rem !important;
+    }
+
+    .md-version__current {
+      background: none !important;
+      border: none !important;
+      color: rgba(255, 255, 255, 0.6) !important;
+      font-weight: 400 !important;
+      font-size: 0.7rem !important;
+      padding: 0.15rem 0.3rem !important;
+      border-radius: 3px !important;
+      white-space: nowrap !important;
+      line-height: 1.2 !important;
+      cursor: pointer !important;
+      letter-spacing: 0.02em !important;
+      transition: color 0.2s !important;
+    }
+
+    .md-version__current:hover {
+      color: #FFD700 !important;
+    }
+
+    .md-version__list {
+      background: #1a1a1a !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 3px !important;
+      min-width: 7rem !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .md-version__link {
+      color: rgba(255, 255, 255, 0.6) !important;
+      padding: 0.25rem 0.5rem !important;
+      font-size: 0.65rem !important;
+      display: block !important;
+      transition: all 0.15s ease !important;
+    }
+
+    .md-version__link:hover {
+      color: #FFD700 !important;
+      background: rgba(255, 215, 0, 0.05) !important;
+    }
+
+    /* 6. Palette toggle (dark/light) — right side */
+    .md-header__inner > [data-md-component="palette"] {
+      order: 7 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0.1rem !important;
+    }
+
+    form.md-header__option {
+      order: 7 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0.1rem !important;
+      display: inline-flex !important;
+      align-items: center !important;
+    }
+
+    /* 7. GitHub source — far right */
+    .md-header__source {
+      order: 8 !important;
+      flex: 0 0 auto !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      margin: 0 0 0 0.3rem !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      width: auto !important;
+    }
+
+    .md-source__repository {
+      max-width: none !important;
+      overflow: visible !important;
+      text-overflow: unset !important;
+    }
+
+    /* Generic header buttons */
+    .md-header__button {
+      padding: 0.4rem !important;
+    }
+
+    /* ——— Responsive ——— */
     
-    /* Responsive adjustments for better visibility */
+    /* Apply hamburger swap for all screen sizes where hamburger is visible (≤1220px) */
     @media screen and (max-width: 1220px) {
+      /* Swap hamburger and logo positions whenever hamburger menu is visible */
+      .md-header__button[for="__drawer"] {
+        order: 1 !important;
+        margin: 0 0.3rem 0 0 !important;
+        display: inline-flex !important;
+      }
+
+      .md-header__button.md-logo {
+        order: 2 !important;
+        margin: 0 0.2rem !important;
+      }
+
       .md-header__title {
-        font-size: 1.5rem !important;
+        order: 3 !important;
+        margin: 0 0 0 0.15rem !important;
       }
-      
-      .md-version__current {
-        min-width: 120px !important;
-        font-size: 0.9rem !important;
-        padding: 4px 12px !important;
-      }
-      
-      .md-header__option {
-        margin-right: 16px !important;
-      }
-    }
-    
-    @media screen and (max-width: 1024px) {
-      .md-header__title {
-        font-size: 1.3rem !important;
-      }
-      
-      .md-version__current {
-        min-width: 100px !important;
-        font-size: 0.85rem !important;
-        padding: 4px 10px !important;
-      }
-    }
-    
-    @media screen and (max-width: 768px) {
-      .md-header__title {
+
+      .md-header__title::before {
         font-size: 1.1rem !important;
       }
-      
-      .md-version__current {
-        min-width: 90px !important;
-        font-size: 0.8rem !important;
-        padding: 3px 8px !important;
+      .md-header__title::after {
+        font-size: 0.65rem !important;
+        padding: 0.12rem 0.4rem !important;
       }
-      
-      .md-header__option {
-        margin-right: 8px !important;
-        margin-left: 8px !important;
+      .md-search {
+        margin: 0 0 0 0.5rem !important;
+      }
+    }
+
+    @media screen and (max-width: 1024px) {
+      /* Tablet/iPad: Further refinements */
+      .md-header__title::before {
+        font-size: 1rem !important;
+      }
+      .md-header__title::after {
+        font-size: 0.48rem !important;
+        margin-top: 0.45rem !important; /* Adjust top alignment for tablet size */
+        margin-left: -0.18rem !important;
+      }
+      .md-header__source {
+        display: none !important;
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      /* Mobile/iPhone: Smaller text, center all items, wrap search */
+      .md-header__button.md-logo {
+        margin: 0 0.1rem !important;
+      }
+
+      .md-header__title {
+        line-height: 2.4rem !important;
+        height: auto !important;
+        margin: 0 0 0 0.1rem !important;
+      }
+
+      .md-header__inner {
+        flex-wrap: wrap !important;
+        height: auto !important;
+        min-height: 3rem !important;
+        padding: 0.3rem 0.5rem !important;
+        justify-content: center !important; /* Center all header items */
+      }
+
+      .md-header__title::before {
+        font-size: 0.95rem !important;
+      }
+      .md-header__title::after {
+        font-size: 0.42rem !important;
+        padding: 0.08rem 0.3rem !important;
+        margin-top: 0.35rem !important; /* Adjust top alignment for smaller size */
+        margin-left: -0.15rem !important; /* Keep it close to title */
+      }
+      .md-search {
+        max-width: 100% !important;
+        flex: 1 1 100% !important;
+        order: 10 !important;
+        margin: 0.3rem 0 0 0 !important;
+      }
+      .md-header .md-version {
+        display: none !important;
       }
     }
     
     /* Fix navigation tabs hover coverage */
     .md-tabs__link {
-      padding: 16px 16px !important;
-      height: auto !important;
-      min-height: 48px !important;
+      padding: 0 1rem !important;
+      height: 100% !important;
+      min-height: 2.4rem !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       line-height: 1.2 !important;
       position: relative !important;
+      box-sizing: border-box !important;
+    }
+    
+    .md-tabs__item {
+      height: 100% !important;
+    }
+    
+    .md-tabs__list {
+      height: 100% !important;
+    }
+    
+    @media screen and (max-width: 768px) {
+      .md-tabs__link {
+        padding: 0 0.8rem !important;
+        font-size: 0.85rem !important;
+      }
     }
     
     .md-tabs__link:hover {
@@ -510,17 +732,18 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
-        
-  
-  
     
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
   
   Home
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -552,11 +775,31 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../how-to-guides/ic-hub-use-case/industry-core-hub-overview/" class="md-tabs__link">
+        <a href="../../how-to-guides/backward-compatibility/" class="md-tabs__link">
           
   
   
   How-to Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tck/" class="md-tabs__link">
+          
+  
+  
+  TCK
 
         </a>
       </li>
@@ -593,17 +836,8 @@
   
     
     
-      
-  
-  
-  
-    
-  
-  
-    
-    
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../dataspace-library/" class="md-tabs__link">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -611,9 +845,6 @@
 
         </a>
       </li>
-    
-  
-
     
   
 
@@ -688,9 +919,27 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+    
+    
+    
+    
+      
+      
         
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -699,7 +948,88 @@
   </span>
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            Home
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Welcome
+    
+  </span>
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../home/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../home/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -818,6 +1148,82 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Experimental
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            Experimental
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/ai-tensorflow-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AI/ML with TensorFlow
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -869,6 +1275,29 @@
             How-to Guides
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/backward-compatibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Backward Compatibility
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -953,7 +1382,7 @@
   
   
   <span class="md-ellipsis">
-    Core Concepts
+    TCK
     
   </span>
   
@@ -963,6 +1392,272 @@
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            TCK
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tck/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Connector TCK
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Connector TCK
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tck/connector/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tck/connector/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tck/connector/running-tests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Running Tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tck/connector/cicd-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CI/CD Integration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tck/connector/interpreting-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Interpreting Results
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tck/connector/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Core Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Core Concepts
           </label>
@@ -1115,10 +1810,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
             
   
   
@@ -1131,12 +1826,35 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             API Reference
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1163,10 +1881,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2" >
         
           
-          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="">
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="">
             
   
   
@@ -1179,8 +1897,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_1">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2">
             <span class="md-nav__icon md-icon"></span>
             Dataspace Library
           </label>
@@ -1231,10 +1949,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_2" >
         
           
-          <label class="md-nav__link" for="__nav_5_1_2" id="__nav_5_1_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_2_2" id="__nav_6_2_2_label" tabindex="0">
             
   
   
@@ -1247,8 +1965,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_1_2">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_2">
             <span class="md-nav__icon md-icon"></span>
             Connector
           </label>
@@ -1376,10 +2094,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_3" >
         
           
-          <label class="md-nav__link" for="__nav_5_1_3" id="__nav_5_1_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_2_3" id="__nav_6_2_3_label" tabindex="0">
             
   
   
@@ -1392,8 +2110,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_1_3">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_3">
             <span class="md-nav__icon md-icon"></span>
             Discovery Services
           </label>
@@ -1498,10 +2216,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_5" >
         
           
-          <label class="md-nav__link" for="__nav_5_1_5" id="__nav_5_1_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_2_5" id="__nav_6_2_5_label" tabindex="0">
             
   
   
@@ -1514,8 +2232,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_1_5">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_5">
             <span class="md-nav__icon md-icon"></span>
             Legacy
           </label>
@@ -1585,10 +2303,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3" >
         
           
-          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="">
+          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="">
             
   
   
@@ -1601,8 +2319,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3">
             <span class="md-nav__icon md-icon"></span>
             Industry Library
           </label>
@@ -1653,10 +2371,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_2" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_2" id="__nav_5_2_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_2" id="__nav_6_3_2_label" tabindex="0">
             
   
   
@@ -1669,8 +2387,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_2">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_2">
             <span class="md-nav__icon md-icon"></span>
             DTR
           </label>
@@ -1752,10 +2470,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_3" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_3" id="__nav_5_2_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_3" id="__nav_6_3_3_label" tabindex="0">
             
   
   
@@ -1768,12 +2486,35 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_3">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_3">
             <span class="md-nav__icon md-icon"></span>
             Submodel Server
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../industry-library/submodel-server/adapters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Adapters Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1797,10 +2538,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_3_1" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_3_2" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_3_1" id="__nav_5_2_3_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_3_2" id="__nav_6_3_3_2_label" tabindex="0">
             
   
   
@@ -1813,8 +2554,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_3_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_3_1">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_3_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_3_2">
             <span class="md-nav__icon md-icon"></span>
             Adapters
           </label>
@@ -1904,10 +2645,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_4" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_4" id="__nav_5_2_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_4" id="__nav_6_3_4_label" tabindex="0">
             
   
   
@@ -1920,8 +2661,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_4">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_4">
             <span class="md-nav__icon md-icon"></span>
             Discovery Services
           </label>
@@ -1980,10 +2721,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_5" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_5" id="__nav_5_2_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_5" id="__nav_6_3_5_label" tabindex="0">
             
   
   
@@ -1996,8 +2737,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_5">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_5">
             <span class="md-nav__icon md-icon"></span>
             Legacy
           </label>
@@ -2090,10 +2831,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_6_4" id="__nav_6_4_label" tabindex="">
             
   
   
@@ -2106,8 +2847,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6_4">
             <span class="md-nav__icon md-icon"></span>
             Extension Library
           </label>
@@ -2580,10 +3321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -2596,8 +3337,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Contributing
           </label>
@@ -2671,10 +3412,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_3" >
         
           
-          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_3" id="__nav_7_3_label" tabindex="0">
             
   
   
@@ -2687,8 +3428,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_3">
             <span class="md-nav__icon md-icon"></span>
             Architectural Decision Records
           </label>
@@ -3259,7 +4000,7 @@ SPDX-License-Identifier: CC-BY-4.0
 </ul>
 <h2 id="quick-start-examples">Quick Start Examples</h2>
 <h3 id="converting-samm-schema-to-json-ld">Converting SAMM Schema to JSON-LD</h3>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.extensions.semantics</span><span class="w"> </span><span class="kn">import</span> <span class="n">SammSchemaContextTranslator</span>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.extensions.semantics</span><span class="w"> </span><span class="kn">import</span> <span class="n">SammSchemaContextTranslator</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Initialize translator</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">translator</span> <span class="o">=</span> <span class="n">SammSchemaContextTranslator</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -3274,7 +4015,7 @@ SPDX-License-Identifier: CC-BY-4.0
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="nb">print</span><span class="p">(</span><span class="n">context</span><span class="p">[</span><span class="s2">&quot;@context&quot;</span><span class="p">])</span>
 </span></code></pre></div>
 <h3 id="using-nested-json-ld-format">Using Nested JSON-LD Format</h3>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Generate nested JSON-LD context with hierarchical structure</span>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Generate nested JSON-LD context with hierarchical structure</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">nested_context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld_nested</span><span class="p">(</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">semantic_id</span><span class="o">=</span><span class="s2">&quot;urn:samm:io.catenax.part_type_information:1.0.0#PartTypeInformation&quot;</span><span class="p">,</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">aspect_prefix</span><span class="o">=</span><span class="s2">&quot;cx&quot;</span>
@@ -3287,7 +4028,7 @@ SPDX-License-Identifier: CC-BY-4.0
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Context: </span><span class="si">{</span><span class="n">value</span><span class="p">[</span><span class="s1">&#39;@context&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="providing-custom-schema">Providing Custom Schema</h3>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Load schema from local file</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my-aspect-schema.json&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -3301,7 +4042,7 @@ SPDX-License-Identifier: CC-BY-4.0
 </span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="documentation-structure">Documentation Structure</h2>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>extension-library/
+<div class="highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>extension-library/
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>├── index.md                    # This file - API overview
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>└── semantics/
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    └── semantics.md           # SAMM Schema Context Translator API
@@ -3309,7 +4050,7 @@ SPDX-License-Identifier: CC-BY-4.0
 <h2 id="use-cases">Use Cases</h2>
 <p>The Extension Library supports various domain-specific use cases:</p>
 <h3 id="product-carbon-footprint-pcf">Product Carbon Footprint (PCF)</h3>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Convert PCF aspect model to JSON-LD</span>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Convert PCF aspect model to JSON-LD</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">pcf_context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld</span><span class="p">(</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">semantic_id</span><span class="o">=</span><span class="s2">&quot;urn:samm:io.catenax.pcf:7.0.0#Pcf&quot;</span><span class="p">,</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">aspect_prefix</span><span class="o">=</span><span class="s2">&quot;pcf&quot;</span>
@@ -3326,14 +4067,14 @@ SPDX-License-Identifier: CC-BY-4.0
 </span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="p">}</span>
 </span></code></pre></div>
 <h3 id="part-type-information">Part Type Information</h3>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Convert Part Type Information aspect</span>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Convert Part Type Information aspect</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">part_context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld</span><span class="p">(</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">semantic_id</span><span class="o">=</span><span class="s2">&quot;urn:samm:io.catenax.part_type_information:1.0.0#PartTypeInformation&quot;</span><span class="p">,</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">aspect_prefix</span><span class="o">=</span><span class="s2">&quot;part&quot;</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="serial-part-typization">Serial Part Typization</h3>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Convert Serial Part aspect with nested structure</span>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Convert Serial Part aspect with nested structure</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">serial_context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld_nested</span><span class="p">(</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">semantic_id</span><span class="o">=</span><span class="s2">&quot;urn:samm:io.catenax.serial_part:3.0.0#SerialPart&quot;</span><span class="p">,</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">aspect_prefix</span><span class="o">=</span><span class="s2">&quot;serial&quot;</span>
@@ -3341,7 +4082,7 @@ SPDX-License-Identifier: CC-BY-4.0
 </span></code></pre></div>
 <h2 id="integration-patterns">Integration Patterns</h2>
 <h3 id="complete-semantic-processing-workflow">Complete Semantic Processing Workflow</h3>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.extensions.semantics</span><span class="w"> </span><span class="kn">import</span> <span class="n">SammSchemaContextTranslator</span>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.extensions.semantics</span><span class="w"> </span><span class="kn">import</span> <span class="n">SammSchemaContextTranslator</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.industry.services</span><span class="w"> </span><span class="kn">import</span> <span class="n">AasService</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tractusx_sdk.dataspace.managers</span><span class="w"> </span><span class="kn">import</span> <span class="n">OAuth2Manager</span>
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
@@ -3390,14 +4131,14 @@ SPDX-License-Identifier: CC-BY-4.0
 <h2 id="api-conventions">API Conventions</h2>
 <h3 id="semantic-ids">Semantic IDs</h3>
 <p>All semantic IDs must follow the URN format:</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>urn:samm:&lt;namespace&gt;:&lt;aspect-name&gt;:&lt;version&gt;#&lt;AspectName&gt;
+<div class="highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>urn:samm:&lt;namespace&gt;:&lt;aspect-name&gt;:&lt;version&gt;#&lt;AspectName&gt;
 </span></code></pre></div>
 <p>Example:
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>urn:samm:io.catenax.pcf:7.0.0#Pcf
+<div class="highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>urn:samm:io.catenax.pcf:7.0.0#Pcf
 </span></code></pre></div></p>
 <h3 id="context-prefixes">Context Prefixes</h3>
 <p>Custom prefixes can be specified for aspect properties:</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld</span><span class="p">(</span>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld</span><span class="p">(</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="n">semantic_id</span><span class="o">=</span><span class="s2">&quot;urn:samm:io.catenax.pcf:7.0.0#Pcf&quot;</span><span class="p">,</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">aspect_prefix</span><span class="o">=</span><span class="s2">&quot;custom&quot;</span>  <span class="c1"># Use &#39;custom&#39; instead of default &#39;cx&#39;</span>
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">)</span>
@@ -3407,12 +4148,12 @@ SPDX-License-Identifier: CC-BY-4.0
 <ol>
 <li>
 <p><strong>Auto-fetch from repository</strong> (default):
-   <div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld</span><span class="p">(</span><span class="n">semantic_id</span><span class="o">=</span><span class="s2">&quot;urn:samm:...&quot;</span><span class="p">)</span>
+   <div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld</span><span class="p">(</span><span class="n">semantic_id</span><span class="o">=</span><span class="s2">&quot;urn:samm:...&quot;</span><span class="p">)</span>
 </span></code></pre></div></p>
 </li>
 <li>
 <p><strong>Custom repository URL</strong>:
-   <div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld</span><span class="p">(</span>
+   <div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld</span><span class="p">(</span>
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="n">semantic_id</span><span class="o">=</span><span class="s2">&quot;urn:samm:...&quot;</span><span class="p">,</span>
 </span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="n">link_core</span><span class="o">=</span><span class="s2">&quot;https://my-repo.example.com/schemas/&quot;</span>
 </span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="p">)</span>
@@ -3420,7 +4161,7 @@ SPDX-License-Identifier: CC-BY-4.0
 </li>
 <li>
 <p><strong>Explicit schema dictionary</strong>:
-   <div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld</span><span class="p">(</span>
+   <div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld</span><span class="p">(</span>
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="n">semantic_id</span><span class="o">=</span><span class="s2">&quot;urn:samm:...&quot;</span><span class="p">,</span>
 </span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>    <span class="n">schema</span><span class="o">=</span><span class="n">my_schema_dict</span>
 </span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="p">)</span>
@@ -3430,7 +4171,7 @@ SPDX-License-Identifier: CC-BY-4.0
 <h2 id="output-formats">Output Formats</h2>
 <h3 id="flattened-json-ld">Flattened JSON-LD</h3>
 <p>Use <code>schema_to_jsonld()</code> for flat context structure:</p>
-<div class="language-json highlight"><span class="filename">JSON</span><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
+<div class="highlight"><span class="filename">JSON</span><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">&quot;@context&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="nt">&quot;@version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.1</span><span class="p">,</span>
 </span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;@id&quot;</span><span class="p">,</span>
@@ -3444,7 +4185,7 @@ SPDX-License-Identifier: CC-BY-4.0
 </span></code></pre></div>
 <h3 id="nested-json-ld">Nested JSON-LD</h3>
 <p>Use <code>schema_to_jsonld_nested()</code> for hierarchical structure:</p>
-<div class="language-json highlight"><span class="filename">JSON</span><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="p">{</span>
+<div class="highlight"><span class="filename">JSON</span><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="p">{</span>
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="nt">&quot;AspectName&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="nt">&quot;@context&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">      </span><span class="nt">&quot;@version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.1</span><span class="p">,</span>
@@ -3461,7 +4202,7 @@ SPDX-License-Identifier: CC-BY-4.0
 </span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="p">}</span>
 </span></code></pre></div>
 <h2 id="error-handling">Error Handling</h2>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">try</span><span class="p">:</span>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">try</span><span class="p">:</span>
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="n">context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld</span><span class="p">(</span>
 </span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>        <span class="n">semantic_id</span><span class="o">=</span><span class="s2">&quot;urn:samm:invalid:id&quot;</span>
 </span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>    <span class="p">)</span>
@@ -3485,7 +4226,7 @@ SPDX-License-Identifier: CC-BY-4.0
 </ol>
 <h2 id="performance-considerations">Performance Considerations</h2>
 <h3 id="schema-caching">Schema Caching</h3>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Cache schemas for repeated use</span>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Cache schemas for repeated use</span>
 </span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">schema_cache</span> <span class="o">=</span> <span class="p">{}</span>
 </span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
 </span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_or_fetch_schema</span><span class="p">(</span><span class="n">semantic_id</span><span class="p">):</span>
@@ -3500,7 +4241,7 @@ SPDX-License-Identifier: CC-BY-4.0
 </span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="batch-processing">Batch Processing</h3>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Process multiple aspects efficiently</span>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Process multiple aspects efficiently</span>
 </span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">semantic_ids</span> <span class="o">=</span> <span class="p">[</span>
 </span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>    <span class="s2">&quot;urn:samm:io.catenax.pcf:7.0.0#Pcf&quot;</span><span class="p">,</span>
 </span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>    <span class="s2">&quot;urn:samm:io.catenax.part_type_information:1.0.0#PartTypeInformation&quot;</span><span class="p">,</span>
@@ -3520,14 +4261,14 @@ SPDX-License-Identifier: CC-BY-4.0
 <h2 id="advanced-features">Advanced Features</h2>
 <h3 id="circular-reference-handling">Circular Reference Handling</h3>
 <p>The translator automatically detects and handles circular references in schemas:</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Translator has built-in recursion depth limit</span>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Translator has built-in recursion depth limit</span>
 </span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">translator</span> <span class="o">=</span> <span class="n">SammSchemaContextTranslator</span><span class="p">()</span>
 </span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="n">translator</span><span class="o">.</span><span class="n">recursionDepth</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># Adjust if needed (default: 2)</span>
 </span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>
 </span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="n">context</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">schema_to_jsonld</span><span class="p">(</span><span class="n">semantic_id</span><span class="o">=</span><span class="s2">&quot;urn:samm:...&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="custom-logging">Custom Logging</h3>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 </span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>
 </span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="c1"># Configure custom logger</span>
 </span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;SammTranslator&quot;</span><span class="p">)</span>
@@ -3552,8 +4293,11 @@ SPDX-License-Identifier: CC-BY-4.0
 <p>This work is licensed under the <a href="https://creativecommons.org/licenses/by/4.0/legalcode">CC-BY-4.0</a>.</p>
 <ul>
 <li>SPDX-License-Identifier: CC-BY-4.0</li>
-<li>SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation</li>
-<li>Source URL: https://github.com/eclipse-tractusx/tractusx-sdk</li>
+<li>SPDX-FileCopyrightText: 2025, 2026 Contributors to the Eclipse Foundation</li>
+<li>SPDX-FileCopyrightText: 2025, 2026 Catena-X Automotive Network e.V.</li>
+<li>SPDX-FileCopyrightText: 2025, 2026 LKS Next</li>
+<li>SPDX-FileCopyrightText: 2025, 2026 Mondragon Unibertsitatea</li>
+<li>Source URL: <a href="https://github.com/eclipse-tractusx/tractusx-sdk">https://github.com/eclipse-tractusx/tractusx-sdk</a></li>
 </ul>
 
 
@@ -3627,7 +4371,7 @@ SPDX-License-Identifier: CC-BY-4.0
   
   <div class="custom-footer__bottom">
     <div class="custom-footer__copyright">
-      Copyright © 2025 Eclipse Tractus-X. Built with 
+      Copyright © 2026 Eclipse Tractus-X Contributors. Built with 
       <a href="https://www.mkdocs.org/" target="_blank" rel="noopener">MkDocs</a> and 
       <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">Material for MkDocs</a>.
     </div>
@@ -3645,8 +4389,26 @@ SPDX-License-Identifier: CC-BY-4.0
       <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "content.tabs.link", "toc.follow"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.f55a23d4.min.js"></script>
       
     
+  <script>
+    /* Move the version selector from the hidden .md-header__topic into
+       .md-header__inner so it becomes a direct flex child with order: 6 */
+    (function() {
+      var observer = new MutationObserver(function() {
+        var version = document.querySelector('.md-version');
+        var headerInner = document.querySelector('.md-header__inner');
+        if (version && headerInner && !version.dataset.moved) {
+          version.dataset.moved = 'true';
+          headerInner.appendChild(version);
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    })();
+  </script>
+
   </body>
 </html>

@@ -35,7 +35,7 @@
       
       
       
-        <link rel="next" href="tutorials/getting-started/">
+        <link rel="next" href="home/overview/">
       
       
       <link rel="icon" href="assets/images/logo_tractus-x-min.ico">
@@ -43,7 +43,7 @@
     
     
       
-        <title>Tractus-X SDK Documentation</title>
+        <title>Welcome - Tractus-X SDK Documentation</title>
       
     
     
@@ -57,127 +57,349 @@
 
 
     
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/stylesheets/orange-black-theme.css">
   <style>
-    /* Fix version number display and header spacing */
+    /*
+     * Header layout — single row using flexbox
+     * DOM order: Logo → Hamburger → Title → Palette → SearchIcon → Search → Source
+     * Visual order: Logo | Title+docs | ———— Search (centered) ———— | Version | Palette | Source
+     */
     .md-header__inner {
       display: flex !important;
       align-items: center !important;
-      justify-content: space-between !important;
       flex-wrap: nowrap !important;
+      height: 3rem !important;
+      padding: 0 0.1rem !important;
+      gap: 0 !important;
+      position: relative !important;
     }
-    
-    .md-header__title {
-      flex: 1 !important;
-      min-width: 0 !important;
-      margin-right: 16px !important;
-    }
-    
 
-    
-    .md-header__button {
-      margin-left: 4px !important;
+    /* 1. Logo — stays left */
+    .md-header__button.md-logo {
+      order: 1 !important;
+      flex: 0 0 auto !important;
+      margin: 0 !important;
+      padding: 0.2rem 0.1rem !important;
+      display: inline-flex !important;
+      align-items: center !important;
     }
-    
-    /* Move version selector next to GitHub repository info */
-    .md-version {
-      position: absolute !important;
-      right: -750px !important;
+
+    /* 2. Hamburger (mobile drawer toggle) - hidden on desktop by default */
+    .md-header__button[for="__drawer"] {
+      order: 2 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0.2rem !important;
+      display: none !important; /* Hidden on desktop */
+    }
+
+    /* Show hamburger on smaller screens (handled by Material theme) */
+    @media screen and (max-width: 1220px) {
+      .md-header__button[for="__drawer"] {
+        display: inline-flex !important;
+      }
+    }
+
+    /* 3. Title — next to logo, vertically centered */
+    .md-header__title {
+      order: 3 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0 0 0.15rem !important;
+      overflow: visible !important;
+      font-family: 'Manrope', sans-serif !important;
+      font-weight: 700 !important;
+      font-size: 1.2rem !important;
+      letter-spacing: -0.02em !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 0.5rem !important;
+      line-height: 3rem !important;
+      height: 3rem !important;
+    }
+
+    /* Hide original title text (site_name) */
+    .md-header__title .md-header__ellipsis {
+      font-size: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      display: none !important;
+    }
+
+    /* Custom title text */
+    .md-header__title::before {
+      content: "Tractus-X SDK" !important;
+      color: #ffffff !important;
+      font-size: 1.2rem !important;
+      font-weight: 700 !important;
+      white-space: nowrap !important;
+    }
+
+    /* Modern "docs" sub-label */
+    .md-header__title::after {
+      content: "docs" !important;
+      color: rgba(255, 215, 0, 0.7) !important;
+      font-size: 0.5rem !important;
+      font-weight: 500 !important;
+      background: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      border: none !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.12em !important;
+      white-space: nowrap !important;
+      align-self: flex-start !important;
+      margin-top: 0.55rem !important;
+      margin-left: -0.2rem !important;
+    }
+
+    /* 4. Search — fills available header space */
+    .md-search {
+      order: 5 !important;
+      flex: 1 1 auto !important;
+      max-width: none !important;
+      width: auto !important;
+      margin: 0 0 0 0.75rem !important;
+      position: relative !important;
+      left: auto !important;
+      top: auto !important;
+      transform: none !important;
       z-index: 1 !important;
     }
-    
-    /* Keep search in center position */
-    .md-search {
-      margin-right: auto !important;
-      margin-left: auto !important;
-    }
-    
-    /* GitHub repo info on the far right */
-    .md-header__source {
-      margin-left: auto !important;
-      margin-right: 60px !important;
-    }
-    
-    /* Theme selector stays on far right */
-    .md-header__button.md-icon {
-      margin-left: auto !important;
-      margin-right: 8px !important;
-    }
-    
-    .md-version__current {
-      background-color: rgba(0, 0, 0, 0.3) !important;
-      border: 2px solid #FFD700 !important;
-      color: #FFD700 !important;
-      font-weight: 600 !important;
-      padding: 6px 16px !important;
-      border-radius: 6px !important;
-      min-width: 140px !important;
-      max-width: 200px !important;
-      text-align: center !important;
-      white-space: nowrap !important;
-      overflow: visible !important;
-      display: block !important;
-      line-height: 1.2 !important;
-    }
-    
 
+    /* Ensure search form fills the container */
+    .md-search__form {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+
+    /* Ensure search input fills the form */
+    .md-search__input {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+
+    /* Override Material's default search input width */
+    .md-search__inner {
+      width: 100% !important;
+    }
+
+    /* Ensure search output (results) container doesn't limit width */
+    .md-search__output {
+      width: 100% !important;
+    }
+
+    /* Search icon button (the magnifying glass) */
+    label[for="__search"] {
+      order: 4 !important;
+      flex: 0 0 auto !important;
+    }
+
+    /* 5. Version selector — minimal, right side */
+    .md-header .md-version {
+      order: 6 !important;
+      flex: 0 0 auto !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      margin: 0 0.4rem !important;
+    }
+
+    .md-version__current {
+      background: none !important;
+      border: none !important;
+      color: rgba(255, 255, 255, 0.6) !important;
+      font-weight: 400 !important;
+      font-size: 0.7rem !important;
+      padding: 0.15rem 0.3rem !important;
+      border-radius: 3px !important;
+      white-space: nowrap !important;
+      line-height: 1.2 !important;
+      cursor: pointer !important;
+      letter-spacing: 0.02em !important;
+      transition: color 0.2s !important;
+    }
+
+    .md-version__current:hover {
+      color: #FFD700 !important;
+    }
+
+    .md-version__list {
+      background: #1a1a1a !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 3px !important;
+      min-width: 7rem !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .md-version__link {
+      color: rgba(255, 255, 255, 0.6) !important;
+      padding: 0.25rem 0.5rem !important;
+      font-size: 0.65rem !important;
+      display: block !important;
+      transition: all 0.15s ease !important;
+    }
+
+    .md-version__link:hover {
+      color: #FFD700 !important;
+      background: rgba(255, 215, 0, 0.05) !important;
+    }
+
+    /* 6. Palette toggle (dark/light) — right side */
+    .md-header__inner > [data-md-component="palette"] {
+      order: 7 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0.1rem !important;
+    }
+
+    form.md-header__option {
+      order: 7 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0.1rem !important;
+      display: inline-flex !important;
+      align-items: center !important;
+    }
+
+    /* 7. GitHub source — far right */
+    .md-header__source {
+      order: 8 !important;
+      flex: 0 0 auto !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      margin: 0 0 0 0.3rem !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      width: auto !important;
+    }
+
+    .md-source__repository {
+      max-width: none !important;
+      overflow: visible !important;
+      text-overflow: unset !important;
+    }
+
+    /* Generic header buttons */
+    .md-header__button {
+      padding: 0.4rem !important;
+    }
+
+    /* ——— Responsive ——— */
     
-    /* Responsive adjustments for better visibility */
+    /* Apply hamburger swap for all screen sizes where hamburger is visible (≤1220px) */
     @media screen and (max-width: 1220px) {
+      /* Swap hamburger and logo positions whenever hamburger menu is visible */
+      .md-header__button[for="__drawer"] {
+        order: 1 !important;
+        margin: 0 0.3rem 0 0 !important;
+        display: inline-flex !important;
+      }
+
+      .md-header__button.md-logo {
+        order: 2 !important;
+        margin: 0 0.2rem !important;
+      }
+
       .md-header__title {
-        font-size: 1.5rem !important;
+        order: 3 !important;
+        margin: 0 0 0 0.15rem !important;
       }
-      
-      .md-version__current {
-        min-width: 120px !important;
-        font-size: 0.9rem !important;
-        padding: 4px 12px !important;
-      }
-      
-      .md-header__option {
-        margin-right: 16px !important;
-      }
-    }
-    
-    @media screen and (max-width: 1024px) {
-      .md-header__title {
-        font-size: 1.3rem !important;
-      }
-      
-      .md-version__current {
-        min-width: 100px !important;
-        font-size: 0.85rem !important;
-        padding: 4px 10px !important;
-      }
-    }
-    
-    @media screen and (max-width: 768px) {
-      .md-header__title {
+
+      .md-header__title::before {
         font-size: 1.1rem !important;
       }
-      
-      .md-version__current {
-        min-width: 90px !important;
-        font-size: 0.8rem !important;
-        padding: 3px 8px !important;
+      .md-header__title::after {
+        font-size: 0.65rem !important;
+        padding: 0.12rem 0.4rem !important;
       }
-      
-      .md-header__option {
-        margin-right: 8px !important;
-        margin-left: 8px !important;
+      .md-search {
+        margin: 0 0 0 0.5rem !important;
+      }
+    }
+
+    @media screen and (max-width: 1024px) {
+      /* Tablet/iPad: Further refinements */
+      .md-header__title::before {
+        font-size: 1rem !important;
+      }
+      .md-header__title::after {
+        font-size: 0.48rem !important;
+        margin-top: 0.45rem !important; /* Adjust top alignment for tablet size */
+        margin-left: -0.18rem !important;
+      }
+      .md-header__source {
+        display: none !important;
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      /* Mobile/iPhone: Smaller text, center all items, wrap search */
+      .md-header__button.md-logo {
+        margin: 0 0.1rem !important;
+      }
+
+      .md-header__title {
+        line-height: 2.4rem !important;
+        height: auto !important;
+        margin: 0 0 0 0.1rem !important;
+      }
+
+      .md-header__inner {
+        flex-wrap: wrap !important;
+        height: auto !important;
+        min-height: 3rem !important;
+        padding: 0.3rem 0.5rem !important;
+        justify-content: center !important; /* Center all header items */
+      }
+
+      .md-header__title::before {
+        font-size: 0.95rem !important;
+      }
+      .md-header__title::after {
+        font-size: 0.42rem !important;
+        padding: 0.08rem 0.3rem !important;
+        margin-top: 0.35rem !important; /* Adjust top alignment for smaller size */
+        margin-left: -0.15rem !important; /* Keep it close to title */
+      }
+      .md-search {
+        max-width: 100% !important;
+        flex: 1 1 100% !important;
+        order: 10 !important;
+        margin: 0.3rem 0 0 0 !important;
+      }
+      .md-header .md-version {
+        display: none !important;
       }
     }
     
     /* Fix navigation tabs hover coverage */
     .md-tabs__link {
-      padding: 16px 16px !important;
-      height: auto !important;
-      min-height: 48px !important;
+      padding: 0 1rem !important;
+      height: 100% !important;
+      min-height: 2.4rem !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       line-height: 1.2 !important;
       position: relative !important;
+      box-sizing: border-box !important;
+    }
+    
+    .md-tabs__item {
+      height: 100% !important;
+    }
+    
+    .md-tabs__list {
+      height: 100% !important;
+    }
+    
+    @media screen and (max-width: 768px) {
+      .md-tabs__link {
+        padding: 0 0.8rem !important;
+        font-size: 0.85rem !important;
+      }
     }
     
     .md-tabs__link:hover {
@@ -391,7 +613,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              Welcome
             
           </span>
         </div>
@@ -510,17 +732,18 @@
     
   
   
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="." class="md-tabs__link">
-        
-  
-  
     
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="." class="md-tabs__link">
+          
+  
   
   Home
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -552,11 +775,31 @@
     
     
       <li class="md-tabs__item">
-        <a href="how-to-guides/ic-hub-use-case/industry-core-hub-overview/" class="md-tabs__link">
+        <a href="how-to-guides/backward-compatibility/" class="md-tabs__link">
           
   
   
   How-to Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="tck/" class="md-tabs__link">
+          
+  
+  
+  TCK
 
         </a>
       </li>
@@ -591,15 +834,8 @@
   
     
     
-      
-  
-  
-  
-  
-    
-    
       <li class="md-tabs__item">
-        <a href="api-reference/dataspace-library/" class="md-tabs__link">
+        <a href="api-reference/" class="md-tabs__link">
           
   
   
@@ -607,9 +843,6 @@
 
         </a>
       </li>
-    
-  
-
     
   
 
@@ -686,6 +919,54 @@
   
   
   
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            Home
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
     <li class="md-nav__item md-nav__item--active">
       
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
@@ -699,7 +980,7 @@
   
   
   <span class="md-ellipsis">
-    Home
+    Welcome
     
   </span>
   
@@ -712,7 +993,7 @@
   
   
   <span class="md-ellipsis">
-    Home
+    Welcome
     
   </span>
   
@@ -735,19 +1016,37 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview-of-the-sdk" class="md-nav__link">
+  <a href="#installation" class="md-nav__link">
     <span class="md-ellipsis">
-      Overview of the SDK
+      Installation
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Overview of the SDK">
+    <nav class="md-nav" aria-label="Installation">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
+  <a href="#basic-installation" class="md-nav__link">
     <span class="md-ellipsis">
-      Key Features
+      Basic Installation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-a-specific-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install a Specific Version
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verify-the-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify the Installation
     </span>
   </a>
   
@@ -759,19 +1058,19 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#purpose-and-goals" class="md-nav__link">
+  <a href="#what-is-this-sdk" class="md-nav__link">
     <span class="md-ellipsis">
-      Purpose and Goals
+      What is this SDK?
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Purpose and Goals">
+    <nav class="md-nav" aria-label="What is this SDK?">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#based-on-eclipse-tractus-x-kits" class="md-nav__link">
+  <a href="#what-you-get" class="md-nav__link">
     <span class="md-ellipsis">
-      Based on Eclipse Tractus-X KITs
+      What you get
     </span>
   </a>
   
@@ -783,46 +1082,70 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#target-audience" class="md-nav__link">
+  <a href="#why-we-built-this" class="md-nav__link">
     <span class="md-ellipsis">
-      Target Audience
+      Why we built this
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Target Audience">
+    <nav class="md-nav" aria-label="Why we built this">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#based-on-tractus-x-kits" class="md-nav__link">
+    <span class="md-ellipsis">
+      Based on Tractus-X KITs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#who-is-this-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      Who is this for?
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Who is this for?">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#developers" class="md-nav__link">
     <span class="md-ellipsis">
-      🧑‍💻 Developers
+      Developers
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#organizations" class="md-nav__link">
+  <a href="#companies-and-integrators" class="md-nav__link">
     <span class="md-ellipsis">
-      🏢 Organizations
+      Companies and integrators
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#researchers-students" class="md-nav__link">
+  <a href="#students-and-researchers" class="md-nav__link">
     <span class="md-ellipsis">
-      🎓 Researchers &amp; Students
+      Students and researchers
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#data-engineers" class="md-nav__link">
+  <a href="#data-teams" class="md-nav__link">
     <span class="md-ellipsis">
-      📊 Data Engineers
+      Data teams
     </span>
   </a>
   
@@ -834,55 +1157,46 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#quick-links-and-resources" class="md-nav__link">
+  <a href="#quick-links" class="md-nav__link">
     <span class="md-ellipsis">
-      Quick Links and Resources
+      Quick Links
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Quick Links and Resources">
+    <nav class="md-nav" aria-label="Quick Links">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#getting-started" class="md-nav__link">
     <span class="md-ellipsis">
-      🚀 Getting Started
+      Getting Started
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#core-concepts" class="md-nav__link">
+  <a href="#learn-the-concepts" class="md-nav__link">
     <span class="md-ellipsis">
-      📚 Core Concepts
+      Learn the Concepts
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#development" class="md-nav__link">
+  <a href="#code-and-community" class="md-nav__link">
     <span class="md-ellipsis">
-      🛠️ Development
+      Code and Community
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#community" class="md-nav__link">
+  <a href="#more-resources" class="md-nav__link">
     <span class="md-ellipsis">
-      🤝 Community
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#additional-resources" class="md-nav__link">
-    <span class="md-ellipsis">
-      📖 Additional Resources
+      More Resources
     </span>
   </a>
   
@@ -905,6 +1219,60 @@
     </ul>
   
 </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="home/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="home/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
       
     </li>
   
@@ -1024,6 +1392,82 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Experimental
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            Experimental
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tutorials/ai-tensorflow-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AI/ML with TensorFlow
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1075,6 +1519,29 @@
             How-to Guides
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="how-to-guides/backward-compatibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Backward Compatibility
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1159,7 +1626,7 @@
   
   
   <span class="md-ellipsis">
-    Core Concepts
+    TCK
     
   </span>
   
@@ -1169,6 +1636,272 @@
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            TCK
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tck/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Connector TCK
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Connector TCK
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tck/connector/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tck/connector/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tck/connector/running-tests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Running Tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tck/connector/cicd-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CI/CD Integration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tck/connector/interpreting-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Interpreting Results
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tck/connector/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Core Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Core Concepts
           </label>
@@ -1318,10 +2051,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -1334,12 +2067,35 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             API Reference
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1363,10 +2119,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2" >
         
           
-          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
             
   
   
@@ -1379,8 +2135,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_1">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2">
             <span class="md-nav__icon md-icon"></span>
             Dataspace Library
           </label>
@@ -1431,10 +2187,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_2" >
         
           
-          <label class="md-nav__link" for="__nav_5_1_2" id="__nav_5_1_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_2_2" id="__nav_6_2_2_label" tabindex="0">
             
   
   
@@ -1447,8 +2203,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_1_2">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_2">
             <span class="md-nav__icon md-icon"></span>
             Connector
           </label>
@@ -1576,10 +2332,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_3" >
         
           
-          <label class="md-nav__link" for="__nav_5_1_3" id="__nav_5_1_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_2_3" id="__nav_6_2_3_label" tabindex="0">
             
   
   
@@ -1592,8 +2348,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_1_3">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_3">
             <span class="md-nav__icon md-icon"></span>
             Discovery Services
           </label>
@@ -1698,10 +2454,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_5" >
         
           
-          <label class="md-nav__link" for="__nav_5_1_5" id="__nav_5_1_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_2_5" id="__nav_6_2_5_label" tabindex="0">
             
   
   
@@ -1714,8 +2470,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_1_5">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_5">
             <span class="md-nav__icon md-icon"></span>
             Legacy
           </label>
@@ -1782,10 +2538,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3" >
         
           
-          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="0">
             
   
   
@@ -1798,8 +2554,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3">
             <span class="md-nav__icon md-icon"></span>
             Industry Library
           </label>
@@ -1850,10 +2606,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_2" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_2" id="__nav_5_2_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_2" id="__nav_6_3_2_label" tabindex="0">
             
   
   
@@ -1866,8 +2622,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_2">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_2">
             <span class="md-nav__icon md-icon"></span>
             DTR
           </label>
@@ -1949,10 +2705,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_3" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_3" id="__nav_5_2_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_3" id="__nav_6_3_3_label" tabindex="0">
             
   
   
@@ -1965,12 +2721,35 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_3">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_3">
             <span class="md-nav__icon md-icon"></span>
             Submodel Server
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api-reference/industry-library/submodel-server/adapters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Adapters Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1994,10 +2773,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_3_1" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_3_2" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_3_1" id="__nav_5_2_3_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_3_2" id="__nav_6_3_3_2_label" tabindex="0">
             
   
   
@@ -2010,8 +2789,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_3_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_3_1">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_3_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_3_2">
             <span class="md-nav__icon md-icon"></span>
             Adapters
           </label>
@@ -2101,10 +2880,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_4" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_4" id="__nav_5_2_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_4" id="__nav_6_3_4_label" tabindex="0">
             
   
   
@@ -2117,8 +2896,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_4">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_4">
             <span class="md-nav__icon md-icon"></span>
             Discovery Services
           </label>
@@ -2177,10 +2956,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_5" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_5" id="__nav_5_2_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_5" id="__nav_6_3_5_label" tabindex="0">
             
   
   
@@ -2193,8 +2972,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_5">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_5">
             <span class="md-nav__icon md-icon"></span>
             Legacy
           </label>
@@ -2284,10 +3063,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_4" >
         
           
-          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_4" id="__nav_6_4_label" tabindex="0">
             
   
   
@@ -2300,8 +3079,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_4">
             <span class="md-nav__icon md-icon"></span>
             Extension Library
           </label>
@@ -2390,10 +3169,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -2406,8 +3185,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Contributing
           </label>
@@ -2481,10 +3260,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_3" >
         
           
-          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_3" id="__nav_7_3_label" tabindex="0">
             
   
   
@@ -2497,8 +3276,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_3">
             <span class="md-nav__icon md-icon"></span>
             Architectural Decision Records
           </label>
@@ -2661,19 +3440,37 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview-of-the-sdk" class="md-nav__link">
+  <a href="#installation" class="md-nav__link">
     <span class="md-ellipsis">
-      Overview of the SDK
+      Installation
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Overview of the SDK">
+    <nav class="md-nav" aria-label="Installation">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
+  <a href="#basic-installation" class="md-nav__link">
     <span class="md-ellipsis">
-      Key Features
+      Basic Installation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-a-specific-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install a Specific Version
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verify-the-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify the Installation
     </span>
   </a>
   
@@ -2685,19 +3482,19 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#purpose-and-goals" class="md-nav__link">
+  <a href="#what-is-this-sdk" class="md-nav__link">
     <span class="md-ellipsis">
-      Purpose and Goals
+      What is this SDK?
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Purpose and Goals">
+    <nav class="md-nav" aria-label="What is this SDK?">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#based-on-eclipse-tractus-x-kits" class="md-nav__link">
+  <a href="#what-you-get" class="md-nav__link">
     <span class="md-ellipsis">
-      Based on Eclipse Tractus-X KITs
+      What you get
     </span>
   </a>
   
@@ -2709,46 +3506,70 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#target-audience" class="md-nav__link">
+  <a href="#why-we-built-this" class="md-nav__link">
     <span class="md-ellipsis">
-      Target Audience
+      Why we built this
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Target Audience">
+    <nav class="md-nav" aria-label="Why we built this">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#based-on-tractus-x-kits" class="md-nav__link">
+    <span class="md-ellipsis">
+      Based on Tractus-X KITs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#who-is-this-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      Who is this for?
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Who is this for?">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#developers" class="md-nav__link">
     <span class="md-ellipsis">
-      🧑‍💻 Developers
+      Developers
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#organizations" class="md-nav__link">
+  <a href="#companies-and-integrators" class="md-nav__link">
     <span class="md-ellipsis">
-      🏢 Organizations
+      Companies and integrators
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#researchers-students" class="md-nav__link">
+  <a href="#students-and-researchers" class="md-nav__link">
     <span class="md-ellipsis">
-      🎓 Researchers &amp; Students
+      Students and researchers
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#data-engineers" class="md-nav__link">
+  <a href="#data-teams" class="md-nav__link">
     <span class="md-ellipsis">
-      📊 Data Engineers
+      Data teams
     </span>
   </a>
   
@@ -2760,55 +3581,46 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#quick-links-and-resources" class="md-nav__link">
+  <a href="#quick-links" class="md-nav__link">
     <span class="md-ellipsis">
-      Quick Links and Resources
+      Quick Links
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Quick Links and Resources">
+    <nav class="md-nav" aria-label="Quick Links">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#getting-started" class="md-nav__link">
     <span class="md-ellipsis">
-      🚀 Getting Started
+      Getting Started
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#core-concepts" class="md-nav__link">
+  <a href="#learn-the-concepts" class="md-nav__link">
     <span class="md-ellipsis">
-      📚 Core Concepts
+      Learn the Concepts
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#development" class="md-nav__link">
+  <a href="#code-and-community" class="md-nav__link">
     <span class="md-ellipsis">
-      🛠️ Development
+      Code and Community
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#community" class="md-nav__link">
+  <a href="#more-resources" class="md-nav__link">
     <span class="md-ellipsis">
-      🤝 Community
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#additional-resources" class="md-nav__link">
-    <span class="md-ellipsis">
-      📖 Additional Resources
+      More Resources
     </span>
   </a>
   
@@ -2871,113 +3683,118 @@ SPDX-License-Identifier: CC-BY-4.0
 
 -->
 <h1 id="eclipse-tractus-x-sdk-documentation">Eclipse Tractus-X SDK Documentation</h1>
-<p>Welcome to the <strong>Eclipse Tractus-X Software Development Kit (SDK)</strong> - your gateway to building powerful dataspace applications and services.</p>
+<p>Welcome to the <strong>Eclipse Tractus-X Software Development Kit (SDK)</strong> - your gateway to building powerful dataspace native applications, services and AI models.</p>
 <p><a href="https://github.com/eclipse-tractusx/tractusx-sdk/graphs/contributors"><img alt="Contributors" src="https://img.shields.io/github/contributors/eclipse-tractusx/tractusx-sdk.svg?style=for-the-badge" /></a>
 <a href="https://github.com/eclipse-tractusx/tractusx-sdk/stargazers"><img alt="Stargazers" src="https://img.shields.io/github/stars/eclipse-tractusx/tractusx-sdk.svg?style=for-the-badge" /></a>
 <a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/LICENSE"><img alt="Code License" src="https://img.shields.io/github/license/eclipse-tractusx/tractusx-sdk.svg?style=for-the-badge" /></a>
 <a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/LICENSE_non-code"><img alt="Non-Code License" src="https://img.shields.io/badge/NON--CODE%20LICENSE-CC--BY--4.0-8A2BE2?style=for-the-badge" /></a>
 <a href="https://github.com/eclipse-tractusx/tractusx-sdk/releases"><img alt="Latest Release" src="https://img.shields.io/github/v/release/eclipse-tractusx/tractusx-sdk.svg?style=for-the-badge" /></a>
+<a href="https://pypi.org/project/tractusx-sdk/"><img alt="PyPI Version" src="https://img.shields.io/pypi/v/tractusx-sdk?style=for-the-badge&amp;label=PyPI" /></a>
+<a href="https://pypi.org/project/tractusx-sdk/"><img alt="Python Versions" src="https://img.shields.io/pypi/pyversions/tractusx-sdk?style=for-the-badge" /></a>
 <a href="https://admin-shell.io/aas/API/3/0/"><img alt="AAS 3.0 Compliant" src="https://img.shields.io/badge/AAS-3.0-blue?style=for-the-badge" /></a></p>
 <!-- Reference Links -->
-<h2 id="overview-of-the-sdk">Overview of the SDK</h2>
-<p>The Tractus-X SDK is a modular Python library that provides simplified APIs and methods for interacting with dataspace infrastructure. It serves as a comprehensive toolkit for both <strong>providing</strong> and <strong>consuming</strong> data in the Tractus-X ecosystem.</p>
-<h3 id="key-features">Key Features</h3>
+<h2 id="installation">Installation</h2>
+<p>The Tractus-X SDK is published on <a href="https://pypi.org/project/tractusx-sdk/">PyPI</a> and requires <strong>Python 3.12 or later</strong>.</p>
+<h3 id="basic-installation">Basic Installation</h3>
+<div class="highlight"><span class="filename">Bash</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>tractusx-sdk
+</span></code></pre></div>
+<h3 id="install-a-specific-version">Install a Specific Version</h3>
+<div class="highlight"><span class="filename">Bash</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>tractusx-sdk<span class="o">==</span><span class="m">0</span>.7.0rc1
+</span></code></pre></div>
+<h3 id="verify-the-installation">Verify the Installation</h3>
+<div class="highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">tractusx_sdk</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">tractusx_sdk</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+</span></code></pre></div>
+<p>The package index is available at <a href="https://pypi.org/project/tractusx-sdk/">https://pypi.org/project/tractusx-sdk/</a>.</p>
+<blockquote>
+<p><strong>Note:</strong> It is strongly recommended to install the SDK inside a virtual environment (<code>venv</code>, <code>conda</code>, or similar) to avoid dependency conflicts.</p>
+</blockquote>
+<div class="highlight"><span class="filename">Bash</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Create and activate a virtual environment</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>python3.12<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate<span class="w">      </span><span class="c1"># macOS / Linux</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>.venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">         </span><span class="c1"># Windows</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># Then install the SDK</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>pip<span class="w"> </span>install<span class="w"> </span>tractusx-sdk
+</span></code></pre></div>
+<hr />
+<h2 id="what-is-this-sdk">What is this SDK?</h2>
+<p>The Tractus-X SDK is a Python library that makes it easier to work with dataspaces. Think of it as a toolbox that handles the complicated parts of sharing and accessing data in the Tractus-X network, so you can focus on building your application.</p>
+<p>Whether you're sharing data with partners or pulling data from providers, this SDK handles the connector setup, authentication, policies, and all the protocol details for you.</p>
+<h3 id="what-you-get">What you get</h3>
 <ul>
-<li><strong>🔌 Connector Integration</strong> - Seamless interaction with Eclipse Dataspace Connectors (EDC)</li>
-<li><strong>🏭 Industry Standards</strong> - Built-in support for industry-specific data models and standards</li>
-<li><strong>🔍 Data Discovery</strong> - Easy exploration and discovery of available datasets</li>
-<li><strong>🛡️ Secure Access</strong> - Automated authentication and policy management</li>
-<li><strong>📦 Modular Design</strong> - Use only the components you need</li>
-<li><strong>🚀 Quick Start</strong> - Get up and running in minutes with our tutorials</li>
+<li>Work with Eclipse Dataspace Connectors without dealing with low-level APIs</li>
+<li>Built-in support for industry data models (parts, batteries, digital twins, etc.)</li>
+<li>Discover what data is available across the network</li>
+<li>Handle authentication and access policies automatically</li>
+<li>Pick only the parts you need - it's modular</li>
+<li>Get started fast with ready-to-run examples</li>
 </ul>
-<h2 id="purpose-and-goals">Purpose and Goals</h2>
-<p>The Tractus-X SDK aims to:</p>
+<h2 id="why-we-built-this">Why we built this</h2>
+<p>Working with dataspaces involves a lot of moving parts: connectors, registries, discovery services, policies, negotiations. Each component has its own API, version quirks, and protocol requirements.</p>
+<p>We built this SDK to hide that complexity. It gives you simple Python methods that work across different EDC versions, handles backward compatibility automatically, and follows the patterns recommended by Tractus-X KITs.</p>
+<p>The goal is simple: make it easy to join the dataspace without being a dataspace expert.</p>
+<h3 id="based-on-tractus-x-kits">Based on Tractus-X KITs</h3>
+<p>The SDK implements the official Tractus-X standards:</p>
 <ul>
-<li><strong>Simplify Integration</strong> - Provide easy-to-use abstractions over complex dataspace protocols</li>
-<li><strong>Accelerate Development</strong> - Offer pre-built components for common dataspace operations  </li>
-<li><strong>Ensure Compatibility</strong> - Maintain compatibility with evolving dataspace standards</li>
-<li><strong>Enable Innovation</strong> - Provide a solid foundation for building custom dataspace applications</li>
-<li><strong>Foster Adoption</strong> - Lower the barrier to entry for dataspace participation</li>
+<li><a href="https://eclipse-tractusx.github.io/docs-kits/category/connector-kit">Connector KIT</a> - working with EDC connectors</li>
+<li><a href="https://eclipse-tractusx.github.io/docs-kits/category/digital-twin-kit">Digital Twin KIT</a> - digital twins and registries</li>
+<li><a href="https://eclipse-tractusx.github.io/docs-kits/category/industry-core-kit">Industry Core KIT</a> - industry data models</li>
 </ul>
-<h3 id="based-on-eclipse-tractus-x-kits">Based on Eclipse Tractus-X KITs</h3>
-<p>This SDK implements and extends functionality from official Eclipse Tractus-X KITs:</p>
-<ul>
-<li><a href="https://eclipse-tractusx.github.io/docs-kits/category/connector-kit">Connector KIT</a> - EDC connector patterns</li>
-<li><a href="https://eclipse-tractusx.github.io/docs-kits/category/digital-twin-kit">Digital Twin KIT</a> - Digital Twin Registry integration</li>
-<li><a href="https://eclipse-tractusx.github.io/docs-kits/category/industry-core-kit">Industry Core KIT</a> - Core industry data models</li>
-</ul>
-<h2 id="target-audience">Target Audience</h2>
-<p>This SDK is designed for:</p>
-<h3 id="developers">🧑‍💻 <strong>Developers</strong></h3>
-<ul>
-<li>Building dataspace-enabled applications</li>
-<li>Integrating existing systems with Tractus-X</li>
-<li>Creating microservices for data exchange</li>
-</ul>
-<h3 id="organizations">🏢 <strong>Organizations</strong></h3>
-<ul>
-<li>Companies joining the Tractus-X dataspace</li>
-<li>System integrators implementing dataspace solutions</li>
-<li>Technology vendors building on Tractus-X standards</li>
-</ul>
-<h3 id="researchers-students">🎓 <strong>Researchers &amp; Students</strong></h3>
-<ul>
-<li>Learning about dataspace technologies</li>
-<li>Experimenting with secure data exchange</li>
-<li>Building proof-of-concept applications</li>
-</ul>
-<h3 id="data-engineers">📊 <strong>Data Engineers</strong></h3>
-<ul>
-<li>Managing data assets and catalogs</li>
-<li>Implementing data governance policies</li>
-<li>Building data pipelines with dataspace sources</li>
-</ul>
-<h2 id="quick-links-and-resources">Quick Links and Resources</h2>
-<h3 id="getting-started">🚀 <strong>Getting Started</strong></h3>
+<h2 id="who-is-this-for">Who is this for?</h2>
+<h3 id="developers">Developers</h3>
+<p>You're building apps that need to share or access data in Tractus-X. Maybe you're connecting an existing system, building a new microservice, or just experimenting with dataspace tech.</p>
+<h3 id="companies-and-integrators">Companies and integrators</h3>
+<p>Your organization is joining Tractus-X, or you're implementing dataspace solutions for clients. You need something that works now and won't break when standards evolve.</p>
+<h3 id="students-and-researchers">Students and researchers</h3>
+<p>You're learning about dataspaces, running experiments, or building proofs of concept. The SDK lets you focus on your ideas instead of wrestling with connector APIs.</p>
+<h3 id="data-teams">Data teams</h3>
+<p>You manage data catalogs, build data pipelines, or implement governance policies. The SDK gives you programmatic access to the whole dataspace infrastructure.</p>
+<h2 id="quick-links">Quick Links</h2>
+<h3 id="getting-started">Getting Started</h3>
 <ul>
 <li><a href="tutorials/getting-started/">Installation Guide</a> - Set up your development environment</li>
-<li><a href="tutorials/getting-started/">First step: Creation of an asset</a> - Build your first dataspace application</li>
+<li><a href="tutorials/getting-started/">Create Your First Asset</a> - Start sharing data in minutes</li>
 </ul>
-<h3 id="core-concepts">📚 <strong>Core Concepts</strong></h3>
+<h3 id="learn-the-concepts">Learn the Concepts</h3>
 <ul>
-<li><a href="core-concepts/dataspace-concepts/">Dataspace Library</a> - Core connector services and Eclipse Tractus-X Connector integration</li>
-<li><a href="core-concepts/industry-concepts/">Industry Library</a> - Digital Twin Registry and Submodel Server integration</li>
-<li><a href="api-reference/extension-library/semantics/semantics/">Extension Library</a> - Use case-specific extensions and add-on functionality</li>
+<li><a href="core-concepts/dataspace-concepts/">Dataspace Library</a> - Working with connectors and the EDC</li>
+<li><a href="core-concepts/industry-concepts/">Industry Library</a> - Digital Twin Registry and submodel servers</li>
+<li><a href="api-reference/extension-library/semantics/semantics/">Extension Library</a> - Use case-specific add-ons</li>
+<li><a href="how-to-guides/backward-compatibility/">Backward Compatibility Guide</a> - Migrating between Jupiter and Saturn, handling different EDC versions</li>
 </ul>
-<h3 id="development">🛠️ <strong>Development</strong></h3>
+<h3 id="code-and-community">Code and Community</h3>
 <ul>
-<li><a href="https://github.com/eclipse-tractusx/tractusx-sdk">GitHub Repository</a> - Source code and issues</li>
-<li><a href="https://pypi.org/project/tractusx-sdk/">PyPI Package</a> - Latest releases</li>
-<li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CHANGELOG.md">Changelog</a> - Version history</li>
-</ul>
-<h3 id="community">🤝 <strong>Community</strong></h3>
-<ul>
-<li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/discussions">Discussions</a> - Ask questions and share ideas</li>
+<li><a href="https://github.com/eclipse-tractusx/tractusx-sdk">GitHub Repository</a> - Source code, issues, and discussions</li>
+<li><a href="https://pypi.org/project/tractusx-sdk/">PyPI Package</a> - Install via pip</li>
+<li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CHANGELOG.md">Changelog</a> - What's new in each release</li>
 <li><a href="https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CONTRIBUTING.md">Contributing Guidelines</a> - How to contribute</li>
-<li><a href="https://eclipse-tractusx.github.io/community/open-meetings#Industry%20Core%20Hub%20&amp;%20Tractus-X%20SDK%20Weekly">Community Meetings</a> - Weekly developer meetings</li>
+<li><a href="https://eclipse-tractusx.github.io/community/open-meetings#Industry%20Core%20Hub%20&amp;%20Tractus-X%20SDK%20Weekly">Weekly Meetings</a> - Join the developer community</li>
 </ul>
-<h3 id="additional-resources">📖 <strong>Additional Resources</strong></h3>
+<h3 id="more-resources">More Resources</h3>
 <ul>
-<li><a href="https://eclipse-tractusx.github.io/">Eclipse Tractus-X</a> - Official project website</li>
-<li><a href="https://eclipse-tractusx.github.io/Kits">Tractus-X KITs</a> - Standard specifications</li>
+<li><a href="https://eclipse-tractusx.github.io/">Eclipse Tractus-X</a> - Main project website</li>
+<li><a href="https://eclipse-tractusx.github.io/Kits">Tractus-X KITs</a> - Official specifications and standards</li>
 </ul>
 <hr />
 <div class="admonition tip">
-<p class="admonition-title">New to Dataspace Technology?</p>
-<p>Start with our <a href="tutorials/getting-started/">Getting Started Guide</a> to learn the basics of dataspace interaction in just 10 minutes!</p>
+<p class="admonition-title">New to dataspaces?</p>
+<p>Check out the <a href="tutorials/getting-started/">Getting Started Guide</a> - it takes about 10 minutes and shows you how the whole thing works.</p>
 </div>
 <div class="admonition info">
-<p class="admonition-title">Version Information</p>
-<p><strong>Current Version:</strong> 0.7.0-rc1<br />
-<strong>Python Support:</strong> 3.12+<br />
-<strong>License:</strong> Apache 2.0 (Code) / CC-BY-4.0 (Documentation)</p>
+<p class="admonition-title">Current release: 0.7.0-rc1</p>
+<p>Requires Python 3.12+<br />
+License: Apache 2.0 (code) / CC-BY-4.0 (docs)</p>
 </div>
 <h2 id="notice">NOTICE</h2>
 <p>This work is licensed under the <a href="https://creativecommons.org/licenses/by/4.0/legalcode">CC-BY-4.0</a>.</p>
 <ul>
 <li>SPDX-License-Identifier: CC-BY-4.0</li>
-<li>SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation</li>
-<li>Source URL: https://github.com/eclipse-tractusx/tractusx-sdk</li>
+<li>SPDX-FileCopyrightText: 2025, 2026 Contributors to the Eclipse Foundation</li>
+<li>SPDX-FileCopyrightText: 2025, 2026 Catena-X Automotive Network e.V.</li>
+<li>SPDX-FileCopyrightText: 2025, 2026 LKS Next</li>
+<li>SPDX-FileCopyrightText: 2025, 2026 Mondragon Unibertsitatea</li>
+<li>Source URL: <a href="https://github.com/eclipse-tractusx/tractusx-sdk">https://github.com/eclipse-tractusx/tractusx-sdk</a></li>
 </ul>
 
 
@@ -3051,7 +3868,7 @@ SPDX-License-Identifier: CC-BY-4.0
   
   <div class="custom-footer__bottom">
     <div class="custom-footer__copyright">
-      Copyright © 2025 Eclipse Tractus-X. Built with 
+      Copyright © 2026 Eclipse Tractus-X Contributors. Built with 
       <a href="https://www.mkdocs.org/" target="_blank" rel="noopener">MkDocs</a> and 
       <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">Material for MkDocs</a>.
     </div>
@@ -3069,8 +3886,26 @@ SPDX-License-Identifier: CC-BY-4.0
       <script id="__config" type="application/json">{"base": ".", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "content.tabs.link", "toc.follow"], "search": "assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
+  
       <script src="assets/javascripts/bundle.f55a23d4.min.js"></script>
       
     
+  <script>
+    /* Move the version selector from the hidden .md-header__topic into
+       .md-header__inner so it becomes a direct flex child with order: 6 */
+    (function() {
+      var observer = new MutationObserver(function() {
+        var version = document.querySelector('.md-version');
+        var headerInner = document.querySelector('.md-header__inner');
+        if (version && headerInner && !version.dataset.moved) {
+          version.dataset.moved = 'true';
+          headerInner.appendChild(version);
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    })();
+  </script>
+
   </body>
 </html>

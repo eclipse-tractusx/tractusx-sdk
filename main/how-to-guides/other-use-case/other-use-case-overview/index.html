@@ -37,7 +37,7 @@
         <link rel="prev" href="../../ic-hub-use-case/industry-core-hub-overview/">
       
       
-        <link rel="next" href="../../../core-concepts/sdk-architecture/sdk-structure-and-components/">
+        <link rel="next" href="../../../tck/">
       
       
       <link rel="icon" href="../../../assets/images/logo_tractus-x-min.ico">
@@ -59,127 +59,349 @@
 
 
     
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../../assets/stylesheets/orange-black-theme.css">
   <style>
-    /* Fix version number display and header spacing */
+    /*
+     * Header layout — single row using flexbox
+     * DOM order: Logo → Hamburger → Title → Palette → SearchIcon → Search → Source
+     * Visual order: Logo | Title+docs | ———— Search (centered) ———— | Version | Palette | Source
+     */
     .md-header__inner {
       display: flex !important;
       align-items: center !important;
-      justify-content: space-between !important;
       flex-wrap: nowrap !important;
+      height: 3rem !important;
+      padding: 0 0.1rem !important;
+      gap: 0 !important;
+      position: relative !important;
     }
-    
-    .md-header__title {
-      flex: 1 !important;
-      min-width: 0 !important;
-      margin-right: 16px !important;
-    }
-    
 
-    
-    .md-header__button {
-      margin-left: 4px !important;
+    /* 1. Logo — stays left */
+    .md-header__button.md-logo {
+      order: 1 !important;
+      flex: 0 0 auto !important;
+      margin: 0 !important;
+      padding: 0.2rem 0.1rem !important;
+      display: inline-flex !important;
+      align-items: center !important;
     }
-    
-    /* Move version selector next to GitHub repository info */
-    .md-version {
-      position: absolute !important;
-      right: -750px !important;
+
+    /* 2. Hamburger (mobile drawer toggle) - hidden on desktop by default */
+    .md-header__button[for="__drawer"] {
+      order: 2 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0.2rem !important;
+      display: none !important; /* Hidden on desktop */
+    }
+
+    /* Show hamburger on smaller screens (handled by Material theme) */
+    @media screen and (max-width: 1220px) {
+      .md-header__button[for="__drawer"] {
+        display: inline-flex !important;
+      }
+    }
+
+    /* 3. Title — next to logo, vertically centered */
+    .md-header__title {
+      order: 3 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0 0 0.15rem !important;
+      overflow: visible !important;
+      font-family: 'Manrope', sans-serif !important;
+      font-weight: 700 !important;
+      font-size: 1.2rem !important;
+      letter-spacing: -0.02em !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 0.5rem !important;
+      line-height: 3rem !important;
+      height: 3rem !important;
+    }
+
+    /* Hide original title text (site_name) */
+    .md-header__title .md-header__ellipsis {
+      font-size: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      display: none !important;
+    }
+
+    /* Custom title text */
+    .md-header__title::before {
+      content: "Tractus-X SDK" !important;
+      color: #ffffff !important;
+      font-size: 1.2rem !important;
+      font-weight: 700 !important;
+      white-space: nowrap !important;
+    }
+
+    /* Modern "docs" sub-label */
+    .md-header__title::after {
+      content: "docs" !important;
+      color: rgba(255, 215, 0, 0.7) !important;
+      font-size: 0.5rem !important;
+      font-weight: 500 !important;
+      background: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      border: none !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.12em !important;
+      white-space: nowrap !important;
+      align-self: flex-start !important;
+      margin-top: 0.55rem !important;
+      margin-left: -0.2rem !important;
+    }
+
+    /* 4. Search — fills available header space */
+    .md-search {
+      order: 5 !important;
+      flex: 1 1 auto !important;
+      max-width: none !important;
+      width: auto !important;
+      margin: 0 0 0 0.75rem !important;
+      position: relative !important;
+      left: auto !important;
+      top: auto !important;
+      transform: none !important;
       z-index: 1 !important;
     }
-    
-    /* Keep search in center position */
-    .md-search {
-      margin-right: auto !important;
-      margin-left: auto !important;
-    }
-    
-    /* GitHub repo info on the far right */
-    .md-header__source {
-      margin-left: auto !important;
-      margin-right: 60px !important;
-    }
-    
-    /* Theme selector stays on far right */
-    .md-header__button.md-icon {
-      margin-left: auto !important;
-      margin-right: 8px !important;
-    }
-    
-    .md-version__current {
-      background-color: rgba(0, 0, 0, 0.3) !important;
-      border: 2px solid #FFD700 !important;
-      color: #FFD700 !important;
-      font-weight: 600 !important;
-      padding: 6px 16px !important;
-      border-radius: 6px !important;
-      min-width: 140px !important;
-      max-width: 200px !important;
-      text-align: center !important;
-      white-space: nowrap !important;
-      overflow: visible !important;
-      display: block !important;
-      line-height: 1.2 !important;
-    }
-    
 
+    /* Ensure search form fills the container */
+    .md-search__form {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+
+    /* Ensure search input fills the form */
+    .md-search__input {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+
+    /* Override Material's default search input width */
+    .md-search__inner {
+      width: 100% !important;
+    }
+
+    /* Ensure search output (results) container doesn't limit width */
+    .md-search__output {
+      width: 100% !important;
+    }
+
+    /* Search icon button (the magnifying glass) */
+    label[for="__search"] {
+      order: 4 !important;
+      flex: 0 0 auto !important;
+    }
+
+    /* 5. Version selector — minimal, right side */
+    .md-header .md-version {
+      order: 6 !important;
+      flex: 0 0 auto !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      margin: 0 0.4rem !important;
+    }
+
+    .md-version__current {
+      background: none !important;
+      border: none !important;
+      color: rgba(255, 255, 255, 0.6) !important;
+      font-weight: 400 !important;
+      font-size: 0.7rem !important;
+      padding: 0.15rem 0.3rem !important;
+      border-radius: 3px !important;
+      white-space: nowrap !important;
+      line-height: 1.2 !important;
+      cursor: pointer !important;
+      letter-spacing: 0.02em !important;
+      transition: color 0.2s !important;
+    }
+
+    .md-version__current:hover {
+      color: #FFD700 !important;
+    }
+
+    .md-version__list {
+      background: #1a1a1a !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 3px !important;
+      min-width: 7rem !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .md-version__link {
+      color: rgba(255, 255, 255, 0.6) !important;
+      padding: 0.25rem 0.5rem !important;
+      font-size: 0.65rem !important;
+      display: block !important;
+      transition: all 0.15s ease !important;
+    }
+
+    .md-version__link:hover {
+      color: #FFD700 !important;
+      background: rgba(255, 215, 0, 0.05) !important;
+    }
+
+    /* 6. Palette toggle (dark/light) — right side */
+    .md-header__inner > [data-md-component="palette"] {
+      order: 7 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0.1rem !important;
+    }
+
+    form.md-header__option {
+      order: 7 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0.1rem !important;
+      display: inline-flex !important;
+      align-items: center !important;
+    }
+
+    /* 7. GitHub source — far right */
+    .md-header__source {
+      order: 8 !important;
+      flex: 0 0 auto !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      margin: 0 0 0 0.3rem !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      width: auto !important;
+    }
+
+    .md-source__repository {
+      max-width: none !important;
+      overflow: visible !important;
+      text-overflow: unset !important;
+    }
+
+    /* Generic header buttons */
+    .md-header__button {
+      padding: 0.4rem !important;
+    }
+
+    /* ——— Responsive ——— */
     
-    /* Responsive adjustments for better visibility */
+    /* Apply hamburger swap for all screen sizes where hamburger is visible (≤1220px) */
     @media screen and (max-width: 1220px) {
+      /* Swap hamburger and logo positions whenever hamburger menu is visible */
+      .md-header__button[for="__drawer"] {
+        order: 1 !important;
+        margin: 0 0.3rem 0 0 !important;
+        display: inline-flex !important;
+      }
+
+      .md-header__button.md-logo {
+        order: 2 !important;
+        margin: 0 0.2rem !important;
+      }
+
       .md-header__title {
-        font-size: 1.5rem !important;
+        order: 3 !important;
+        margin: 0 0 0 0.15rem !important;
       }
-      
-      .md-version__current {
-        min-width: 120px !important;
-        font-size: 0.9rem !important;
-        padding: 4px 12px !important;
-      }
-      
-      .md-header__option {
-        margin-right: 16px !important;
-      }
-    }
-    
-    @media screen and (max-width: 1024px) {
-      .md-header__title {
-        font-size: 1.3rem !important;
-      }
-      
-      .md-version__current {
-        min-width: 100px !important;
-        font-size: 0.85rem !important;
-        padding: 4px 10px !important;
-      }
-    }
-    
-    @media screen and (max-width: 768px) {
-      .md-header__title {
+
+      .md-header__title::before {
         font-size: 1.1rem !important;
       }
-      
-      .md-version__current {
-        min-width: 90px !important;
-        font-size: 0.8rem !important;
-        padding: 3px 8px !important;
+      .md-header__title::after {
+        font-size: 0.65rem !important;
+        padding: 0.12rem 0.4rem !important;
       }
-      
-      .md-header__option {
-        margin-right: 8px !important;
-        margin-left: 8px !important;
+      .md-search {
+        margin: 0 0 0 0.5rem !important;
+      }
+    }
+
+    @media screen and (max-width: 1024px) {
+      /* Tablet/iPad: Further refinements */
+      .md-header__title::before {
+        font-size: 1rem !important;
+      }
+      .md-header__title::after {
+        font-size: 0.48rem !important;
+        margin-top: 0.45rem !important; /* Adjust top alignment for tablet size */
+        margin-left: -0.18rem !important;
+      }
+      .md-header__source {
+        display: none !important;
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      /* Mobile/iPhone: Smaller text, center all items, wrap search */
+      .md-header__button.md-logo {
+        margin: 0 0.1rem !important;
+      }
+
+      .md-header__title {
+        line-height: 2.4rem !important;
+        height: auto !important;
+        margin: 0 0 0 0.1rem !important;
+      }
+
+      .md-header__inner {
+        flex-wrap: wrap !important;
+        height: auto !important;
+        min-height: 3rem !important;
+        padding: 0.3rem 0.5rem !important;
+        justify-content: center !important; /* Center all header items */
+      }
+
+      .md-header__title::before {
+        font-size: 0.95rem !important;
+      }
+      .md-header__title::after {
+        font-size: 0.42rem !important;
+        padding: 0.08rem 0.3rem !important;
+        margin-top: 0.35rem !important; /* Adjust top alignment for smaller size */
+        margin-left: -0.15rem !important; /* Keep it close to title */
+      }
+      .md-search {
+        max-width: 100% !important;
+        flex: 1 1 100% !important;
+        order: 10 !important;
+        margin: 0.3rem 0 0 0 !important;
+      }
+      .md-header .md-version {
+        display: none !important;
       }
     }
     
     /* Fix navigation tabs hover coverage */
     .md-tabs__link {
-      padding: 16px 16px !important;
-      height: auto !important;
-      min-height: 48px !important;
+      padding: 0 1rem !important;
+      height: 100% !important;
+      min-height: 2.4rem !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       line-height: 1.2 !important;
       position: relative !important;
+      box-sizing: border-box !important;
+    }
+    
+    .md-tabs__item {
+      height: 100% !important;
+    }
+    
+    .md-tabs__list {
+      height: 100% !important;
+    }
+    
+    @media screen and (max-width: 768px) {
+      .md-tabs__link {
+        padding: 0 0.8rem !important;
+        font-size: 0.85rem !important;
+      }
     }
     
     .md-tabs__link:hover {
@@ -356,7 +578,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#industry-core-hub-use-case" class="md-skip">
+        <a href="#other-use-cases-applications" class="md-skip">
           Skip to content
         </a>
       
@@ -510,17 +732,18 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="../../.." class="md-tabs__link">
-        
-  
-  
     
+    
+      <li class="md-tabs__item">
+        <a href="../../.." class="md-tabs__link">
+          
+  
   
   Home
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -554,11 +777,31 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../../ic-hub-use-case/industry-core-hub-overview/" class="md-tabs__link">
+        <a href="../../backward-compatibility/" class="md-tabs__link">
           
   
   
   How-to Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../tck/" class="md-tabs__link">
+          
+  
+  
+  TCK
 
         </a>
       </li>
@@ -593,15 +836,8 @@
   
     
     
-      
-  
-  
-  
-  
-    
-    
       <li class="md-tabs__item">
-        <a href="../../../api-reference/dataspace-library/" class="md-tabs__link">
+        <a href="../../../api-reference/" class="md-tabs__link">
           
   
   
@@ -609,9 +845,6 @@
 
         </a>
       </li>
-    
-  
-
     
   
 
@@ -686,9 +919,27 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+    
+    
+    
+    
+      
+      
         
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -697,7 +948,88 @@
   </span>
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            Home
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Welcome
+    
+  </span>
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../home/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../home/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -816,6 +1148,82 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Experimental
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            Experimental
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tutorials/ai-tensorflow-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AI/ML with TensorFlow
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -870,6 +1278,29 @@
             How-to Guides
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backward-compatibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Backward Compatibility
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -951,6 +1382,135 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#applications-using-the-sdk" class="md-nav__link">
+    <span class="md-ellipsis">
+      Applications Using the SDK
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sdk-library-usage-by-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      SDK Library Usage by Project
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SDK Library Usage by Project">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dataspace-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dataspace Library
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#industry-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      Industry Library
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Extensions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration Patterns
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pattern-1-full-stack-application-ic-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern 1: Full-Stack Application (IC Hub)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-2-standalone-microservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern 2: Standalone Microservice
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-3-sdk-as-connector-client-aas-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern 3: SDK as Connector Client (AAS Suite)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-case-add-ons-planned" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Case Add-ons (Planned)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contributing-your-use-case" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contributing Your Use Case
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sdk-extension-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      SDK Extension Development
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resources
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#notice" class="md-nav__link">
     <span class="md-ellipsis">
       NOTICE
@@ -1005,7 +1565,7 @@
   
   
   <span class="md-ellipsis">
-    Core Concepts
+    TCK
     
   </span>
   
@@ -1015,6 +1575,272 @@
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            TCK
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tck/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Connector TCK
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Connector TCK
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tck/connector/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tck/connector/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tck/connector/running-tests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Running Tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tck/connector/cicd-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CI/CD Integration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tck/connector/interpreting-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Interpreting Results
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tck/connector/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Core Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Core Concepts
           </label>
@@ -1164,10 +1990,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -1180,12 +2006,35 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             API Reference
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1209,10 +2058,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2" >
         
           
-          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
             
   
   
@@ -1225,8 +2074,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_1">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2">
             <span class="md-nav__icon md-icon"></span>
             Dataspace Library
           </label>
@@ -1277,10 +2126,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_2" >
         
           
-          <label class="md-nav__link" for="__nav_5_1_2" id="__nav_5_1_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_2_2" id="__nav_6_2_2_label" tabindex="0">
             
   
   
@@ -1293,8 +2142,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_1_2">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_2">
             <span class="md-nav__icon md-icon"></span>
             Connector
           </label>
@@ -1422,10 +2271,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_3" >
         
           
-          <label class="md-nav__link" for="__nav_5_1_3" id="__nav_5_1_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_2_3" id="__nav_6_2_3_label" tabindex="0">
             
   
   
@@ -1438,8 +2287,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_1_3">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_3">
             <span class="md-nav__icon md-icon"></span>
             Discovery Services
           </label>
@@ -1544,10 +2393,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_5" >
         
           
-          <label class="md-nav__link" for="__nav_5_1_5" id="__nav_5_1_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_2_5" id="__nav_6_2_5_label" tabindex="0">
             
   
   
@@ -1560,8 +2409,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_1_5">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_5">
             <span class="md-nav__icon md-icon"></span>
             Legacy
           </label>
@@ -1628,10 +2477,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3" >
         
           
-          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="0">
             
   
   
@@ -1644,8 +2493,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3">
             <span class="md-nav__icon md-icon"></span>
             Industry Library
           </label>
@@ -1696,10 +2545,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_2" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_2" id="__nav_5_2_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_2" id="__nav_6_3_2_label" tabindex="0">
             
   
   
@@ -1712,8 +2561,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_2">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_2">
             <span class="md-nav__icon md-icon"></span>
             DTR
           </label>
@@ -1795,10 +2644,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_3" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_3" id="__nav_5_2_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_3" id="__nav_6_3_3_label" tabindex="0">
             
   
   
@@ -1811,12 +2660,35 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_3">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_3">
             <span class="md-nav__icon md-icon"></span>
             Submodel Server
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api-reference/industry-library/submodel-server/adapters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Adapters Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1840,10 +2712,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_3_1" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_3_2" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_3_1" id="__nav_5_2_3_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_3_2" id="__nav_6_3_3_2_label" tabindex="0">
             
   
   
@@ -1856,8 +2728,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_3_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_3_1">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_3_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_3_2">
             <span class="md-nav__icon md-icon"></span>
             Adapters
           </label>
@@ -1947,10 +2819,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_4" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_4" id="__nav_5_2_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_4" id="__nav_6_3_4_label" tabindex="0">
             
   
   
@@ -1963,8 +2835,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_4">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_4">
             <span class="md-nav__icon md-icon"></span>
             Discovery Services
           </label>
@@ -2023,10 +2895,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_5" >
         
           
-          <label class="md-nav__link" for="__nav_5_2_5" id="__nav_5_2_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_3_5" id="__nav_6_3_5_label" tabindex="0">
             
   
   
@@ -2039,8 +2911,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_2_5">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_5">
             <span class="md-nav__icon md-icon"></span>
             Legacy
           </label>
@@ -2130,10 +3002,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_4" >
         
           
-          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_4" id="__nav_6_4_label" tabindex="0">
             
   
   
@@ -2146,8 +3018,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_4">
             <span class="md-nav__icon md-icon"></span>
             Extension Library
           </label>
@@ -2236,10 +3108,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -2252,8 +3124,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Contributing
           </label>
@@ -2327,10 +3199,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_3" >
         
           
-          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_3" id="__nav_7_3_label" tabindex="0">
             
   
   
@@ -2343,8 +3215,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_3">
             <span class="md-nav__icon md-icon"></span>
             Architectural Decision Records
           </label>
@@ -2507,6 +3379,135 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#applications-using-the-sdk" class="md-nav__link">
+    <span class="md-ellipsis">
+      Applications Using the SDK
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sdk-library-usage-by-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      SDK Library Usage by Project
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SDK Library Usage by Project">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dataspace-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dataspace Library
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#industry-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      Industry Library
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Extensions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration Patterns
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pattern-1-full-stack-application-ic-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern 1: Full-Stack Application (IC Hub)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-2-standalone-microservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern 2: Standalone Microservice
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-3-sdk-as-connector-client-aas-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern 3: SDK as Connector Client (AAS Suite)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-case-add-ons-planned" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Case Add-ons (Planned)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contributing-your-use-case" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contributing Your Use Case
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sdk-extension-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      SDK Extension Development
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resources
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#notice" class="md-nav__link">
     <span class="md-ellipsis">
       NOTICE
@@ -2558,15 +3559,248 @@ https://creativecommons.org/licenses/by/4.0/legalcode.
 SPDX-License-Identifier: CC-BY-4.0
 
 -->
-<h1 id="industry-core-hub-use-case">Industry Core Hub Use Case</h1>
-<p>TBD
-This should include an example on how the IC Hub uses Tractus-X SDK</p>
+<h1 id="other-use-cases-applications">Other Use Cases &amp; Applications</h1>
+<p>The Tractus-X SDK is used across multiple projects in the Eclipse Tractus-X ecosystem. This page provides an overview of repositories and applications that leverage the SDK for dataspace interactions.</p>
+<h2 id="applications-using-the-sdk">Applications Using the SDK</h2>
+<p>The following table lists all known projects and applications built with the Tractus-X SDK:</p>
+<table>
+<thead>
+<tr>
+<th>Project</th>
+<th>Description</th>
+<th>Repository</th>
+<th>SDK Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Industry Core Hub</strong></td>
+<td>Lighthouse implementation for production dataspace applications. Provides backend services and frontend UI demonstrating full SDK capabilities.</td>
+<td><a href="https://github.com/eclipse-tractusx/industry-core-hub">eclipse-tractusx/industry-core-hub</a></td>
+<td>Dataspace Library, Industry Library, Extensions</td>
+</tr>
+<tr>
+<td><strong>IC Hub Backend</strong></td>
+<td>Backend microservices using SDK dataspace and industry libraries for connector integration, DTR management, and data exchange.</td>
+<td><a href="https://github.com/eclipse-tractusx/industry-core-hub/tree/main/ichub-backend">industry-core-hub/ichub-backend</a></td>
+<td><code>tractusx_sdk.dataspace</code>, <code>tractusx_sdk.industry</code></td>
+</tr>
+<tr>
+<td><strong>IC Hub Frontend</strong></td>
+<td>Web-based UI consuming SDK-powered APIs for asset management, contract negotiation, and Digital Twin operations.</td>
+<td><a href="https://github.com/eclipse-tractusx/industry-core-hub/tree/main/ichub-frontend">industry-core-hub/ichub-frontend</a></td>
+<td>Via Backend APIs</td>
+</tr>
+<tr>
+<td><strong>Tractus-X SDK Services</strong></td>
+<td>Reusable microservices built with the SDK, available as standalone services or embedded in applications.</td>
+<td><a href="https://github.com/eclipse-tractusx/tractusx-sdk-services">eclipse-tractusx/tractusx-sdk-services</a></td>
+<td>Full SDK</td>
+</tr>
+<tr>
+<td><strong>DT Pull Service</strong></td>
+<td>Service that automatically discovers and pulls Digital Twin shell descriptors from data providers using SDK connectors.</td>
+<td><a href="https://github.com/eclipse-tractusx/tractusx-sdk-services">tractusx-sdk-services/dt-pull-service</a></td>
+<td>Industry Library, Dataspace Library</td>
+</tr>
+<tr>
+<td><strong>Test Orchestrator</strong></td>
+<td>Test agent service that validates data provision configurations for compliance with standard schemas and syntax.</td>
+<td><a href="https://github.com/eclipse-tractusx/tractusx-sdk-services">tractusx-sdk-services/test-orchestrator</a></td>
+<td>Dataspace Library, Extensions (TCK)</td>
+</tr>
+<tr>
+<td><strong>Tractus-X AAS Suite</strong></td>
+<td>Integration project combining the Tractus-X SDK (EDC connector client) with the BaSyx Python SDK for AAS server implementations.</td>
+<td><a href="https://github.com/eclipse-tractusx/aas-suite">eclipse-tractusx/aas-suite</a></td>
+<td>Dataspace Library (Connector)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sdk-library-usage-by-project">SDK Library Usage by Project</h2>
+<h3 id="dataspace-library">Dataspace Library</h3>
+<p>Projects using <code>tractusx_sdk.dataspace</code> for connector operations:</p>
+<ul>
+<li>✅ Industry Core Hub Backend</li>
+<li>✅ DT Pull Service</li>
+<li>✅ Test Orchestrator</li>
+<li>✅ Tractus-X AAS Suite</li>
+</ul>
+<p><strong>Key Features Used:</strong></p>
+<ul>
+<li>Connector service factories (Jupiter/Saturn)</li>
+<li>Connection managers (Postgres, FileSystem, Memory)</li>
+<li>EDC Management API controllers</li>
+<li>Contract negotiation and data transfer</li>
+<li>Discovery services integration</li>
+</ul>
+<h3 id="industry-library">Industry Library</h3>
+<p>Projects using <code>tractusx_sdk.industry</code> for Digital Twin Registry and AAS operations:</p>
+<ul>
+<li>✅ Industry Core Hub Backend</li>
+<li>✅ DT Pull Service</li>
+</ul>
+<p><strong>Key Features Used:</strong></p>
+<ul>
+<li>AAS 3.0 Shell Descriptor models</li>
+<li>Digital Twin Registry service client</li>
+<li>Submodel descriptor management</li>
+<li>Specific Asset ID handling</li>
+</ul>
+<h3 id="extensions">Extensions</h3>
+<p>Projects using <code>tractusx_sdk.extensions</code> for specialized functionality:</p>
+<ul>
+<li>✅ Test Orchestrator (TCK extension)</li>
+<li>✅ Industry Core Hub (Notification API extension)</li>
+</ul>
+<p><strong>Key Extensions:</strong></p>
+<ul>
+<li><strong>TCK (Test Compliance Kit)</strong> - Connector validation and E2E testing</li>
+<li><strong>Notification API</strong> - Asynchronous notification handling</li>
+<li><strong>Semantics</strong> - Semantic model validation and conversion</li>
+</ul>
+<h2 id="integration-patterns">Integration Patterns</h2>
+<h3 id="pattern-1-full-stack-application-ic-hub">Pattern 1: Full-Stack Application (IC Hub)</h3>
+<div class="highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌─────────────────────────────────────────┐
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│         Frontend (React/Vue)            │
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│  - Asset Browser                        │
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│  - Contract Negotiation UI              │
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│  - Digital Twin Explorer                │
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>└────────────┬────────────────────────────┘
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>             │ REST APIs
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>┌────────────▼────────────────────────────┐
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│       Backend Services (FastAPI)        │
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│  - tractusx_sdk.dataspace               │
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│  - tractusx_sdk.industry                │
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│  - PostgreSQL Connection Manager        │
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>└────────────┬────────────────────────────┘
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>             │
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    ┌────────┴─────────┐
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    │                  │
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>┌───▼──────┐    ┌──────▼────────┐
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>│   EDC    │    │      DTR      │
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>└──────────┘    └───────────────┘
+</span></code></pre></div>
+<h3 id="pattern-2-standalone-microservice">Pattern 2: Standalone Microservice</h3>
+<div class="highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>┌─────────────────────────────────────────┐
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>│      DT Pull Service (FastAPI)          │
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>│  - Scheduled data synchronization       │
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>│  - tractusx_sdk.industry (DTR)          │
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>│  - tractusx_sdk.dataspace (Connector)   │
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>└────────────┬────────────────────────────┘
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>             │
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    ┌────────┴─────────┐
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    │                  │
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>┌───▼──────┐    ┌──────▼────────┐
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│   EDC    │    │      DTR      │
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>└──────────┘    └───────────────┘
+</span></code></pre></div>
+<h3 id="pattern-3-sdk-as-connector-client-aas-suite">Pattern 3: SDK as Connector Client (AAS Suite)</h3>
+<div class="highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>┌─────────────────────────────────────────┐
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>│         BaSyx AAS Server                │
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>│  - AAS registry and data storage        │
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>│  - Submodel endpoints                   │
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>└────────────┬────────────────────────────┘
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>             │ Protected by EDC
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>┌────────────▼────────────────────────────┐
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>│    tractusx_sdk.dataspace               │
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>│  - Asset creation for submodels         │
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>│  - Policy management                    │
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>│  - Contract definition creation         │
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>└────────────┬────────────────────────────┘
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>             │
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>         ┌───▼──────┐
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>         │   EDC    │
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>         └──────────┘
+</span></code></pre></div>
+<h2 id="use-case-add-ons-planned">Use Case Add-ons (Planned)</h2>
+<p>The following use case-specific extensions are planned or in development:</p>
+<table>
+<thead>
+<tr>
+<th>Use Case</th>
+<th>Status</th>
+<th>Description</th>
+<th>Target Libraries</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Digital Product Passport</strong></td>
+<td>Planned</td>
+<td>Product lifecycle and sustainability data exchange</td>
+<td>Industry + Extensions</td>
+</tr>
+<tr>
+<td><strong>PCF Exchange</strong></td>
+<td>Planned</td>
+<td>Product Carbon Footprint calculation and sharing</td>
+<td>Industry + Extensions</td>
+</tr>
+<tr>
+<td><strong>Demand &amp; Capacity</strong></td>
+<td>Planned</td>
+<td>Supply chain visibility and capacity planning</td>
+<td>Dataspace + Extensions</td>
+</tr>
+<tr>
+<td><strong>Quality Data Exchange</strong></td>
+<td>Planned</td>
+<td>Quality metrics, alerts, and root cause analysis</td>
+<td>Dataspace + Extensions</td>
+</tr>
+<tr>
+<td><strong>Traceability</strong></td>
+<td>Planned</td>
+<td>Part genealogy and supply chain traceability</td>
+<td>Industry + Extensions</td>
+</tr>
+</tbody>
+</table>
+<h2 id="contributing-your-use-case">Contributing Your Use Case</h2>
+<p>Are you building an application with the Tractus-X SDK? We'd love to feature it here!</p>
+<p><strong>To add your project to this list:</strong></p>
+<ol>
+<li>Open a <a href="https://github.com/eclipse-tractusx/tractusx-sdk/discussions/new?category=show-and-tell">GitHub Discussion</a></li>
+<li>Provide:</li>
+<li>Project name and description</li>
+<li>Repository URL (if open source)</li>
+<li>Which SDK libraries you're using</li>
+<li>Key features or use cases</li>
+<li>Submit a pull request updating this page</li>
+</ol>
+<p><strong>Requirements:</strong></p>
+<ul>
+<li>Project must use <code>tractusx-sdk</code> as a dependency</li>
+<li>Must be actively maintained</li>
+<li>Open source projects preferred (but not required)</li>
+</ul>
+<h2 id="sdk-extension-development">SDK Extension Development</h2>
+<p>Want to build a reusable extension for the SDK?</p>
+<p>See the <a href="../../../core-concepts/extensions-concepts/">Extension Development Guide</a> for:</p>
+<ul>
+<li>Extension structure and conventions</li>
+<li>How to package and distribute extensions</li>
+<li>Testing and validation</li>
+<li>Contribution guidelines</li>
+</ul>
+<h2 id="resources">Resources</h2>
+<ul>
+<li><strong>SDK Repository:</strong> <a href="https://github.com/eclipse-tractusx/tractusx-sdk">github.com/eclipse-tractusx/tractusx-sdk</a></li>
+<li><strong>SDK Services:</strong> <a href="https://github.com/eclipse-tractusx/tractusx-sdk-services">github.com/eclipse-tractusx/tractusx-sdk-services</a></li>
+<li><strong>Industry Core Hub:</strong> <a href="https://github.com/eclipse-tractusx/industry-core-hub">github.com/eclipse-tractusx/industry-core-hub</a></li>
+<li><strong>Community Meetings:</strong> <a href="https://eclipse-tractusx.github.io/community/open-meetings#Industry%20Core%20Hub%20&amp;%20Tractus-X%20SDK%20Weekly">Open Meetings Calendar</a></li>
+</ul>
+<hr />
 <h2 id="notice">NOTICE</h2>
 <p>This work is licensed under the <a href="https://creativecommons.org/licenses/by/4.0/legalcode">CC-BY-4.0</a>.</p>
 <ul>
 <li>SPDX-License-Identifier: CC-BY-4.0</li>
-<li>SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation</li>
-<li>Source URL: https://github.com/eclipse-tractusx/tractusx-sdk</li>
+<li>SPDX-FileCopyrightText: 2025, 2026 Contributors to the Eclipse Foundation</li>
+<li>SPDX-FileCopyrightText: 2025, 2026 Catena-X Automotive Network e.V.</li>
+<li>SPDX-FileCopyrightText: 2025, 2026 LKS Next</li>
+<li>SPDX-FileCopyrightText: 2025, 2026 Mondragon Unibertsitatea</li>
+<li>Source URL: <a href="https://github.com/eclipse-tractusx/tractusx-sdk">https://github.com/eclipse-tractusx/tractusx-sdk</a></li>
 </ul>
 
 
@@ -2640,7 +3874,7 @@ This should include an example on how the IC Hub uses Tractus-X SDK</p>
   
   <div class="custom-footer__bottom">
     <div class="custom-footer__copyright">
-      Copyright © 2025 Eclipse Tractus-X. Built with 
+      Copyright © 2026 Eclipse Tractus-X Contributors. Built with 
       <a href="https://www.mkdocs.org/" target="_blank" rel="noopener">MkDocs</a> and 
       <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">Material for MkDocs</a>.
     </div>
@@ -2658,8 +3892,26 @@ This should include an example on how the IC Hub uses Tractus-X SDK</p>
       <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "content.tabs.link", "toc.follow"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
+  
       <script src="../../../assets/javascripts/bundle.f55a23d4.min.js"></script>
       
     
+  <script>
+    /* Move the version selector from the hidden .md-header__topic into
+       .md-header__inner so it becomes a direct flex child with order: 6 */
+    (function() {
+      var observer = new MutationObserver(function() {
+        var version = document.querySelector('.md-version');
+        var headerInner = document.querySelector('.md-header__inner');
+        if (version && headerInner && !version.dataset.moved) {
+          version.dataset.moved = 'true';
+          headerInner.appendChild(version);
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    })();
+  </script>
+
   </body>
 </html>
