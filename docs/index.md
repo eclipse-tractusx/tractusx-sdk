@@ -157,7 +157,7 @@ You manage data catalogs, build data pipelines, or implement governance policies
 !!! tip "New to dataspaces?"
     Check out the [Getting Started Guide](tutorials/getting-started.md) - it takes about 10 minutes and shows you how the whole thing works.
 
-!!! info "Current release: 0.7.0-rc1"
+!!! info "Current release: 0.7.0-rc2"
     Requires Python 3.12+  
     License: Apache 2.0 (code) / CC-BY-4.0 (docs)
 

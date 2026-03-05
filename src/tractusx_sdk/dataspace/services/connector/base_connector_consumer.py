@@ -436,6 +436,259 @@ class BaseConnectorConsumerService(BaseService):
             **kwargs
         )
 
+    def get_catalog_with_bpnl(self, bpnl: str, counter_party_address: str, filter_expression: list[dict] = None,
+                              context: dict = DEFAULT_CONTEXT, timeout: int = None, verify: bool = None) -> dict | None:
+        """
+        Retrieves the Connector DCAT catalog using the BPNL as the counter party ID.
+
+        In the base implementation, the BPNL is used directly as the ``counter_party_id``.
+        Subclasses (e.g. Saturn) override this to perform connector discovery via the BPNL first.
+
+        Parameters:
+        bpnl (str): The Business Partner Number of the counterparty, used directly as counter_party_id.
+        counter_party_address (str): The DSP URL of the EDC provider.
+        filter_expression (list[dict], optional): Filter criteria to apply. If None, no filter is applied.
+        context (dict, optional): JSON-LD context for the catalog request. Defaults to DEFAULT_CONTEXT.
+        timeout (int, optional): Request timeout in seconds. Defaults to None.
+        verify (bool, optional): Whether to verify SSL certificates. If None, uses service default.
+
+        Returns:
+        dict | None: The EDC catalog as a dictionary, or None if the request fails.
+        """
+        if filter_expression:
+            return self.get_catalog_with_filter(counter_party_id=bpnl, counter_party_address=counter_party_address,
+                                                filter_expression=filter_expression, timeout=timeout,
+                                                verify=verify, context=context)
+        return self.get_catalog(counter_party_id=bpnl, counter_party_address=counter_party_address,
+                                timeout=timeout, verify=verify, context=context)
+
+    def get_catalog_by_dct_type_with_bpnl(self, bpnl: str, counter_party_address: str, dct_type: str,
+                                          dct_type_key: str = DEFAULT_DCT_TYPE_KEY, operator: str = "=",
+                                          timeout: int = None, context: dict = DEFAULT_CONTEXT) -> dict:
+        """
+        Retrieves a catalog filtered by DCT type, using the BPNL as the counter party ID.
+
+        In the base implementation, the BPNL is used directly as the ``counter_party_id``.
+        Subclasses (e.g. Saturn) override this to perform connector discovery via the BPNL first.
+
+        Parameters:
+        bpnl (str): The Business Partner Number of the counterparty, used directly as counter_party_id.
+        counter_party_address (str): The DSP URL of the EDC provider.
+        dct_type (str): The DCT type to filter by (e.g. "https://w3id.org/catenax/taxonomy#Submodel").
+        dct_type_key (str): The operand key for DCT type matching. Defaults to DEFAULT_DCT_TYPE_KEY.
+        operator (str): The filter operator. Defaults to "=".
+        timeout (int, optional): Request timeout in seconds. Defaults to None.
+        context (dict, optional): JSON-LD context for the catalog request. Defaults to DEFAULT_CONTEXT.
+
+        Returns:
+        dict: The filtered EDC catalog.
+        """
+        return self.get_catalog_by_dct_type(counter_party_id=bpnl, counter_party_address=counter_party_address,
+                                            dct_type=dct_type, dct_type_key=dct_type_key, operator=operator,
+                                            timeout=timeout, context=context)
+
+    def get_catalog_by_asset_id_with_bpnl(self, bpnl: str, counter_party_address: str, asset_id: str,
+                                          id_key: str = DEFAULT_ID_KEY, operator: str = "=",
+                                          timeout: int = None, verify: bool = None,
+                                          context: dict = DEFAULT_CONTEXT) -> dict:
+        """
+        Retrieves a catalog filtered by asset ID, using the BPNL as the counter party ID.
+
+        In the base implementation, the BPNL is used directly as the ``counter_party_id``.
+        Subclasses (e.g. Saturn) override this to perform connector discovery via the BPNL first.
+
+        Parameters:
+        bpnl (str): The Business Partner Number of the counterparty, used directly as counter_party_id.
+        counter_party_address (str): The DSP URL of the EDC provider.
+        asset_id (str): The asset ID to filter by.
+        id_key (str): The operand key for asset ID matching. Defaults to DEFAULT_ID_KEY.
+        operator (str): The filter operator. Defaults to "=".
+        timeout (int, optional): Request timeout in seconds. Defaults to None.
+        verify (bool, optional): Whether to verify SSL certificates. If None, uses service default.
+        context (dict, optional): JSON-LD context for the catalog request. Defaults to DEFAULT_CONTEXT.
+
+        Returns:
+        dict: The filtered EDC catalog.
+        """
+        return self.get_catalog_by_asset_id(counter_party_id=bpnl, counter_party_address=counter_party_address,
+                                            asset_id=asset_id, id_key=id_key, operator=operator,
+                                            timeout=timeout, verify=verify, context=context)
+
+    def get_catalog_with_filter_parallel_with_bpnl(self, bpnl: str, counter_party_address: str,
+                                                   filter_expression: list[dict], catalogs: dict = None,
+                                                   timeout: int = None, context: dict = DEFAULT_CONTEXT) -> None:
+        """
+        Fetches a filtered catalog for a single EDC URL using the BPNL as the counter party ID,
+        storing the result in the shared ``catalogs`` dict. Designed for use in threaded scenarios.
+
+        In the base implementation, the BPNL is used directly as the ``counter_party_id``.
+        Subclasses (e.g. Saturn) override this to perform connector discovery via the BPNL first.
+
+        Parameters:
+        bpnl (str): The Business Partner Number of the counterparty, used directly as counter_party_id.
+        counter_party_address (str): The DSP URL of the EDC provider.
+        filter_expression (list[dict]): Filter criteria to apply to the catalog request.
+        catalogs (dict, optional): Shared dict to store the result under ``counter_party_address``.
+        timeout (int, optional): Request timeout in seconds. Defaults to None.
+        context (dict, optional): JSON-LD context for the catalog request. Defaults to DEFAULT_CONTEXT.
+        """
+        if catalogs is None:
+            catalogs = {}
+        catalogs[counter_party_address] = self.get_catalog_with_filter(counter_party_id=bpnl,
+                                                                       counter_party_address=counter_party_address,
+                                                                       filter_expression=filter_expression,
+                                                                       timeout=timeout, context=context)
+
+    def get_catalogs_with_filter_with_bpnl(self, bpnl: str, edcs: list, filter_expression: list[dict],
+                                           timeout: int = None, context: dict = DEFAULT_CONTEXT) -> dict:
+        """
+        Retrieves catalogs from multiple EDC URLs filtered by the given expression,
+        using the BPNL as the counter party ID. Queries each EDC sequentially.
+
+        In the base implementation, the BPNL is used directly as the ``counter_party_id``.
+        Subclasses (e.g. Saturn) override this to perform connector discovery via the BPNL first.
+
+        Parameters:
+        bpnl (str): The Business Partner Number of the counterparty, used directly as counter_party_id.
+        edcs (list): List of DSP URLs to query.
+        filter_expression (list[dict]): Filter criteria to apply to each catalog request.
+        timeout (int, optional): Request timeout in seconds. Defaults to None.
+        context (dict, optional): JSON-LD context for the catalog requests. Defaults to DEFAULT_CONTEXT.
+
+        Returns:
+        dict: A mapping of EDC URL → catalog response dict.
+        """
+        catalogs = {}
+        for edc_url in edcs:
+            catalogs[edc_url] = self.get_catalog_with_filter(counter_party_id=bpnl,
+                                                             counter_party_address=edc_url,
+                                                             filter_expression=filter_expression,
+                                                             timeout=timeout, context=context)
+        return catalogs
+
+    def get_catalogs_by_dct_type_with_bpnl(self, bpnl: str, edcs: list, dct_type: str,
+                                           dct_type_key: str = DEFAULT_DCT_TYPE_KEY, timeout: int = None,
+                                           context: dict = DEFAULT_CONTEXT) -> dict:
+        """
+        Retrieves catalogs from multiple EDC URLs filtered by DCT type,
+        using the BPNL as the counter party ID.
+
+        In the base implementation, the BPNL is used directly as the ``counter_party_id``.
+        Subclasses (e.g. Saturn) override this to perform connector discovery via the BPNL first.
+
+        Parameters:
+        bpnl (str): The Business Partner Number of the counterparty, used directly as counter_party_id.
+        edcs (list): List of DSP URLs to query.
+        dct_type (str): The DCT type to filter by.
+        dct_type_key (str): The operand key for DCT type matching. Defaults to DEFAULT_DCT_TYPE_KEY.
+        timeout (int, optional): Request timeout in seconds. Defaults to None.
+        context (dict, optional): JSON-LD context for the catalog requests. Defaults to DEFAULT_CONTEXT.
+
+        Returns:
+        dict: A mapping of EDC URL → catalog response dict.
+        """
+        filter_expr = [self.get_filter_expression(key=dct_type_key, value=dct_type, operator="=")]
+        return self.get_catalogs_with_filter_with_bpnl(bpnl=bpnl, edcs=edcs, filter_expression=filter_expr,
+                                                       timeout=timeout, context=context)
+
+    def get_catalogs_with_filter_with_bpnl_parallel(self, bpnl: str, edcs: list, filter_expression: list[dict],
+                                                    timeout: int = None, context: dict = DEFAULT_CONTEXT) -> dict:
+        """
+        Retrieves catalogs from multiple EDC URLs filtered by the given expression in parallel,
+        using the BPNL as the counter party ID.
+
+        In the base implementation, the BPNL is used directly as the ``counter_party_id``.
+        Subclasses (e.g. Saturn) override this to perform connector discovery via the BPNL first.
+
+        Parameters:
+        bpnl (str): The Business Partner Number of the counterparty, used directly as counter_party_id.
+        edcs (list): List of DSP URLs to query.
+        filter_expression (list[dict]): Filter criteria to apply to each catalog request.
+        timeout (int, optional): Request timeout in seconds. Defaults to None.
+        context (dict, optional): JSON-LD context for the catalog requests. Defaults to DEFAULT_CONTEXT.
+
+        Returns:
+        dict: A mapping of EDC URL → catalog response dict.
+        """
+        catalogs: dict = {}
+        threads: list[threading.Thread] = []
+
+        def fetch_catalog(edc_url):
+            catalogs[edc_url] = self.get_catalog_with_filter(counter_party_id=bpnl,
+                                                             counter_party_address=edc_url,
+                                                             filter_expression=filter_expression,
+                                                             timeout=timeout, context=context)
+
+        for edc_url in edcs:
+            thread = threading.Thread(target=fetch_catalog, args=(edc_url,))
+            thread.start()
+            threads.append(thread)
+
+        for thread in threads:
+            thread.join()
+
+        return catalogs
+
+    def get_catalogs_by_dct_type_with_bpnl_parallel(self, bpnl: str, edcs: list, dct_type: str,
+                                                    dct_type_key: str = DEFAULT_DCT_TYPE_KEY, timeout: int = None,
+                                                    context: dict = DEFAULT_CONTEXT) -> dict:
+        """
+        Retrieves catalogs from multiple EDC URLs filtered by DCT type in parallel,
+        using the BPNL as the counter party ID.
+
+        In the base implementation, the BPNL is used directly as the ``counter_party_id``.
+        Subclasses (e.g. Saturn) override this to perform connector discovery via the BPNL first.
+
+        Parameters:
+        bpnl (str): The Business Partner Number of the counterparty, used directly as counter_party_id.
+        edcs (list): List of DSP URLs to query.
+        dct_type (str): The DCT type to filter by.
+        dct_type_key (str): The operand key for DCT type matching. Defaults to DEFAULT_DCT_TYPE_KEY.
+        timeout (int, optional): Request timeout in seconds. Defaults to None.
+        context (dict, optional): JSON-LD context for the catalog requests. Defaults to DEFAULT_CONTEXT.
+
+        Returns:
+        dict: A mapping of EDC URL → catalog response dict.
+        """
+        filter_expr = [self.get_filter_expression(key=dct_type_key, value=dct_type, operator="=")]
+        return self.get_catalogs_with_filter_with_bpnl_parallel(bpnl=bpnl, edcs=edcs, filter_expression=filter_expr,
+                                                                timeout=timeout, context=context)
+
+    def do_dsp_with_bpnl(self, bpnl: str, counter_party_address: str, filter_expression: list[dict] = None,
+                         policies: list = None, max_wait: int = 60, poll_interval: int = 1,
+                         catalog_context: dict = DEFAULT_CONTEXT,
+                         negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> tuple[str, str]:
+        """
+        Performs all DSP operations until retrieving an EDR, using the BPNL as the counter party ID.
+
+        In the base implementation, the BPNL is used directly as the ``counter_party_id``.
+        Subclasses (e.g. Saturn) override this to perform connector discovery via the BPNL first,
+        resolving the actual counter party address and ID before proceeding.
+
+        Parameters:
+        bpnl (str): The Business Partner Number of the counterparty, used directly as counter_party_id.
+        counter_party_address (str): The DSP URL of the EDC provider.
+        filter_expression (list[dict], optional): Filter criteria for the catalog lookup.
+        policies (list, optional): Allow-list of accepted usage policies. Defaults to None.
+        max_wait (int): Maximum seconds to wait for negotiation / EDR. Defaults to 60.
+        poll_interval (int): Seconds between poll attempts. Defaults to 1.
+        catalog_context (dict, optional): JSON-LD context for catalog requests.
+        negotiation_context (dict, optional): JSON-LD context for negotiation requests.
+
+        Returns:
+        tuple[str, str]: A tuple of (dataplane_endpoint, edr_access_token).
+        """
+        return self.do_dsp(
+            counter_party_id=bpnl,
+            counter_party_address=counter_party_address,
+            filter_expression=filter_expression,
+            policies=policies,
+            max_wait=max_wait,
+            poll_interval=poll_interval,
+            catalog_context=catalog_context,
+            negotiation_context=negotiation_context
+        )
+
     def get_catalog_with_filter_parallel(self, counter_party_id: str, counter_party_address: str,
                                          filter_expression: list[dict], catalogs: dict = None,
                                          timeout: int = None, context: dict = DEFAULT_CONTEXT, **kwargs) -> None:

@@ -29,7 +29,7 @@ This module contains extensions for the Tractus-X SDK, including:
 - semantics: Schema to context translation utilities
 """
 
-__version__ = '0.7.0-rc1'
+__version__ = '0.7.0-rc2'
 __author__ = 'Eclipse Tractus-X Contributors'
 __license__ = "Apache License, Version 2.0"
 
