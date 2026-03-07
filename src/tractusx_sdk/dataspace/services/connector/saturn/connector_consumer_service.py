@@ -577,14 +577,19 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         threads: list[threading.Thread] = []
 
         def fetch_catalog(counter_party_id, counter_party_address, filter_expression, timeout, catalogs, protocol, context):
-            catalog_request = self.get_catalog_request_with_filter(
-                counter_party_id=counter_party_id,
-                counter_party_address=counter_party_address,
-                filter_expression=filter_expression,
-                protocol=protocol,
-                context=context
-            )
-            catalogs[counter_party_address] = self.get_catalog(request=catalog_request, timeout=timeout)
+            try:
+                catalog_request = self.get_catalog_request_with_filter(
+                    counter_party_id=counter_party_id,
+                    counter_party_address=counter_party_address,
+                    filter_expression=filter_expression,
+                    protocol=protocol,
+                    context=context
+                )
+                catalogs[counter_party_address] = self.get_catalog(request=catalog_request, timeout=timeout)
+            except Exception as e:
+                if self.logger:
+                    self.logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", counter_party_address, e)
+                catalogs[counter_party_address] = {"error": str(e)}
 
         for edc_url in edcs:
             thread = threading.Thread(target=fetch_catalog, kwargs={
@@ -608,9 +613,14 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                            timeout: int = None, namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT):
         catalogs = {}
         for edc_url in edcs:
-            catalogs[edc_url] = self._get_catalog_internal(bpnl=bpnl, counter_party_address=edc_url,
-                                                         filter_expression=filter_expression, timeout=timeout,
-                                                         context=context, namespace=namespace)
+            try:
+                catalogs[edc_url] = self._get_catalog_internal(bpnl=bpnl, counter_party_address=edc_url,
+                                                             filter_expression=filter_expression, timeout=timeout,
+                                                             context=context, namespace=namespace)
+            except Exception as e:
+                if self.logger:
+                    self.logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
+                catalogs[edc_url] = {"error": str(e)}
         return catalogs
 
     def get_catalog_by_dct_type(self, counter_party_id: str, counter_party_address: str, dct_type: str,
@@ -722,9 +732,14 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         threads = []
 
         def fetch_catalog(edc_url):
-            catalogs[edc_url] = self._get_catalog_internal(bpnl=bpnl, counter_party_address=edc_url,
-                                                         filter_expression=filter_expression, timeout=timeout,
-                                                         context=context, namespace=namespace)
+            try:
+                catalogs[edc_url] = self._get_catalog_internal(bpnl=bpnl, counter_party_address=edc_url,
+                                                             filter_expression=filter_expression, timeout=timeout,
+                                                             context=context, namespace=namespace)
+            except Exception as e:
+                if self.logger:
+                    self.logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
+                catalogs[edc_url] = {"error": str(e)}
 
         for edc_url in edcs:
             thread = threading.Thread(target=fetch_catalog, args=(edc_url,))
