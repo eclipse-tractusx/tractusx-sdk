@@ -1,9 +1,9 @@
+[![PyPI](https://img.shields.io/pypi/v/tractusx_sdk?style=for-the-badge)](https://pypi.org/p/tractusx_sdk)
 [![Contributors][contributors-shield]][contributors-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Apache 2.0 License][license-shield]][license-url-code]
 [![CC-BY-4.0][license-shield-non-code]][license-url-non-code]
 [![Latest Release][release-shield]][release-url]
-[![PyPI version](https://img.shields.io/pypi/v/tractusx_sdk)](https://pypi.org/p/tractusx_sdk)
 
 # Tractus-X Software Development KIT (SDK)
 
