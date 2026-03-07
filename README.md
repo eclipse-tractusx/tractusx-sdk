@@ -1,3 +1,4 @@
+[![PyPI](https://img.shields.io/pypi/v/tractusx_sdk?style=for-the-badge)](https://pypi.org/p/tractusx_sdk)
 [![Contributors][contributors-shield]][contributors-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Apache 2.0 License][license-shield]][license-url-code]
@@ -25,7 +26,7 @@ No specific use case logic will be configured here, only the bare minimum for in
 
 ## Installation
 
-Install the package directly from PyPI:
+Install the package directly from PyPI [https://pypi.org/p/tractusx_sdk](https://pypi.org/p/tractusx_sdk):
 
 ```bash
 pip install tractusx-sdk
