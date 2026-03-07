@@ -3,6 +3,7 @@
 [![Apache 2.0 License][license-shield]][license-url-code]
 [![CC-BY-4.0][license-shield-non-code]][license-url-non-code]
 [![Latest Release][release-shield]][release-url]
+[![PyPI version](https://img.shields.io/pypi/v/tractusx_sdk)](https://pypi.org/p/tractusx_sdk)
 
 # Tractus-X Software Development KIT (SDK)
 
@@ -25,7 +26,7 @@ No specific use case logic will be configured here, only the bare minimum for in
 
 ## Installation
 
-Install the package directly from PyPI:
+Install the package directly from PyPI [https://pypi.org/p/tractusx_sdk](https://pypi.org/p/tractusx_sdk):
 
 ```bash
 pip install tractusx-sdk
