@@ -31,6 +31,34 @@ from ..constants import (
     DSP2025_DATASET_KEY, DSP2025_POLICY_KEY,
 )
 
+## Namespace prefixes that can appear in JSON-LD policy keys across EDC versions.
+## Stripping these normalizes Saturn (unprefixed) and legacy (prefixed) policies
+## so they can be compared regardless of which format the user or catalog uses.
+_NORMALIZABLE_PREFIXES = ("odrl:", "dcat:", "dct:", "edc:", "tx:", "cx-policy:")
+
+
+def _strip_prefix(key: str) -> str:
+    """Return *key* with any known JSON-LD namespace prefix removed."""
+    for prefix in _NORMALIZABLE_PREFIXES:
+        if key.startswith(prefix):
+            return key[len(prefix):]
+    return key
+
+
+def _normalize_policy(policy):
+    """Recursively strip namespace prefixes from all dict keys in *policy*.
+
+    This allows Saturn-format policies (no ``odrl:`` prefix) to be compared
+    against legacy-format policies (with ``odrl:`` prefix) and vice versa.
+    Values that are dicts or lists are processed recursively; all other values
+    are left unchanged.
+    """
+    if isinstance(policy, dict):
+        return {_strip_prefix(k): _normalize_policy(v) for k, v in policy.items()}
+    if isinstance(policy, list):
+        return [_normalize_policy(item) for item in policy]
+    return policy
+
 ## Ordered lookup: try DSP 2025-1 (unprefixed) first, then legacy (prefixed).
 _DATASET_KEYS = (DSP2025_DATASET_KEY, DSP_DATASET_KEY)   # "dataset", "dcat:dataset"
 _POLICY_KEYS  = (DSP2025_POLICY_KEY,  DSP_POLICY_KEY)    # "hasPolicy", "odrl:hasPolicy"
@@ -164,10 +192,20 @@ class DspTools:
         to_compare.pop("@id", None)
         to_compare.pop("@type", None)
 
+        ## Normalise namespace prefixes (e.g. ``odrl:``) so that Saturn-format
+        ## policies (no prefix) can be matched against legacy-format policies
+        ## (with prefix) and vice versa.
+        normalized_catalog_policy = _normalize_policy(to_compare)
+
         ## Check if the policy is in the list of allowed_policies
-        ### TODO: This should maybe be enhanced to compare the actual constraints one by one
-        if to_compare in allowed_policies:
-            return True
+        for allowed in allowed_policies:
+            ## Shallow-copy so we can safely pop @id/@type without mutating the caller's list.
+            ## _normalize_policy creates new dicts recursively so no deepcopy is needed here.
+            allowed_copy = dict(allowed)
+            allowed_copy.pop("@id", None)
+            allowed_copy.pop("@type", None)
+            if normalized_catalog_policy == _normalize_policy(allowed_copy):
+                return True
         
         return False
 
