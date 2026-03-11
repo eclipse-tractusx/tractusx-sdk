@@ -20,41 +20,31 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 #
-# TCK Connector — INT Environment Configuration
+# TCK Connector — Shared Environment Configuration
 #
-# This file is a ready-to-use template for the Catena-X INT (integration)
-# environment.  Replace all <PLACEHOLDER> tokens with real values, then run:
-#
-#   python tck_e2e_saturn_0-11-X_simple.py --config tck-int-config.yaml
-#
-# or run all 6 tests at once:
-#
-#   ./run_all_tests.sh --config tck-int-config.yaml
+# This file is the single source of truth for all connectivity values used
+# across the 6 TCK E2E test scripts.  Edit only this file when switching
+# between environments (local umbrella, INT, PRE-PROD, etc.).
 #
 # Sections
 # --------
-#   jupiter   → used by: tck_e2e_jupiter_0-10-X_simple|detailed
-#   saturn    → used by: tck_e2e_saturn_0-11-X_simple|detailed and
-#                        tck_e2e_saturn_0-11-X_simple_did|detailed_did
+#   jupiter  → used by: tck_e2e_jupiter_0-10-X_simple|detailed (BPNL discovery)
+#   saturn   → used by: all four saturn scripts (BPNL + DID discovery modes)
+#              - BPNL scripts (*_simple.py, *_detailed.py) use:
+#                  saturn.provider, saturn.access_policy
+#              - DID scripts (*_simple_did.py, *_detailed_did.py) use:
+#                  saturn.provider_did, saturn.access_policy_did
+#              Both modes share the same saturn section with dual config fields.
 #
 # Backend base_url
 # ----------------
-#   Do NOT include a UUID here.  The test loader appends /urn:uuid:<uuid4>
-#   at runtime so that every run gets a unique resource path.
+#   Do NOT include a UUID here.  The test loader appends /urn:uuid:<uuid4> at
+#   runtime so that every run gets a unique resource path.
 #
 # Null / optional fields
 # ----------------------
 #   Leave optional fields as ~ (YAML null) to let the SDK use its default.
-#
-# How to obtain INT values
-# ------------------------
-#   Provider / Consumer URLs & API keys  →  your EDC deployment team or
-#                                           Helm values of your INT cluster
-#   BPNLs                                →  BPDM INT service or your
-#                                           organisation's registration record
-#   DIDs                                 →  Portal INT  (Administration →
-#                                           Company → Company Identity)
-#   Backend URL                          →  simple-data-backend deployment on INT
+#   Example: a section that uses BPN discovery does not need a "did" field.
 #################################################################################
 
 # ---------------------------------------------------------------------------
@@ -62,19 +52,21 @@
 # ---------------------------------------------------------------------------
 jupiter:
   provider:
-    base_url: "https://jupiter-edc-provider-ichub-control.int.catena-x.net"
-    dma_path: "/management"                                  # Management API path (default: /management)
-    api_key: "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC"
-    bpn: "BPNL0000000093Q7"                                  # e.g. BPNL00000000PROV
-    dsp_url: "https://jupiter-edc-provider-ichub-control.int.catena-x.net/api/v1/dsp"
+    base_url: "http://dataprovider-controlplane.tx.test"
+    dma_path: "/management"
+    api_key: "TEST2"
+    bpn: "BPNL00000003AYRE"
+    dsp_url: "http://dataprovider-controlplane.tx.test/api/v1/dsp"
+    did: ~
   consumer:
-    base_url: "https://jupiter-edc-consumer-ichub-control.int.catena-x.net"
-    dma_path: "/management"                                  # Management API path (default: /management)
-    api_key: "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC"
-    bpn: "BPNL00000003CRHK"                                  # e.g. BPNL00000000CONS
+    base_url: "http://dataconsumer-1-controlplane.tx.test"
+    dma_path: "/management"
+    api_key: "TEST1"
+    bpn: "BPNL00000003AZQP"
+    did: ~
   backend:
-    base_url: "https://jupiter-storage-ichub.int.catena-x.net"
-    api_key: ~                             # set to ~ if no auth needed
+    base_url: "http://dataprovider-submodelserver.tx.test"
+    api_key: ~
   policies:
     protocol: "dataspace-protocol-http"
     negotiation_context:
@@ -121,22 +113,22 @@ jupiter:
 # ---------------------------------------------------------------------------
 saturn:
   provider:
-    base_url: "https://edc-provider-ichub-control.int.catena-x.net"
-    dma_path: "/management"                                  # Management API path (default: /management)
-    api_key: "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC"
-    bpn: "BPNL0000000093Q7"                                  # e.g. BPNL00000000PROV
-    dsp_url: "https://edc-provider-ichub-control.int.catena-x.net/api/v1/dsp"
-    dsp_url_did: "https://edc-provider-ichub-control.int.catena-x.net/api/v1/dsp/2025-1"  # Used by DID-mode scripts only
-    did: "did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL0000000093Q7"
+    base_url: "http://dataprovider-controlplane.tx.test"
+    dma_path: "/management"
+    api_key: "TEST2"
+    bpn: "BPNL00000003AYRE"
+    dsp_url: "http://dataprovider-controlplane.tx.test/api/v1/dsp"
+    dsp_url_did: "http://dataprovider-controlplane.tx.test/api/v1/dsp/2025-1"
+    did: "did:web:portal-backend.tx.test:api:administration:staticdata:did:BPNL00000003AYRE"
   consumer:
-    base_url: "https://edc-consumer-ichub-control.int.catena-x.net"
-    dma_path: "/management"                                  # Management API path (default: /management)
-    api_key: "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC"
-    bpn: "BPNL00000003CRHK"                                  # e.g. BPNL00000000CONS
-    did: "did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL00000003CRHK"
+    base_url: "http://dataconsumer-1-controlplane.tx.test"
+    dma_path: "/management"
+    api_key: "TEST1"
+    bpn: "BPNL00000003AZQP"
+    did: "did:web:portal-backend.tx.test:api:administration:staticdata:did:BPNL00000003AZQP"
   backend:
-    base_url: "https://storage-ichub.int.catena-x.net"
-    api_key: ~                             # set to ~ if no auth needed
+    base_url: "http://dataprovider-submodelserver.tx.test"
+    api_key: ~
   policies:
     protocol: "dataspace-protocol-http:2025-1"
     negotiation_context:
