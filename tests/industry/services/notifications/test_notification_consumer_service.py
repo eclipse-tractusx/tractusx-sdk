@@ -26,13 +26,13 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
-from tractusx_sdk.extensions.notification_api import (
+from tractusx_sdk.industry.services.notifications import (
     NotificationConsumerService,
-    Notification,
     NotificationError,
     NotificationValidationError,
-    DIGITAL_TWIN_EVENT_API_TYPE,
 )
+from tractusx_sdk.industry.models.notifications import Notification
+from tractusx_sdk.industry.constants import DIGITAL_TWIN_EVENT_API_TYPE
 
 
 # Test fixtures
@@ -315,7 +315,7 @@ class TestSendNotification:
             connector_consumer=mock_connector_consumer,
         )
         
-        with patch("tractusx_sdk.extensions.notification_api.services.notification_consumer_service.HttpTools") as mock_http:
+        with patch("tractusx_sdk.industry.services.notifications.notification_consumer_service.HttpTools") as mock_http:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.text = '{"status": "received"}'
@@ -343,7 +343,7 @@ class TestSendNotification:
             connector_consumer=mock_connector_consumer,
         )
         
-        with patch("tractusx_sdk.extensions.notification_api.services.notification_consumer_service.HttpTools") as mock_http:
+        with patch("tractusx_sdk.industry.services.notifications.notification_consumer_service.HttpTools") as mock_http:
             mock_response = MagicMock()
             mock_response.status_code = 202
             mock_response.text = ""
@@ -371,7 +371,7 @@ class TestSendNotification:
             connector_consumer=mock_connector_consumer,
         )
         
-        with patch("tractusx_sdk.extensions.notification_api.services.notification_consumer_service.HttpTools") as mock_http:
+        with patch("tractusx_sdk.industry.services.notifications.notification_consumer_service.HttpTools") as mock_http:
             mock_response = MagicMock()
             mock_response.status_code = 500
             mock_response.text = "Internal Server Error"
@@ -419,7 +419,7 @@ class TestSendNotificationToEndpoint:
             connector_consumer=mock_connector_consumer,
         )
         
-        with patch("tractusx_sdk.extensions.notification_api.services.notification_consumer_service.HttpTools") as mock_http:
+        with patch("tractusx_sdk.industry.services.notifications.notification_consumer_service.HttpTools") as mock_http:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.text = '{"status": "ok"}'
@@ -443,7 +443,7 @@ class TestSendNotificationToEndpoint:
             connector_consumer=mock_connector_consumer,
         )
         
-        with patch("tractusx_sdk.extensions.notification_api.services.notification_consumer_service.HttpTools") as mock_http:
+        with patch("tractusx_sdk.industry.services.notifications.notification_consumer_service.HttpTools") as mock_http:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.text = "{}"
@@ -481,7 +481,7 @@ class TestSendToMultipleProviders:
             {"bpn": "BPNL000000000002", "dsp_url": "https://provider2.com/dsp"},
         ]
         
-        with patch("tractusx_sdk.extensions.notification_api.services.notification_consumer_service.HttpTools") as mock_http:
+        with patch("tractusx_sdk.industry.services.notifications.notification_consumer_service.HttpTools") as mock_http:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.text = '{"status": "ok"}'
@@ -516,7 +516,7 @@ class TestSendToMultipleProviders:
             {"bpn": "BPNL000000000002", "dsp_url": "https://provider2.com/dsp"},
         ]
         
-        with patch("tractusx_sdk.extensions.notification_api.services.notification_consumer_service.HttpTools") as mock_http:
+        with patch("tractusx_sdk.industry.services.notifications.notification_consumer_service.HttpTools") as mock_http:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.text = '{"status": "ok"}'

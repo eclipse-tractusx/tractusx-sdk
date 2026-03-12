@@ -47,7 +47,7 @@ import logging
 from tractusx_sdk.dataspace.services.connector.base_connector_provider import (
     BaseConnectorProviderService,
 )
-from tractusx_sdk.extensions.notification_api import (
+from tractusx_sdk.industry.services.notifications import (
     NotificationService,
     NotificationError,
 )

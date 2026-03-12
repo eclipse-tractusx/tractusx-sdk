@@ -5,7 +5,13 @@ Further information can be found on the [README.md](README.md) file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.7.0] - R26.03
+## [0.7.1] - R26.03
+
+### Fixed
+
+- hotfix/0.7.1: fixed policy parsing issues in `saturn`, enhanced error handling and (breaking) migrated `notifications api` to `industry` module before release. by @matbmoser in https://github.com/eclipse-tractusx/tractusx-sdk/pull/194
+
+## [0.7.0]
 
 ### Added
 

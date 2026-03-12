@@ -27,6 +27,7 @@ The Industry Library enables:
 
 - **Digital Twin Management** - Create, query, and manage Asset Administration Shells (AAS)
 - **Submodel Operations** - Handle submodel descriptors and data storage
+- **Notification Services** - Send and manage Industry Core notifications through the dataspace
 - **Business Partner Discovery** - Locate BPNs for assets using various identifiers
 - **Extensible Storage** - Pluggable adapters for different storage backends
 
@@ -70,6 +71,25 @@ Store and retrieve submodel data using flexible storage adapters.
   - JSON file operations
   - Directory management
   - Usage examples
+
+### Notifications
+
+Send and manage Industry Core notifications through the Catena-X dataspace.
+
+#### Services
+- **[Notification Services](notifications/services.md)** - High-level notification operations
+  - Discover `DigitalTwinEventAPI` assets in provider catalogs
+  - Negotiate contracts and send notifications via EDR
+  - BPNL-based discovery for Saturn connectors
+  - Multi-provider broadcast support
+  - Provider-side asset management
+
+#### Models
+- **[Notification Models](notifications/models.md)** - Pydantic data models
+  - Notification - Complete notification (header + content)
+  - NotificationHeader - Message metadata (`message_header_3.0.0`)
+  - NotificationContent - Flexible payload body
+  - Builder pattern for fluent construction
 
 ### Discovery Services
 
@@ -169,6 +189,9 @@ industry-library/
 │   └── adapters/
 │       ├── base-adapter.md            # Abstract base interface
 │       └── file-system-adapter.md     # File system implementation
+├── notifications/                     # Notification APIs
+│   ├── services.md                    # Notification services reference
+│   └── models.md                      # Notification models reference
 ├── discovery-services/                # Discovery APIs
 │   └── bpn-discovery.md               # BPN Discovery Service
 └── legacy/                            # Legacy documentation

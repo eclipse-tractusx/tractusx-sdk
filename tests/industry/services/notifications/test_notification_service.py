@@ -26,8 +26,10 @@
 import pytest
 from unittest.mock import Mock, MagicMock
 
-from tractusx_sdk.extensions.notification_api.services import NotificationService
-from tractusx_sdk.extensions.notification_api.exceptions import NotificationError
+from tractusx_sdk.industry.services.notifications import (
+    NotificationService,
+    NotificationError,
+)
 
 
 class TestNotificationService:
