@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - feat: add BPNL-based discovery methods to `NotificationConsumerService` (`discover_notification_assets_with_bpnl`, `negotiate_notification_access_with_bpnl`, `get_notification_endpoint_with_bpnl`, `send_notification_with_bpnl`) for Saturn connector discovery support
 - test: add 23 unit tests for Saturn compatibility and `_with_bpnl` notification consumer methods
 
-## [0.7.0] - R26.03
+## [0.7.0]
 
 ### Added
 
