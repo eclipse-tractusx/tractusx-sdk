@@ -14,7 +14,7 @@ files = [
 
 [[package]]
 name = "annotated-types"
-version = "0.7.0"
+version = "0.7.1"
 description = "Reusable constraint types to use with typing.Annotated"
 optional = false
 python-versions = ">=3.8"

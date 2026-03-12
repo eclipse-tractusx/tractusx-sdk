@@ -5,6 +5,19 @@ Further information can be found on the [README.md](README.md) file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.1] - R26.03
+
+### Fixed
+
+- fix: make `NotificationConsumerService.discover_notification_assets` Saturn-compatible by using `_get_datasets()` from `dsp_tools` instead of hardcoded `dcat:dataset` key by @matbmoser
+- fix: correct import path in `notification.py` to reference industry-level `constants` module directly (`...constants`) instead of a local bridge file
+- fix: restore accidentally deleted `extensions/notification_api` module
+
+### Added
+
+- feat: add BPNL-based discovery methods to `NotificationConsumerService` (`discover_notification_assets_with_bpnl`, `negotiate_notification_access_with_bpnl`, `get_notification_endpoint_with_bpnl`, `send_notification_with_bpnl`) for Saturn connector discovery support
+- test: add 23 unit tests for Saturn compatibility and `_with_bpnl` notification consumer methods
+
 ## [0.7.0] - R26.03
 
 ### Added
