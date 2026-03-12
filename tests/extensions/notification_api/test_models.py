@@ -27,7 +27,7 @@ import pytest
 from datetime import datetime
 from uuid import uuid4
 
-from tractusx_sdk.extensions.notification_api.models import (
+from tractusx_sdk.industry..models import (
     NotificationHeader,
     NotificationContent,
     Notification,

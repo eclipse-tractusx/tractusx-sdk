@@ -43,13 +43,17 @@ import logging
 from tractusx_sdk.dataspace.services.connector.base_connector_consumer import (
     BaseConnectorConsumerService,
 )
-from tractusx_sdk.extensions.notification_api import (
+from tractusx_sdk.industry.services.notifications import (
     NotificationConsumerService,
-    Notification,
     NotificationError,
     NotificationValidationError,
 )
-from tractusx_sdk.extensions.notification_api.constants import MANAGEMENT_API_PATH, NOTIFICATION_ASSET_CONTENT_TYPE
+
+from tractusx_sdk.industry.models.notifications import (
+    Notification,
+)
+
+from tractusx_sdk.industry.constants import MANAGEMENT_API_PATH, NOTIFICATION_ASSET_CONTENT_TYPE
 
 
 # Configure logging
@@ -71,7 +75,7 @@ def main():
     connector_base_url = "https://your-connector-controlplane.example.com"
     connector_dma_path = MANAGEMENT_API_PATH
     connector_api_key = "your-api-key"
-    dataspace_version = "jupiter"  # Available: "jupiter"
+    dataspace_version = "jupiter"  # Available: "jupiter", "saturn"
     
     # Your BPN (sender)
     sender_bpn = "BPNL000000000001"
@@ -116,7 +120,9 @@ def main():
     
     # This must match the policy offered by the provider
     # The provider created a simple "odrl:use" policy
-    policies_to_accept = [
+    #
+    # Jupiter (EDC 0.10.x and earlier) uses odrl:-prefixed keys:
+    policies_to_accept_jupiter = [
         {
             "odrl:permission": {
                 "odrl:action": {
@@ -127,6 +133,23 @@ def main():
             "odrl:obligation": [],
         }
     ]
+
+    # Saturn (EDC 0.11.x+, DSP 2025-1) uses unprefixed keys:
+    policies_to_accept_saturn = [
+        {
+            "permission": {
+                "action": "use",
+            },
+            "prohibition": [],
+            "obligation": [],
+        }
+    ]
+
+    # Select the right policy format based on the dataspace version
+    if dataspace_version == "saturn":
+        policies_to_accept = policies_to_accept_saturn
+    else:
+        policies_to_accept = policies_to_accept_jupiter
     
     # ==========================================================================
     # Build the notification
@@ -193,7 +216,7 @@ def send_with_manual_endpoint():
     connector_base_url = "https://your-connector.com"
     connector_dma_path = MANAGEMENT_API_PATH
     connector_api_key = "your-api-key"
-    dataspace_version = "jupiter"  # Available: "jupiter"
+    dataspace_version = "jupiter"  # Available: "jupiter", "saturn"
     sender_bpn = "BPNL000000000001"
     provider_bpn = "BPNL000000000002"
     provider_dsp_url = "https://provider-connector.com/api/dsp"
@@ -255,7 +278,7 @@ def discover_and_inspect():
     connector_base_url = "https://your-connector.com"
     connector_dma_path = MANAGEMENT_API_PATH
     connector_api_key = "your-api-key"
-    dataspace_version = "jupiter"  # Available: "jupiter"
+    dataspace_version = "jupiter"  # Available: "jupiter", "saturn"
     provider_bpn = "BPNL000000000002"
     provider_dsp_url = "https://provider-connector.com/api/dsp"
     

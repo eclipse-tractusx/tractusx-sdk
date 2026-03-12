@@ -166,6 +166,9 @@ nav:
         - Adapters:
           - Base Adapter: api-reference/industry-library/submodel-server/adapters/base-adapter.md
           - File System Adapter: api-reference/industry-library/submodel-server/adapters/file-system-adapter.md
+      - Notifications:
+        - Services: api-reference/industry-library/notifications/services.md
+        - Models: api-reference/industry-library/notifications/models.md
       - Discovery Services:
         - BPN Discovery: api-reference/industry-library/discovery-services/bpn-discovery.md 
       - Legacy:
