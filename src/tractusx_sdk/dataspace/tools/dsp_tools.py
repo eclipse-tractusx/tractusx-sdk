@@ -498,6 +498,10 @@ class DspTools:
 
         valid_assets:list = []
 
+        ## If dataset is None, the catalog returned no assets at all
+        if dataset is None:
+            raise Exception("No asset was found in the catalog! The provider did not share any matching asset.")
+
         ## If just one asset is there
         if isinstance(dataset, dict):
             policy = DspTools.get_dataset_policy(dataset=dataset, allowed_policies=allowed_policies)
@@ -509,7 +513,7 @@ class DspTools:
         
         ## In case it is a empty list give error
         if(len(dataset) == 0):
-            raise Exception("No dataset was found for the search asset! It is empty!")
+            raise Exception("No asset was found in the catalog! The dataset list is empty.")
 
         ## More than one asset, the prio is set by the allowed policies order
         for item in dataset:

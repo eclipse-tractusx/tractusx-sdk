@@ -1740,6 +1740,79 @@ class TestDspToolsCatalogEdgeCases:
         assert len(result) == 1
         assert result[0][0] == "ichub:asset:dtr:9foUM7pmSTrr5LZnx0NqiQ"
 
+    # ── Empty / missing catalog tests (provider has not shared any asset) ─────
+
+    def test_filter_assets_none_catalog_raises(self):
+        """Passing None as the catalog must raise with an 'empty' message."""
+        with pytest.raises(Exception, match="catalog is empty"):
+            DspTools.filter_assets_and_policies(
+                catalog=None,
+                allowed_policies=ALLOWED_POLICIES,
+            )
+
+    def test_filter_assets_no_dataset_key_raises(self):
+        """A catalog that contains no 'dataset' or 'dcat:dataset' key means the
+        provider has not shared any asset – must raise with a clear message."""
+        empty_catalog = {
+            "@id": "some-catalog-id",
+            "@type": "Catalog",
+        }
+        with pytest.raises(Exception, match="The provider did not share any matching asset"):
+            DspTools.filter_assets_and_policies(
+                catalog=empty_catalog,
+                allowed_policies=ALLOWED_POLICIES,
+            )
+
+    def test_filter_assets_no_dataset_key_bare_dict_raises(self):
+        """Completely empty dict catalog – no keys at all – must raise the
+        'provider did not share' error, not a cryptic NoneType error."""
+        with pytest.raises(Exception, match="The provider did not share any matching asset"):
+            DspTools.filter_assets_and_policies(
+                catalog={},
+                allowed_policies=ALLOWED_POLICIES,
+            )
+
+    def test_filter_assets_legacy_empty_dataset_list_raises(self):
+        """Legacy Jupiter-style catalog using 'dcat:dataset' key with an empty
+        list must raise with a 'dataset list is empty' message."""
+        empty_legacy_catalog = {
+            "@id": "some-catalog-id",
+            "@type": "dcat:Catalog",
+            "dcat:dataset": [],
+        }
+        with pytest.raises(Exception, match="dataset list is empty"):
+            DspTools.filter_assets_and_policies(
+                catalog=empty_legacy_catalog,
+                allowed_policies=ALLOWED_POLICIES,
+            )
+
+    def test_filter_assets_saturn_empty_dataset_list_raises(self):
+        """Saturn-style catalog using 'dataset' key with an empty list must
+        raise with a 'dataset list is empty' message."""
+        empty_saturn_catalog = {
+            "@id": "some-catalog-id",
+            "@type": "Catalog",
+            "dataset": [],
+        }
+        with pytest.raises(Exception, match="dataset list is empty"):
+            DspTools.filter_assets_and_policies(
+                catalog=empty_saturn_catalog,
+                allowed_policies=ALLOWED_POLICIES,
+            )
+
+    def test_filter_assets_no_dataset_error_is_not_none_type(self):
+        """Regression: missing 'dataset' key must NOT raise a NoneType / AttributeError.
+        It must raise an Exception with a human-readable message."""
+        catalog_without_dataset = {"@id": "abc", "@type": "Catalog", "someOtherKey": "value"}
+        with pytest.raises(Exception) as exc_info:
+            DspTools.filter_assets_and_policies(
+                catalog=catalog_without_dataset,
+                allowed_policies=ALLOWED_POLICIES,
+            )
+        # Ensure the error is not "NoneType" – it must be a descriptive message
+        assert "NoneType" not in str(exc_info.value)
+        assert "provider" in str(exc_info.value).lower() or "asset" in str(exc_info.value).lower()
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Jupiter (legacy / DSP HTTP 2024) fixtures & tests

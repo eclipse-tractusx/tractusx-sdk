@@ -21,6 +21,19 @@
 #################################################################################
 
 # Package-level variables
-__version__ = '0.7.0'
+__version__ = '0.7.1'
 __author__ = 'Eclipse Tractus-X Contributors'
 __license__ = "Apache License, Version 2.0"
+
+from .constants import (
+    DIGITAL_TWIN_EVENT_API_TYPE,
+    DCT_TYPE_KEY,
+    DEFAULT_HEADER_VERSION,
+)
+
+__all__ = [
+    # Constants
+    "DIGITAL_TWIN_EVENT_API_TYPE",
+    "DCT_TYPE_KEY",
+    "DEFAULT_HEADER_VERSION"
+]
