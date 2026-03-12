@@ -22,3 +22,26 @@ cd tck/connector
 ```
 
 See the [TCK documentation](../../../../docs/tck/index.md) for configuration and CI/CD integration guidance.
+
+## TCK Extension Module
+
+The TCK functionality is also available as a reusable Python module in the SDK's extensions library at `tractusx_sdk.extensions.tck.connector`. This module provides:
+
+- **`runners`** — Pre-built test runners that orchestrate full E2E flows (provision, negotiate, consume)
+- **`helpers`** — Helper functions for catalog discovery, negotiation, and data retrieval
+- **`models`** — Configuration models (`TckConfig`) for defining provider/consumer/backend settings and policies
+
+You can import and use these directly in your own test suites or integration scripts:
+
+```python
+from tractusx_sdk.extensions.tck.connector.runners import run_detailed_test
+from tractusx_sdk.extensions.tck.connector.models import TckConfig
+```
+
+## NOTICE
+
+This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
+
+- SPDX-License-Identifier: CC-BY-4.0
+- SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation
+- Source URL: <https://github.com/eclipse-tractusx/tractusx-sdk>
