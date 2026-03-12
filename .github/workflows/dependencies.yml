@@ -86,7 +86,7 @@ jobs:
 
       - name: Generate Dependencies file
         run: |
-            curl -L --output ./dash.jar 'https://repo.eclipse.org/repository/cbi-maven2-releases/org/eclipse/license/org.eclipse.license/1.0.1.v20140414-1359/org.eclipse.license-1.0.1.v20140414-1359.jar'
+            curl -L --output ./dash.jar 'https://repo.eclipse.org/service/local/artifact/maven/redirect?r=dash-licenses&g=org.eclipse.dash&a=org.eclipse.dash.licenses&v=LATEST'
             
             DEP_FILE="DEPENDENCIES_TRACTUS-X_SDK"
 
@@ -175,7 +175,7 @@ jobs:
 
         - name: Generate Dependencies file - Pwsh version
           run: |
-              Invoke-WebRequest -Uri 'https://repo.eclipse.org/repository/cbi-maven2-releases/org/eclipse/license/org.eclipse.license/1.0.1.v20140414-1359/org.eclipse.license-1.0.1.v20140414-1359.jar' -OutFile .\dash.jar
+              Invoke-WebRequest -Uri 'https://repo.eclipse.org/service/local/artifact/maven/redirect?r=dash-licenses&g=org.eclipse.dash&a=org.eclipse.dash.licenses&v=LATEST' -OutFile .\dash.jar
 
               $DEP_FILE = "DEPENDENCIES_TRACTUS-X_SDK_WINDOWS"
 
