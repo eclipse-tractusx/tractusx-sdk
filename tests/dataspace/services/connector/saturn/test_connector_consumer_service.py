@@ -54,6 +54,7 @@ class TestSaturnConnectorConsumerService(TestCase):
             }
             
             self.service = ConnectorConsumerService(
+                dataspace_version=self.dataspace_version,
                 base_url=self.base_url,
                 dma_path=self.dma_path,
                 headers=self.headers,
@@ -88,6 +89,7 @@ class TestSaturnConnectorConsumerService(TestCase):
             }
             
             service = ConnectorConsumerService(
+                dataspace_version=self.dataspace_version,
                 base_url=self.base_url,
                 dma_path=self.dma_path,
                 headers=self.headers,
@@ -113,7 +115,7 @@ class TestSaturnConnectorConsumerService(TestCase):
             result = self.service._resolve_counter_party_info(bpnl=bpnl)
             
             self.assertEqual(result, (expected_address, expected_id, expected_protocol))
-            mock_discovery.assert_called_once_with(bpnl=bpnl, counter_party_address=None, namespace=ConnectorConsumerService.EDC_NAMESPACE)
+            mock_discovery.assert_called_once_with(bpnl=bpnl, counter_party_address=None, namespace=ConnectorConsumerService.EDC_NAMESPACE, verify=None)
     
     def test_resolve_counter_party_info_without_bpnl(self):
         """Test _resolve_counter_party_info with direct parameters."""
@@ -650,8 +652,10 @@ class TestSaturnConnectorConsumerService(TestCase):
             mock_internal.assert_called_once_with(
                 bpnl=bpnl,
                 counter_party_address=None,
+                filter_expression=None,
                 context=ConnectorConsumerService.DEFAULT_CONTEXT,
-                namespace=ConnectorConsumerService.EDC_NAMESPACE
+                namespace=ConnectorConsumerService.EDC_NAMESPACE,
+                verify=None
             )
     
     def test_get_catalog_request_protocol_variations(self):
