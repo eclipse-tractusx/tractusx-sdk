@@ -29,10 +29,6 @@ The SDK was developed with the following use cases in mind, but we hope it is us
 
 We encourage users to explore and adapt the SDK to their specific needs!
 
-# Usage tutorials
-
-TBD
-
 # Implementation Examples
 
 - [Industry Core Hub (Dataspace Connector)](https://github.com/eclipse-tractusx/industry-core-hub/blob/main/ichub-backend/managers/enablement_services/connector_manager.py)
@@ -44,5 +40,8 @@ TBD
 This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
 - SPDX-License-Identifier: CC-BY-4.0
-- SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation
-- Source URL: https://github.com/eclipse-tractusx/tractusx-sdk
+- SPDX-FileCopyrightText: 2025, 2026 Contributors to the Eclipse Foundation
+- SPDX-FileCopyrightText: 2025, 2026 Catena-X Automotive Network e.V.
+- SPDX-FileCopyrightText: 2025, 2026 LKS Next
+- SPDX-FileCopyrightText: 2025, 2026 Mondragon Unibertsitatea
+- Source URL: [https://github.com/eclipse-tractusx/tractusx-sdk](https://github.com/eclipse-tractusx/tractusx-sdk)

@@ -4,12 +4,11 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "tractusx_sdk"
-version = "0.6.1"
+version = "0.7.1"
 description = "Eclipse Tractus-X Software Development KIT - The Dataspace & Industry Foundation Middleware"
 license = { text = "Apache-2.0" }
 readme = "README.md"
 requires-python = ">=3.12,<4.0"
-
 dependencies = [
     "annotated-types (>=0.7.0,<0.8.0)",
     "deprecation (>=2.1.0,<3.0.0)",
@@ -41,8 +40,9 @@ dependencies = [
 ]
 
 [project.urls]
-repository = "https://github.com/eclipse-tractusx/tractusx-sdk"
-documentation = "https://github.com/eclipse-tractusx/tractusx-sdk/tree/main/docs"
+"Homepage" = "https://eclipse-tractusx.github.io/tractusx-sdk/main/"
+"Repository" = "https://github.com/eclipse-tractusx/tractusx-sdk"
+"Documentation" = "https://eclipse-tractusx.github.io/tractusx-sdk/main/"
 "Issues" = "https://github.com/eclipse-tractusx/tractusx-sdk/issues"
 "Changelog" = "https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CHANGELOG.md"
 

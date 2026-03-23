@@ -5,6 +5,33 @@ Further information can be found on the [README.md](README.md) file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.1] - R26.03
+
+### Fixed
+
+- hotfix/0.7.1: fixed policy parsing issues in `saturn`, enhanced error handling and (breaking) migrated `notifications api` to `industry` module before release. by @matbmoser in https://github.com/eclipse-tractusx/tractusx-sdk/pull/194
+
+## [0.7.0]
+
+### Added
+
+- feat/tck-docs: improved documentation of TCK in official website & improve stability of docs by @matbmoser in https://github.com/eclipse-tractusx/tractusx-sdk/pull/189
+- Complete Core Concepts and API References sections documentation (Industry Library and Extension Library) by @flarrinaga in https://github.com/eclipse-tractusx/tractusx-sdk/pull/185
+- Feat/saturn-changes: dsp 2025-1 support, new saturn policies support and v0.11.X EDC support + added TCK by @matbmoser in https://github.com/eclipse-tractusx/tractusx-sdk/pull/170
+- feat: implement notification api services in sdk by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/183
+- docs: changelog 0.6.2-rc1 by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/187
+* Bugfix/0.7.0-rc3: Fixed important bugs when retrieveing catalogs by @matbmoser in https://github.com/eclipse-tractusx/tractusx-sdk/pull/192
+* feat: applied bugfix to sdk by @matbmoser in https://github.com/eclipse-tractusx/tractusx-sdk/pull/191
+
+### Changed
+
+- build(deps): bump filelock from 3.18.0 to 3.20.1 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/177
+- build(deps): bump urllib3 from 2.5.0 to 2.6.3 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/178
+- build(deps): bump filelock from 3.20.1 to 3.20.3 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/179
+- build(deps): bump pyasn1 from 0.6.1 to 0.6.2 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/180
+- build(deps): bump python-multipart from 0.0.20 to 0.0.22 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/181
+- build(deps): bump cryptography from 44.0.2 to 46.0.5 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/186
+
 ## [0.6.1] - R25.12
 
 ### Fixed
@@ -216,5 +243,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Added initial commit with open source requirements
 - Added initial architecture documentation
+
 
 

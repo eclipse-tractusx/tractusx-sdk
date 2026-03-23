@@ -59,10 +59,10 @@ The Tractus-X SDK can be installed in two ways: from PyPI (recommended for most 
     python -c "
     try:
         from tractusx_sdk.dataspace.services import BaseConnectorService
-        print('✅ SDK Ready!')
+        print(' SDK Ready!')
         print('BaseConnectorService imported successfully')
     except Exception as e:
-        print('❌ Import failed:')
+        print(' Import failed:')
         print(f'Error: {e}')
         import traceback
         traceback.print_exc()
@@ -83,10 +83,10 @@ The Tractus-X SDK can be installed in two ways: from PyPI (recommended for most 
     python -c "
     try:
         from tractusx_sdk.dataspace.services import BaseConnectorService
-        print('✅ SDK Ready!')
+        print(' SDK Ready!')
         print('BaseConnectorService imported successfully')
     except Exception as e:
-        print('❌ Import failed:')
+        print(' Import failed:')
         print(f'Error: {e}')
         import traceback
         traceback.print_exc()
@@ -94,7 +94,7 @@ The Tractus-X SDK can be installed in two ways: from PyPI (recommended for most 
     ```
 
 !!! success "Installation Complete!"
-    If you see "✅ SDK Ready!" then you're all set to continue to the next step!
+    If you see " SDK Ready!" then you're all set to continue to the next step!
 
 !!! warning "Compatibility Notice"
     Currently this SDK is not 100% compatible and has not been tested against the `v0.11.x` connector. The issue is being worked on [here](https://github.com/eclipse-tractusx/tractusx-sdk/issues/159).
@@ -128,15 +128,18 @@ Now that you have the SDK installed verify it: [Create your First Asset](./creat
 
 Once you have the SDK installed and verified check the following links:
 
-1. **📚 Explore Libraries**: Learn about the [Dataspace Library](../api-reference/dataspace-library/index.md) for connector services
-2. **🔍 Read Services Documentation**: Check out [connector services](../api-reference/dataspace-library/connector/services.md) for detailed API reference
-3. **📖 SDK Structure**: Understand the [SDK architecture](../core-concepts/sdk-architecture/sdk-structure-and-components.md)
-4. **🤝 Join Community**: Connect with other developers in our [discussions](https://github.com/eclipse-tractusx/tractusx-sdk/discussions)
+1. **Explore Libraries**: Learn about the [Dataspace Library](../api-reference/dataspace-library/index.md) for connector services
+2. **Read Services Documentation**: Check out [connector services](../api-reference/dataspace-library/connector/services.md) for detailed API reference
+3. **SDK Structure**: Understand the [SDK architecture](../core-concepts/sdk-architecture/sdk-structure-and-components.md)
+4. **Join Community**: Connect with other developers in our [discussions](https://github.com/eclipse-tractusx/tractusx-sdk/discussions)
 
 ## NOTICE
 
 This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
 - SPDX-License-Identifier: CC-BY-4.0
-- SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation
-- Source URL: https://github.com/eclipse-tractusx/tractusx-sdk
+- SPDX-FileCopyrightText: 2025, 2026 Contributors to the Eclipse Foundation
+- SPDX-FileCopyrightText: 2025, 2026 Catena-X Automotive Network e.V.
+- SPDX-FileCopyrightText: 2025, 2026 LKS Next
+- SPDX-FileCopyrightText: 2025, 2026 Mondragon Unibertsitatea
+- Source URL: [https://github.com/eclipse-tractusx/tractusx-sdk](https://github.com/eclipse-tractusx/tractusx-sdk)

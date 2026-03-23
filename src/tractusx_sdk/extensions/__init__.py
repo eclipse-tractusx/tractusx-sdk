@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS NEXT
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,6 +21,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-__version__ = '0.6.1'
+"""
+Tractus-X SDK Extensions.
+
+This module contains extensions for the Tractus-X SDK, including:
+- semantics: Schema to context translation utilities
+- tck: Tools, Checkers, and Helpers for various SDK components
+"""
+
+__version__ = '0.7.1'
 __author__ = 'Eclipse Tractus-X Contributors'
 __license__ = "Apache License, Version 2.0"
