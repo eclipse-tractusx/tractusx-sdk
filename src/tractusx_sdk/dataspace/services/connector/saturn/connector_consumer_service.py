@@ -439,7 +439,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
         return transfer_process_id
         
-    def discover_connector_protocol(self, bpnl: str, counter_party_address: str = None, verify: bool = None) -> dict | None:
+    def discover_connector_protocol(self, bpnl: str, counter_party_address: str = None) -> dict | None:
+        if self.verbose:
+            self.logger.info(f"Discovering connector protocol for BPNL: {bpnl}, Address: {counter_party_address}")
 
         if verify is None:
             verify = getattr(self, 'verify_ssl', True)
@@ -450,8 +452,14 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             verify=verify
         )
         if response is None or response.status_code != 200:
-            raise ConnectionError(
-                f"[Connector Service]: It was not possible to get the catalog from the EDC provider! Response code: [{response.status_code}]")
+            status_code = response.status_code if response else 'None'
+            error_msg = f"Connector Service failed to discover connector protocol! Status: {status_code}"
+            if self.verbose and response is not None:
+                error_msg += f"\nBPNL: {bpnl}, Address: {counter_party_address}"
+                error_msg += f"\nResponse headers: {dict(response.headers)}"
+                error_msg += f"\nResponse body: {response.text}"
+            self.logger.error(error_msg)
+            raise ConnectionError(error_msg)
         return response.json()
 
 

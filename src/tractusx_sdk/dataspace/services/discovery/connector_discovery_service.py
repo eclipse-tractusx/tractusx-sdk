@@ -72,9 +72,18 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         Raises:
             Exception: If no discovery endpoint is found for the given key.
         """
+        if self.verbose:
+            self.logger.info(f"Fetching discovery URL for key: {discovery_key}")
+        
         endpoints = discovery_finder_service.find_discovery_urls(keys=[discovery_key])
         if(discovery_key not in endpoints):
-          raise Exception("[Connector Discovery Service] Connector Discovery endpoint not found!")
+            error_msg = f"[Connector Discovery Service] Connector Discovery endpoint not found for key: {discovery_key}"
+            if self.verbose:
+                error_msg += f"\nAvailable endpoints: {list(endpoints.keys())}"
+            raise Exception(error_msg)
+        
+        if self.verbose:
+            self.logger.info(f"Discovery URL found: {endpoints[discovery_key]}")
         
         return endpoints[discovery_key]
 
@@ -133,6 +142,9 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         """
         # Use cached discovery URL, refresh if necessary
         discovery_url = self._get_or_update_discovery_url()
+        
+        if self.verbose:
+            self.logger.info(f"Finding connector for BPN: {bpn} using URL: {discovery_url}")
 
         body:list = [
             bpn
@@ -142,13 +154,29 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
 
         response = HttpTools.do_post(url=discovery_url, headers=headers, json=body)
         if(response is None or response.status_code != 200):
-            raise Exception("[Connector Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
+            status_code = response.status_code if response else 'None'
+            error_msg = f"[Connector Discovery Service] Failed to get connector URLs! Status: {status_code}"
+            if self.verbose and response is not None:
+                error_msg += f"\nURL: {discovery_url}"
+                error_msg += f"\nRequest body: {body}"
+                error_msg += f"\nResponse headers: {dict(response.headers)}"
+                error_msg += f"\nResponse body: {response.text}"
+            raise Exception(error_msg)
         
         json_response:dict = response.json()
+        
+        if self.verbose:
+            self.logger.info(f"Received {len(json_response)} connector entries")
 
         # Iterate over the json_response to find the connectorEndpoint for the specified BPN
         for item in json_response:
             if item.get(bpn_key) == bpn:
-                return item.get(connector_endpoint_key, [])
+                endpoints = item.get(connector_endpoint_key, [])
+                if self.verbose:
+                    self.logger.info(f"Found {len(endpoints)} endpoint(s) for BPN {bpn}")
+                return endpoints
+        
         # If the BPN is not found, return None or an empty list
+        if self.verbose:
+            self.logger.warning(f"No connector endpoints found for BPN: {bpn}")
         return None
