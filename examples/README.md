@@ -37,7 +37,9 @@ examples/
 │   └── services/
 │       └── discovery/   # BPN discovery examples
 └── extensions/          # SDK extension examples
-    └── semantics/       # Semantic model examples
+    ├── semantics/       # Semantic model examples
+    └── geometry/        # Geometry aspect validator examples
+        └── exampleData/ # Example SingleLevelSceneNode JSON files
 ```
 
 ## Available Examples
@@ -74,6 +76,16 @@ examples/
   - Automatic schema fetching from Tractus-X repository
   - SAMM to JSON-LD context transformation
   - Verifiable credential creation support
+
+#### Geometry Aspect Validator
+
+- **File**: `extensions/geometry/geometry_aspect_validator_example.py`
+- **Purpose**: Demonstrates how to validate SingleLevelSceneNode JSON files against the Catena-X schema.
+- **Features**:
+  - Schema loading from the official Tractus-X repository
+  - Single scene node validation
+  - Recursive child reference resolution and validation
+  - Configurable validation levels (error, warning, info)
 
 ## Prerequisites
 
@@ -121,6 +133,10 @@ python bpn_discovery_example.py
 # For semantic schema translation
 cd examples/extensions/semantics/
 python schema_to_context_translator_example.py
+
+# For geometry aspect validation
+cd examples/extensions/geometry/
+python geometry_aspect_validator_example.py
 ```
 
 

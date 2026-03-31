@@ -201,8 +201,10 @@ def main():
         description='Validate geometry nodes from SingleLevelSceneNode JSON files',
         epilog='''
 Examples:
-  python validateGeometry.py exampleData/scene.json
-  python validateGeometry.py exampleData/scene.json -d ./exampleData -v info
+  python validateGeometry.py scene.json
+  python validateGeometry.py scene.json -d ./data/ -v info
+
+Sample data: https://github.com/eclipse-tractusx/tractusx-sdk/tree/main/examples/extensions/geometry
         ''',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
