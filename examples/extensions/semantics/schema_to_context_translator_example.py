@@ -46,7 +46,7 @@ def main():
     logger = logging.getLogger(__name__)
     
     # Create translator instance
-    translator = SammSchemaContextTranslator(logger=logger, verbose=True)
+    translator = SammSchemaContextTranslator(logger=logger, debug=True)
     
     # Use a SerialPart semantic ID - the translator will automatically fetch the schema
     semantic_id = "urn:samm:io.catenax.pcf:7.0.0#Pcf"

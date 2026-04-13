@@ -120,7 +120,7 @@ class TestBaseConsumerConnectorService(unittest.TestCase):
             dma_path="/test",
             headers={},
             connection_manager=None,
-            verbose=False,
+            debug=False,
             logger=None
         )
         service._catalog_controller = mock_catalog

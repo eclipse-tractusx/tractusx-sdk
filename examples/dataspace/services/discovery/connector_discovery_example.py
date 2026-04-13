@@ -85,7 +85,7 @@ def quick_start():
     connector_discovery_service = ConnectorDiscoveryService(
         oauth=oauth_manager,
         discovery_finder_service=discovery_finder,
-        verbose=True,    # Enable detailed cache logging
+        debug=True,    # Enable detailed cache logging
         logger=logger    # Provide logger for enhanced output
     )
     

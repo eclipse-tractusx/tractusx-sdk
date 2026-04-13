@@ -36,7 +36,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
     oauth:OAuth2Manager
     def __init__(self, oauth:OAuth2Manager, discovery_finder_service: DiscoveryFinderService, cache_timeout_seconds:int = 60 * 60 * 12,
                  session:requests.Session = None, base_path:str="/api/v1.0/administration/connectors/bpnDiscovery",
-                 verbose:bool=False, logger:Optional[logging.Logger]=None):
+                 debug:bool=False, logger:Optional[logging.Logger]=None):
         """
         Initialize the BPN Discovery Service.
         
@@ -45,7 +45,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
             cache_timeout_seconds (int): Cache timeout in seconds (default: 12 hours).
             session (requests.Session): HTTP session for connection reuse.
             base_path (str): API path to append to the base URL from discovery finder (default: "/api/v1.0/administration/connectors/bpnDiscovery").
-            verbose (bool): Enable verbose logging (default: False).
+            debug (bool): Enable debug logging with request/response bodies (default: False).
             logger (Optional[logging.Logger]): Logger instance for logging (default: None).
         """
         self.oauth = oauth
@@ -53,7 +53,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
             oauth=oauth,
             discovery_finder_service=discovery_finder_service,
             cache_timeout_seconds=cache_timeout_seconds,
-            verbose=verbose,
+            debug=debug,
             logger=logger
         )
         self.session = session

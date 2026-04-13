@@ -53,13 +53,13 @@ def service(mock_dma_adapter, mock_controllers):
                 dataspace_version="jupiter",
                 base_url="http://test",
                 dma_path="/dma",
-                verbose=True
+                debug=True
             )
             yield svc
 
 
 @pytest.fixture
-def service_verbose_false(mock_dma_adapter, mock_controllers):
+def service_debug_false(mock_dma_adapter, mock_controllers):
     with patch("tractusx_sdk.dataspace.adapters.connector.AdapterFactory.get_dma_adapter", return_value=mock_dma_adapter):
         with patch("tractusx_sdk.dataspace.controllers.connector.ControllerFactory.get_dma_controllers_for_version") as mock_get_controllers:
             mock_get_controllers.return_value = mock_controllers
@@ -67,7 +67,7 @@ def service_verbose_false(mock_dma_adapter, mock_controllers):
                 dataspace_version="jupiter",
                 base_url="http://test",
                 dma_path="/dma",
-                verbose=False
+                debug=False
             )
             yield svc
 
@@ -158,13 +158,13 @@ def test_create_policy_failure_raises(mock_get_policy_model, service):
 
 
 @patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
-def test_create_asset_verbose_logging(mock_get_asset_model, mock_dma_adapter, mock_controllers):
+def test_create_asset_debug_logging(mock_get_asset_model, mock_dma_adapter, mock_controllers):
     logger = Mock()
     service = BaseConnectorProviderService(
         dataspace_version="jupiter",
         base_url="http://test",
         dma_path="/dma",
-        verbose=True,
+        debug=True,
         logger=logger
     )
     service._asset_controller = Mock()
@@ -174,17 +174,17 @@ def test_create_asset_verbose_logging(mock_get_asset_model, mock_dma_adapter, mo
 
     service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
 
-    assert logger.info.called
+    assert logger.debug.called
 
 
 @patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
-def test_create_asset_no_verbose_logging(mock_get_asset_model, mock_dma_adapter, mock_controllers):
+def test_create_asset_no_debug_logging(mock_get_asset_model, mock_dma_adapter, mock_controllers):
     logger = Mock()
     service = BaseConnectorProviderService(
         dataspace_version="jupiter",
         base_url="http://test",
         dma_path="/dma",
-        verbose=False,
+        debug=False,
         logger=logger
     )
     service._asset_controller = Mock()
@@ -194,4 +194,4 @@ def test_create_asset_no_verbose_logging(mock_get_asset_model, mock_dma_adapter,
 
     service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
 
-    logger.info.assert_not_called()
+    logger.debug.assert_not_called()

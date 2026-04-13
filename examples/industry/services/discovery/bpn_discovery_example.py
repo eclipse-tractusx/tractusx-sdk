@@ -86,7 +86,7 @@ def quick_start():
         oauth=oauth_manager,
         discovery_finder_service=discovery_finder,
         base_path="/api/v1.0/administration/connectors/bpnDiscovery",
-        verbose=True,    # Enable detailed cache logging
+        debug=True,    # Enable detailed cache logging
         logger=logger    # Provide logger for enhanced output
     )
 
