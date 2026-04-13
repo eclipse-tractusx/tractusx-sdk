@@ -72,7 +72,7 @@ class SammSchemaContextTranslator:
         Args:
             logger (Optional[logging.Logger]): Logger instance for debugging and error reporting.
                                              If None, no logging will be performed.
-            debug (bool): Enable debug logging with detailed output output. Defaults to False.
+            debug (bool): Enable debug logging with detailed output. Defaults to False.
         
         Returns:
             None
