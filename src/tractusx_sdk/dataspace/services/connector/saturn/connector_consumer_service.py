@@ -14,7 +14,7 @@
 # distributed under the License is distributed on an "AS IS" BASIS
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
 # either express or implied. See the
-# License for the specific language govern in permissions and limitations
+# License for the specific language governing permissions and limitations
 # under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -40,6 +40,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         logger=None,
         verbose: bool = False,
         verify_ssl: bool = True,
+        connector_discovery_controller=None,
     ):
         super().__init__(
             dataspace_version=dataspace_version,
@@ -56,7 +57,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             "EDR": self._edr_controller,
             "CONTRACT_NEGOTIATION": self._contract_negotiation_controller,
             "TRANSFER_PROCESS": self._transfer_process_controller,
-            "CONNECTOR_DISCOVERY": None,
+            "CONNECTOR_DISCOVERY": connector_discovery_controller,
         }
         self._connector_discovery_controller = self.controllers["CONNECTOR_DISCOVERY"]
 
@@ -67,13 +68,15 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         verify: bool = None,
     ) -> dict | None:
         if verify is None:
-            verify = getattr(self, "verify_ssl", True)
+            verify = self.verify_ssl
 
         request = ModelFactory.get_connector_discovery_model(
             dataspace_version=self.dataspace_version,
             bpnl=bpnl,
             counter_party_address=counter_party_address,
         )
+        if self.connector_discovery is None:
+            raise RuntimeError("[Connector Service] Connector discovery controller is not configured.")
         response: Response = self.connector_discovery.get_discover(request, verify=verify)
         if response is None or response.status_code != 200:
             status_code = None if response is None else response.status_code

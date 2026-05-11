@@ -14,7 +14,7 @@
 # distributed under the License is distributed on an "AS IS" BASIS
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
 # either express or implied. See the
-# License for the specific language govern in permissions and limitations
+# License for the specific language governing permissions and limitations
 # under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -23,4 +23,3 @@
 from .connector_service import ConnectorService
 from .connector_provider_service import ConnectorProviderService
 from .connector_consumer_service import ConnectorConsumerService
-
