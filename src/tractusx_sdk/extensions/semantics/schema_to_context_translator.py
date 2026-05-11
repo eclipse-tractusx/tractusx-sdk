@@ -53,7 +53,7 @@ class SammSchemaContextTranslator:
         refPathSep (str): Reference path separator ("/")
         propertiesKey (str): Key for object properties ("properties")
         logger (Optional[logging.Logger]): Logger instance for debugging
-        verbose (bool): Enable verbose logging
+        debug (bool): Enable debug logging with detailed output
         itemKey (str): Key for array items ("items")
         schemaPrefix (str): Prefix for schema URIs ("schema")
         aspectPrefix (str): Prefix for aspect URIs ("aspect")
@@ -65,14 +65,14 @@ class SammSchemaContextTranslator:
         contextTemplate (Dict[str, Any]): Template for context objects
     """
     
-    def __init__(self, logger: Optional[logging.Logger] = None, verbose: bool = False) -> None:
+    def __init__(self, logger: Optional[logging.Logger] = None, debug: bool = False) -> None:
         """
         Initialize the SAMM Schema Context Translator.
         
         Args:
             logger (Optional[logging.Logger]): Logger instance for debugging and error reporting.
                                              If None, no logging will be performed.
-            verbose (bool): Enable verbose logging output. Defaults to False.
+            debug (bool): Enable debug logging with detailed output. Defaults to False.
         
         Returns:
             None
@@ -85,7 +85,7 @@ class SammSchemaContextTranslator:
         self.refPathSep = "/"
         self.propertiesKey = "properties"
         self.logger = logger
-        self.verbose = verbose
+        self.debug = debug
         self.itemKey = "items"
         self.schemaPrefix = "schema"
         self.aspectPrefix = "aspect"
@@ -132,7 +132,7 @@ class SammSchemaContextTranslator:
             ...     print("Schema fetched successfully")
         """
         try:
-            if self.verbose and self.logger:
+            if self.debug and self.logger:
                 self.logger.info(f"Fetching schema for semantic ID: {semantic_id}")
             
             # Use the existing submodel_schema_finder from the SDK
@@ -140,7 +140,7 @@ class SammSchemaContextTranslator:
             
             if result['status'] == 'ok':
                 schema_dict = result['schema']
-                if self.verbose and self.logger:
+                if self.debug and self.logger:
                     self.logger.info(f"Successfully fetched schema: {result['message']}")
                 return schema_dict
             else:
@@ -185,7 +185,7 @@ class SammSchemaContextTranslator:
         """
         # If schema is None, try to fetch it using the semantic ID
         if schema is None:
-            if self.verbose and self.logger:
+            if self.debug and self.logger:
                 self.logger.info(f"Schema not provided, attempting to fetch from semantic ID: {semantic_id}")
             schema = self.fetch_schema_from_semantic_id(semantic_id, link_core=link_core)
             if schema is None:
@@ -1047,7 +1047,7 @@ class SammSchemaContextTranslator:
                 return op.get_attribute(self.baseSchema, attr_path=path, path_sep=self.refPathSep, default_value=None)
             
             if(self.depth >= self.recursionDepth):
-                if(self.verbose and self.logger is not None):
+                if(self.debug and self.logger is not None):
                     self.logger.warning(f"[WARNING] Infinite recursion detected in the following path: ref[{ref}] and acumulated ref[{actualref}]!")
                 self.depth=0
                 return None

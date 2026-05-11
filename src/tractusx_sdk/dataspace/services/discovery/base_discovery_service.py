@@ -41,7 +41,7 @@ class BaseDiscoveryService(ABC):
     """
 
     def __init__(self, oauth: OAuth2Manager, discovery_finder_service: DiscoveryFinderService, cache_timeout_seconds: int = 60 * 60 * 12,
-                 verbose: bool = False, logger: Optional[logging.Logger] = None):
+                 debug: bool = False, logger: Optional[logging.Logger] = None):
         """
         Initialize the base discovery service.
         
@@ -50,13 +50,13 @@ class BaseDiscoveryService(ABC):
             discovery_finder_service: DiscoveryFinderService instance for finding discovery URLs.
             discovery_finder_url (str): URL for the discovery finder service.
             cache_timeout_seconds (int): Cache timeout in seconds (default: 12 hours).
-            verbose (bool): Enable verbose logging (default: False).
+            debug (bool): Enable debug logging with request/response bodies (default: False).
             logger (Optional[logging.Logger]): Logger instance for logging (default: None).
         """
         self.oauth = oauth
         self.discovery_finder_service = discovery_finder_service
         self.cache_timeout_seconds = cache_timeout_seconds
-        self.verbose = verbose
+        self.debug = debug
         self.logger = logger
         self.discovery_cache = {}
 
@@ -117,7 +117,7 @@ class BaseDiscoveryService(ABC):
                         "url": url,
                         "timestamp": current_time
                     }
-                    if self.verbose and self.logger:
+                    if self.debug and self.logger:
                         import datetime
                         cache_count = len(self.discovery_cache)
                         valid_until = datetime.datetime.fromtimestamp(current_time + self.cache_timeout_seconds)
@@ -129,7 +129,7 @@ class BaseDiscoveryService(ABC):
                 # If we have a cached entry, preserve it and continue using it
                 if entry:
                     # Log the error but continue with cached URL
-                    if self.verbose and self.logger:
+                    if self.debug and self.logger:
                         service_name = self.get_service_name()
                         self.logger.warning(f"[{service_name}] Failed to refresh discovery URL, using cached version. Error: {str(e)}")
                     return entry["url"]
@@ -138,7 +138,7 @@ class BaseDiscoveryService(ABC):
                     raise e
         else:
             # Using valid cached URL
-            if self.verbose and self.logger and entry:
+            if self.debug and self.logger and entry:
                 import datetime
                 cache_count = len(self.discovery_cache)
                 valid_until = datetime.datetime.fromtimestamp(entry["timestamp"] + self.cache_timeout_seconds)
@@ -158,7 +158,7 @@ class BaseDiscoveryService(ABC):
         cache_count = len(self.discovery_cache)
         self.discovery_cache.clear()
         
-        if self.verbose and self.logger:
+        if self.debug and self.logger:
             service_name = self.get_service_name()
             self.logger.info(f"[{service_name}] Cache flushed: {cache_count} entries removed")
         
@@ -178,11 +178,11 @@ class BaseDiscoveryService(ABC):
         
         if entry_existed:
             del self.discovery_cache[discovery_key]
-            if self.verbose and self.logger:
+            if self.debug and self.logger:
                 service_name = self.get_service_name()
                 self.logger.info(f"[{service_name}] Cache entry invalidated for key '{discovery_key}'")
         else:
-            if self.verbose and self.logger:
+            if self.debug and self.logger:
                 service_name = self.get_service_name()
                 self.logger.debug(f"[{service_name}] No cache entry found for key '{discovery_key}' to invalidate")
         

@@ -52,12 +52,12 @@ class BaseConnectorConsumerService(BaseService):
     NEGOTIATION_ID_KEY = "contractNegotiationId"
 
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
-                 connection_manager: BaseConnectionManager = None, verbose: bool = True, logger: logging.Logger = None):
+                 connection_manager: BaseConnectionManager = None, debug: bool = False, logger: logging.Logger = None):
         self.dataspace_version = dataspace_version
-        self.verbose = verbose
+        self.debug = debug
         self.logger = logger
-        # Backwards compatibility: if verbose is True and no logger provided, use default logger
-        if self.verbose and self.logger is None:
+        # Backwards compatibility: if debug is True and no logger provided, use default logger
+        if self.debug and self.logger is None:
             self.logger = logging.getLogger(__name__)
 
         dma_adapter = AdapterFactory.get_dma_adapter(
@@ -1004,7 +1004,7 @@ class BaseConnectorConsumerService(BaseService):
         merged_headers: dict = (headers | dataplane_headers)
         
         if(session):
-            return HttpTools.do_get_with_session(
+            response = HttpTools.do_get_with_session(
                 url=url,
                 headers=merged_headers,
                 verify=verify,
@@ -1012,16 +1012,25 @@ class BaseConnectorConsumerService(BaseService):
                 allow_redirects=allow_redirects,
                 session=session,
             )
-            
-        ## Do get request to get a response!
-        return HttpTools.do_get(
-            url=url,
-            headers=merged_headers,
-            verify=verify,
-            timeout=timeout,
-            params=params,
-            allow_redirects=allow_redirects
-        )
+        else:
+            ## Do get request to get a response!
+            response = HttpTools.do_get(
+                url=url,
+                headers=merged_headers,
+                verify=verify,
+                timeout=timeout,
+                params=params,
+                allow_redirects=allow_redirects
+            )
+
+        if self.debug and self.logger:
+            self.logger.debug(f"[EDC Service] GET {url} -> Status: {response.status_code}")
+            try:
+                self.logger.debug(f"[EDC Service] Response body: {response.text}")
+            except Exception:
+                pass
+
+        return response
 
     def do_post(
         self,
@@ -1074,10 +1083,13 @@ class BaseConnectorConsumerService(BaseService):
 
         dataplane_headers: dict = self.get_data_plane_headers(access_token=access_token, content_type=content_type)
         merged_headers: dict = (headers | dataplane_headers)
-        ## Do get request to get a response!
-        
+
+        if self.debug and self.logger:
+            self.logger.debug(f"[EDC Service] POST {url}")
+            self.logger.debug(f"[EDC Service] Request body: {body}")
+
         if(session):
-            return HttpTools.do_post_with_session(
+            response = HttpTools.do_post_with_session(
                 url=url,
                 json=body,
                 headers=merged_headers,
@@ -1086,12 +1098,21 @@ class BaseConnectorConsumerService(BaseService):
                 allow_redirects=allow_redirects,
                 session=session,
             )
+        else:
+            response = HttpTools.do_post(
+                url=url,
+                json=body,
+                headers=merged_headers,
+                verify=verify,
+                timeout=timeout,
+                allow_redirects=allow_redirects
+            )
 
-        return HttpTools.do_post(
-            url=url,
-            json=body,
-            headers=merged_headers,
-            verify=verify,
-            timeout=timeout,
-            allow_redirects=allow_redirects
-        )
+        if self.debug and self.logger:
+            self.logger.debug(f"[EDC Service] POST {url} -> Status: {response.status_code}")
+            try:
+                self.logger.debug(f"[EDC Service] Response body: {response.text}")
+            except Exception:
+                pass
+
+        return response

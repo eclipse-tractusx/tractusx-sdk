@@ -34,9 +34,9 @@ class BaseConnectorProviderService(BaseService):
     _contract_definition_controller: BaseDmaController
     _policy_controller: BaseDmaController
 
-    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verbose: bool = True, logger: logging.Logger = None):
+    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, debug: bool = False, logger: logging.Logger = None):
         self.dataspace_version = dataspace_version
-        self.verbose = verbose
+        self.debug = debug
         self.logger = logger or logging.getLogger(__name__)
 
         dma_adapter = AdapterFactory.get_dma_adapter(
@@ -97,8 +97,8 @@ class BaseConnectorProviderService(BaseService):
         headers: dict = None,
         private_properties: dict = None
     ):
-        if self.verbose:
-            self.logger.info(f"Creating asset {asset_id} at {base_url}.")
+        if self.debug:
+            self.logger.debug(f"Creating asset {asset_id} at {base_url}.")
 
         context = {
             "edc": "https://w3id.org/edc/v0.0.1/ns/",
@@ -148,10 +148,14 @@ class BaseConnectorProviderService(BaseService):
             self.logger.error(asset_response.text)
             raise ValueError(f"Failed to create asset {asset_id}. Status code: {asset_response.status_code}")
 
-        if self.verbose:
-            self.logger.info(f"Asset {asset_id} created successfully.")
+        response_body = asset_response.json()
 
-        return asset_response.json()
+        if self.debug:
+            self.logger.debug(f"Asset {asset_id} created successfully.")
+            self.logger.debug(f"Request body: {asset}")
+            self.logger.debug(f"Response body: {response_body}")
+
+        return response_body
 
     def create_contract(
         self,
@@ -160,8 +164,8 @@ class BaseConnectorProviderService(BaseService):
         access_policy_id: str,
         asset_id: str
     ) -> dict:
-        if self.verbose:
-            self.logger.info(f"Creating new contract with ID {contract_id}.")
+        if self.debug:
+            self.logger.debug(f"Creating new contract with ID {contract_id}.")
 
         context = {
             "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
@@ -189,10 +193,14 @@ class BaseConnectorProviderService(BaseService):
         if created_contract.status_code != 200:
             raise ValueError(f"Failed to create contract {contract_id}. Status code: {created_contract.status_code}")
 
-        if self.verbose:
-            self.logger.info(f"Contract {contract_id} created successfully.")
+        response_body = created_contract.json()
 
-        return created_contract.json()
+        if self.debug:
+            self.logger.debug(f"Contract {contract_id} created successfully.")
+            self.logger.debug(f"Request body: {contract}")
+            self.logger.debug(f"Response body: {response_body}")
+
+        return response_body
 
     def create_policy(
         self,
@@ -202,8 +210,8 @@ class BaseConnectorProviderService(BaseService):
         prohibitions: dict | list[dict] = [],
         obligations: dict | list[dict] = []
     ) -> dict:
-        if self.verbose:
-            self.logger.info(f"Creating new policy with ID {policy_id}.")
+        if self.debug:
+            self.logger.debug(f"Creating new policy with ID {policy_id}.")
 
         policy = ModelFactory.get_policy_model(
             dataspace_version=self.dataspace_version,
@@ -219,7 +227,11 @@ class BaseConnectorProviderService(BaseService):
         if created_policy.status_code != 200:
             raise ValueError(f"Failed to create policy {policy_id}. Status code: {created_policy.status_code}")
 
-        if self.verbose:
-            self.logger.info(f"Policy {policy_id} created successfully.")
+        response_body = created_policy.json()
 
-        return created_policy.json()
+        if self.debug:
+            self.logger.debug(f"Policy {policy_id} created successfully.")
+            self.logger.debug(f"Request body: {policy}")
+            self.logger.debug(f"Response body: {response_body}")
+
+        return response_body

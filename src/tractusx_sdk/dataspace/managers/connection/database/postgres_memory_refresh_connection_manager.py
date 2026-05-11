@@ -33,7 +33,7 @@ class PostgresMemoryRefreshConnectionManager(PostgresMemoryConnectionManager):
     Manages EDR connections using an in-memory cache synchronized with a Postgres database.
     Periodically persists changes and reloads updates from the database to ensure consistency.
     """
-    def __init__(self, engine: E | S, persist_interval: int = 5, provider_id_key: str = "providerId", table_name: str = "edr_connections", edrs_key: str = "edrs", logger:logging.Logger=None, verbose: bool = False):
+    def __init__(self, engine: E | S, persist_interval: int = 5, provider_id_key: str = "providerId", table_name: str = "edr_connections", edrs_key: str = "edrs", logger:logging.Logger=None, debug: bool = False):
         """
         Initialize the connection manager with persistence and reload functionality.
 
@@ -44,9 +44,9 @@ class PostgresMemoryRefreshConnectionManager(PostgresMemoryConnectionManager):
             table_name (str): Table name for EDR connections.
             edrs_key (str): Key used for storing EDR counts.
             logger (Logger, optional): Logger instance for debug output.
-            verbose (bool): Enable verbose logging.
+            debug (bool): Enable debug logging.
         """
-        super().__init__(engine=engine, provider_id_key=provider_id_key, edrs_key=edrs_key, logger=logger, verbose=verbose)
+        super().__init__(engine=engine, provider_id_key=provider_id_key, edrs_key=edrs_key, logger=logger, debug=debug)
         self.persist_interval = persist_interval
         self._stop_event = threading.Event()
         self._start_background_tasks()

@@ -36,9 +36,9 @@ def translator():
 
 @pytest.fixture
 def translator_with_logger():
-    """Create a translator instance with a logger for verbose testing."""
+    """Create a translator instance with a logger for debug testing."""
     logger = Mock(spec=logging.Logger)
-    return SammSchemaContextTranslator(logger=logger, verbose=True)
+    return SammSchemaContextTranslator(logger=logger, debug=True)
 
 
 @pytest.fixture
@@ -135,7 +135,7 @@ class TestSammSchemaContextTranslatorInit:
         assert translator.refPathSep == "/"
         assert translator.propertiesKey == "properties"
         assert translator.logger is None
-        assert translator.verbose is False
+        assert translator.debug is False
         assert translator.itemKey == "items"
         assert translator.schemaPrefix == "schema"
         assert translator.aspectPrefix == "aspect"
@@ -143,13 +143,13 @@ class TestSammSchemaContextTranslatorInit:
         assert translator.recursionDepth == 2
         assert translator.depth == 0
 
-    def test_init_with_logger_and_verbose(self):
-        """Test initialization with logger and verbose mode."""
+    def test_init_with_logger_and_debug(self):
+        """Test initialization with logger and debug mode."""
         logger = Mock(spec=logging.Logger)
-        translator = SammSchemaContextTranslator(logger=logger, verbose=True)
+        translator = SammSchemaContextTranslator(logger=logger, debug=True)
         
         assert translator.logger == logger
-        assert translator.verbose is True
+        assert translator.debug is True
 
     def test_initial_jsonld_structure(self, translator):
         """Test the initial JSON-LD structure."""
