@@ -71,7 +71,10 @@ class DiscoveryFinderService:
         response:Response = HttpTools.do_post(url=self.url, headers=headers, json=body)
         ## In case the response code is not successfull or the response is null
         if(response is None or response.status_code != 200):
-            raise Exception("[EDC Discovery Service] It was not possible to get the discovery service because the response was not successful!")
+            status_code = None if response is None else response.status_code
+            raise Exception(
+                f"[Discovery Finder] Failed to get discovery service because the response was not successful! Status: {status_code}"
+            )
         
         data = response.json()
 

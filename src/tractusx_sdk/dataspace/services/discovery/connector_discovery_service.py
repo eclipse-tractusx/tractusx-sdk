@@ -142,7 +142,10 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
 
         response = HttpTools.do_post(url=discovery_url, headers=headers, json=body)
         if(response is None or response.status_code != 200):
-            raise Exception("[Connector Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
+            status_code = None if response is None else response.status_code
+            raise Exception(
+                f"[Connector Discovery Service] Failed to get connector URLs because the response was not successful! Status: {status_code}"
+            )
         
         json_response:dict = response.json()
 
