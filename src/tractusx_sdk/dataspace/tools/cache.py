@@ -1,7 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 CGI Deutschland B.V. & Co. KG
+# Copyright (c) 2026 BMW Group
 # Copyright (c) 2025 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
@@ -21,8 +21,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-## Code originally beloging to Industry Flag Service: 
-# https://github.com/eclipse-tractusx/tractusx-sdk-services/tree/main/industry-flag-service
 """This file provides tools for caching.
 """
 
