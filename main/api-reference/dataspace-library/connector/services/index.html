@@ -5254,6 +5254,11 @@ SPDX-License-Identifier: CC-BY-4.0
 <td>GET flow filtered by <code>dct:type</code></td>
 </tr>
 <tr>
+<td><code>do_get_by_dct_type_with_bpnl(bpnl, counter_party_address, dct_type, ...)</code> ⭐</td>
+<td><code>bpnl: str</code>, <code>dct_type: str</code></td>
+<td>Same with BPNL resolution — <strong>Saturn only</strong></td>
+</tr>
+<tr>
 <td><code>do_get_by_asset_id(counter_party_id, counter_party_address, asset_id, ...)</code></td>
 <td><code>asset_id: str</code></td>
 <td>GET flow filtered by asset ID</td>
@@ -5287,6 +5292,11 @@ SPDX-License-Identifier: CC-BY-4.0
 <td><code>do_put_with_bpnl(bpnl, counter_party_address, filter_expression, json, ...)</code> ⭐</td>
 <td><code>bpnl: str</code>, <code>json: dict</code></td>
 <td>Same with BPNL resolution — <strong>Saturn only</strong></td>
+</tr>
+<tr>
+<td><code>do_put_by_dct_type_with_bpnl(bpnl, counter_party_address, dct_type, json, ...)</code> ⭐</td>
+<td><code>bpnl: str</code>, <code>dct_type: str</code>, <code>json: dict</code></td>
+<td>PUT flow filtered by <code>dct:type</code> with BPNL resolution — <strong>Saturn only</strong></td>
 </tr>
 </tbody>
 </table>
