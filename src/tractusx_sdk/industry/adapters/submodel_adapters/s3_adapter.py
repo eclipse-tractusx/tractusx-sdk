@@ -68,19 +68,19 @@ class S3Adapter(SubmodelAdapter):
             self._data["key_pattern"] = key_pattern
             return self
 
-        def region_name(self, region_name: str):
+        def region_name(self, region_name: Optional[str]):
             self._data["region_name"] = region_name
             return self
 
-        def endpoint_url(self, endpoint_url: str):
+        def endpoint_url(self, endpoint_url: Optional[str]):
             self._data["endpoint_url"] = endpoint_url
             return self
 
-        def aws_access_key_id(self, aws_access_key_id: str):
+        def aws_access_key_id(self, aws_access_key_id: Optional[str]):
             self._data["aws_access_key_id"] = aws_access_key_id
             return self
 
-        def aws_secret_access_key(self, aws_secret_access_key: str):
+        def aws_secret_access_key(self, aws_secret_access_key: Optional[str]):
             self._data["aws_secret_access_key"] = aws_secret_access_key
             return self
 
@@ -112,16 +112,31 @@ class S3Adapter(SubmodelAdapter):
         if not isinstance(key_pattern, str) or not key_pattern.strip():
             raise ValueError("key_pattern must be a non-empty string")
 
+        # Validate credentials are provided together
+        has_access_key = bool(aws_access_key_id is not None and str(aws_access_key_id).strip())
+        has_secret_key = bool(aws_secret_access_key is not None and str(aws_secret_access_key).strip())
+
+        if has_access_key != has_secret_key:
+            raise ValueError(
+                "Both aws_access_key_id and aws_secret_access_key must be provided together, "
+                "or neither (to use environment variables, IAM roles, or AWS config files)"
+            )
+
         self.bucket_name = bucket_name
         self.key_pattern = key_pattern
         self.client_error = ClientError
-        self.client = boto3.client(
-            "s3",
-            region_name=region_name,
-            endpoint_url=endpoint_url,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key #TODO: verify that both keys are provided together if one is provided and skip them if not present
-        )
+
+        # Build client kwargs, only including credentials if both are provided
+        client_kwargs = {
+            "region_name": region_name,
+            "endpoint_url": endpoint_url,
+        }
+
+        if has_access_key and has_secret_key:
+            client_kwargs["aws_access_key_id"] = aws_access_key_id
+            client_kwargs["aws_secret_access_key"] = aws_secret_access_key
+
+        self.client = boto3.client("s3", **client_kwargs)
 
     def _extract_key(self, submodel_metadata: Mapping[str, Any]) -> str:
         """
@@ -193,14 +208,13 @@ class S3Adapter(SubmodelAdapter):
                 f"Failed to write JSON to S3: bucket={self.bucket_name}, key={key}"
             ) from e
 
-    def delete(self, submodel_metadata: Mapping[str, Any]) -> bool:
+    def delete(self, submodel_metadata: Mapping[str, Any]) -> None:
         """
         Delete an S3 object.
         """
         key = self._extract_key(submodel_metadata)
         try:
             self.client.delete_object(Bucket=self.bucket_name, Key=key)
-            return True
         except self.client_error as e:
             raise RuntimeError(
                 f"Failed to delete from S3: bucket={self.bucket_name}, key={key}"
