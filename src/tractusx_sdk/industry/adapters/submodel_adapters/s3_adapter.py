@@ -68,7 +68,7 @@ class S3Adapter(SubmodelAdapter):
             self._data["key_pattern"] = key_pattern
             return self
 
-        def region_name(self, region_name: Optional[str]):
+        def region_name(self, region_name: str):
             self._data["region_name"] = region_name
             return self
 
@@ -87,13 +87,15 @@ class S3Adapter(SubmodelAdapter):
         def build(self):
             if "bucket_name" not in self._data:
                 raise ValueError("Missing required builder parameter: bucket_name")
+            if "region_name" not in self._data:
+                raise ValueError("Missing required builder parameter: region_name")
             return self.cls(**self._data)
 
     def __init__(
             self,
             bucket_name: str,
+            region_name: str,
             key_pattern: str = "{path}",
-            region_name: Optional[str] = None,
             endpoint_url: Optional[str] = None,
             aws_access_key_id: Optional[str] = None,
             aws_secret_access_key: Optional[str] = None
@@ -129,8 +131,10 @@ class S3Adapter(SubmodelAdapter):
         # Build client kwargs, only including credentials if both are provided
         client_kwargs = {
             "region_name": region_name,
-            "endpoint_url": endpoint_url,
         }
+        
+        if endpoint_url is not None:
+            client_kwargs["endpoint_url"] = endpoint_url
 
         if has_access_key and has_secret_key:
             client_kwargs["aws_access_key_id"] = aws_access_key_id
