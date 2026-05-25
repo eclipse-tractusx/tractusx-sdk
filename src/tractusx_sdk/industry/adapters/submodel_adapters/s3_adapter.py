@@ -23,7 +23,7 @@
 #################################################################################
 
 import json
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping
 
 from .. import SubmodelAdapter
 
@@ -72,15 +72,15 @@ class S3Adapter(SubmodelAdapter):
             self._data["region_name"] = region_name
             return self
 
-        def endpoint_url(self, endpoint_url: Optional[str]):
+        def endpoint_url(self, endpoint_url: str | None):
             self._data["endpoint_url"] = endpoint_url
             return self
 
-        def aws_access_key_id(self, aws_access_key_id: Optional[str]):
+        def aws_access_key_id(self, aws_access_key_id: str | None):
             self._data["aws_access_key_id"] = aws_access_key_id
             return self
 
-        def aws_secret_access_key(self, aws_secret_access_key: Optional[str]):
+        def aws_secret_access_key(self, aws_secret_access_key: str | None):
             self._data["aws_secret_access_key"] = aws_secret_access_key
             return self
 
@@ -96,9 +96,9 @@ class S3Adapter(SubmodelAdapter):
             bucket_name: str,
             region_name: str,
             key_pattern: str = "{path}",
-            endpoint_url: Optional[str] = None,
-            aws_access_key_id: Optional[str] = None,
-            aws_secret_access_key: Optional[str] = None
+            endpoint_url: str | None = None,
+            aws_access_key_id: str | None = None,
+            aws_secret_access_key: str | None = None
     ):
         try:
             import boto3
@@ -237,7 +237,7 @@ class S3Adapter(SubmodelAdapter):
                 return False
             raise
 
-    def list_contents(self, prefix: Optional[str] = None) -> list[str]:
+    def list_contents(self, prefix: str | None = None) -> list[str]:
         """
         List S3 objects with an optional prefix.
         """

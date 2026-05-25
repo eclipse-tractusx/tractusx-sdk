@@ -390,30 +390,33 @@ class SubmodelAdapterFactory:
 
         Requires the ``boto3`` package (``pip install tractusx_sdk[s3]``).
 
-        :param bucket_name: Target S3 bucket name.
+        :param bucket_name: Target S3 bucket name (required).
+        :param region_name: AWS region (required, e.g. ``"eu-central-1"``).
         :param key_pattern: Pattern for S3 object keys, resolved from submodel metadata.
             Uses the same ``{field}`` substitution convention as ``FileSystemAdapter``.
-        :param region_name: AWS region (e.g. ``"eu-central-1"``).
-        :param endpoint_url: Override endpoint for S3-compatible stores such as MinIO.
-        :param aws_access_key_id: AWS access key ID. If not provided, boto3 will use environment variables,
-            IAM roles, or AWS config files.
-        :param aws_secret_access_key: AWS secret access key. Required if ``aws_access_key_id`` is provided.
-        :return: Built S3 adapter instance.
+            Defaults to ``"{path}"``.
+        :param endpoint_url: Override endpoint URL for S3-compatible stores such as MinIO.
+            If not provided, uses AWS S3 endpoint.
+        :param aws_access_key_id: AWS access key ID. Must be provided together with
+            ``aws_secret_access_key``. If neither is provided, boto3 will use environment
+            variables, IAM roles, or AWS config files.
+        :param aws_secret_access_key: AWS secret access key. Must be provided together with
+            ``aws_access_key_id``. If neither is provided, boto3 will use environment
+            variables, IAM roles, or AWS config files.
+        :return: Configured S3 adapter instance (SubmodelAdapter).
 
         Example:
             Create an S3 adapter with explicit credentials:
 
                 adapter = SubmodelAdapterFactory.get_s3(
                     bucket_name="my-submodels",
-                    key_pattern="{semantic_id}/{submodel_id}.json",
                     region_name="eu-central-1",
+                    key_pattern="{semantic_id}/{submodel_id}.json",
                     aws_access_key_id="YOUR_ACCESS_KEY",
                     aws_secret_access_key="YOUR_SECRET_KEY",
                 )
         """
-        config = {"bucket_name": bucket_name, "key_pattern": key_pattern}
-        if region_name is not None:
-            config["region_name"] = region_name
+        config = {"bucket_name": bucket_name, "region_name": region_name, "key_pattern": key_pattern}
         if endpoint_url is not None:
             config["endpoint_url"] = endpoint_url
         if aws_access_key_id is not None:
