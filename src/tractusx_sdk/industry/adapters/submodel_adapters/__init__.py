@@ -22,8 +22,10 @@
 
 from .file_system_adapter import FileSystemAdapter
 from .http_submodel_adapter import HttpSubmodelAdapter
+from .s3_adapter import S3Adapter
 
 __all__ = [
     'FileSystemAdapter',
-    'HttpSubmodelAdapter'
+    'HttpSubmodelAdapter',
+    'S3Adapter',
 ]
