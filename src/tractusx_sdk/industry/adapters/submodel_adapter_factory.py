@@ -379,8 +379,8 @@ class SubmodelAdapterFactory:
     @staticmethod
     def get_s3(
             bucket_name: str,
+            region_name: str,
             key_pattern: str = "{path}",
-            region_name: str | None = None,
             endpoint_url: str | None = None,
             aws_access_key_id: str | None = None,
             aws_secret_access_key: str | None = None
