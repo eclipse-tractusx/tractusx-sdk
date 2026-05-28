@@ -70,7 +70,7 @@ jobs:
           
     - name: Install Python dependencies
       run: |
-        poetry install --with dev,test
+        poetry install --with dev,test --extras s3
         poetry run pip install flake8 pytest-html
         
     - name: Verify critical imports
