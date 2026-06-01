@@ -300,6 +300,95 @@ python connect.py
 !!! success "Data Access Complete!"
     Congratulations! You've successfully created an asset and accessed it.
 
+### Create an Inline Data Asset
+
+Instead of pointing to an external HTTP endpoint, you can embed the data payload **directly inside the asset** using the `InlineData` DataAddress type. This is useful for publishing small or static payloads (e.g. JSON documents, certificates, metadata) without requiring a separate backend server.
+
+Use the `create_inline_asset()` convenience method:
+
+```python
+import json
+from tractusx_sdk.dataspace.services.connector import BaseConnectorProviderService
+from tractusx_sdk.dataspace.services.connector.service_factory import ServiceFactory
+import logging
+
+# Step 1: Configure your connector settings
+consumer_connector_controlplane_hostname = "https://connector.example.com"
+consumer_connector_controlplane_management_api = "/management"
+consumer_api_key_header = "X-Api-Key"
+consumer_api_key = "your-api-key"
+consumer_dataspace_version = "jupiter"  # or "saturn" for latest
+
+# Step 2: Set up headers for API authentication
+consumer_connector_headers = {
+    consumer_api_key_header: consumer_api_key,
+    "Content-Type": "application/json"
+}
+
+# Step 3: Initialize logger
+logger = logging.getLogger(__name__)
+
+# Step 4: Create connector service using ServiceFactory
+provider_connector_service: BaseConnectorProviderService = ServiceFactory.get_connector_provider_service(
+    dataspace_version=consumer_dataspace_version,
+    base_url=consumer_connector_controlplane_hostname,
+    dma_path=consumer_connector_controlplane_management_api,
+    headers=consumer_connector_headers,
+    logger=logger,
+    verbose=True
+)
+
+# Step 5: Define the payload to embed
+payload = {
+    "id": "doc-001",
+    "type": "ExampleDocument",
+    "value": "Hello, dataspace!"
+}
+
+# Step 6: Create the inline asset
+try:
+    response = provider_connector_service.create_inline_asset(
+        asset_id="inline-asset-001",
+        data=json.dumps(payload),          # Serialized payload embedded in the asset
+        content_type="application/json",   # Optional, defaults to "application/json"
+        dct_type="example-type",
+        version="1.0"
+    )
+
+    print(" Inline asset created!")
+    print(response)
+
+except Exception as e:
+    print(f" Failed to create inline asset: {e}")
+```
+
+Alternatively, you can use `create_asset()` directly with the `inline_data` parameter:
+
+```python
+response = provider_connector_service.create_asset(
+    asset_id="inline-asset-001",
+    inline_data=json.dumps(payload),
+    content_type="application/json",
+    dct_type="example-type",
+    version="1.0"
+)
+```
+
+!!! info "How InlineData works"
+    The payload is stored inside the EDC asset's DataAddress under the `data` field:
+    ```json
+    {
+        "@type": "DataAddress",
+        "type": "InlineData",
+        "data": "{\"id\": \"doc-001\", ...}",
+        "mediaType": "application/json"
+    }
+    ```
+    When a consumer negotiates a contract and requests the asset via the data plane, the EDC serves the embedded content directly — no additional backend endpoint required.
+
+!!! warning "Validation"
+    `create_asset()` raises a `ValueError` if neither `base_url` nor `inline_data` is provided. You must supply exactly one of the two.
+
 ### Troubleshooting
 
 If you encounter issues, here are common solutions:

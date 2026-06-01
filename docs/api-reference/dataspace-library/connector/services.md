@@ -163,7 +163,8 @@ Combined:
 | `get_filter_expression`    | `filter_params`                                | Build filter expression for catalog queries      |
 | `contract_negotiations`    | `counter_party_id`, `asset_id`, `policies`     | List or manage contract negotiations             |
 | `transfer_processes`       | `contract_id`, `asset_id`                      | List or manage data transfer processes           |
-| `create_asset`             | `asset_id`, `base_url`, `dct_type`, `version`, `semantic_id` | Create and publish an asset                      |
+| `create_asset`             | `asset_id`, `base_url` *(or `inline_data`)*, `dct_type`, `version`, `semantic_id` | Create and publish an asset with an HttpData or InlineData DataAddress |
+| `create_inline_asset`      | `asset_id`, `data`, `content_type`, `dct_type`, `version`, `semantic_id` | Convenience wrapper to create an asset with an embedded InlineData payload |
 | `create_contract`          | `contract_params`                              | Create a contract definition                     |
 | `create_policy`            | `policy_params`                                | Create a policy for data sharing                 |
 | `assets`                   | `asset_id`, `asset_data`                       | Manage assets (CRUD operations)                  |
@@ -367,7 +368,8 @@ The Saturn `ConnectorProviderService` is identical to the base. All methods are 
 
 | Method | Key Parameters | Description |
 |--------|---------------|-------------|
-| `create_asset(asset_id, base_url, dct_type, version, semantic_id, proxy_params, headers, private_properties, ...)` | `asset_id: str`, `base_url: str` | Build and POST a complete EDC asset (data address + properties + private properties) |
+| `create_asset(asset_id, base_url, dct_type, version, semantic_id, proxy_params, headers, inline_data, content_type, private_properties, ...)` | `asset_id: str`; one of `base_url: str` **or** `inline_data: str` | Build and POST a complete EDC asset. Use `base_url` for HttpData assets or `inline_data`/`content_type` for InlineData assets. Raises `ValueError` if neither is provided. |
+| `create_inline_asset(asset_id, data, content_type, dct_type, version, semantic_id, private_properties, ...)` | `asset_id: str`, `data: str` | Convenience wrapper around `create_asset()` for embedding data directly in the DataAddress (InlineData type). `content_type` defaults to `application/json`. |
 | `create_contract(asset_id, access_policy_id, usage_policy_id, ...)` | `asset_id: str` | Build and POST a contract definition linking an asset to access and usage policies |
 | `create_policy(policy_id, permissions, ...)` | `policy_id: str` | Build and POST an ODRL policy |
 
