@@ -124,9 +124,19 @@ class BaseConnectorProviderService(BaseService):
         :param inline_data: Raw data string to embed in an InlineData DataAddress.
         :param content_type: Media type for InlineData (default ``"application/json"``).
         :param kwargs: Additional keyword arguments forwarded to the model factory.
-        :raises ValueError: If neither ``base_url`` nor ``inline_data`` is provided.
+        :raises ValueError: In the following cases:
+
+            - Both ``base_url`` and ``inline_data`` are provided (ambiguous input).
+            - ``data_address_type`` is ``"InlineData"`` but ``inline_data`` is ``None``.
+            - Neither ``base_url`` nor ``inline_data`` is provided.
+            - The EDC connector returns a non-200 response when creating the asset.
         """
         # Determine effective data address type from parameters
+        if base_url is not None and inline_data is not None:
+            raise ValueError(
+                "Provide either 'base_url' (HttpData) or 'inline_data' (InlineData), not both."
+            )
+
         if inline_data is not None:
             data_address_type = "InlineData"
 
