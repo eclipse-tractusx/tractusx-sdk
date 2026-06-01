@@ -86,7 +86,7 @@ class BaseConnectorProviderService(BaseService):
     def create_asset(
         self,
         asset_id: str,
-        base_url: str,
+        base_url: str = None,
         dct_type: str = None,
         version: str = "3.0",
         semantic_id: str = None,
@@ -100,10 +100,47 @@ class BaseConnectorProviderService(BaseService):
         private_properties: dict = None,
         context: dict = None,
         data_address_type: str = "HttpData",
+        inline_data: str = None,
+        content_type: str = None,
         **kwargs
     ):
+        """
+        Create an EDC asset with either an HttpData or InlineData DataAddress.
+
+        For HttpData (default): provide ``base_url`` (and optionally ``proxy_params`` / ``headers``).
+        For InlineData: provide ``inline_data`` (the raw content to embed) and optionally
+        ``content_type`` (defaults to ``"application/json"``).
+
+        :param asset_id: Unique identifier for the asset.
+        :param base_url: Backend URL for HttpData assets. Optional when using InlineData.
+        :param dct_type: DCT type URI for the asset properties.
+        :param version: Dataspace version string (default ``"3.0"``).
+        :param semantic_id: Semantic ID URI for the asset properties.
+        :param proxy_params: Proxy configuration for HttpData assets. Ignored for InlineData.
+        :param headers: Custom headers for HttpData assets. Ignored for InlineData.
+        :param private_properties: Private properties dict for the asset.
+        :param context: JSON-LD context dict. Uses EDC defaults if not provided.
+        :param data_address_type: DataAddress type (``"HttpData"`` or ``"InlineData"``).
+        :param inline_data: Raw data string to embed in an InlineData DataAddress.
+        :param content_type: Media type for InlineData (default ``"application/json"``).
+        :param kwargs: Additional keyword arguments forwarded to the model factory.
+        :raises ValueError: If neither ``base_url`` nor ``inline_data`` is provided.
+        """
+        # Determine effective data address type from parameters
+        if inline_data is not None:
+            data_address_type = "InlineData"
+
+        if data_address_type == "InlineData" and inline_data is None:
+            raise ValueError("inline_data is required when data_address_type is 'InlineData'.")
+
+        if data_address_type != "InlineData" and base_url is None:
+            raise ValueError("base_url is required when data_address_type is not 'InlineData'.")
+
         if self.verbose:
-            self.logger.info(f"Creating asset {asset_id} at {base_url}.")
+            if data_address_type == "InlineData":
+                self.logger.info(f"Creating inline asset {asset_id}.")
+            else:
+                self.logger.info(f"Creating asset {asset_id} at {base_url}.")
 
         # Use provided context or default
         if context is None:
@@ -114,18 +151,27 @@ class BaseConnectorProviderService(BaseService):
                 "dct": "http://purl.org/dc/terms/"
             }
 
-        data_address = {
-            "@type": "DataAddress",
-            "type": data_address_type,
-            "baseUrl": base_url
-        }
+        # Build DataAddress based on type
+        if data_address_type == "InlineData":
+            data_address = {
+                "@type": "DataAddress",
+                "type": "InlineData",
+                "data": inline_data,
+                "mediaType": content_type or "application/json"
+            }
+        else:
+            data_address = {
+                "@type": "DataAddress",
+                "type": data_address_type,
+                "baseUrl": base_url
+            }
 
-        if proxy_params is not None:
-            data_address.update(proxy_params)
+            if proxy_params is not None:
+                data_address.update(proxy_params)
 
-        if headers is not None:
-            for key, value in headers.items():
-                data_address["header:" + key] = value
+            if headers is not None:
+                for key, value in headers.items():
+                    data_address["header:" + key] = value
 
         properties: dict = {}
 
@@ -164,6 +210,50 @@ class BaseConnectorProviderService(BaseService):
             self.logger.info(f"Asset {asset_id} created successfully.")
 
         return asset_response.json()
+
+    def create_inline_asset(
+        self,
+        asset_id: str,
+        data: str,
+        content_type: str = "application/json",
+        dct_type: str = None,
+        version: str = "3.0",
+        semantic_id: str = None,
+        private_properties: dict = None,
+        context: dict = None,
+        **kwargs
+    ):
+        """
+        Convenience method to create an EDC asset with an InlineData DataAddress.
+
+        The ``data`` payload is embedded directly in the asset's DataAddress so
+        that the EDC data plane can serve it without an external backend.
+
+        :param asset_id: Unique identifier for the asset.
+        :param data: Raw content string to embed (e.g. a JSON document).
+        :param content_type: Media type of the embedded data (default ``"application/json"``).
+        :param dct_type: DCT type URI for the asset properties.
+        :param version: Dataspace version string (default ``"3.0"``).
+        :param semantic_id: Semantic ID URI for the asset properties.
+        :param private_properties: Private properties dict for the asset.
+        :param context: JSON-LD context dict. Uses EDC defaults if not provided.
+        :param kwargs: Additional keyword arguments forwarded to the model factory.
+        :return: The created asset response as a dict.
+        """
+        return self.create_asset(
+            asset_id=asset_id,
+            inline_data=data,
+            content_type=content_type,
+            dct_type=dct_type,
+            version=version,
+            semantic_id=semantic_id,
+            proxy_params=None,
+            headers=None,
+            private_properties=private_properties,
+            context=context,
+            data_address_type="InlineData",
+            **kwargs
+        )
 
     def create_contract(
         self,

@@ -195,3 +195,108 @@ def test_create_asset_no_verbose_logging(mock_get_asset_model, mock_dma_adapter,
     service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
 
     logger.info.assert_not_called()
+
+
+# ── InlineData DataAddress tests ──────────────────────────────────────────────
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_inline_data_success(mock_get_asset_model, service):
+    """Verify that providing inline_data builds an InlineData DataAddress."""
+    mock_response = Mock(status_code=200)
+    mock_response.json.return_value = {"asset": "ok"}
+    service._asset_controller.create.return_value = mock_response
+    mock_get_asset_model.return_value = Mock(to_data=lambda: "{}")
+
+    result = service.create_asset(
+        asset_id="inline-1",
+        inline_data='{"hello": "world"}',
+        content_type="application/json",
+        dct_type="test-type"
+    )
+
+    assert result == {"asset": "ok"}
+    call_kwargs = mock_get_asset_model.call_args
+    data_address = call_kwargs.kwargs["data_address"]
+    assert data_address["type"] == "InlineData"
+    assert data_address["data"] == '{"hello": "world"}'
+    assert data_address["mediaType"] == "application/json"
+    assert "baseUrl" not in data_address
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_inline_data_default_content_type(mock_get_asset_model, service):
+    """Verify that content_type defaults to 'application/json' for InlineData."""
+    mock_response = Mock(status_code=200)
+    mock_response.json.return_value = {"asset": "ok"}
+    service._asset_controller.create.return_value = mock_response
+    mock_get_asset_model.return_value = Mock(to_data=lambda: "{}")
+
+    service.create_asset(asset_id="inline-2", inline_data="data")
+
+    call_kwargs = mock_get_asset_model.call_args
+    data_address = call_kwargs.kwargs["data_address"]
+    assert data_address["mediaType"] == "application/json"
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_inline_data_ignores_proxy_and_headers(mock_get_asset_model, service):
+    """Verify that proxy_params and headers are ignored for InlineData assets."""
+    mock_response = Mock(status_code=200)
+    mock_response.json.return_value = {"asset": "ok"}
+    service._asset_controller.create.return_value = mock_response
+    mock_get_asset_model.return_value = Mock(to_data=lambda: "{}")
+
+    service.create_asset(
+        asset_id="inline-3",
+        inline_data="payload",
+        proxy_params={"proxyPath": "true"},
+        headers={"Authorization": "Bearer token"}
+    )
+
+    call_kwargs = mock_get_asset_model.call_args
+    data_address = call_kwargs.kwargs["data_address"]
+    assert "proxyPath" not in data_address
+    assert "header:Authorization" not in data_address
+
+
+def test_create_asset_no_base_url_no_inline_data_raises(service):
+    """Verify ValueError when neither base_url nor inline_data is provided."""
+    with pytest.raises(ValueError, match="base_url is required"):
+        service.create_asset(asset_id="bad-1", dct_type="test")
+
+
+def test_create_asset_inline_data_type_without_data_raises(service):
+    """Verify ValueError when data_address_type is InlineData but inline_data is None."""
+    with pytest.raises(ValueError, match="inline_data is required"):
+        service.create_asset(
+            asset_id="bad-2",
+            data_address_type="InlineData",
+            dct_type="test"
+        )
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_inline_asset_convenience(mock_get_asset_model, service):
+    """Verify the create_inline_asset() convenience method delegates correctly."""
+    mock_response = Mock(status_code=200)
+    mock_response.json.return_value = {"asset": "inline-ok"}
+    service._asset_controller.create.return_value = mock_response
+    mock_get_asset_model.return_value = Mock(to_data=lambda: "{}")
+
+    result = service.create_inline_asset(
+        asset_id="conv-1",
+        data='{"cert": "data"}',
+        content_type="application/json",
+        dct_type="https://w3id.org/catenax/taxonomy#CompanyCertificate",
+        semantic_id="urn:samm:io.catenax.cert:3.1.0"
+    )
+
+    assert result == {"asset": "inline-ok"}
+    call_kwargs = mock_get_asset_model.call_args
+    data_address = call_kwargs.kwargs["data_address"]
+    assert data_address["type"] == "InlineData"
+    assert data_address["data"] == '{"cert": "data"}'
+    props = call_kwargs.kwargs["properties"]
+    assert props["dct:type"]["@id"] == "https://w3id.org/catenax/taxonomy#CompanyCertificate"
+    assert props["aas-semantics:semanticId"]["@id"] == "urn:samm:io.catenax.cert:3.1.0"
