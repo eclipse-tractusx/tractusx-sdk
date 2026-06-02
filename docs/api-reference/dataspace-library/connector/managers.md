@@ -54,9 +54,9 @@ Below, you'll find a comparison of the available connection managers, followed b
 
 | Manager Name                  | Attributes                                                                                  | Methods                                                                                                    |
 |-------------------------------|---------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| `MemoryConnectionManager`     | `open_connections`, `provider_id_key`, `edrs_key`, `logger`, `verbose`, `_lock`             | `add_connection()`, `get_connection()`, `get_connection_transfer_id()`, `delete_connection()`               |
+| `MemoryConnectionManager`     | `open_connections`, `provider_id_key`, `edrs_key`, `logger`, `verbose`, `_lock`             | `add_connection()`, `get_connection()`, `get_connection_transfer_id()`, `delete_connection()`, `clear_connections_by_party()`               |
 | `FileSystemConnectionManager` | `file_path`, `persist_interval`, `lock`, `_stop_event`, `_last_loaded_hash`, `open_connections` | `add_connection()`, `get_connection()`, `get_connection_transfer_id()`, `delete_connection()`               |
-| `PostgresConnectionManager`   | `engine`, `table_name`                                                                      | `add_connection()`, `get_connection()`, `get_connection_transfer_id()`, `delete_connection()`               |
+| `PostgresConnectionManager`   | `engine`, `table_name`                                                                      | `add_connection()`, `get_connection()`, `get_connection_transfer_id()`, `delete_connection()`, `clear_connections_by_party()` |
 
 ## Manager Instantiation Example
 
@@ -83,6 +83,32 @@ pg_connection_manager = PostgresConnectionManager(engine=my_engine, table_name="
 | `get_connection`            | `counter_party_id, counter_party_address, query_checksum, policy_checksum`                  | All                            | Retrieves an EDR connection                                                                 |
 | `get_connection_transfer_id`| `counter_party_id, counter_party_address, query_checksum, policy_checksum`                  | All                            | Gets the transfer process ID for a connection                                               |
 | `delete_connection`         | `counter_party_id, counter_party_address, query_checksum, policy_checksum`                  | All                            | Deletes an EDR connection     |
+| `clear_connections_by_party` | `counter_party_id_substring`                                                               | `MemoryConnectionManager`, `PostgresConnectionManager` | Removes all cached EDR entries for a counterparty identified by a substring (e.g. BPN). Returns the number of top-level party entries removed. See [Evicting Stale EDR Connections](#evicting-stale-edr-connections). |
+
+## Evicting Stale EDR Connections
+
+The `clear_connections_by_party(counter_party_id_substring)` method removes all in-memory (and, for `PostgresConnectionManager`, also database-persisted) EDR entries whose cache key contains the given substring.
+
+This is necessary because the cache key format differs between EDC protocol versions:
+
+- **Saturn** (DSP 2025-1): the cache key is the full counterparty **DID**, e.g. `did:web:wallet.example.com:BPNL000000000065`
+- **Jupiter** (DSP 0.8): the cache key is the raw **BPN**, e.g. `BPNL000000000065`
+
+In both cases the BPN is contained in the key, so a single call with the BPN substring covers both protocols without any caller-side branching. Callers that already know the exact DID (e.g. after calling `get_discovery_info` on a Saturn connector) may pass the full DID instead for a more precise, single-entry eviction.
+
+Without clearing stale entries, an expired transfer ID remains cached indefinitely and every subsequent `get_edr()` call will fail with `"It was not possible to get the edr because the EDC response was not successful!"`.
+
+```python
+# Evict stale EDR for a counterparty — works for both Saturn (DID key) and Jupiter (BPN key)
+removed = connection_manager.clear_connections_by_party("BPNL000000000065")
+print(f"Cleared {removed} stale EDR cache entries")
+
+# If you already resolved the exact DID (Saturn), use it for a precise eviction
+did = "did:web:wallet.example.com:BPNL000000000065"
+removed = connection_manager.clear_connections_by_party(did)
+```
+
+> **Note:** `clear_connections_by_party` removes the entire top-level party entry from the cache (all assets, addresses, and policy checksums for that counterparty). It does not decrement the internal `edrs` count. Use `delete_connection` when you need to remove a single, precisely identified EDR entry.
 
 ## Attribute Reference
 

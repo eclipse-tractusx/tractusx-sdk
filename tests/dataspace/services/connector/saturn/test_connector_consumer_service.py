@@ -1017,5 +1017,206 @@ class TestSaturnConnectorConsumerService(TestCase):
 
 
 
+    def test_do_get_by_dct_type_with_bpnl_success(self):
+        """Test do_get_by_dct_type_with_bpnl delegates to do_get_with_bpnl with the correct filter expression."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "https://w3id.org/catenax/taxonomy#PcfExchange"
+        policies = [{"@id": "policy-123"}]
+        path = "/pcf"
+        mock_response = mock.Mock(spec=Response)
+
+        with mock.patch.object(self.service, 'do_get_with_bpnl') as mock_do_get:
+            mock_do_get.return_value = mock_response
+
+            result = self.service.do_get_by_dct_type_with_bpnl(
+                bpnl=bpnl,
+                counter_party_address=counter_party_address,
+                dct_type=dct_type,
+                policies=policies,
+                path=path,
+            )
+
+            self.assertEqual(result, mock_response)
+            mock_do_get.assert_called_once()
+            call_kwargs = mock_do_get.call_args[1]
+            self.assertEqual(call_kwargs["bpnl"], bpnl)
+            self.assertEqual(call_kwargs["counter_party_address"], counter_party_address)
+            self.assertEqual(call_kwargs["policies"], policies)
+            self.assertEqual(call_kwargs["path"], path)
+            # Verify filter expression targets the dct_type value
+            filter_expr = call_kwargs["filter_expression"]
+            self.assertEqual(len(filter_expr), 1)
+            self.assertIn(dct_type, str(filter_expr[0]))
+
+    def test_do_get_by_dct_type_with_bpnl_uses_bpnl_for_discovery(self):
+        """Test that do_get_by_dct_type_with_bpnl triggers BPNL-based discovery (Saturn-aware URL resolution)."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "https://w3id.org/catenax/taxonomy#PcfExchange"
+        dataplane_url = "https://dataplane.example.com"
+        access_token = "token-abc"
+        mock_response = mock.Mock(spec=Response)
+
+        with mock.patch.object(self.service, 'do_dsp_with_bpnl') as mock_dsp, \
+             mock.patch.object(self.service, '_execute_http_request') as mock_execute:
+            mock_dsp.return_value = (dataplane_url, access_token)
+            mock_execute.return_value = mock_response
+
+            result = self.service.do_get_by_dct_type_with_bpnl(
+                bpnl=bpnl,
+                counter_party_address=counter_party_address,
+                dct_type=dct_type,
+            )
+
+            self.assertEqual(result, mock_response)
+            # do_dsp_with_bpnl must be called (not do_dsp), ensuring Saturn discovery endpoint is used
+            mock_dsp.assert_called_once()
+            dsp_kwargs = mock_dsp.call_args[1]
+            self.assertEqual(dsp_kwargs["bpnl"], bpnl)
+            self.assertEqual(dsp_kwargs["counter_party_address"], counter_party_address)
+
+    def test_do_get_by_dct_type_with_bpnl_missing_dataplane(self):
+        """Test do_get_by_dct_type_with_bpnl raises RuntimeError when DSP returns no dataplane info."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "https://w3id.org/catenax/taxonomy#PcfExchange"
+
+        with mock.patch.object(self.service, 'do_dsp_with_bpnl') as mock_dsp:
+            mock_dsp.return_value = (None, None)
+
+            with self.assertRaises(RuntimeError):
+                self.service.do_get_by_dct_type_with_bpnl(
+                    bpnl=bpnl,
+                    counter_party_address=counter_party_address,
+                    dct_type=dct_type,
+                )
+
+    def test_do_put_by_dct_type_with_bpnl_success(self):
+        """Test do_put_by_dct_type_with_bpnl delegates to do_put_with_bpnl with the correct filter expression."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "https://w3id.org/catenax/taxonomy#PcfExchange"
+        json_data = {"pcfValue": 3.14}
+        policies = [{"@id": "policy-456"}]
+        path = "/pcf"
+        mock_response = mock.Mock(spec=Response)
+
+        with mock.patch.object(self.service, 'do_put_with_bpnl') as mock_do_put:
+            mock_do_put.return_value = mock_response
+
+            result = self.service.do_put_by_dct_type_with_bpnl(
+                bpnl=bpnl,
+                counter_party_address=counter_party_address,
+                dct_type=dct_type,
+                json=json_data,
+                policies=policies,
+                path=path,
+            )
+
+            self.assertEqual(result, mock_response)
+            mock_do_put.assert_called_once()
+            call_kwargs = mock_do_put.call_args[1]
+            self.assertEqual(call_kwargs["bpnl"], bpnl)
+            self.assertEqual(call_kwargs["counter_party_address"], counter_party_address)
+            self.assertEqual(call_kwargs["json"], json_data)
+            self.assertEqual(call_kwargs["policies"], policies)
+            self.assertEqual(call_kwargs["path"], path)
+            filter_expr = call_kwargs["filter_expression"]
+            self.assertEqual(len(filter_expr), 1)
+            self.assertIn(dct_type, str(filter_expr[0]))
+
+    def test_do_put_by_dct_type_with_bpnl_uses_bpnl_for_discovery(self):
+        """Test that do_put_by_dct_type_with_bpnl triggers BPNL-based discovery (Saturn-aware URL resolution)."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "https://w3id.org/catenax/taxonomy#PcfExchange"
+        json_data = {"pcfValue": 1.0}
+        dataplane_url = "https://dataplane.example.com"
+        access_token = "token-xyz"
+        mock_response = mock.Mock(spec=Response)
+
+        with mock.patch.object(self.service, 'do_dsp_with_bpnl') as mock_dsp, \
+             mock.patch.object(self.service, '_execute_http_request') as mock_execute:
+            mock_dsp.return_value = (dataplane_url, access_token)
+            mock_execute.return_value = mock_response
+
+            result = self.service.do_put_by_dct_type_with_bpnl(
+                bpnl=bpnl,
+                counter_party_address=counter_party_address,
+                dct_type=dct_type,
+                json=json_data,
+            )
+
+            self.assertEqual(result, mock_response)
+            # do_dsp_with_bpnl must be called, ensuring Saturn discovery endpoint is used
+            mock_dsp.assert_called_once()
+            dsp_kwargs = mock_dsp.call_args[1]
+            self.assertEqual(dsp_kwargs["bpnl"], bpnl)
+            self.assertEqual(dsp_kwargs["counter_party_address"], counter_party_address)
+
+    def test_do_put_by_dct_type_with_bpnl_missing_dataplane(self):
+        """Test do_put_by_dct_type_with_bpnl raises RuntimeError when DSP returns no dataplane info."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "https://w3id.org/catenax/taxonomy#PcfExchange"
+
+        with mock.patch.object(self.service, 'do_dsp_with_bpnl') as mock_dsp:
+            mock_dsp.return_value = (None, None)
+
+            with self.assertRaises(RuntimeError):
+                self.service.do_put_by_dct_type_with_bpnl(
+                    bpnl=bpnl,
+                    counter_party_address=counter_party_address,
+                    dct_type=dct_type,
+                )
+
+    def test_do_get_by_dct_type_with_bpnl_custom_dct_type_key(self):
+        """Test do_get_by_dct_type_with_bpnl with a custom dct_type_key."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "PcfExchange"
+        custom_key = "dct:type"
+        mock_response = mock.Mock(spec=Response)
+
+        with mock.patch.object(self.service, 'do_get_with_bpnl') as mock_do_get:
+            mock_do_get.return_value = mock_response
+
+            self.service.do_get_by_dct_type_with_bpnl(
+                bpnl=bpnl,
+                counter_party_address=counter_party_address,
+                dct_type=dct_type,
+                dct_type_key=custom_key,
+            )
+
+            call_kwargs = mock_do_get.call_args[1]
+            filter_expr = call_kwargs["filter_expression"]
+            self.assertIn(custom_key, str(filter_expr[0]))
+            self.assertIn(dct_type, str(filter_expr[0]))
+
+    def test_do_put_by_dct_type_with_bpnl_custom_dct_type_key(self):
+        """Test do_put_by_dct_type_with_bpnl with a custom dct_type_key."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "PcfExchange"
+        custom_key = "dct:type"
+        mock_response = mock.Mock(spec=Response)
+
+        with mock.patch.object(self.service, 'do_put_with_bpnl') as mock_do_put:
+            mock_do_put.return_value = mock_response
+
+            self.service.do_put_by_dct_type_with_bpnl(
+                bpnl=bpnl,
+                counter_party_address=counter_party_address,
+                dct_type=dct_type,
+                dct_type_key=custom_key,
+            )
+
+            call_kwargs = mock_do_put.call_args[1]
+            filter_expr = call_kwargs["filter_expression"]
+            self.assertIn(custom_key, str(filter_expr[0]))
+            self.assertIn(dct_type, str(filter_expr[0]))
+
+
 if __name__ == '__main__':
     main()

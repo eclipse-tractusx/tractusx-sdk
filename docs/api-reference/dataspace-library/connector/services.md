@@ -339,6 +339,7 @@ These methods wrap the full catalog → negotiate → transfer → HTTP request 
 | `do_get(counter_party_id, counter_party_address, filter_expression, ...)` | `filter_expression: list[dict]` | Full DSP flow + GET data from the data plane |
 | `do_get_with_bpnl(bpnl, counter_party_address, filter_expression, ...)` ⭐ | `bpnl: str` | Same with BPNL resolution — **Saturn only** |
 | `do_get_by_dct_type(counter_party_id, counter_party_address, dct_type, ...)` | `dct_type: str` | GET flow filtered by `dct:type` |
+| `do_get_by_dct_type_with_bpnl(bpnl, counter_party_address, dct_type, ...)` ⭐ | `bpnl: str`, `dct_type: str` | Same with BPNL resolution — **Saturn only** |
 | `do_get_by_asset_id(counter_party_id, counter_party_address, asset_id, ...)` | `asset_id: str` | GET flow filtered by asset ID |
 | `do_post(counter_party_id, counter_party_address, filter_expression, json, ...)` | `json: dict` | Full DSP flow + POST payload to the data plane |
 | `do_post_with_bpnl(bpnl, counter_party_address, filter_expression, json, ...)` ⭐ | `bpnl: str`, `json: dict` | Same with BPNL resolution — **Saturn only** |
@@ -346,6 +347,7 @@ These methods wrap the full catalog → negotiate → transfer → HTTP request 
 | `do_post_by_asset_id(counter_party_id, counter_party_address, asset_id, json, ...)` | `asset_id: str` | POST flow filtered by asset ID |
 | `do_put(counter_party_id, counter_party_address, filter_expression, json, ...)` | `json: dict` | Full DSP flow + PUT payload to the data plane |
 | `do_put_with_bpnl(bpnl, counter_party_address, filter_expression, json, ...)` ⭐ | `bpnl: str`, `json: dict` | Same with BPNL resolution — **Saturn only** |
+| `do_put_by_dct_type_with_bpnl(bpnl, counter_party_address, dct_type, json, ...)` ⭐ | `bpnl: str`, `dct_type: str`, `json: dict` | PUT flow filtered by `dct:type` with BPNL resolution — **Saturn only** |
 
 ---
 
