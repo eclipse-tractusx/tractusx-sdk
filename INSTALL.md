@@ -33,70 +33,105 @@ pip install --upgrade tractusx-sdk
 
 ## Basic Usage
 
-Here's a quick example of how to use the SDK:
+Here's a minimal example to get started with the SDK as a data consumer:
 
 ```python
-from tractusx_sdk.dataspace.services.connector.v0_9_0.edc_service import ConnectorService
+from tractusx_sdk.dataspace.services.connector import ServiceFactory
 
-edc_service = ConnectorService(
-    base_url="https://control.plane.url", 
-    dma_path="management",
+consumer_service = ServiceFactory.get_connector_consumer_service(
+    dataspace_version="saturn",  # use "jupiter" for EDC v0.8.x-v0.10.x
+    base_url="https://my-connector-controlplane.url",
+    dma_path="/management",
     headers={
-            "X-Api-Key": "your-api-key",
-            "Content-Type": "application/json"
-    })
-
-context =  {
-    "edc": "https://w3id.org/edc/v0.0.1/ns/",
-    "cx-common": "https://w3id.org/catenax/ontology/common#",
-    "cx-taxo": "https://w3id.org/catenax/taxonomy#",
-    "dct": "http://purl.org/dc/terms/"
-}
-
-data_address = { 
-        "@type": "DataAddress",
-        "type": "HttpData",
-        "baseUrl": "<<base-url>>"
+        "X-Api-Key": "your-api-key",
+        "Content-Type": "application/json"
     }
-
-properties:dict = {
-        "dct:type": {
-            "@id": dct_type
-        }
-    }
-
-asset = ModelFactory.get_asset_model(
-    dataspace_version="jupiter",
-    context=context,
-    oid="<<your-asset-id>>",
-    properties=properties,
-    private_properties=[],
-    data_address=data_address
 )
 
-asset_response = self.edc_service.assets.create(obj=asset)
-
-# Example usage
-print(asset_response.json())
+# Retrieve the catalog from a remote connector
+catalog = consumer_service.get_catalog_by_dct_type(
+    dct_type="https://w3id.org/catenax/taxonomy#DigitalTwinRegistry",
+    counter_party_id="BPNL00000003AYRE",
+    counter_party_address="https://provider-controlplane.url/api/v1/dsp"
+)
+print(catalog)
 ```
 
-> **Note**: Replace `"your-api-key"` with your actual API key or credentials as required.
+> **Note**: Replace `"your-api-key"`, URLs, and BPN values with your actual configuration. See the [examples/](./examples/) directory and the [full documentation](https://eclipse-tractusx.github.io/tractusx-sdk/main/) for more patterns.
+
+## Verify Installation
+
+After installing, confirm the package is available:
+
+```bash
+python -c "import tractusx_sdk; print(tractusx_sdk.__version__)"
+```
+
+You should see the installed version number printed without errors.
 
 ## Documentation
 
-For more information, refer to the official documentation or README.
+For more information, refer to the official documentation:
 
-Here you will find more documentation regarding the usage of the SDK:
+- [Full Documentation](https://eclipse-tractusx.github.io/tractusx-sdk/main/)
+- [Usage Examples](./examples/)
+- [README](./README.md)
 
-[Tractus-X Usage Documentation](./docs/user/README.md)
+## Uninstallation
 
-## Troubleshooting
+To remove the package:
 
-- Ensure Python version is compatible
-- Use `--no-cache-dir` with pip if encountering caching issues:
+```bash
+pip uninstall tractusx-sdk
+```
+
+## Local Development
+
+To set up a local development environment (e.g. for contributing):
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/eclipse-tractusx/tractusx-sdk.git
+cd tractusx-sdk
+
+# 2. Install Poetry (if not already installed)
+pip install poetry
+
+# 3. Install all dependencies including dev and test groups
+poetry install --with dev,test
+
+# 4. Run the test suite
+poetry run pytest
+```
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
+
+## Troubleshooting & FAQ
+
+**Q: `import tractusx_sdk` fails after installation.**\
+A: Ensure your virtual environment is activated and that you installed into it. Run `pip show tractusx-sdk` to confirm.
+
+**Q: Which `dataspace_version` should I use?**\
+A: Use `"saturn"` for EDC `v0.11.x` (DSP 2025-1) and `"jupiter"` for EDC `v0.8.x`–`v0.10.x`.
+
+**Q: I get authentication errors connecting to the connector.**\
+A: Verify your `X-Api-Key` header value and that the connector management API URL (`base_url` + `dma_path`) is reachable from your environment.
+
+**Q: Pip install fails with dependency conflicts.**\
+A: Install in a clean virtual environment: `python -m venv .venv && source .venv/bin/activate && pip install tractusx-sdk`. If conflicts persist, check the [issues page](https://github.com/eclipse-tractusx/tractusx-sdk/issues).
+
+**Q: Caching issues during install.**\
+A: Use the `--no-cache-dir` flag:
   ```bash
   pip install --no-cache-dir tractusx-sdk
   ```
+
+## Contact & Support
+
+- **GitHub Issues**: [Report a bug or request a feature](https://github.com/eclipse-tractusx/tractusx-sdk/issues/new/choose)
+- **GitHub Discussions**: [Ask questions or share ideas](https://github.com/eclipse-tractusx/tractusx-sdk/discussions)
+- **Matrix Chat**: [Industry Core Hub Channel](https://matrix.to/#/#tractusx-industry-core-hub:matrix.eclipse.org)
+- **Open Meetings**: [Tractus-X SDK Weekly](https://eclipse-tractusx.github.io/community/open-meetings#tractus-x-sdk-weekly)
 
 ## NOTICE
 
