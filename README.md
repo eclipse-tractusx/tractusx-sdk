@@ -500,6 +500,8 @@ Providing reusable modules:
 
 For a full arc42 architecture documentation see [docs/architecture/](./docs/architecture/index.md).
 
+For operator and deployment guidance see the [Administrator's Guide](./docs/admin/index.md).
+
 ![Architecture](https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/docs/media/catena-x-speedway-sdk.svg)
 
 ## Industry Core Hub Example

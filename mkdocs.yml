@@ -130,6 +130,13 @@ nav:
     - 10. Quality Requirements: architecture/10_quality_requirements.md
     - 11. Technical Risks: architecture/11_technical_risks.md
     - 12. Glossary: architecture/12_glossary.md
+  - Administration:
+    - Overview: admin/index.md
+    - Configuration: admin/configuration.md
+    - Production Deployment: admin/production-deployment.md
+    - Security: admin/security.md
+    - Health Checks: admin/health-checks.md
+    - Upgrade Guide: admin/upgrade-guide.md
   - Tutorials: 
     - Installation & Setup: tutorials/getting-started.md
     - Create First Asset: tutorials/create-first-asset.md
