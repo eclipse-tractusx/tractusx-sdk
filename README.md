@@ -498,6 +498,8 @@ Providing reusable modules:
 - [Extensions](./src/tractusx_sdk/extensions)
   - Allows you to extend the SDK tool box with your use case specifics and reusable components.
 
+For a full arc42 architecture documentation see [docs/architecture/](./docs/architecture/index.md).
+
 ![Architecture](https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/docs/media/catena-x-speedway-sdk.svg)
 
 ## Industry Core Hub Example
