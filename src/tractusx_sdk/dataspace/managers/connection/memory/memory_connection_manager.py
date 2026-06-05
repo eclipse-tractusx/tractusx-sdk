@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2025 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
@@ -181,3 +182,36 @@ class MemoryConnectionManager(BaseConnectionManager):
                 if self.logger and self.verbose:
                     self.logger.error("[Memory Connection Manager] No EDR found to delete for the provided keys.")
                 return False
+
+    def clear_connections_by_party(self, counter_party_id_substring: str) -> int:
+        """
+        Removes all cached EDR connections whose ``counter_party_id`` key contains
+        ``counter_party_id_substring``.
+
+        Useful when the cache stores entries keyed by the full counterparty DID
+        (e.g. ``did:web:wallet.example.com:BPNL000000000065``) but the caller only
+        knows the short BPN form.  A substring match covers both representations
+        without requiring the caller to resolve the DID first.
+
+        Args:
+            counter_party_id_substring (str): Substring to match against each
+                ``counter_party_id`` key (e.g. ``"BPNL000000000065"``).
+
+        Returns:
+            int: Number of top-level party entries removed from the cache.
+        """
+        with self._lock:
+            keys_to_remove = [
+                k for k in self.open_connections
+                if k != self.edrs_key and counter_party_id_substring in k
+            ]
+            for key in keys_to_remove:
+                del self.open_connections[key]
+
+            removed = len(keys_to_remove)
+            if self.logger and removed > 0:
+                self.logger.info(
+                    "[Memory Connection Manager] Cleared %d party cache entries matching substring '%s'.",
+                    removed, counter_party_id_substring
+                )
+            return removed

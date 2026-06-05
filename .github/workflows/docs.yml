@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0  # Fetch full history for mike versioning
       
@@ -65,12 +65,12 @@ jobs:
       
       - name: Deploy documentation
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+          if [["$GITHUB_REF" == refs/tags/* ]]; then
             # Deploy tagged version
             VERSION=${GITHUB_REF#refs/tags/v}
             poetry run mike deploy --push --update-aliases $VERSION latest
             poetry run mike set-default --push latest
-          elif [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+          elif [["$GITHUB_REF" == "refs/heads/main" ]]; then
             # Deploy development version from main branch
             poetry run mike deploy --push --title "Development" main
           fi
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       
       - uses: actions/setup-python@v4
         with:
