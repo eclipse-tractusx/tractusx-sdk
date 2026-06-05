@@ -94,7 +94,7 @@ pypi/pypi/-/typer/0.15.4, MIT, approved, #21293
 pypi/pypi/-/typing-inspection/0.4.2, MIT, approved, #26752
 pypi/pypi/-/typing_extensions/4.15.0, BSD-3-Clause AND Python-2.0 AND PSF-2.0, approved, #23202
 pypi/pypi/-/tzdata/2025.3, Apache-2.0, approved, #25563
-pypi/pypi/-/urllib3/2.6.3, MIT AND Python-2.0 AND MPL-2.0, approved, #25564
+pypi/pypi/-/urllib3/2.7.0, MIT AND Python-2.0, approved, #28317
 pypi/pypi/-/uvicorn/0.34.3, BSD-3-Clause, approved, #21063
 pypi/pypi/-/uvloop/0.22.1, Apache-2.0 AND MIT AND ISC AND 0BSD AND GPL-3.0-or-later WITH Autoconf-exception-macro AND GPL-3.0-or-later WITH Autoconf-exception-generic-3.0 AND GPL-2.0-or-later WITH Libtool-exception AND FSFUL AND FSFULLR AND X11 AND CC-BY-4.0 AND LicenseRef-Public-Domain, approved, #27673
 pypi/pypi/-/verspec/0.1.0, Apache-2.0, approved, clearlydefined
