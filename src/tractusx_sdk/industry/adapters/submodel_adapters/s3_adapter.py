@@ -221,7 +221,7 @@ class S3Adapter(SubmodelAdapter):
             self.client.delete_object(Bucket=self.bucket_name, Key=key)
         except self.client_error as e:
             raise RuntimeError(
-                f"Failed to delete from S3: bucket={self.bucket_name}, key={key}"
+                f"Failed to delete S3 object: bucket={self.bucket_name}, key={key}"
             ) from e
 
     def exists(self, submodel_metadata: Mapping[str, Any]) -> bool:

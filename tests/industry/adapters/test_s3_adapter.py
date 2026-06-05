@@ -24,7 +24,6 @@
 
 import json
 import unittest
-from unittest.mock import patch, MagicMock
 
 from moto import mock_aws
 import boto3
@@ -42,7 +41,7 @@ class TestS3Adapter(unittest.TestCase):
         # Create a mock S3 bucket
         self.bucket_name = "test-bucket"
         self.region_name = "eu-central-1"
-        
+
         # Create the bucket using boto3 (which is mocked by @mock_s3)
         s3_client = boto3.client("s3", region_name=self.region_name)
         s3_client.create_bucket(
@@ -53,7 +52,7 @@ class TestS3Adapter(unittest.TestCase):
     def test_adapter_initialization_with_required_params(self):
         """Test S3Adapter initializes with required bucket_name and region_name"""
         adapter = S3Adapter(bucket_name=self.bucket_name, region_name=self.region_name)
-        
+
         self.assertEqual(adapter.bucket_name, self.bucket_name)
         self.assertEqual(adapter.key_pattern, "{path}")
 
@@ -65,7 +64,7 @@ class TestS3Adapter(unittest.TestCase):
             region_name=self.region_name,
             key_pattern=key_pattern
         )
-        
+
         self.assertEqual(adapter.key_pattern, key_pattern)
 
     def test_adapter_initialization_with_region(self):
@@ -74,28 +73,28 @@ class TestS3Adapter(unittest.TestCase):
             bucket_name=self.bucket_name,
             region_name=self.region_name
         )
-        
+
         self.assertIsNotNone(adapter.client)
 
     def test_adapter_initialization_missing_bucket_name(self):
         """Test S3Adapter raises ValueError when bucket_name is missing"""
         with self.assertRaises(ValueError) as context:
             S3Adapter(bucket_name="", region_name=self.region_name)
-        
+
         self.assertIn("bucket_name must be a non-empty string", str(context.exception))
 
     def test_adapter_initialization_invalid_bucket_name_type(self):
         """Test S3Adapter raises ValueError when bucket_name is not a string"""
         with self.assertRaises(ValueError) as context:
             S3Adapter(bucket_name=None, region_name=self.region_name)
-        
+
         self.assertIn("bucket_name must be a non-empty string", str(context.exception))
 
     def test_adapter_initialization_empty_key_pattern(self):
         """Test S3Adapter raises ValueError when key_pattern is empty"""
         with self.assertRaises(ValueError) as context:
             S3Adapter(bucket_name=self.bucket_name, region_name=self.region_name, key_pattern="")
-        
+
         self.assertIn("key_pattern must be a non-empty string", str(context.exception))
 
     def test_adapter_initialization_credentials_both_provided(self):
@@ -106,7 +105,7 @@ class TestS3Adapter(unittest.TestCase):
             aws_access_key_id="test-key",
             aws_secret_access_key="test-secret"
         )
-        
+
         self.assertIsNotNone(adapter.client)
 
     def test_adapter_initialization_only_access_key(self):
@@ -117,8 +116,8 @@ class TestS3Adapter(unittest.TestCase):
                 region_name=self.region_name,
                 aws_access_key_id="test-key"
             )
-        
-        self.assertIn("Both aws_access_key_id and aws_secret_access_key must be provided together", 
+
+        self.assertIn("Both aws_access_key_id and aws_secret_access_key must be provided together",
                      str(context.exception))
 
     def test_adapter_initialization_only_secret_key(self):
@@ -129,7 +128,7 @@ class TestS3Adapter(unittest.TestCase):
                 region_name=self.region_name,
                 aws_secret_access_key="test-secret"
             )
-        
+
         self.assertIn("Both aws_access_key_id and aws_secret_access_key must be provided together",
                      str(context.exception))
 
@@ -138,9 +137,9 @@ class TestS3Adapter(unittest.TestCase):
         adapter = S3Adapter(bucket_name=self.bucket_name, region_name=self.region_name)
         metadata = {"path": "submodels/test.json"}
         content = {"id": "test-id", "name": "test-submodel"}
-        
+
         adapter.write_json(metadata, content)
-        
+
         # Verify the object was written
         response = adapter.client.get_object(Bucket=self.bucket_name, Key="submodels/test.json")
         written_content = json.loads(response["Body"].read())
@@ -150,9 +149,9 @@ class TestS3Adapter(unittest.TestCase):
         """Test writing None as JSON content"""
         adapter = S3Adapter(bucket_name=self.bucket_name, region_name=self.region_name)
         metadata = {"path": "submodels/test.json"}
-        
+
         adapter.write_json(metadata, None)
-        
+
         # Verify null was written
         response = adapter.client.get_object(Bucket=self.bucket_name, Key="submodels/test.json")
         written_content = json.loads(response["Body"].read())
@@ -162,10 +161,10 @@ class TestS3Adapter(unittest.TestCase):
         """Test write_json raises TypeError for non-mapping content"""
         adapter = S3Adapter(bucket_name=self.bucket_name, region_name=self.region_name)
         metadata = {"path": "submodels/test.json"}
-        
+
         with self.assertRaises(TypeError) as context:
             adapter.write_json(metadata, ["not", "a", "mapping"])
-        
+
         self.assertIn("content must be a mapping or None", str(context.exception))
 
     def test_write_json_with_custom_key_pattern(self):
@@ -180,7 +179,7 @@ class TestS3Adapter(unittest.TestCase):
         content = {"data": "test"}
         
         adapter.write_json(metadata, content)
-        
+
         # Verify object was written to correct key
         response = adapter.client.get_object(
             Bucket=self.bucket_name, 
