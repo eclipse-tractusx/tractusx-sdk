@@ -61,7 +61,7 @@ jobs:
         run: pip install poetry
       
       - name: Install dependencies
-        run: poetry install --with docs
+        run: poetry install --with docs --extras s3
       
       - name: Deploy documentation
         run: |
@@ -89,7 +89,7 @@ jobs:
         run: pip install poetry
       
       - name: Install dependencies
-        run: poetry install --with docs
+        run: poetry install --with docs --extras s3
       
       - name: Build documentation
         run: poetry run mkdocs build --strict
