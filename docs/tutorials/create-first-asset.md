@@ -188,6 +188,7 @@ try:
         asset_id="test-asset-001",
         base_url="https://example.com/data",
         dct_type="example-type",
+        # dct_subject is optional
         version="3.0"
     )
 
@@ -274,6 +275,7 @@ try:
     # asset_id="test-asset-001",
     # base_url="https://example.com/data",
     # dct_type="example-type",
+    # dct_subject="cx-taxo:ExampleSubject",  # optional
     # version="3.0"
     # )
 
