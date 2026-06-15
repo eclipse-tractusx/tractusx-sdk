@@ -29,6 +29,6 @@ This module contains extensions for the Tractus-X SDK, including:
 - tck: Tools, Checkers, and Helpers for various SDK components
 """
 
-__version__ = '0.8.0-rc2'
+__version__ = '0.8.0'
 __author__ = 'Eclipse Tractus-X Contributors'
 __license__ = "Apache License, Version 2.0"
