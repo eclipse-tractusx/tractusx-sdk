@@ -31,7 +31,7 @@ The SDK follows [Semantic Versioning 2.0.0](https://semver.org/):
 | **Minor** (0.**x**.0) | New features, new dataspace version support — backward compatible; no code changes required for existing APIs |
 | **Major** (**x**.0.0) | Breaking API changes — review migration notes before upgrading |
 
-Check the [CHANGELOG.md](../../CHANGELOG.md) `### Fixed` and `### Security` sections for patch notes, and `### Added` / `### Changed` for minor/major notes.
+Check the [CHANGELOG.md](https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CHANGELOG.md) `### Fixed` and `### Security` sections for patch notes, and `### Added` / `### Changed` for minor/major notes.
 
 ## Upgrading the SDK Version
 
@@ -51,7 +51,7 @@ poetry install
 
 After upgrading:
 
-1. Review the [CHANGELOG.md](../../CHANGELOG.md) for any `### Changed` entries affecting your usage
+1. Review the [CHANGELOG.md](https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/CHANGELOG.md) for any `### Changed` entries affecting your usage
 2. Run your test suite: `pytest`
 3. Verify behavior against your target EDC connector
 

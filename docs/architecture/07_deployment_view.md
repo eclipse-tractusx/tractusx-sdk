@@ -43,7 +43,7 @@ poetry add tractusx-sdk
 | Source code | [https://github.com/eclipse-tractusx/tractusx-sdk](https://github.com/eclipse-tractusx/tractusx-sdk) |
 | Release tags | GitHub Releases (e.g., `v0.8.0`) |
 
-The package is published automatically to PyPI via the [release workflow](.github/workflows/release.yaml) when a version tag is pushed.
+The package is published automatically to PyPI via the [release workflow](https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/.github/workflows/release.yaml) when a version tag is pushed.
 
 ## Consuming Application Deployment
 
