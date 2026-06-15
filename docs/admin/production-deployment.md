@@ -67,10 +67,14 @@ For deployable microservices built on the SDK, see [tractusx-sdk-services](https
 Use `MemoryConnectionManager` (default). The EDR cache lives in RAM and is fast.
 
 ```python
+import os
+from tractusx_sdk.dataspace.services.connector.service_factory import ServiceFactory
+
 # Default — no explicit manager needed
 service = ServiceFactory.get_connector_consumer_service(
     dataspace_version="saturn",
     base_url=os.environ["EDC_BASE_URL"],
+    dma_path=os.environ["EDC_DMA_PATH"],
     headers=headers,
 )
 ```
@@ -82,7 +86,7 @@ Use `PostgresConnectionManager` so all processes share the same EDR state. Witho
 ```python
 import os
 from sqlmodel import create_engine
-from tractusx_sdk.dataspace.managers.connection.postgres import PostgresConnectionManager
+from tractusx_sdk.dataspace.managers.connection.database import PostgresConnectionManager
 from tractusx_sdk.dataspace.services.connector.service_factory import ServiceFactory
 
 engine = create_engine(os.environ["DATABASE_URL"])
@@ -91,6 +95,7 @@ manager = PostgresConnectionManager(engine=engine, table_name="edr_connections")
 service = ServiceFactory.get_connector_consumer_service(
     dataspace_version="saturn",
     base_url=os.environ["EDC_BASE_URL"],
+    dma_path=os.environ["EDC_DMA_PATH"],
     headers=headers,
     connection_manager=manager,
 )
@@ -106,7 +111,7 @@ Use `FileSystemConnectionManager` to persist the EDR cache across restarts witho
 from tractusx_sdk.dataspace.managers.connection.file_system import FileSystemConnectionManager
 
 manager = FileSystemConnectionManager(
-    file_path="/var/data/edr_connections.json",
+    path="/var/data/edr_connections.json",
     persist_interval=30,
 )
 ```

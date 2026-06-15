@@ -49,14 +49,13 @@ Custom authentication managers can be created by implementing `AuthManagerInterf
 
 ## Connection and EDR Cache
 
-The SDK maintains an **in-memory cache** for EDR (Endpoint Data Reference) tokens obtained after successful contract negotiations. This avoids redundant negotiations for the same BPN + `dct:type` combination within the lifecycle of the service instance.
+The SDK maintains a **connection cache** for EDR (Endpoint Data Reference) tokens obtained after successful contract negotiations. This avoids redundant negotiations for the same provider endpoint within the lifecycle of the service instance.
 
 Key behaviors:
 
-- Cache is keyed by `(bpnl, dct_type)` tuples
-- Cache can be disabled via the `disabled=True` parameter on the connection manager
-- Cache entries can be evicted per Business Partner with `clear_connections_by_party(bpnl)`
-- The cache is **not persisted** — it is lost when the process restarts (see [ADR-0002](../contributing/architectural-decisions/0002-data-storage-architecture.md))
+- Cache is keyed by counterparty ID and provider address, together with asset checksums
+- Cache entries can be evicted per Business Partner with `clear_connections_by_party(counterparty_id)`
+- By default the cache is held **in-memory** and is lost on process restart. `FileSystemConnectionManager` and `PostgresConnectionManager` provide optional persistence (see [ADR-0002](../contributing/architectural-decisions/0002-data-storage-architecture.md))
 
 ## Multi-Version Support
 

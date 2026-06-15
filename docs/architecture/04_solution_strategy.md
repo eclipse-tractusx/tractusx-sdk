@@ -40,15 +40,16 @@ This allows new EDC versions to be added without modifying existing stable code,
 service = ServiceFactory.get_connector_consumer_service(
     dataspace_version="saturn",  # or "jupiter"
     base_url="https://connector.example.com",
+    dma_path="/management",
     headers=headers,
 )
 ```
 
-### 3. No Persistence in the SDK
+### 3. Optional Persistence — In-Memory by Default
 
-The SDK deliberately has no database or persistence layer. It provides an in-memory cache for short-lived connection state (e.g., EDR tokens), which can be disabled. All long-term storage is the responsibility of the consuming application. See [ADR-0002](../contributing/architectural-decisions/0002-data-storage-architecture.md).
+The SDK defaults to an **in-memory cache** for short-lived connection state (e.g., EDR tokens). For applications that need durability across restarts or horizontal scaling, the SDK also ships `FileSystemConnectionManager` (JSON file) and `PostgresConnectionManager` (PostgreSQL) as drop-in alternatives. All long-term business data storage remains the responsibility of the consuming application. See [ADR-0002](../contributing/architectural-decisions/0002-data-storage-architecture.md).
 
-This keeps the SDK stateless and testable, and avoids coupling it to any specific storage technology.
+This keeps the SDK lightweight for simple use cases while providing persistence options for production deployments, without coupling core logic to any specific storage technology.
 
 ### 4. Separate Repository for Microservices
 

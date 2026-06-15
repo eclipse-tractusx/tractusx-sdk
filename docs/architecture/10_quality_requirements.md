@@ -50,7 +50,7 @@ The following quality scenarios are derived from the quality goals in [Chapter 1
 
 | Scenario ID | Stimulus | Response | Metric |
 |-------------|---------|----------|--------|
-| Q-T1 | A pull request is opened | CI runs the full test suite and reports coverage | Coverage enforced by `pytest-cov`; PRs failing coverage are blocked |
+| Q-T1 | A pull request is opened | CI runs the full test suite and reports coverage | Coverage reported by `pytest-cov`; not currently enforced as a PR gate |
 | Q-T2 | A developer writes a unit test for a service | The service can be tested without a running EDC | All adapter HTTP calls can be mocked via `requests-mock` |
 
 ### Extensibility

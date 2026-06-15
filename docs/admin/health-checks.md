@@ -25,8 +25,8 @@ The Eclipse Tractus-X SDK provides access to the EDC connector's built-in health
 
 | Method | EDC Endpoint | Purpose |
 |--------|-------------|---------|
-| `get_health` | `GET /api/check/health` | Overall health of the connector application |
-| `get_liveness` | `GET /api/check/liveness` | Whether the connector process is alive |
+| `get_health` | `GET /<dma_path>/check/health` (e.g., `/management/check/health`) | Overall health of the connector application |
+| `get_liveness` | `GET /<dma_path>/check/liveness` (e.g., `/management/check/liveness`) | Whether the connector process is alive |
 
 !!! note
     These methods call the **EDC connector's** health endpoints — they report on the EDC's health, not the health of your application. Use them to include EDC reachability as a component in your application's own health probe.
@@ -36,6 +36,7 @@ The Eclipse Tractus-X SDK provides access to the EDC connector's built-in health
 The `ApplicationObservabilityController` is accessed via the `ControllerFactory`:
 
 ```python
+import os
 from tractusx_sdk.dataspace.controllers.connector.controller_factory import ControllerFactory
 from tractusx_sdk.dataspace.adapters.connector.adapter_factory import AdapterFactory
 

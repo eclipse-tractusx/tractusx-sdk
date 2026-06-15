@@ -38,7 +38,7 @@ We use Architecture Decision Records to document all significant architectural c
 
 ### ADR-0002 — Data Storage Architecture
 
-The SDK provides an **in-memory cache only**. No persistence layer is included. Consuming applications are responsible for their own storage strategy. This keeps the SDK stateless and technology-agnostic.
+The SDK defaults to an **in-memory cache** for EDR connection state. Optional persistent managers (`FileSystemConnectionManager`, `PostgresConnectionManager`) are shipped for deployments that require durability. All business-domain storage remains the responsibility of consuming applications. This keeps the SDK technology-agnostic while offering flexibility for production use cases.
 
 ### ADR-0003 — SDK Module Architecture
 

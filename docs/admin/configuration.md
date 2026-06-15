@@ -31,14 +31,14 @@ from tractusx_sdk.dataspace.services.connector.service_factory import ServiceFac
 service = ServiceFactory.get_connector_consumer_service(
     dataspace_version="saturn",        # "jupiter" or "saturn"
     base_url="https://edc.example.com",
-    dma_path="/management",            # optional, defaults to /management
+    dma_path="/management",
     headers={
         "Authorization": "Bearer <token>",
         "Content-Type": "application/json",
     },
     connection_manager=my_manager,     # optional, defaults to MemoryConnectionManager
     logger=my_logger,                  # optional, defaults to tractusx_sdk logger
-    verbose=False,                     # optional, enables debug-level HTTP logging
+    verbose=False,                     # optional, defaults to True; set False in production
 )
 ```
 
@@ -48,11 +48,11 @@ service = ServiceFactory.get_connector_consumer_service(
 |-----------|------|----------|---------|-------------|
 | `dataspace_version` | `str` | Yes | — | Protocol version: `"jupiter"` (EDC 0.8.x–0.10.x) or `"saturn"` (EDC 0.11.x+, DSP 2025-1) |
 | `base_url` | `str` | Yes | — | Base URL of the EDC connector control plane (e.g., `https://edc.example.com`) |
-| `dma_path` | `str` | No | `/management` | Path prefix for the Management API |
+| `dma_path` | `str` | Yes | — | Path prefix for the Management API (e.g., `"/management"`). There is no built-in default — this must always be provided. |
 | `headers` | `dict` | Yes | — | HTTP headers injected into every request. Must include auth headers. |
 | `connection_manager` | `ConnectionManager` | No | `MemoryConnectionManager` | Manages EDR connection state. See [Connection Managers](#connection-managers). |
 | `logger` | `logging.Logger` | No | SDK default logger | Logger instance for SDK output. |
-| `verbose` | `bool` | No | `False` | When `True`, logs every HTTP request and response body at DEBUG level. |
+| `verbose` | `bool` | No | `True` | When `True`, logs every HTTP request and response body at DEBUG level. Set `False` in production to avoid leaking sensitive data into logs. |
 
 ## Connection Managers
 
@@ -80,24 +80,25 @@ manager = MemoryConnectionManager(verbose=True)
 from tractusx_sdk.dataspace.managers.connection.file_system import FileSystemConnectionManager
 
 manager = FileSystemConnectionManager(
-    file_path="/var/data/edr_connections.json",
+    path="/var/data/edr_connections.json",
     persist_interval=60,  # flush to disk every 60 seconds
 )
 ```
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `file_path` | `str` | Path to the JSON file used to persist connections |
-| `persist_interval` | `int` | Seconds between automatic disk flushes (default: 60) |
+| `path` | `str` | Path to the JSON file used to persist connections |
+| `persist_interval` | `int` | Seconds between automatic disk flushes (default: 5) |
 
 ### PostgresConnectionManager
 
 ```python
-from tractusx_sdk.dataspace.managers.connection.postgres import PostgresConnectionManager
+from tractusx_sdk.dataspace.managers.connection.database import PostgresConnectionManager
 from sqlmodel import create_engine
+import os
 
 engine = create_engine(
-    "postgresql://user:password@db-host:5432/mydb",
+    os.environ["DATABASE_URL"],
     pool_size=5,
     max_overflow=10,
 )
@@ -125,6 +126,7 @@ manager = PostgresConnectionManager(
 ### OAuth2Manager (recommended for production)
 
 ```python
+import os
 from tractusx_sdk.dataspace.managers import OAuth2Manager
 
 auth_manager = OAuth2Manager(
@@ -143,6 +145,7 @@ The `OAuth2Manager` fetches and caches the token automatically, refreshing it be
 ### AuthManager (development / simple setups only)
 
 ```python
+import os
 from tractusx_sdk.dataspace.managers import AuthManager
 
 auth_manager = AuthManager(api_key=os.environ["EDC_API_KEY"])
@@ -163,13 +166,16 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("my-app.sdk")
 
 service = ServiceFactory.get_connector_consumer_service(
-    ...,
+    dataspace_version="saturn",
+    base_url="https://edc.example.com",
+    dma_path="/management",
+    headers=headers,
     logger=logger,
-    verbose=False,  # set True to log HTTP bodies at DEBUG level
+    verbose=False,  # set False to avoid logging HTTP bodies in production
 )
 ```
 
-Set `verbose=True` only in development — it logs full HTTP request/response bodies which may contain sensitive data.
+Set `verbose=False` in production — `verbose=True` (the default) logs full HTTP request/response bodies which may contain sensitive data.
 
 ## Environment Variable Reference
 
@@ -178,6 +184,7 @@ The SDK does not read environment variables directly, but the following pattern 
 | Variable (suggested name) | Used for |
 |--------------------------|---------|
 | `EDC_BASE_URL` | `base_url` in `ServiceFactory` |
+| `EDC_DMA_PATH` | `dma_path` in `ServiceFactory` (e.g., `"/management"`) |
 | `EDC_API_KEY` | `AuthManager` (development only) |
 | `IAM_TOKEN_URL` | `OAuth2Manager.token_url` |
 | `CLIENT_ID` | `OAuth2Manager.client_id` |
