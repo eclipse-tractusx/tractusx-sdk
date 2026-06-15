@@ -88,6 +88,7 @@ class BaseConnectorProviderService(BaseService):
         asset_id: str,
         base_url: str,
         dct_type: str = None,
+        dct_subject: str = None,
         version: str = "3.0",
         semantic_id: str = None,
         proxy_params: dict = {
@@ -132,6 +133,11 @@ class BaseConnectorProviderService(BaseService):
         if dct_type is not None:
             properties["dct:type"] = {
                 "@id": dct_type
+            }
+
+        if dct_subject is not None:
+            properties["dct:subject"] = {
+                "@id": dct_subject
             }
 
         if version is not None:
