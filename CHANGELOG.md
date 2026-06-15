@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See also the overarching [CHANGELOG.md](https://eclipse-tractusx.github.io/changelog) for Tractus-X releases.
 
-## [Unreleased]
+## [0.8.0] - 2026-06-15
 
 ### Added
 
@@ -17,9 +17,11 @@ See also the overarching [CHANGELOG.md](https://eclipse-tractusx.github.io/chang
 
 ### Changed
 
+- chore: qg x checks release r2606 — TRG compliance, Administrator's Guide, and architecture documentation by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/225
 - chore: switch GitHub Actions checkout to SHA pins by @stephanbcbauer in https://github.com/eclipse-tractusx/tractusx-sdk/pull/214
 - build(deps-dev): bump pymdown-extensions from 10.21 to 10.21.3 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/215
 - build(deps): bump idna from 3.11 to 3.15 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/216
+- build(deps): bump urllib3 from 2.6.3 to 2.7.0 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/213
 - build(deps): bump python-multipart from 0.0.26 to 0.0.27 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/210
 - build(deps): bump requests from 2.32.5 to 2.33.0 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/199
 - build(deps): bump cryptography from 46.0.5 to 46.0.7 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/203
