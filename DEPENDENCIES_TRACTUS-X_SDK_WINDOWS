@@ -94,3 +94,4 @@ pypi/pypi/-/verspec/0.1.0, Apache-2.0, approved, clearlydefined
 pypi/pypi/-/watchdog/6.0.0, Apache-2.0 AND Python-2.0, approved, #23866
 pypi/pypi/-/watchfiles/1.1.1, MIT, approved, clearlydefined
 pypi/pypi/-/websockets/16.0, BSD-3-Clause AND Apache-2.0 AND PSF-2.0 AND Python-2.0, approved, #25768
+pypi/pypi/-/winloop/0.1.91, Apache-2.0 AND MIT AND ISC AND CC-BY-4.0 AND BSD-2-Clause AND (GPL-3.0-or-later WITH Autoconf-exception-macro), approved, #20508
