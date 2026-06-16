@@ -195,3 +195,75 @@ def test_create_asset_no_verbose_logging(mock_get_asset_model, mock_dma_adapter,
     service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
 
     logger.info.assert_not_called()
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_with_dct_subject(mock_get_asset_model, service):
+    """create_asset passes dct:subject as a property when dct_subject is provided."""
+    captured_properties = {}
+
+    def capture_call(**kwargs):
+        captured_properties.update(kwargs.get("properties", {}))
+        return Mock(to_data=lambda: "{}")
+
+    mock_get_asset_model.side_effect = capture_call
+    mock_response = Mock(status_code=200)
+    mock_response.json.return_value = {"@id": "123"}
+    service._asset_controller.create.return_value = mock_response
+
+    service.create_asset(
+        asset_id="123",
+        base_url="http://test",
+        dct_type="cx-taxo:CCMAPI",
+        dct_subject="cx-taxo:CompanyCertificateManagementNotificationApi",
+    )
+
+    assert captured_properties["dct:type"] == {"@id": "cx-taxo:CCMAPI"}
+    assert captured_properties["dct:subject"] == {"@id": "cx-taxo:CompanyCertificateManagementNotificationApi"}
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_without_dct_subject_omits_property(mock_get_asset_model, service):
+    """When dct_subject is not provided, dct:subject is absent from the properties."""
+    captured_properties = {}
+
+    def capture_call(**kwargs):
+        captured_properties.update(kwargs.get("properties", {}))
+        return Mock(to_data=lambda: "{}")
+
+    mock_get_asset_model.side_effect = capture_call
+    mock_response = Mock(status_code=200)
+    mock_response.json.return_value = {"@id": "123"}
+    service._asset_controller.create.return_value = mock_response
+
+    service.create_asset(
+        asset_id="123",
+        base_url="http://test",
+        dct_type="cx-taxo:SubmodelBundle",
+    )
+
+    assert "dct:subject" not in captured_properties
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_dct_subject_without_dct_type(mock_get_asset_model, service):
+    """dct_subject can be set independently of dct_type."""
+    captured_properties = {}
+
+    def capture_call(**kwargs):
+        captured_properties.update(kwargs.get("properties", {}))
+        return Mock(to_data=lambda: "{}")
+
+    mock_get_asset_model.side_effect = capture_call
+    mock_response = Mock(status_code=200)
+    mock_response.json.return_value = {"@id": "123"}
+    service._asset_controller.create.return_value = mock_response
+
+    service.create_asset(
+        asset_id="123",
+        base_url="http://test",
+        dct_subject="cx-taxo:CompanyCertificateManagementNotificationApi",
+    )
+
+    assert "dct:type" not in captured_properties
+    assert captured_properties["dct:subject"] == {"@id": "cx-taxo:CompanyCertificateManagementNotificationApi"}

@@ -163,7 +163,7 @@ Combined:
 | `get_filter_expression`    | `filter_params`                                | Build filter expression for catalog queries      |
 | `contract_negotiations`    | `counter_party_id`, `asset_id`, `policies`     | List or manage contract negotiations             |
 | `transfer_processes`       | `contract_id`, `asset_id`                      | List or manage data transfer processes           |
-| `create_asset`             | `asset_id`, `base_url`, `dct_type`, `version`, `semantic_id` | Create and publish an asset                      |
+| `create_asset`             | `asset_id`, `base_url`, `dct_type`, `dct_subject`, `version`, `semantic_id` | Create and publish an asset                      |
 | `create_contract`          | `contract_params`                              | Create a contract definition                     |
 | `create_policy`            | `policy_params`                                | Create a policy for data sharing                 |
 | `assets`                   | `asset_id`, `asset_data`                       | Manage assets (CRUD operations)                  |
@@ -367,7 +367,7 @@ The Saturn `ConnectorProviderService` is identical to the base. All methods are 
 
 | Method | Key Parameters | Description |
 |--------|---------------|-------------|
-| `create_asset(asset_id, base_url, dct_type, version, semantic_id, proxy_params, headers, private_properties, ...)` | `asset_id: str`, `base_url: str` | Build and POST a complete EDC asset (data address + properties + private properties) |
+| `create_asset(asset_id, base_url, dct_type, dct_subject, version, semantic_id, proxy_params, headers, private_properties, ...)` | `asset_id: str`, `base_url: str` | Build and POST a complete EDC asset (data address + properties + private properties) |
 | `create_contract(asset_id, access_policy_id, usage_policy_id, ...)` | `asset_id: str` | Build and POST a contract definition linking an asset to access and usage policies |
 | `create_policy(policy_id, permissions, ...)` | `policy_id: str` | Build and POST an ODRL policy |
 
@@ -430,6 +430,15 @@ provider.create_asset(
     base_url="https://submodel-service.example.com/",
     dct_type="https://w3id.org/catenax/taxonomy#Submodel",
     semantic_id="urn:samm:io.catenax.part_type_information:1.0.0#PartTypeInformation",
+    version="3.0",
+)
+
+# For notification APIs that use both dct:type (category) and dct:subject (specific API):
+provider.create_asset(
+    asset_id="urn:uuid:ccm-notification-asset",
+    base_url="https://notification-service.example.com/",
+    dct_type="cx-taxo:CCMAPI",
+    dct_subject="cx-taxo:CompanyCertificateManagementNotificationApi",
     version="3.0",
 )
 
