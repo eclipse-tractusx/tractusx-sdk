@@ -1,5 +1,5 @@
 #################################################################################
-# Eclipse Tractus-X - Industry Core Hub Backend
+# Eclipse Tractus-X - Software Development KIT
 #
 # Copyright (c) 2026 DRÄXLMAIER Group
 # (represented by Lisa Dräxlmaier GmbH)
@@ -22,8 +22,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
-
-# TODO: Move to Tractus-X SDK if it can be generalized for any HTTP-based submodel service
 
 from typing import Dict, Any, Mapping, Optional
 from uuid import UUID
