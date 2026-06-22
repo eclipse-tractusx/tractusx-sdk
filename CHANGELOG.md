@@ -5,6 +5,43 @@ Further information can be found on the [README.md](README.md) file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+See also the overarching [CHANGELOG.md](https://eclipse-tractusx.github.io/changelog) for Tractus-X releases.
+
+## [0.8.0] - 2026-06-15
+
+### Added
+
+- feat: add `clear_connections_by_party` method to connection managers for protocol-agnostic EDR cache eviction by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/220
+- feat: add `do_get_by_dct_type_with_bpnl` and `do_put_by_dct_type_with_bpnl` convenience methods to `ConnectorConsumerService` (saturn) by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/218
+- feat: add Python 3.13 and 3.14 compatibility test workflow by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/207
+
+### Changed
+
+- chore: qg x checks release r2606 — TRG compliance, Administrator's Guide, and architecture documentation by @CDiezRodriguez in https://github.com/eclipse-tractusx/tractusx-sdk/pull/225
+- chore: switch GitHub Actions checkout to SHA pins by @stephanbcbauer in https://github.com/eclipse-tractusx/tractusx-sdk/pull/214
+- build(deps-dev): bump pymdown-extensions from 10.21 to 10.21.3 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/215
+- build(deps): bump idna from 3.11 to 3.15 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/216
+- build(deps): bump urllib3 from 2.6.3 to 2.7.0 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/213
+- build(deps): bump python-multipart from 0.0.26 to 0.0.27 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/210
+- build(deps): bump requests from 2.32.5 to 2.33.0 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/199
+- build(deps): bump cryptography from 46.0.5 to 46.0.7 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/203
+- build(deps-dev): bump pytest from 8.4.2 to 9.0.3 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/208
+- build(deps): bump python-multipart from 0.0.22 to 0.0.26 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/204
+- build(deps): bump pygments from 2.19.2 to 2.20.0 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/202
+- build(deps): bump ecdsa from 0.19.1 to 0.19.2 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/200
+- build(deps): bump pyasn1 from 0.6.2 to 0.6.3 by @dependabot[bot] in https://github.com/eclipse-tractusx/tractusx-sdk/pull/196
+
+## [0.7.2] - 2026-04-13
+
+### Added
+
+- feat: add caching tool by @gerbigf in https://github.com/eclipse-tractusx/tractusx-sdk/pull/197
+- init: geometry aspect validator extension and reorganize examples directory by @HannesKrug in https://github.com/eclipse-tractusx/tractusx-sdk/pull/184
+
+### Fixed
+
+- hotfix: fix dependency download URLs in workflow to use eclipse repository by @matbmoser in https://github.com/eclipse-tractusx/tractusx-sdk/pull/198
+
 ## [0.7.1] - R26.03
 
 ### Fixed
@@ -243,6 +280,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Added initial commit with open source requirements
 - Added initial architecture documentation
-
-
-

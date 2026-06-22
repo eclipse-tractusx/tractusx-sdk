@@ -116,6 +116,27 @@ nav:
     - Welcome: index.md
     - Overview: home/overview.md
     - Quick Start: home/quick-start.md
+  - Architecture:
+    - Overview: architecture/index.md
+    - 1. Introduction and Goals: architecture/01_introduction_and_goals.md
+    - 2. Architecture Constraints: architecture/02_architecture_constraints.md
+    - 3. System Scope and Context: architecture/03_system_scope_and_context.md
+    - 4. Solution Strategy: architecture/04_solution_strategy.md
+    - 5. Building Block View: architecture/05_building_block_view.md
+    - 6. Runtime View: architecture/06_runtime_view.md
+    - 7. Deployment View: architecture/07_deployment_view.md
+    - 8. Cross-cutting Concepts: architecture/08_concepts.md
+    - 9. Architecture Decisions: architecture/09_architecture_decisions.md
+    - 10. Quality Requirements: architecture/10_quality_requirements.md
+    - 11. Technical Risks: architecture/11_technical_risks.md
+    - 12. Glossary: architecture/12_glossary.md
+  - Administration:
+    - Overview: admin/index.md
+    - Configuration: admin/configuration.md
+    - Production Deployment: admin/production-deployment.md
+    - Security: admin/security.md
+    - Health Checks: admin/health-checks.md
+    - Upgrade Guide: admin/upgrade-guide.md
   - Tutorials: 
     - Installation & Setup: tutorials/getting-started.md
     - Create First Asset: tutorials/create-first-asset.md
