@@ -20,6 +20,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+import json
 import unittest
 from copy import deepcopy
 from unittest.mock import MagicMock, Mock
@@ -66,7 +67,7 @@ class TestModelFactoryContractNegotiation(unittest.TestCase):
 
     def test_get_contract_negotiation_model_with_offer_policy_model_only(self):
         policy_model = Mock(BasePolicyModel)
-        policy_model.to_data = MagicMock(return_value=deepcopy(self.policy_data))
+        policy_model.to_data = MagicMock(return_value=json.dumps(deepcopy(self.policy_data)))
 
         model = ModelFactory.get_contract_negotiation_model(
             dataspace_version=self.dataspace_version,
@@ -112,7 +113,7 @@ class TestModelFactoryContractNegotiation(unittest.TestCase):
         }
 
         policy_model = Mock(BasePolicyModel)
-        policy_model.to_data = MagicMock(return_value=deepcopy(self.policy_data))
+        policy_model.to_data = MagicMock(return_value=json.dumps(deepcopy(self.policy_data)))
 
         model = ModelFactory.get_contract_negotiation_model(
             dataspace_version=self.dataspace_version,

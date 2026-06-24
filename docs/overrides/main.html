@@ -25,127 +25,349 @@
 
 {% block styles %}
   {{ super() }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ 'assets/stylesheets/orange-black-theme.css' | url }}">
   <style>
-    /* Fix version number display and header spacing */
+    /*
+     * Header layout — single row using flexbox
+     * DOM order: Logo → Hamburger → Title → Palette → SearchIcon → Search → Source
+     * Visual order: Logo | Title+docs | ———— Search (centered) ———— | Version | Palette | Source
+     */
     .md-header__inner {
       display: flex !important;
       align-items: center !important;
-      justify-content: space-between !important;
       flex-wrap: nowrap !important;
+      height: 3rem !important;
+      padding: 0 0.1rem !important;
+      gap: 0 !important;
+      position: relative !important;
     }
-    
-    .md-header__title {
-      flex: 1 !important;
-      min-width: 0 !important;
-      margin-right: 16px !important;
-    }
-    
 
-    
-    .md-header__button {
-      margin-left: 4px !important;
+    /* 1. Logo — stays left */
+    .md-header__button.md-logo {
+      order: 1 !important;
+      flex: 0 0 auto !important;
+      margin: 0 !important;
+      padding: 0.2rem 0.1rem !important;
+      display: inline-flex !important;
+      align-items: center !important;
     }
-    
-    /* Move version selector next to GitHub repository info */
-    .md-version {
-      position: absolute !important;
-      right: -750px !important;
+
+    /* 2. Hamburger (mobile drawer toggle) - hidden on desktop by default */
+    .md-header__button[for="__drawer"] {
+      order: 2 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0.2rem !important;
+      display: none !important; /* Hidden on desktop */
+    }
+
+    /* Show hamburger on smaller screens (handled by Material theme) */
+    @media screen and (max-width: 1220px) {
+      .md-header__button[for="__drawer"] {
+        display: inline-flex !important;
+      }
+    }
+
+    /* 3. Title — next to logo, vertically centered */
+    .md-header__title {
+      order: 3 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0 0 0.15rem !important;
+      overflow: visible !important;
+      font-family: 'Manrope', sans-serif !important;
+      font-weight: 700 !important;
+      font-size: 1.2rem !important;
+      letter-spacing: -0.02em !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 0.5rem !important;
+      line-height: 3rem !important;
+      height: 3rem !important;
+    }
+
+    /* Hide original title text (site_name) */
+    .md-header__title .md-header__ellipsis {
+      font-size: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      display: none !important;
+    }
+
+    /* Custom title text */
+    .md-header__title::before {
+      content: "Tractus-X SDK" !important;
+      color: #ffffff !important;
+      font-size: 1.2rem !important;
+      font-weight: 700 !important;
+      white-space: nowrap !important;
+    }
+
+    /* Modern "docs" sub-label */
+    .md-header__title::after {
+      content: "docs" !important;
+      color: rgba(255, 215, 0, 0.7) !important;
+      font-size: 0.5rem !important;
+      font-weight: 500 !important;
+      background: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      border: none !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.12em !important;
+      white-space: nowrap !important;
+      align-self: flex-start !important;
+      margin-top: 0.55rem !important;
+      margin-left: -0.2rem !important;
+    }
+
+    /* 4. Search — fills available header space */
+    .md-search {
+      order: 5 !important;
+      flex: 1 1 auto !important;
+      max-width: none !important;
+      width: auto !important;
+      margin: 0 0 0 0.75rem !important;
+      position: relative !important;
+      left: auto !important;
+      top: auto !important;
+      transform: none !important;
       z-index: 1 !important;
     }
-    
-    /* Keep search in center position */
-    .md-search {
-      margin-right: auto !important;
-      margin-left: auto !important;
-    }
-    
-    /* GitHub repo info on the far right */
-    .md-header__source {
-      margin-left: auto !important;
-      margin-right: 60px !important;
-    }
-    
-    /* Theme selector stays on far right */
-    .md-header__button.md-icon {
-      margin-left: auto !important;
-      margin-right: 8px !important;
-    }
-    
-    .md-version__current {
-      background-color: rgba(0, 0, 0, 0.3) !important;
-      border: 2px solid #FFD700 !important;
-      color: #FFD700 !important;
-      font-weight: 600 !important;
-      padding: 6px 16px !important;
-      border-radius: 6px !important;
-      min-width: 140px !important;
-      max-width: 200px !important;
-      text-align: center !important;
-      white-space: nowrap !important;
-      overflow: visible !important;
-      display: block !important;
-      line-height: 1.2 !important;
-    }
-    
 
+    /* Ensure search form fills the container */
+    .md-search__form {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+
+    /* Ensure search input fills the form */
+    .md-search__input {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+
+    /* Override Material's default search input width */
+    .md-search__inner {
+      width: 100% !important;
+    }
+
+    /* Ensure search output (results) container doesn't limit width */
+    .md-search__output {
+      width: 100% !important;
+    }
+
+    /* Search icon button (the magnifying glass) */
+    label[for="__search"] {
+      order: 4 !important;
+      flex: 0 0 auto !important;
+    }
+
+    /* 5. Version selector — minimal, right side */
+    .md-header .md-version {
+      order: 6 !important;
+      flex: 0 0 auto !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      margin: 0 0.4rem !important;
+    }
+
+    .md-version__current {
+      background: none !important;
+      border: none !important;
+      color: rgba(255, 255, 255, 0.6) !important;
+      font-weight: 400 !important;
+      font-size: 0.7rem !important;
+      padding: 0.15rem 0.3rem !important;
+      border-radius: 3px !important;
+      white-space: nowrap !important;
+      line-height: 1.2 !important;
+      cursor: pointer !important;
+      letter-spacing: 0.02em !important;
+      transition: color 0.2s !important;
+    }
+
+    .md-version__current:hover {
+      color: #FFD700 !important;
+    }
+
+    .md-version__list {
+      background: #1a1a1a !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 3px !important;
+      min-width: 7rem !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .md-version__link {
+      color: rgba(255, 255, 255, 0.6) !important;
+      padding: 0.25rem 0.5rem !important;
+      font-size: 0.65rem !important;
+      display: block !important;
+      transition: all 0.15s ease !important;
+    }
+
+    .md-version__link:hover {
+      color: #FFD700 !important;
+      background: rgba(255, 215, 0, 0.05) !important;
+    }
+
+    /* 6. Palette toggle (dark/light) — right side */
+    .md-header__inner > [data-md-component="palette"] {
+      order: 7 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0.1rem !important;
+    }
+
+    form.md-header__option {
+      order: 7 !important;
+      flex: 0 0 auto !important;
+      margin: 0 0.1rem !important;
+      display: inline-flex !important;
+      align-items: center !important;
+    }
+
+    /* 7. GitHub source — far right */
+    .md-header__source {
+      order: 8 !important;
+      flex: 0 0 auto !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      margin: 0 0 0 0.3rem !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      width: auto !important;
+    }
+
+    .md-source__repository {
+      max-width: none !important;
+      overflow: visible !important;
+      text-overflow: unset !important;
+    }
+
+    /* Generic header buttons */
+    .md-header__button {
+      padding: 0.4rem !important;
+    }
+
+    /* ——— Responsive ——— */
     
-    /* Responsive adjustments for better visibility */
+    /* Apply hamburger swap for all screen sizes where hamburger is visible (≤1220px) */
     @media screen and (max-width: 1220px) {
+      /* Swap hamburger and logo positions whenever hamburger menu is visible */
+      .md-header__button[for="__drawer"] {
+        order: 1 !important;
+        margin: 0 0.3rem 0 0 !important;
+        display: inline-flex !important;
+      }
+
+      .md-header__button.md-logo {
+        order: 2 !important;
+        margin: 0 0.2rem !important;
+      }
+
       .md-header__title {
-        font-size: 1.5rem !important;
+        order: 3 !important;
+        margin: 0 0 0 0.15rem !important;
       }
-      
-      .md-version__current {
-        min-width: 120px !important;
-        font-size: 0.9rem !important;
-        padding: 4px 12px !important;
-      }
-      
-      .md-header__option {
-        margin-right: 16px !important;
-      }
-    }
-    
-    @media screen and (max-width: 1024px) {
-      .md-header__title {
-        font-size: 1.3rem !important;
-      }
-      
-      .md-version__current {
-        min-width: 100px !important;
-        font-size: 0.85rem !important;
-        padding: 4px 10px !important;
-      }
-    }
-    
-    @media screen and (max-width: 768px) {
-      .md-header__title {
+
+      .md-header__title::before {
         font-size: 1.1rem !important;
       }
-      
-      .md-version__current {
-        min-width: 90px !important;
-        font-size: 0.8rem !important;
-        padding: 3px 8px !important;
+      .md-header__title::after {
+        font-size: 0.65rem !important;
+        padding: 0.12rem 0.4rem !important;
       }
-      
-      .md-header__option {
-        margin-right: 8px !important;
-        margin-left: 8px !important;
+      .md-search {
+        margin: 0 0 0 0.5rem !important;
+      }
+    }
+
+    @media screen and (max-width: 1024px) {
+      /* Tablet/iPad: Further refinements */
+      .md-header__title::before {
+        font-size: 1rem !important;
+      }
+      .md-header__title::after {
+        font-size: 0.48rem !important;
+        margin-top: 0.45rem !important; /* Adjust top alignment for tablet size */
+        margin-left: -0.18rem !important;
+      }
+      .md-header__source {
+        display: none !important;
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      /* Mobile/iPhone: Smaller text, center all items, wrap search */
+      .md-header__button.md-logo {
+        margin: 0 0.1rem !important;
+      }
+
+      .md-header__title {
+        line-height: 2.4rem !important;
+        height: auto !important;
+        margin: 0 0 0 0.1rem !important;
+      }
+
+      .md-header__inner {
+        flex-wrap: wrap !important;
+        height: auto !important;
+        min-height: 3rem !important;
+        padding: 0.3rem 0.5rem !important;
+        justify-content: center !important; /* Center all header items */
+      }
+
+      .md-header__title::before {
+        font-size: 0.95rem !important;
+      }
+      .md-header__title::after {
+        font-size: 0.42rem !important;
+        padding: 0.08rem 0.3rem !important;
+        margin-top: 0.35rem !important; /* Adjust top alignment for smaller size */
+        margin-left: -0.15rem !important; /* Keep it close to title */
+      }
+      .md-search {
+        max-width: 100% !important;
+        flex: 1 1 100% !important;
+        order: 10 !important;
+        margin: 0.3rem 0 0 0 !important;
+      }
+      .md-header .md-version {
+        display: none !important;
       }
     }
     
     /* Fix navigation tabs hover coverage */
     .md-tabs__link {
-      padding: 16px 16px !important;
-      height: auto !important;
-      min-height: 48px !important;
+      padding: 0 1rem !important;
+      height: 100% !important;
+      min-height: 2.4rem !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       line-height: 1.2 !important;
       position: relative !important;
+      box-sizing: border-box !important;
+    }
+    
+    .md-tabs__item {
+      height: 100% !important;
+    }
+    
+    .md-tabs__list {
+      height: 100% !important;
+    }
+    
+    @media screen and (max-width: 768px) {
+      .md-tabs__link {
+        padding: 0 0.8rem !important;
+        font-size: 0.85rem !important;
+      }
     }
     
     .md-tabs__link:hover {
@@ -323,10 +545,31 @@
   
   <div class="custom-footer__bottom">
     <div class="custom-footer__copyright">
-      Copyright © 2025 Eclipse Tractus-X. Built with 
+      Copyright © 2026 Eclipse Tractus-X Contributors. Built with 
       <a href="https://www.mkdocs.org/" target="_blank" rel="noopener">MkDocs</a> and 
       <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">Material for MkDocs</a>.
     </div>
   </div>
 </div>
+{% endblock %}
+
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    /* Move the version selector from the hidden .md-header__topic into
+       .md-header__inner so it becomes a direct flex child with order: 6 */
+    (function() {
+      var observer = new MutationObserver(function() {
+        var version = document.querySelector('.md-version');
+        var headerInner = document.querySelector('.md-header__inner');
+        if (version && headerInner && !version.dataset.moved) {
+          version.dataset.moved = 'true';
+          headerInner.appendChild(version);
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    })();
+  </script>
 {% endblock %}

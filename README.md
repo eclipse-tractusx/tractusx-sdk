@@ -1,3 +1,4 @@
+[![PyPI](https://img.shields.io/pypi/v/tractusx_sdk?style=for-the-badge)](https://pypi.org/p/tractusx_sdk)
 [![Contributors][contributors-shield]][contributors-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Apache 2.0 License][license-shield]][license-url-code]
@@ -25,7 +26,7 @@ No specific use case logic will be configured here, only the bare minimum for in
 
 ## Installation
 
-Install the package directly from PyPI:
+Install the package directly from PyPI [https://pypi.org/p/tractusx_sdk](https://pypi.org/p/tractusx_sdk):
 
 ```bash
 pip install tractusx-sdk
@@ -326,16 +327,10 @@ manufacturer_part_id = SpecificAssetId(
     value="BAT-12345-ABC",
     externalSubjectId=Reference(
         type=ReferenceTypes.EXTERNAL_REFERENCE,
-        keys=[ReferenceKey(type=ReferenceKeyTypes.GLOBAL_REFERENCE, value=bpn) for bpn in bpn_keys] or
+        keys=[ReferenceKey(type=ReferenceKeyTypes.GLOBAL_REFERENCE, value=bpn) for bpn in bpns_list] or
         [ReferenceKey(type=ReferenceKeyTypes.GLOBAL_REFERENCE,
                       value=manufacturer_id)]
-    ),
-    supplementalSemanticIds=supplemental_semantic_ids
-)(
-    name="manufacturerPartId",
-    value="BAT-12345-ABC",
-    external_subject_id={"type": "GlobalReference",
-                         "keys": ["BPNL00000003AYRE"]}
+    )
 )
 
 vehicle_identification_number = SpecificAssetId(
@@ -387,21 +382,51 @@ connector_service.consumer.get_catalog(...)
 connector_service.provider.assets.create(...)
 ```
 
-## Roadmap
+## Test Compliance Kits (TCKs)
 
-The development roadmap is the same as the industry core hub.
+The `tck/connector/` directory contains Test Compliance Kits for validating end-to-end connector functionality across different Eclipse Tractus-X EDC versions and deployment scenarios.
 
-```text
-February 3 2025     R25.06             R25.09          R25.12
-Kickoff              MVP                Stable          NEXT            2026 -> Beyond
-| ------------------> | ----------------> | -----------> |  ----------------> |
-                Data Provision     Data Consumption    IC-HUB             + KIT Use Cases
-                     SDK                 SDK             + Integrate First
-                                                           Use Case (e.g. DPP) (Another usage for the SDK)
+### Available TCKs
+
+**Saturn Protocol (EDC v0.11.x - DSP 2025-1):**
+- `tck_e2e_saturn_0-11-X_simple_did.py` - Simple one-call using `do_get()` (DID-based)
+- `tck_e2e_saturn_0-11-X_detailed_did.py` - Detailed step-by-step flow (DID-based)
+- `tck_e2e_umbrella_saturn_simple_did.py` - Umbrella Helm chart (simple)
+- `tck_e2e_umbrella_saturn_detailed.py` - Umbrella Helm chart (detailed)
+
+**Jupiter Protocol (EDC v0.8.x - 0.10.x - Legacy DSP):**
+- `tck_e2e_jupiter_0-10-X_simple.py` - Simple one-call (BPNL-based)
+- `tck_e2e_jupiter_0-10-X_detailed.py` - Detailed step-by-step flow (BPNL-based)
+
+### Running TCKs
+
+```bash
+# Install dependencies
+poetry install
+
+# Run a TCK example
+python tck/connector/tck_e2e_umbrella_saturn_simple_did.py
 ```
 
-> [!IMPORTANT]
-> Currently this SDK is not 100% compatible and tested against the `v0.11.x` connector. The issue is being worked here [tractusx-sdk#159](https://github.com/eclipse-tractusx/tractusx-sdk/issues/159)
+TCKs demonstrate the complete data exchange flow:
+1. **Provider**: Provisions data (Asset + Policies + Contract Definition)
+2. **Consumer**: Discovers, negotiates, transfers, and accesses data
+3. **Backend**: Simple data storage for testing
+
+Each TCK generates timestamped logs in `logs/<tck_name>/<date>/` with request/response details, policy configurations, and test results.
+
+### Deployment Scenarios
+
+**Tractus-X Umbrella**: TCKs are pre-configured with [Tractus-X Umbrella](https://github.com/eclipse-tractusx/tractus-x-umbrella) Helm chart values, providing a complete Catena-X dataspace environment with EDC connectors, SSI DIM Wallet, Digital Twin Registry, and test data.
+
+**Standalone EDC**: TCKs can be adapted for custom EDC deployments by updating connector URLs, API keys, and BPN/DID values.
+
+## Roadmap
+
+The development roadmap is aligned with the [Industry Core Hub](https://github.com/eclipse-tractusx/industry-core-hub). For the latest milestones and planned features, see the [GitHub project board](https://github.com/eclipse-tractusx/tractusx-sdk/milestones) and [open discussions](https://github.com/eclipse-tractusx/tractusx-sdk/discussions).
+
+> [!NOTE]
+> For known compatibility issues with specific connector versions, check the [issues page](https://github.com/eclipse-tractusx/tractusx-sdk/issues).
 
 ## What can you do with this SDK?
 
@@ -473,6 +498,10 @@ Providing reusable modules:
 - [Extensions](./src/tractusx_sdk/extensions)
   - Allows you to extend the SDK tool box with your use case specifics and reusable components.
 
+For a full arc42 architecture documentation see [docs/architecture/](./docs/architecture/index.md).
+
+For operator and deployment guidance see the [Administrator's Guide](./docs/admin/index.md).
+
 ![Architecture](https://github.com/eclipse-tractusx/tractusx-sdk/blob/main/docs/media/catena-x-speedway-sdk.svg)
 
 ## Industry Core Hub Example
@@ -490,9 +519,10 @@ This SDK will be developed based and will follow the Dataspace & Industry Usage 
 ## How to Get Involved
 
 - **Get onboarded**: [Getting started](https://eclipse-tractusx.github.io/docs/oss/getting-started/). Join the Eclipse Tractus-X open source community as a contributor!
+- Read our [Contributing Guidelines](./CONTRIBUTING.md) before submitting pull requests
 - Attend the [official community office hours](https://eclipse-tractusx.github.io/community/open-meetings/#Community%20Office%20Hour) and raise your issue!
-- Attend our [Industry Core Hub Weekly](https://eclipse-tractusx.github.io/community/open-meetings#[IC-Hub]%20Industry%20Core%20Hub%20Weekly)
-- Join our [Tractus-X SDK Matrix Chat](https://matrix.to/#/#tractusx-tractusx-sdk:matrix.eclipse.org)
+- Attend our [Tractus-X SDK Weekly](https://eclipse-tractusx.github.io/community/open-meetings#tractus-x-sdk-weekly)
+- Join our [Industry Core Hub Matrix Chat](https://matrix.to/#/#tractusx-industry-core-hub:matrix.eclipse.org)
 
 ### Found a bug?
 
@@ -511,6 +541,31 @@ otherwise [create a new discussion](https://github.com/eclipse-tractusx/tractusx
 ## Reporting a Security Issue
 
 Please follow the [Security Issue Reporting Guidelines](https://eclipse-tractusx.github.io/docs/release/trg-7/trg-7-01#security-file) if you come across any security vulnerabilities or concerns.
+
+## Contact
+
+- **Matrix Chat**: [Industry Core Hub Channel](https://matrix.to/#/#tractusx-industry-core-hub:matrix.eclipse.org)
+- **Mailing List**: [tractusx-dev](https://accounts.eclipse.org/mailing-list/tractusx-dev)
+- **Open Meetings**: [Tractus-X SDK Weekly](https://eclipse-tractusx.github.io/community/open-meetings#tractus-x-sdk-weekly)
+- **Community Office Hours**: [Office Hours](https://eclipse-tractusx.github.io/community/open-meetings/#Community%20Office%20Hour)
+
+## Troubleshooting & FAQ
+
+**Q: I get authentication errors when connecting to the connector.**\
+A: Ensure you are using the correct API key or OAuth2 credentials. Verify your `X-Api-Key` header value and that your connector's management API is accessible.
+
+**Q: Which connector versions are supported?**\
+A: The SDK supports EDC `v0.8.x` through `v0.11.x`. Use `dataspace_version="jupiter"` for EDC `v0.8.x`–`v0.10.x` and `dataspace_version="saturn"` for EDC `v0.11.x` (DSP 2025-1).
+
+**Q: How do I resolve dependency conflicts during installation?**\
+A: Try installing in a clean virtual environment: `python -m venv .venv && source .venv/bin/activate && pip install tractusx-sdk`. If conflicts persist, check the [issues page](https://github.com/eclipse-tractusx/tractusx-sdk/issues) for known problems.
+
+**Q: Where can I find more detailed usage examples?**\
+A: See the [examples/](./examples/) directory and the [documentation site](https://eclipse-tractusx.github.io/tractusx-sdk/main/).
+
+## Contributing
+
+Please read our [Contributing Guidelines](./CONTRIBUTING.md) before submitting pull requests.
 
 ## Licenses
 

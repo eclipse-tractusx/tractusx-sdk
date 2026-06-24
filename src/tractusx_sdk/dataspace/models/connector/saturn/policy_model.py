@@ -21,6 +21,7 @@
 #################################################################################
 
 from json import dumps as jdumps
+from typing import ClassVar
 from pydantic import Field
 
 from ..base_policy_model import BasePolicyModel
@@ -28,28 +29,145 @@ from ..base_policy_model import BasePolicyModel
 
 class PolicyModel(BasePolicyModel):
     TYPE: str = Field(default="PolicyDefinition", frozen=True)
-    ODRL_TYPE: str = Field(default="odrl:Set", frozen=True)
-    ODRL_CONTEXT: str = Field(default="http://www.w3.org/ns/odrl.jsonld", frozen=True)
+    POLICY_TYPE: str = Field(default="Set", frozen=True)
+    
+    # Default ODRL context URLs for Saturn/Tractus-X EDC compatibility
+    # ClassVar indicates this is a class constant, not a Pydantic model field
+    DEFAULT_ODRL_CONTEXTS: ClassVar[list[str]] = [
+        "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
+        "https://w3id.org/catenax/2025/9/policy/context.jsonld",
+    ]
+    
+    # Default @vocab context for EDC namespace
+    DEFAULT_VOCAB_CONTEXT: ClassVar[dict] = {
+        "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+    }
 
     def to_data(self):
         """
         Converts the model to a JSON representing the data that
         will be sent to the connector when using a policy model.
+        
+        Saturn connector follows Tractus-X EDC v0.7.0+ specification where:
+        - ODRL context must be at the top level @context, not nested
+        - Policy @type is "Set" (not "odrl:Set") when ODRL context is imported
+        - Context can be passed as configuration or uses defaults
 
         :return: a JSON representation of the model
         """
+        # Build the context according to Tractus-X EDC specification
+        context = self._build_context()
 
         data = {
-            "@context": self.context,
+            "@context": context,
             "@type": self.TYPE,
             "@id": self.oid,
             "policy": {
-                "@context": self.ODRL_CONTEXT,
-                "@type": self.ODRL_TYPE,
-                "permission": self.permissions,
-                "prohibition": self.prohibitions,
-                "obligation": self.obligations
+                "@type": self.POLICY_TYPE,
+                "permission": self._normalize_constraints(self.permissions),
+                "prohibition": self._normalize_constraints(self.prohibitions),
+                "obligation": self._normalize_constraints(self.obligations)
             }
         }
 
         return jdumps(data)
+    
+    def _normalize_constraints(self, items):
+        """
+        Recursively normalize constraint values to ensure proper JSON-LD serialization.
+        
+        When rightOperand is a list, each item should remain as a simple value (string/number),
+        not wrapped in objects. The EDC will handle the proper ODRL formatting.
+        
+        :param items: permissions, prohibitions, or obligations list
+        :return: normalized items
+        """
+        if not items:
+            return items
+        
+        if isinstance(items, dict):
+            items = [items]
+        
+        normalized = []
+        for item in items:
+            if isinstance(item, dict):
+                normalized_item = {}
+                for key, value in item.items():
+                    if key == "constraint" and isinstance(value, dict):
+                        normalized_item[key] = self._normalize_constraint_dict(value)
+                    else:
+                        normalized_item[key] = value
+                normalized.append(normalized_item)
+            else:
+                normalized.append(item)
+        
+        return normalized
+    
+    def _normalize_constraint_dict(self, constraint):
+        """
+        Normalize a constraint dictionary, handling 'and'/'or' operators and rightOperand arrays.
+        
+        :param constraint: constraint dictionary
+        :return: normalized constraint
+        """
+        result = {}
+        for key, value in constraint.items():
+            if key in ("and", "or") and isinstance(value, list):
+                # Recursively normalize nested constraints
+                result[key] = [self._normalize_constraint_dict(c) if isinstance(c, dict) else c for c in value]
+            elif key == "rightOperand":
+                result[key] = value
+            else:
+                result[key] = value
+        
+        return result
+    
+    def _build_context(self):
+        """
+        Builds the @context for the policy according to Tractus-X EDC specification.
+        
+        The context structure should be:
+        [
+            "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
+            "https://w3id.org/catenax/2025/9/policy/context.jsonld",
+            {
+                "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+            }
+        ]
+        
+        Users can:
+        1. Pass a complete list with ODRL contexts already included (we preserve order)
+        2. Pass a dict/string and we prepend ODRL contexts automatically
+        3. Pass nothing and get the full default
+        
+        :return: The properly structured context
+        """
+        context = self.context
+        
+        # Case 1: User provided a list
+        if isinstance(context, list):
+            result_context = []
+            
+            # First, add ODRL URL contexts that are missing at the beginning
+            for odrl_ctx in self.DEFAULT_ODRL_CONTEXTS:
+                if odrl_ctx not in context:
+                    result_context.append(odrl_ctx)
+            
+            # Then add all user-provided context items
+            # This preserves user's explicit ordering while ensuring ODRL contexts are present
+            result_context.extend(context)
+            return result_context
+        
+        # Case 2: User provided a dict or string - prepend ODRL URL contexts
+        elif isinstance(context, (dict, str)):
+            return [
+                *self.DEFAULT_ODRL_CONTEXTS,
+                context
+            ]
+        
+        # Case 3: No context provided - use complete defaults
+        else:
+            return [
+                *self.DEFAULT_ODRL_CONTEXTS,
+                self.DEFAULT_VOCAB_CONTEXT
+            ]

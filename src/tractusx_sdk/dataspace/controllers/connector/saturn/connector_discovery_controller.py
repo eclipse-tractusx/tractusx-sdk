@@ -36,4 +36,5 @@ class ConnectorDiscoveryController(DmaController):
 
     def get_discover(self, obj: ConnectorDiscoveryModel, **kwargs):
         kwargs["data"] = obj.to_data()
-        return self.adapter.post(url=self.endpoint_url, **kwargs)
+        response = self.adapter.post(url=self.endpoint_url, **kwargs)
+        return response

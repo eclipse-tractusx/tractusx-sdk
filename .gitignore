@@ -30,6 +30,7 @@ pnpm-debug.log*
 
 ### Local Logging Backend ###
 log
+logs/
 *.log
 
 ### Local Data Files Backend ###

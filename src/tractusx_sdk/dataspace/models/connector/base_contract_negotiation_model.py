@@ -67,7 +67,10 @@ class BaseContractNegotiationModel(BaseModel, ABC):
 
         def offer_policy_from_policy_model(self, policy_model: BasePolicyModel):
             # Remove unnecessary fields from a policy model's policy data
-            policy_data = policy_model.to_data()["policy"]
+            # to_data() returns a JSON string, so we need to parse it first
+            from json import loads as jloads
+            policy_json = jloads(policy_model.to_data())
+            policy_data = policy_json["policy"]
             policy_data.pop("@id", None)
             policy_data.pop("@type", None)
 

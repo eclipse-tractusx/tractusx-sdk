@@ -8,7 +8,7 @@ The documentation versioning is fully automated through GitHub Actions:
 
 ### Automatic Deployments
 
-- **Tagged Releases**: When you create a tag like `v0.5.0`, the workflow automatically:
+- **Tagged Releases**: When you create a tag like `v0.5.1`, the workflow automatically:
   - Deploys documentation for that version
   - Updates the `latest` alias to point to the new version
   - Sets it as the default version
@@ -20,7 +20,7 @@ The documentation versioning is fully automated through GitHub Actions:
 ### Version Selector
 
 Users will see a version selector in the documentation header allowing them to switch between:
-- Latest stable release (e.g., `0.5.0`)
+- Latest stable release (e.g., `0.5.1`)
 - Development version (`main`)  
 - Previous versions (e.g., `0.4.0`)
 
@@ -34,12 +34,15 @@ Users will see a version selector in the documentation header allowing them to s
 
 2. **For development**: Simply push to main - docs are automatically updated
 
-No manual intervention needed! 🚀
+No manual intervention needed!
 
 ## NOTICE
 
 This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
 - SPDX-License-Identifier: CC-BY-4.0
-- SPDX-FileCopyrightText: 2025 Contributors to the Eclipse Foundation
-- Source URL: https://github.com/eclipse-tractusx/tractusx-sdk
+- SPDX-FileCopyrightText: 2025, 2026 Contributors to the Eclipse Foundation
+- SPDX-FileCopyrightText: 2025, 2026 Catena-X Automotive Network e.V.
+- SPDX-FileCopyrightText: 2025, 2026 LKS Next
+- SPDX-FileCopyrightText: 2025, 2026 Mondragon Unibertsitatea
+- Source URL: [https://github.com/eclipse-tractusx/tractusx-sdk](https://github.com/eclipse-tractusx/tractusx-sdk)
