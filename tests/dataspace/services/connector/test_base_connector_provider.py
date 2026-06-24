@@ -357,3 +357,29 @@ def test_create_asset_with_oauth2_config_missing_required_fields_raises(mock_get
             dct_type="test",
             oauth2_config={"tokenUrl": "https://keycloak.example.com/token"}
         )
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_with_oauth2_config_empty_required_fields_raises(mock_get_asset_model, service):
+    """Empty 'tokenUrl' or 'clientId' values are rejected, not only missing keys."""
+    mock_response = Mock(status_code=200)
+    mock_response.json.return_value = {"asset": "ok"}
+    service._asset_controller.create.return_value = mock_response
+
+    mock_get_asset_model.return_value = {"mock": "asset"}
+
+    with pytest.raises(ValueError, match="require at least 'tokenUrl' and 'clientId'"):
+        service.create_asset(
+            asset_id="123",
+            base_url="http://test",
+            dct_type="test",
+            oauth2_config={"tokenUrl": "", "clientId": "my-client-id"}
+        )
+
+    with pytest.raises(ValueError, match="require at least 'tokenUrl' and 'clientId'"):
+        service.create_asset(
+            asset_id="123",
+            base_url="http://test",
+            dct_type="test",
+            oauth2_config={"tokenUrl": "https://keycloak.example.com/token", "clientId": ""}
+        )
