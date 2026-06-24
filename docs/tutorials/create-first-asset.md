@@ -210,6 +210,29 @@ python connect.py
 !!! info "What You'll See"
     This script shows you all the data assets available in your dataspace, including manufacturing data, supply chain information, and other business data shared by participants.
 
+!!! tip "Protecting the data address with OAuth2 / Keycloak"
+    If the backend behind your asset is secured by an OAuth2 authorization server (such as
+    Keycloak), add an `oauth2_config` to `create_asset` so the EDC data plane authenticates with
+    a client-credentials token:
+
+    ```python
+    response = provider_connector_service.create_asset(
+        asset_id="test-asset-001",
+        base_url="https://protected-backend.url/data",
+        dct_type="example-type",
+        version="3.0",
+        oauth2_config={
+            "tokenUrl": "https://keycloak.url/realms/my-realm/protocol/openid-connect/token",
+            "clientId": "my-client-id",
+            "clientSecretKey": "my-vault-secret-alias",  # optional vault alias
+            "scope": "openid",                            # optional
+        },
+    )
+    ```
+
+    `tokenUrl` and `clientId` are mandatory; `clientSecretKey` references a secret stored in the
+    EDC vault and is never inlined in the asset definition.
+
 ### Request the Created Asset and Verify
 
 Let's request access to the asset we just created and get the data:
