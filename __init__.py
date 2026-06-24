@@ -21,6 +21,6 @@
 #################################################################################
 
 # tractusx_sdk Package-level variables
-__version__ = '0.8.1-rc1'
+__version__ = '0.8.1-rc2'
 __author__ = 'Eclipse Tractus-X Contributors'
 __license__ = "Apache License, Version 2.0"
