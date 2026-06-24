@@ -20,6 +20,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
+## Code created partially using a LLM and reviewed by a human committer
 
 import pytest
 from unittest.mock import Mock, patch
@@ -267,3 +268,118 @@ def test_create_asset_dct_subject_without_dct_type(mock_get_asset_model, service
 
     assert "dct:type" not in captured_properties
     assert captured_properties["dct:subject"] == {"@id": "cx-taxo:CompanyCertificateManagementNotificationApi"}
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_with_oauth2_config(mock_get_asset_model, service):
+    mock_response = Mock(status_code=200)
+    mock_response.json.return_value = {"asset": "ok"}
+    service._asset_controller.create.return_value = mock_response
+
+    mock_get_asset_model.return_value = {"mock": "asset"}
+
+    oauth2_config = {
+        "tokenUrl": "https://keycloak.example.com/token",
+        "clientId": "my-client-id",
+        "clientSecretKey": "my-vault-secret-key"
+    }
+
+    result = service.create_asset(
+        asset_id="123",
+        base_url="http://test",
+        dct_type="test",
+        oauth2_config=oauth2_config
+    )
+
+    assert result == {"asset": "ok"}
+    service._asset_controller.create.assert_called_once()
+
+    # Verify the data_address passed to ModelFactory includes OAuth2 config
+    call_kwargs = mock_get_asset_model.call_args[1]
+    data_address = call_kwargs["data_address"]
+    assert data_address["edc:oauth2:tokenUrl"] == "https://keycloak.example.com/token"
+    assert data_address["edc:oauth2:clientId"] == "my-client-id"
+    assert data_address["edc:oauth2:clientSecretKey"] == "my-vault-secret-key"
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_with_oauth2_config_without_secret(mock_get_asset_model, service):
+    mock_response = Mock(status_code=200)
+    mock_response.json.return_value = {"asset": "ok"}
+    service._asset_controller.create.return_value = mock_response
+
+    mock_get_asset_model.return_value = {"mock": "asset"}
+
+    # Provide tokenUrl and clientId, omit clientSecretKey (optional)
+    oauth2_config = {
+        "tokenUrl": "https://keycloak.example.com/token",
+        "clientId": "my-client-id",
+        "scope": "openid profile"
+    }
+
+    result = service.create_asset(
+        asset_id="123",
+        base_url="http://test",
+        dct_type="test",
+        oauth2_config=oauth2_config
+    )
+
+    assert result == {"asset": "ok"}
+
+    # Verify only provided OAuth2 fields are in data_address
+    call_kwargs = mock_get_asset_model.call_args[1]
+    data_address = call_kwargs["data_address"]
+    assert data_address["edc:oauth2:tokenUrl"] == "https://keycloak.example.com/token"
+    assert data_address["edc:oauth2:clientId"] == "my-client-id"
+    assert data_address["edc:oauth2:scope"] == "openid profile"
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_with_oauth2_config_missing_required_fields_raises(mock_get_asset_model, service):
+    mock_response = Mock(status_code=200)
+    mock_response.json.return_value = {"asset": "ok"}
+    service._asset_controller.create.return_value = mock_response
+
+    mock_get_asset_model.return_value = {"mock": "asset"}
+
+    with pytest.raises(ValueError, match="require at least 'tokenUrl' and 'clientId'"):
+        service.create_asset(
+            asset_id="123",
+            base_url="http://test",
+            dct_type="test",
+            oauth2_config={"clientId": "my-client-id"}
+        )
+
+    with pytest.raises(ValueError, match="require at least 'tokenUrl' and 'clientId'"):
+        service.create_asset(
+            asset_id="123",
+            base_url="http://test",
+            dct_type="test",
+            oauth2_config={"tokenUrl": "https://keycloak.example.com/token"}
+        )
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_with_oauth2_config_empty_required_fields_raises(mock_get_asset_model, service):
+    """Empty 'tokenUrl' or 'clientId' values are rejected, not only missing keys."""
+    mock_response = Mock(status_code=200)
+    mock_response.json.return_value = {"asset": "ok"}
+    service._asset_controller.create.return_value = mock_response
+
+    mock_get_asset_model.return_value = {"mock": "asset"}
+
+    with pytest.raises(ValueError, match="require at least 'tokenUrl' and 'clientId'"):
+        service.create_asset(
+            asset_id="123",
+            base_url="http://test",
+            dct_type="test",
+            oauth2_config={"tokenUrl": "", "clientId": "my-client-id"}
+        )
+
+    with pytest.raises(ValueError, match="require at least 'tokenUrl' and 'clientId'"):
+        service.create_asset(
+            asset_id="123",
+            base_url="http://test",
+            dct_type="test",
+            oauth2_config={"tokenUrl": "https://keycloak.example.com/token", "clientId": ""}
+        )

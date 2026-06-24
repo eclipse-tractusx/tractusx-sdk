@@ -99,6 +99,7 @@ class BaseConnectorProviderService(BaseService):
         },
         headers: dict = None,
         private_properties: dict = None,
+        oauth2_config: dict = None,
         context: dict = None,
         data_address_type: str = "HttpData",
         **kwargs
@@ -123,6 +124,23 @@ class BaseConnectorProviderService(BaseService):
 
         if proxy_params is not None:
             data_address.update(proxy_params)
+
+        if oauth2_config is not None:
+            # 'tokenUrl' and 'clientId' are mandatory; reject missing or empty values.
+            if not oauth2_config.get("tokenUrl") or not oauth2_config.get("clientId"):
+                raise ValueError(
+                    "During asset creation, OAuth2-protected data addresses require at least 'tokenUrl' and 'clientId' in the oauth2_config parameter."
+                )
+            # The 'edc:' prefix is required so JSON-LD expands these keys to the EDC
+            # namespace (e.g. https://w3id.org/edc/v0.0.1/ns/oauth2:tokenUrl), matching
+            # the property IRIs registered by the EDC data-plane-http-oauth2 extension.
+            # 'clientSecretKey' is intentionally a vault reference, never an inline secret.
+            data_address["edc:oauth2:tokenUrl"] = oauth2_config["tokenUrl"]
+            data_address["edc:oauth2:clientId"] = oauth2_config["clientId"]
+            if "clientSecretKey" in oauth2_config:
+                data_address["edc:oauth2:clientSecretKey"] = oauth2_config["clientSecretKey"]
+            if "scope" in oauth2_config:
+                data_address["edc:oauth2:scope"] = oauth2_config["scope"]
 
         if headers is not None:
             for key, value in headers.items():
