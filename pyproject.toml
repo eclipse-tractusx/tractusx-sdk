@@ -38,6 +38,9 @@ dependencies = [
     "winloop (>=0.1.8,<0.2.0); sys_platform == 'win32'",
 ]
 
+[project.optional-dependencies]
+s3 = ["boto3>=1.43.0,<2.0.0"]
+
 [project.urls]
 "Homepage" = "https://eclipse-tractusx.github.io/tractusx-sdk/main/"
 "Repository" = "https://github.com/eclipse-tractusx/tractusx-sdk"
@@ -58,6 +61,7 @@ pytest = "^9.0.3"
 pytest-cov = "^6.0.0"
 pytest-asyncio = "^0.15.1"
 requests-mock = "^1.12.1"
+moto = "^5.0.0"
 
 
 [tool.poetry.group.docs.dependencies]

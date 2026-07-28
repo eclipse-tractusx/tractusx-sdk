@@ -58,7 +58,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --with test
+          poetry install --with test --extras s3
 
       - name: Run tests
         run: |
