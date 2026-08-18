@@ -36,19 +36,19 @@ from tractusx_sdk.dataspace.services.connector import ServiceFactory
 from tractusx_sdk.dataspace.tools import Tracer
 from tractusx_sdk.industry.services.aas_service import AasService
 
-CONNECTOR_URL = "https://connector.example.com"
+CONSUMER_CONNECTOR_URL = "https://edc-consumer-ichub-control.int.catena-x.net"
+CONNECTOR_URL= "https://edc-provider-ichub-control.int.catena-x.net/api/v1/dsp/2025-1"
 CONNECTOR_DMA_PATH = "/management"
-CONNECTOR_API_KEY = "<your-api-key>"
-DTR_URL = "https://dtr.example.com"
-COUNTER_PARTY_BPN = "BPNL000000000000"
-
+CONNECTOR_API_KEY = "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC"
+DTR_URL = "https://dtr-ichub.int.catena-x.net"
+COUNTER_PARTY_BPN = "did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL0000000093Q7"
 
 def trace_a_single_service():
     """The `trace` flag, like `verbose`, records everything a service exchanges."""
 
     provider = ServiceFactory.get_connector_provider_service(
-        dataspace_version="jupiter",
-        base_url=CONNECTOR_URL,
+        dataspace_version="saturn",
+        base_url=CONSUMER_CONNECTOR_URL,
         dma_path=CONNECTOR_DMA_PATH,
         headers={"X-Api-Key": CONNECTOR_API_KEY},
         verbose=False,
@@ -81,7 +81,7 @@ def trace_a_complete_flow():
         api_path="/api/v3",
     )
     consumer = ServiceFactory.get_connector_consumer_service(
-        dataspace_version="jupiter",
+        dataspace_version="saturn",
         base_url=CONNECTOR_URL,
         dma_path=CONNECTOR_DMA_PATH,
         headers={"X-Api-Key": CONNECTOR_API_KEY},
@@ -109,7 +109,7 @@ def trace_without_bodies():
 
     tracer = Tracer(name="sequence-only", capture_bodies=False, max_entries=50)
     provider = ServiceFactory.get_connector_provider_service(
-        dataspace_version="jupiter",
+        dataspace_version="saturn",
         base_url=CONNECTOR_URL,
         dma_path=CONNECTOR_DMA_PATH,
         headers={"X-Api-Key": CONNECTOR_API_KEY},
@@ -126,7 +126,7 @@ def trace_at_runtime():
     """Tracing can also be switched on and off after the service was created."""
 
     provider = ServiceFactory.get_connector_provider_service(
-        dataspace_version="jupiter",
+        dataspace_version="saturn",
         base_url=CONNECTOR_URL,
         dma_path=CONNECTOR_DMA_PATH,
         headers={"X-Api-Key": CONNECTOR_API_KEY},
