@@ -36,7 +36,8 @@ class BpnDiscoveryService(BaseDiscoveryService):
     oauth:OAuth2Manager
     def __init__(self, oauth:OAuth2Manager, discovery_finder_service: DiscoveryFinderService, cache_timeout_seconds:int = 60 * 60 * 12,
                  session:requests.Session = None, base_path:str="/api/v1.0/administration/connectors/bpnDiscovery",
-                 verbose:bool=False, logger:Optional[logging.Logger]=None):
+                 verbose:bool=False, logger:Optional[logging.Logger]=None,
+                 trace: bool = False):
         """
         Initialize the BPN Discovery Service.
         
@@ -47,19 +48,26 @@ class BpnDiscoveryService(BaseDiscoveryService):
             base_path (str): API path to append to the base URL from discovery finder (default: "/api/v1.0/administration/connectors/bpnDiscovery").
             verbose (bool): Enable verbose logging (default: False).
             logger (Optional[logging.Logger]): Logger instance for logging (default: None).
+            trace (bool): Enable the tracing of the requests/responses (default: False).
+                The trace is available through `get_trace()`/`get_trace_json()`, and
+                `set_tracer()` shares it with other services.
         """
         self.oauth = oauth
+        self.session = session
+        self.base_path = base_path
+        if(not self.session):
+            self.session = requests.Session()
+
+        # The session is set beforehand, so that the trace configured by the base
+        # service covers every call made with it
         super().__init__(
             oauth=oauth,
             discovery_finder_service=discovery_finder_service,
             cache_timeout_seconds=cache_timeout_seconds,
             verbose=verbose,
-            logger=logger
+            logger=logger,
+            trace=trace
         )
-        self.session = session
-        self.base_path = base_path
-        if(not self.session):
-            self.session = requests.Session()
 
     def get_service_name(self) -> str:
         """Returns the service name for logging purposes."""

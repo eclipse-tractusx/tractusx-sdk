@@ -28,9 +28,10 @@ from uuid import UUID
 from urllib.parse import quote
 import httpx
 
+from tractusx_sdk.dataspace.tools.tracing import TraceableMixin, Tracer, trace_call
 from tractusx_sdk.industry.adapters import SubmodelAdapter
 
-class HttpSubmodelAdapter(SubmodelAdapter):
+class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
     """
     HTTP adapter for external submodel services.
     
@@ -82,6 +83,13 @@ class HttpSubmodelAdapter(SubmodelAdapter):
             self._data["verify_ssl"] = verify_ssl
             return self
 
+        def tracer(self, tracer: Tracer):
+            """
+            Sets the tracer recording the requests/responses of this adapter.
+            """
+            self._data["tracer"] = tracer
+            return self
+
         def build(self):
             if "base_url" not in self._data:
                 raise ValueError("Missing required builder parameter: base_url")
@@ -96,7 +104,8 @@ class HttpSubmodelAdapter(SubmodelAdapter):
         auth_token: Optional[str] = None,
         auth_key_name: Optional[str] = None,
         timeout: int = 30,
-        verify_ssl: bool = True
+        verify_ssl: bool = True,
+        tracer: Optional[Tracer] = None
     ):
         """
         Initialize the HTTP submodel adapter.
@@ -111,6 +120,11 @@ class HttpSubmodelAdapter(SubmodelAdapter):
             auth_key_name: Header name for API key (e.g., "X-Api-Key"), required when auth_type="apikey"
             timeout: Request timeout in seconds (default: 30)
             verify_ssl: Whether to verify SSL certificates (default: True)
+            tracer: Optional tracer recording the requests sent to (and the responses
+                received from) the external submodel service, i.e. `tracer=Tracer()`.
+                The collected trace is available through `get_trace()` and
+                `get_trace_json()`, and one tracer can be shared with other
+                adapters/services to build a single trace.
         """
         self.base_url = base_url.rstrip('/')
         self.api_path = api_path.rstrip('/') if api_path else ""
@@ -120,6 +134,7 @@ class HttpSubmodelAdapter(SubmodelAdapter):
         self.auth_key_name = auth_key_name
         self.timeout = timeout
         self.verify_ssl = verify_ssl
+        self._init_tracing(tracer=tracer)
         
         # Validate authentication configuration
         if self.auth_type not in ["bearer", "apikey", "none"]:
@@ -142,6 +157,19 @@ class HttpSubmodelAdapter(SubmodelAdapter):
 
         if not isinstance(self.url_pattern, str) or not self.url_pattern.strip():
             raise ValueError("url_pattern must be a non-empty string")
+
+    def _trace_call(self, method: str, url: str, headers: dict = None, body: Any = None):
+        """
+        Traces a single call to the external submodel service.
+
+        The returned context manager is a no-op when tracing is disabled.
+
+        :param method: The HTTP method of the call
+        :param url: The URL of the external submodel service
+        :param headers: The headers sent with the request
+        :param body: The body sent with the request, if any
+        """
+        return trace_call(method=method, url=url, tracer=self._tracer, headers=headers, body=body)
 
     def _build_url(self, submodel_metadata: Mapping[str, Any]) -> str:
         """
@@ -242,8 +270,11 @@ class HttpSubmodelAdapter(SubmodelAdapter):
         """
         url = self._build_url(submodel_metadata)
 
+        headers = self._get_headers()
+
         try:
-            response = self.client.get(url, headers=self._get_headers())
+            with self._trace_call("GET", url, headers=headers) as call:
+                response = call.set_response(self.client.get(url, headers=headers))
             return self._handle_response(response, "GET")
         except httpx.RequestError as request_error:
             raise ConnectionError(f"Connection error while reading submodel: {request_error}") from request_error
@@ -257,12 +288,15 @@ class HttpSubmodelAdapter(SubmodelAdapter):
 
         url = self._build_url(submodel_metadata)
 
+        headers = self._get_headers(content_type="application/octet-stream")
+
         try:
-            response = self.client.post(
-                url,
-                content=content,
-                headers=self._get_headers(content_type="application/octet-stream")
-            )
+            with self._trace_call("POST", url, headers=headers, body=content) as call:
+                response = call.set_response(self.client.post(
+                    url,
+                    content=content,
+                    headers=headers
+                ))
             self._handle_response(response, "POST")
         except httpx.RequestError as request_error:
             raise ConnectionError(f"Connection error while writing submodel: {request_error}") from request_error
@@ -276,12 +310,15 @@ class HttpSubmodelAdapter(SubmodelAdapter):
 
         url = self._build_url(submodel_metadata)
 
+        headers = self._get_headers(content_type="application/json")
+
         try:
-            response = self.client.post(
-                url,
-                json=content,
-                headers=self._get_headers(content_type="application/json")
-            )
+            with self._trace_call("POST", url, headers=headers, body=content) as call:
+                response = call.set_response(self.client.post(
+                    url,
+                    json=content,
+                    headers=headers
+                ))
             self._handle_response(response, "POST")
         except httpx.RequestError as request_error:
             raise ConnectionError(f"Connection error while writing submodel JSON: {request_error}") from request_error
@@ -292,8 +329,11 @@ class HttpSubmodelAdapter(SubmodelAdapter):
         """
         url = self._build_url(submodel_metadata)
 
+        headers = self._get_headers()
+
         try:
-            response = self.client.delete(url, headers=self._get_headers())
+            with self._trace_call("DELETE", url, headers=headers) as call:
+                response = call.set_response(self.client.delete(url, headers=headers))
             self._handle_response(response, "DELETE")
         except httpx.RequestError as request_error:
             raise ConnectionError(f"Connection error while deleting submodel: {request_error}") from request_error
@@ -304,8 +344,11 @@ class HttpSubmodelAdapter(SubmodelAdapter):
         """
         url = self._build_url(submodel_metadata)
 
+        headers = self._get_headers()
+
         try:
-            response = self.client.head(url, headers=self._get_headers())
+            with self._trace_call("HEAD", url, headers=headers) as call:
+                response = call.set_response(self.client.head(url, headers=headers))
             if response.status_code == 404:
                 return False
             self._handle_response(response, "HEAD")

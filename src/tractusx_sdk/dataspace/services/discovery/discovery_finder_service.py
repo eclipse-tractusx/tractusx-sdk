@@ -23,12 +23,14 @@
 from requests import Response
 
 from ...tools.http_tools import HttpTools
+from ..service import BaseService
 from ...managers import OAuth2Manager
 
-class DiscoveryFinderService:
+class DiscoveryFinderService(BaseService):
     
     def __init__(self, url:str, oauth:OAuth2Manager, types_key:str="types", endpoints_key:str="endpoints", 
-                 endpoint_address_key:str="endpointAddress", return_type_key:str='type'):
+                 endpoint_address_key:str="endpointAddress", return_type_key:str='type',
+                 trace: bool = False):
         """
         Initialize the Discovery Finder Service with URL, OAuth, and configurable response keys.
         
@@ -39,6 +41,9 @@ class DiscoveryFinderService:
             endpoints_key (str): Key for endpoints in discovery response (default: "endpoints").
             endpoint_address_key (str): Key for endpoint address in discovery response (default: "endpointAddress").
             return_type_key (str): Key for return type in discovery response (default: "type").
+            trace (bool): Enable the tracing of the requests/responses (default: False).
+                The trace is available through `get_trace()`/`get_trace_json()`, and
+                `set_tracer()` shares it with other services.
         """
         self.url = url
         self.oauth = oauth
@@ -46,6 +51,7 @@ class DiscoveryFinderService:
         self.endpoints_key = endpoints_key
         self.endpoint_address_key = endpoint_address_key
         self.return_type_key = return_type_key
+        self._init_tracing(trace=trace)
 
     def find_discovery_urls(self, keys:list=["bpn"]) -> dict:
         """
@@ -68,7 +74,7 @@ class DiscoveryFinderService:
             self.types_key: keys
         }
 
-        response:Response = HttpTools.do_post(url=self.url, headers=headers, json=body)
+        response:Response = HttpTools.do_post(url=self.url, headers=headers, json=body, **self._trace_kwargs())
         ## In case the response code is not successfull or the response is null
         if(response is None or response.status_code != 200):
             raise Exception("[EDC Discovery Service] It was not possible to get the discovery service because the response was not successful!")

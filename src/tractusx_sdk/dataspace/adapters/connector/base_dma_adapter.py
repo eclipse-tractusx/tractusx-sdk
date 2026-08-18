@@ -22,16 +22,26 @@
 
 from ..adapter import Adapter
 from ...tools import HttpTools
+from ...tools.tracing import Tracer
 
 
 class BaseDmaAdapter(Adapter):
     dma_path: str = ""
 
-    def __init__(self, base_url: str, dma_path: str, headers: dict = None):
+    def __init__(self, base_url: str, dma_path: str, headers: dict = None, tracer: Tracer = None):
+        """
+        Create a new DMA adapter instance
+
+        :param base_url: The base URL of the Connector
+        :param dma_path: The path of the Connector Data Management API
+        :param headers: The headers (i.e.: API Key) of the Connector to be requested
+        :param tracer: Optional tracer recording the requests/responses, usually the
+            one of the service this adapter belongs to
+        """
         self.dma_path = dma_path
 
         dma_url = HttpTools.concat_into_url(base_url, dma_path)
-        super().__init__(dma_url, headers)
+        super().__init__(dma_url, headers, tracer=tracer)
 
     class _Builder(Adapter._Builder):
         def dma_path(self, dma_path: str):

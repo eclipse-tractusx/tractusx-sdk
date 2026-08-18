@@ -31,6 +31,7 @@ The Tractus-X SDK tools serve as foundational utilities that power the higher-le
 - **Dataspace Protocol Support**: DSP (Dataspace Protocol) specific operations for catalog and policy handling
 - **Configuration Management**: Application configuration and logging setup utilities
 - **Submodel Validation**: Schema-based validation for Tractus-X submodels
+- **Request Tracing**: Optional recording of the requests/responses exchanged with external services
 
 These tools abstract common operations and provide consistent interfaces across the SDK, reducing code duplication and ensuring reliable functionality.
 
@@ -95,6 +96,52 @@ full_url = HttpTools.concat_into_url(
     "123"
 )
 # Result: "https://api.example.com/v1/resources/123"
+```
+
+### Tracer
+
+An optional recorder of the requests sent to (and the responses received from) external services.
+Every SDK service accepts the `trace` flag (like `verbose`), the adapters below them accept the
+`tracer` it produces, and both expose the collected trace as JSON. See [Request Tracing](../../../core-concepts/sdk-architecture/request-tracing.md)
+for the complete guide.
+
+!!! info "Key Features"
+    - **Opt-in**: disabled by default, the requests are untouched when `trace=False`
+    - **Complete entries**: method, URL, headers, params, body, status, response body, duration, errors
+    - **JSON output**: `get_trace()` (list of dicts) and `get_trace_json()` (string)
+    - **Operations**: `service.trace_operation(name)` groups the calls of a `with` block, on their own
+    - **Shared traces**: `set_tracer()` makes several services record into one `Tracer`
+    - **Safe by default**: `Authorization`, `X-Api-Key`, `Cookie` and similar headers are redacted
+
+**Common Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `to_list()` | The recorded entries, as a list of dictionaries |
+| `to_dict()` | The entries plus the trace metadata |
+| `to_json(indent=2)` | The trace as a JSON string |
+| `clear()` | Removes the recorded entries |
+| `enable()` / `disable()` | Turns the recording on/off |
+| `attach(session)` / `detach(session)` | Traces every call made with a `requests.Session` |
+| `activate(name=None)` | Traces every SDK call of a `with` block, grouped as one `TraceOperation` |
+
+**Example:**
+
+```python
+from tractusx_sdk.dataspace.services.connector import ServiceFactory
+from tractusx_sdk.dataspace.tools import Tracer
+
+# The trace flag, like verbose, on any service
+service = ServiceFactory.get_connector_provider_service(..., trace=True)
+service.assets.get_all()
+print(service.get_trace_json())
+
+# One trace shared by several services
+tracer = Tracer(name="my-flow", capture_bodies=False)
+consumer = ServiceFactory.get_connector_consumer_service(...)
+provider = ServiceFactory.get_connector_provider_service(...)
+consumer.set_tracer(tracer)
+provider.set_tracer(tracer)
 ```
 
 ### DspTools

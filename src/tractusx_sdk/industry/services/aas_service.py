@@ -38,10 +38,11 @@ from tractusx_sdk.industry.models.aas.v3 import (
     ServiceDescription,
 )
 from tractusx_sdk.dataspace.tools import HttpTools, encode_as_base64_url_safe
+from tractusx_sdk.dataspace.services.service import BaseService
 from tractusx_sdk.dataspace.managers.oauth2_manager import OAuth2Manager
 
 
-class AasService:
+class AasService(BaseService):
     """
     Service for interacting with the Digital Twin Registry (DTR).
 
@@ -56,7 +57,8 @@ class AasService:
         api_path: str,
         auth_service: OAuth2Manager = None,
         verify_ssl: bool = True,
-        session: requests.Session | None = None
+        session: requests.Session | None = None,
+        trace: bool = False
     ):
         """
         Initialize the DTR service.
@@ -67,6 +69,11 @@ class AasService:
             api_path (str): API endpoint path
             auth_service (OAuth2Manager, optional): Authentication service for obtaining access tokens
             verify_ssl (bool): Whether to verify SSL certificates
+            session (requests.Session, optional): Session used for the requests
+            trace (bool): Enable the tracing of the requests sent to (and the responses
+                received from) the Digital Twin Registry (default: False). The collected
+                trace is available through `get_trace()` and `get_trace_json()`, and
+                `set_tracer()` shares it with other services.
         """
         self.base_url = base_url.rstrip("/")
         self.base_lookup_url = base_lookup_url.rstrip("/")
@@ -82,6 +89,10 @@ class AasService:
         
         if not self.session:
             self.session = requests.Session()
+
+        # Configured last: the tracer is bound to the session, so that every call
+        # made with it is recorded
+        self._init_tracing(trace=trace)
 
     def _prepare_headers(
         self, bpn: str | None = None, method: str = "GET"

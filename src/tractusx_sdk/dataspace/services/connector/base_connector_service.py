@@ -39,19 +39,26 @@ class BaseConnectorService(BaseService):
                  consumer_service: BaseConnectorConsumerService,
                  provider_service: BaseConnectorProviderService,
                  headers: dict = None,
-                 auth_manager: AuthManagerInterface | None = None):
+                 auth_manager: AuthManagerInterface | None = None,
+                 trace: bool = False):
+        """
+        :param trace: Flag enabling the tracing of the requests sent to (and the
+            responses received from) the connector, by this service and by the
+            consumer/provider services it is composed of (default: False)
+        """
         self.dataspace_version = dataspace_version
 
         merged_headers = headers or {}
         if auth_manager is not None:
             merged_headers = auth_manager.add_auth_header(merged_headers)
 
-        dma_adapter = AdapterFactory.get_dma_adapter(
+        self.dma_adapter = AdapterFactory.get_dma_adapter(
             dataspace_version=dataspace_version,
             base_url=base_url,
             dma_path=dma_path,
             headers=merged_headers
         )
+        dma_adapter = self.dma_adapter
 
         self._contract_agreement_controller = ControllerFactory.get_contract_agreement_controller(
             dataspace_version=dataspace_version,
@@ -60,6 +67,10 @@ class BaseConnectorService(BaseService):
 
         self._consumer_service = consumer_service
         self._provider_service = provider_service
+
+        # Configured last: one single trace for this service, its adapter and the
+        # consumer/provider services it is composed of
+        self._init_tracing(trace=trace)
 
     class _Builder(BaseService._Builder):
         def dma_path(self, dma_path: str):

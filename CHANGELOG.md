@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See also the overarching [CHANGELOG.md](https://eclipse-tractusx.github.io/changelog) for Tractus-X releases.
 
+## [Unreleased]
+
+### Added
+
+- feat: optional `trace` flag on the SDK services, adapters and factories, recording the requests sent to (and the responses received from) the external services and exposing them as JSON through `get_trace()` / `get_trace_json()`, or as `TraceEntry` objects through `get_trace_entries()`
+- feat: named trace operations - `service.trace_operation(name)` and `Tracer.activate(name)` group the calls of a `with` block and hand them back on their own; traces now record the response `content_type`, keep non-JSON bodies (HTML as text, binary as base64), and can be filtered by `operation` / `operation_id`
+
 ## [0.8.0] - 2026-06-15
 
 ### Added

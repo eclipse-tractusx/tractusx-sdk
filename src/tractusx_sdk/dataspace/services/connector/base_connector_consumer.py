@@ -75,7 +75,14 @@ class BaseConnectorConsumerService(BaseService):
     NEGOTIATION_ID_KEY = "contractNegotiationId"
 
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
-                 connection_manager: BaseConnectionManager = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None, verify_ssl: bool = True):
+                 connection_manager: BaseConnectionManager = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None, verify_ssl: bool = True,
+                 trace: bool = False):
+        """
+        :param trace: Flag enabling the tracing of the requests sent to (and the
+            responses received from) the connector and the dataplane (default: False).
+            The collected trace is available through `get_trace()`/`get_trace_json()`,
+            and `set_tracer()` shares it with other services
+        """
         self.dataspace_version = dataspace_version
         self.verbose = verbose
         self.debug = debug
@@ -109,6 +116,9 @@ class BaseConnectorConsumerService(BaseService):
         self._transfer_process_controller = self.controllers.get(ControllerType.TRANSFER_PROCESS)
 
         self.connection_manager = connection_manager if connection_manager is not None else MemoryConnectionManager()
+
+        # Configured last: the tracer is shared with the adapter and the controllers
+        self._init_tracing(trace=trace)
 
     class _Builder(BaseService._Builder):  # NOSONAR - used by ServiceFactory via BaseService._Builder pattern
         def dma_path(self, dma_path: str):
@@ -1594,7 +1604,8 @@ class BaseConnectorConsumerService(BaseService):
                 verify=verify,
                 timeout=timeout,
                 allow_redirects=allow_redirects,
-                session=session
+                session=session,
+                **self._trace_kwargs()
             )
 
         ## Do get request to get a response!
@@ -1604,7 +1615,8 @@ class BaseConnectorConsumerService(BaseService):
             verify=verify,
             timeout=timeout,
             params=params,
-            allow_redirects=allow_redirects
+            allow_redirects=allow_redirects,
+            **self._trace_kwargs()
         )
 
     def do_post(
@@ -1692,7 +1704,8 @@ class BaseConnectorConsumerService(BaseService):
                 verify=verify,
                 timeout=timeout,
                 allow_redirects=allow_redirects,
-                session=session
+                session=session,
+                **self._trace_kwargs()
             )
 
         return HttpTools.do_post(
@@ -1702,7 +1715,8 @@ class BaseConnectorConsumerService(BaseService):
             headers=merged_headers,
             verify=verify,
             timeout=timeout,
-            allow_redirects=allow_redirects
+            allow_redirects=allow_redirects,
+            **self._trace_kwargs()
         )
     def do_put(
         self,
@@ -1789,7 +1803,8 @@ class BaseConnectorConsumerService(BaseService):
                 verify=verify,
                 timeout=timeout,
                 allow_redirects=allow_redirects,
-                session=session
+                session=session,
+                **self._trace_kwargs()
             )
 
         return HttpTools.do_put(
@@ -1799,5 +1814,6 @@ class BaseConnectorConsumerService(BaseService):
             headers=merged_headers,
             verify=verify,
             timeout=timeout,
-            allow_redirects=allow_redirects
+            allow_redirects=allow_redirects,
+            **self._trace_kwargs()
         )

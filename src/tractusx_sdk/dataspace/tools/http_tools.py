@@ -31,10 +31,23 @@ import requests
 from fastapi.responses import JSONResponse, Response
 from io import BytesIO
 import urllib.parse
+
+from .tracing import traced_http
+
+
 class HttpTools:
+    """
+    HTTP helpers used by the SDK services.
+
+    Every request method below is instrumented for tracing: they accept the
+    optional `tracer` and `trace_context` keyword arguments, and record the
+    request/response pair whenever a tracer is active. When tracing is off,
+    the calls behave exactly as before, without any additional processing.
+    """
 
     # do get request without session
     @staticmethod
+    @traced_http("GET")
     def do_get(url,verify=True,headers=None,timeout=None,params=None,allow_redirects=False):
         return requests.get(url=url,verify=verify,
                             timeout=timeout,headers=headers,
@@ -42,6 +55,7 @@ class HttpTools:
     
     # do get request with session
     @staticmethod
+    @traced_http("GET")
     def do_get_with_session(url,session=None,verify=True,headers=None,timeout=None, params=None,allow_redirects=False):
         if session is None:
             session = requests.Session()
@@ -51,6 +65,7 @@ class HttpTools:
     
     # do post request without session
     @staticmethod
+    @traced_http("POST")
     def do_post(url,data=None,verify=True,headers=None,timeout=None,json=None,allow_redirects=False):
         return requests.post(url=url,verify=verify,
                              timeout=timeout,headers=headers,
@@ -59,6 +74,7 @@ class HttpTools:
     
     # do post request with session
     @staticmethod
+    @traced_http("POST")
     def do_post_with_session(url,session=None,data=None,verify=True,headers=None,timeout=None,json=None,allow_redirects=False):
         if session is None:
             session = requests.Session()
@@ -69,6 +85,7 @@ class HttpTools:
 
     # do put request without session
     @staticmethod
+    @traced_http("PUT")
     def do_put(url, data=None, verify=True, headers=None, timeout=None, json=None, allow_redirects=False):
         return requests.put(url=url, verify=verify,
                             timeout=timeout, headers=headers,
@@ -77,6 +94,7 @@ class HttpTools:
 
     # do put request with session
     @staticmethod
+    @traced_http("PUT")
     def do_put_with_session(url, session=None, data=None, verify=True, headers=None, timeout=None, json=None, allow_redirects=False):
         if session is None:
             session = requests.Session()
@@ -87,6 +105,7 @@ class HttpTools:
 
     # do delete request without session
     @staticmethod
+    @traced_http("DELETE")
     def do_delete(url, verify=True, headers=None, timeout=None, params=None, allow_redirects=False):
         return requests.delete(url=url, verify=verify,
                                timeout=timeout, headers=headers,
@@ -94,6 +113,7 @@ class HttpTools:
 
     # do delete request with session
     @staticmethod
+    @traced_http("DELETE")
     def do_delete_with_session(url, session=None, verify=True, headers=None, timeout=None, params=None, allow_redirects=False):
         if session is None:
             session = requests.Session()
