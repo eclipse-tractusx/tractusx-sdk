@@ -138,6 +138,12 @@ This is one catalog request, as `get_trace_json()` returns it:
 sending them (the connector models are sent as JSON strings) are recorded as objects, so the
 whole trace can be navigated as JSON.
 
+JSON bodies are recorded **in full and as JSON** - never as an escaped string - so a trace can
+be parsed and queried directly. `max_body_chars` caps the size of a recorded body when that is
+not wanted (large catalogs, submodel payloads): the body then keeps its structure and the parts
+that did not fit are replaced by a `...[truncated N items]` / `...[truncated N keys]` marker,
+instead of the body being collapsed into a string.
+
 Not every response is JSON, and every one is recorded: `content_type` says what came back,
 non-JSON textual bodies (an HTML error page, plain text) are stored as they are, and binary
 bodies (a PDF or ZIP served by a submodel server) are stored base64 encoded:
@@ -182,11 +188,11 @@ When the call never gets an answer, `response` stays `null` and `error` carries 
 
 A `Tracer` keeps an **ordered list of entries in memory**, one per call, appended as the
 requests are sent. Nothing is written to disk, and nothing leaves the process. The list is
-capped at `max_entries` (1000 by default): once full, the oldest entries are dropped, which -
-together with `max_body_chars` - bounds the memory a long-lived trace can take (roughly
-25 MB at the defaults, in the worst case; `Tracer(max_entries=200, max_body_chars=2000)`
-brings that down to about 1.5 MB). Access is guarded by a lock, so one tracer can be shared
-by several threads.
+capped at `max_entries` (1000 by default): once full, the oldest entries are dropped. Bodies
+are recorded in full, so the memory a long-lived trace takes follows the size of the payloads
+exchanged; `max_body_chars` bounds it when that matters (`Tracer(max_entries=200,
+max_body_chars=2000)` keeps a trace under about 1.5 MB). Access is guarded by a lock, so one
+tracer can be shared by several threads.
 
 ```
 Tracer
@@ -318,7 +324,7 @@ The `Tracer` constructor controls the content of the trace:
 | `max_entries` | `1000` | Maximum number of entries kept (the oldest are dropped) |
 | `capture_bodies` | `True` | Records the request/response bodies |
 | `capture_headers` | `True` | Records the request/response headers |
-| `max_body_chars` | `10000` | Maximum size of a recorded body |
+| `max_body_chars` | `None` | Maximum size of a recorded body (`None` records them in full) |
 | `redact_headers` | `True` | Masks the sensitive headers |
 | `redacted_headers` | `Authorization`, `X-Api-Key`, `Cookie`, ... | Header names to mask |
 

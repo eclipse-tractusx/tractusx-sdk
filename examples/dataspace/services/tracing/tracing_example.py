@@ -26,22 +26,60 @@ Request Tracing Example
 Shows how to record the requests sent to (and the responses received from) the
 external services contacted by the SDK, and how to parse the result as JSON.
 
+Everything printed here is also written to a log file (`tracing_example.log` by
+default, `TRACE_LOG_FILE` to change it), together with the messages logged by the
+SDK itself, so a complete run can be inspected - or shared - afterwards.
+
 CONFIGURATION REQUIRED:
-    Replace the connector and Digital Twin Registry values below with your own.
+    Replace the connector and Digital Twin Registry placeholders below with your
+    own values, or provide them through the environment variables of the same
+    name (CONSUMER_CONNECTOR_URL, CONNECTOR_URL, CONNECTOR_DMA_PATH,
+    CONNECTOR_API_KEY, DTR_URL, COUNTER_PARTY_BPN).
 """
 
 import json
+import logging
+import os
+from pathlib import Path
 
 from tractusx_sdk.dataspace.services.connector import ServiceFactory
 from tractusx_sdk.dataspace.tools import Tracer
 from tractusx_sdk.industry.services.aas_service import AasService
 
-CONSUMER_CONNECTOR_URL = "https://edc-consumer-ichub-control.int.catena-x.net"
-CONNECTOR_URL= "https://edc-provider-ichub-control.int.catena-x.net/api/v1/dsp/2025-1"
-CONNECTOR_DMA_PATH = "/management"
-CONNECTOR_API_KEY = "ACA176440A8BDD3954FCEC3552BF8985AFB75608A57B9121EA809791854AAA2BEDBF85333572E8DECE9537D69697D6BA28EA26174085242CB536B7877E219CAC"
-DTR_URL = "https://dtr-ichub.int.catena-x.net"
-COUNTER_PARTY_BPN = "did:web:portal-backend.int.catena-x.net:api:administration:staticdata:did:BPNL0000000093Q7"
+# Replace the placeholders below, or set the matching environment variables.
+# Never commit real URLs, API keys or credentials to this file.
+CONSUMER_CONNECTOR_URL = os.getenv("CONSUMER_CONNECTOR_URL", "YOUR_CONSUMER_CONNECTOR_URL")  # e.g., "https://your-consumer-connector.example.com"
+CONNECTOR_URL = os.getenv("CONNECTOR_URL", "YOUR_PROVIDER_CONNECTOR_DSP_URL")  # e.g., "https://your-provider-connector.example.com/api/v1/dsp/2025-1"
+CONNECTOR_DMA_PATH = os.getenv("CONNECTOR_DMA_PATH", "/management")
+CONNECTOR_API_KEY = os.getenv("CONNECTOR_API_KEY", "YOUR_CONNECTOR_API_KEY")  # the X-Api-Key of your connector management API
+DTR_URL = os.getenv("DTR_URL", "YOUR_DTR_URL")  # e.g., "https://your-dtr.example.com"
+COUNTER_PARTY_BPN = os.getenv("COUNTER_PARTY_BPN", "YOUR_COUNTER_PARTY_BPN")  # e.g., "BPNL0000000000XY" or a "did:web:..." identifier
+
+LOG_FILE = Path(os.getenv("TRACE_LOG_FILE", "tracing_example.log"))
+
+logger = logging.getLogger("tracing_example")
+
+
+def configure_logging():
+    """Sends everything - the traces and the SDK own messages - to `LOG_FILE`."""
+
+    logging.basicConfig(
+        filename=LOG_FILE,
+        filemode="w",
+        level=logging.DEBUG,
+        format="%(asctime)s %(levelname)-5s [%(name)s] %(message)s",
+    )
+
+
+def report(title: str, payload: str = None):
+    """Prints to the console and stores the same content in the log file."""
+
+    print(payload if payload is not None else title)
+    if payload is None:
+        logger.info(title)
+    else:
+        logger.info("%s\n%s", title, payload)
+
 
 def trace_a_single_service():
     """The `trace` flag, like `verbose`, records everything a service exchanges."""
@@ -52,17 +90,18 @@ def trace_a_single_service():
         dma_path=CONNECTOR_DMA_PATH,
         headers={"X-Api-Key": CONNECTOR_API_KEY},
         verbose=False,
+        logger=logger,
         trace=True,
     )
 
     provider.assets.get_all()
 
     # The trace as a JSON string, ready to be stored or forwarded
-    print(provider.get_trace_json())
+    report("single service trace", provider.get_trace_json())
 
     # ... or as plain dictionaries, to be filtered/inspected in code
     for entry in provider.get_trace():
-        print(
+        report(
             f"{entry['request']['method']} {entry['request']['url']} "
             f"-> {entry['response']['status_code']} in {entry['duration_ms']} ms"
         )
@@ -82,26 +121,34 @@ def trace_a_complete_flow():
     )
     consumer = ServiceFactory.get_connector_consumer_service(
         dataspace_version="saturn",
-        base_url=CONNECTOR_URL,
+        base_url=CONSUMER_CONNECTOR_URL,
         dma_path=CONNECTOR_DMA_PATH,
         headers={"X-Api-Key": CONNECTOR_API_KEY},
         verbose=False,
+        logger=logger,
     )
 
     # Both services record into the same trace
     registry.set_tracer(tracer)
     consumer.set_tracer(tracer)
 
-    registry.get_all_asset_administration_shell_descriptors(bpn=COUNTER_PARTY_BPN)
-    consumer.get_catalog(
-        counter_party_id=COUNTER_PARTY_BPN,
-        counter_party_address=f"{CONNECTOR_URL}/api/v1/dsp",
-    )
+    # A failing call is recorded like any other, so the trace is printed either way
+    try:
+        registry.get_all_asset_administration_shell_descriptors(bpn=COUNTER_PARTY_BPN)
+        consumer.get_catalog(
+            counter_party_id=COUNTER_PARTY_BPN,
+            counter_party_address=CONNECTOR_URL
+        )
+    finally:
+        # The complete trace of both services, in execution order
+        report("complete flow trace", tracer.to_json())
 
-    trace = json.loads(tracer.to_json())
-    print(f"{trace['count']} calls recorded")
-    for entry in trace["entries"]:
-        print(f"  [{entry['context']}] {entry['request']['method']} {entry['request']['url']}")
+        # ... or a summary built from the same entries, parsed back as JSON
+        trace = json.loads(tracer.to_json())
+        report(f"{trace['count']} calls recorded")
+        for entry in trace["entries"]:
+            status = entry["response"]["status_code"] if entry["response"] else entry["error"]["type"]
+            report(f"  [{entry['context']}] {entry['request']['method']} {entry['request']['url']} -> {status}")
 
 
 def trace_without_bodies():
@@ -110,16 +157,17 @@ def trace_without_bodies():
     tracer = Tracer(name="sequence-only", capture_bodies=False, max_entries=50)
     provider = ServiceFactory.get_connector_provider_service(
         dataspace_version="saturn",
-        base_url=CONNECTOR_URL,
+        base_url=CONSUMER_CONNECTOR_URL,
         dma_path=CONNECTOR_DMA_PATH,
         headers={"X-Api-Key": CONNECTOR_API_KEY},
         verbose=False,
+        logger=logger,
     )
 
     # A tracer built by hand configures what is recorded
     provider.set_tracer(tracer)
     provider.assets.get_all()
-    print(tracer.to_json())
+    report("sequence only trace", tracer.to_json())
 
 
 def trace_at_runtime():
@@ -127,22 +175,28 @@ def trace_at_runtime():
 
     provider = ServiceFactory.get_connector_provider_service(
         dataspace_version="saturn",
-        base_url=CONNECTOR_URL,
+        base_url=CONSUMER_CONNECTOR_URL,
         dma_path=CONNECTOR_DMA_PATH,
         headers={"X-Api-Key": CONNECTOR_API_KEY},
         verbose=False,
+        logger=logger,
     )
 
     provider.enable_trace()
     provider.assets.get_all()
-    print(provider.get_trace_json())
+    report("runtime enabled trace", provider.get_trace_json())
 
     provider.disable_trace()
     provider.assets.get_all()  # not recorded any more
 
 
 if __name__ == "__main__":
-    trace_a_single_service()
-    trace_a_complete_flow()
-    trace_without_bodies()
-    trace_at_runtime()
+    configure_logging()
+    try:
+        trace_a_single_service()
+        trace_a_complete_flow()
+        trace_without_bodies()
+        trace_at_runtime()
+    finally:
+        # Written whether the run succeeded or failed
+        print(f"\nComplete run stored in {LOG_FILE.resolve()}")

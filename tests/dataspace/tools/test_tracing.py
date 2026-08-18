@@ -186,6 +186,17 @@ class TestTracer(unittest.TestCase):
         self.assertEqual(payload, base64.b64decode(body["data"]))
 
     @patch("requests.post")
+    def test_large_json_bodies_are_recorded_in_full(self, mock_post):
+        assets = [{"@id": f"asset:{index}", "name": "y" * 500} for index in range(60)]
+        mock_post.return_value = build_response(body=assets)
+        tracer = Tracer()
+
+        HttpTools.do_post(url=self.url, tracer=tracer)
+
+        # No cap by default: the body is the JSON that came back, complete
+        self.assertEqual(assets, tracer.to_list()[0]["response"]["body"])
+
+    @patch("requests.post")
     def test_long_bodies_are_truncated(self, mock_post):
         mock_post.return_value = build_response(text="x" * 500)
         tracer = Tracer(max_body_chars=50)
@@ -195,6 +206,22 @@ class TestTracer(unittest.TestCase):
         body = tracer.to_list()[0]["response"]["body"]
         self.assertTrue(body.startswith("x" * 50))
         self.assertIn("truncated", body)
+
+    @patch("requests.post")
+    def test_long_structured_bodies_stay_structured(self, mock_post):
+        assets = [{"@id": f"asset:{index}", "name": "x" * 100} for index in range(20)]
+        mock_post.return_value = build_response(body=assets)
+        tracer = Tracer(max_body_chars=300)
+
+        HttpTools.do_post(url=self.url, tracer=tracer)
+
+        body = tracer.to_list()[0]["response"]["body"]
+        self.assertIsInstance(body, list)
+        self.assertIsInstance(body[0], dict)
+        self.assertEqual("asset:0", body[0]["@id"])
+        self.assertIn("truncated", body[-1])
+        # navigable: the recorded body is still valid, parsable JSON
+        self.assertEqual(body, json.loads(json.dumps(body)))
 
     @patch("requests.get")
     def test_errors_are_recorded_and_raised(self, mock_get):

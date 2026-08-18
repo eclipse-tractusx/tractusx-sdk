@@ -290,6 +290,8 @@ class TestSharedTracing(unittest.TestCase):
             "AasService.get_all_asset_administration_shell_descriptors",
             entries[0]["context"],
         )
+        # The context is the controller, never the adapter plumbing below it
+        self.assertEqual("AssetController.query", entries[1]["context"])
 
 
 class TestDiscoveryServiceTracing(unittest.TestCase):

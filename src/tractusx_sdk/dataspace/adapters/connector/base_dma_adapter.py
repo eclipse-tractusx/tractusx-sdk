@@ -20,6 +20,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from requests.structures import CaseInsensitiveDict
+
 from ..adapter import Adapter
 from ...tools import HttpTools
 from ...tools.tracing import Tracer
@@ -42,6 +44,30 @@ class BaseDmaAdapter(Adapter):
 
         dma_url = HttpTools.concat_into_url(base_url, dma_path)
         super().__init__(dma_url, headers, tracer=tracer)
+
+    def request(self, method: str, path: str = "", **kwargs):
+        """
+        Perform a request against the Connector Data Management API
+
+        The Connector models are serialized before being sent (`data=`), which does not
+        set a content type by itself, and the API answers `415 Unsupported Media Type`
+        without one. The Data Management API only speaks JSON, so the content type
+        defaults to `application/json` for every request carrying a body, unless the
+        caller already provided one.
+
+        :param method: HTTP method to use with requests
+        :param path: Path to append to the base adapter URL
+        :param kwargs: Keyword arguments to include in the request
+
+        :return: The response of the request
+        """
+        if kwargs.get("data") is not None:
+            headers = CaseInsensitiveDict(self.session.headers)
+            headers.update(kwargs.get("headers") or {})
+            headers.setdefault("Content-Type", "application/json")
+            kwargs["headers"] = headers
+
+        return super().request(method, path, **kwargs)
 
     class _Builder(Adapter._Builder):
         def dma_path(self, dma_path: str):

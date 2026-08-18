@@ -97,14 +97,19 @@ DEFAULT_REDACTED_HEADERS: frozenset = frozenset({
 REDACTED_VALUE: str = "***"
 
 DEFAULT_MAX_ENTRIES: int = 1000
-DEFAULT_MAX_BODY_CHARS: int = 10000
+# Bodies are recorded in full by default: set `max_body_chars` to cap them.
+DEFAULT_MAX_BODY_CHARS: Optional[int] = None
+
+# Marker recording what a body dropped, and the key holding it inside an object.
+TRUNCATED_MARKER: str = "...[truncated {count} {unit}]"
+TRUNCATED_KEY: str = "..."
 
 # Modules skipped when guessing the "context" (the caller) of a traced call.
 _CONTEXT_SKIPPED_MODULES: tuple = (
     "contextlib",
     "tractusx_sdk.dataspace.tools.tracing",
     "tractusx_sdk.dataspace.tools.http_tools",
-    "tractusx_sdk.dataspace.adapters.adapter",
+    "tractusx_sdk.dataspace.adapters",
 )
 
 # Stack of tracers activated with `Tracer.activate()` / `tracing_context()`.
@@ -125,8 +130,9 @@ def _json_safe(value: Any, max_chars: int) -> Any:
     Converts a value into something that can safely be serialized to JSON.
 
     Strings and bytes are truncated to `max_chars`, mappings and sequences are
-    kept as-is when they are JSON serializable, everything else falls back to
-    its string representation.
+    kept as-is when they are JSON serializable - and shrunk, rather than
+    stringified, when they are bigger than `max_chars` - everything else falls
+    back to its string representation.
     """
     if value is None or isinstance(value, (bool, int, float)):
         return value
@@ -142,11 +148,64 @@ def _json_safe(value: Any, max_chars: int) -> Any:
             serialized = json.dumps(value, default=str)
         except (TypeError, ValueError):
             return _truncate(str(value), max_chars)
-        if len(serialized) > max_chars:
-            return _truncate(serialized, max_chars)
+        if max_chars is not None and max_chars > 0 and len(serialized) > max_chars:
+            return _shrink(json.loads(serialized), max_chars)
         return json.loads(serialized)
 
     return _truncate(str(value), max_chars)
+
+
+def _shrink(value: Any, max_chars: int) -> Any:
+    """
+    Reduces an oversized structured value, keeping it structured.
+
+    Truncating the serialized form would turn the body into an escaped string,
+    which can no longer be navigated, so the content itself is trimmed instead:
+    long strings are cut and the trailing items/keys that do not fit are
+    dropped, each omission being recorded with a marker.
+    """
+    return _shrink_value(value, [max_chars])
+
+
+def _shrink_value(value: Any, budget: list) -> Any:
+    """
+    Trims `value` against a shared, mutable character `budget`.
+
+    Only the types produced by a JSON round trip are handled, since the value
+    was already normalized by `_json_safe`.
+    """
+    if isinstance(value, str):
+        if len(value) <= budget[0]:
+            budget[0] -= len(value)
+            return value
+        kept, budget[0] = max(budget[0], 0), 0
+        if kept <= 0:
+            return TRUNCATED_MARKER.format(count=len(value), unit="chars")
+        return _truncate(value, kept)
+
+    if isinstance(value, dict):
+        shrunk = {}
+        keys = list(value)
+        for position, key in enumerate(keys):
+            if budget[0] <= 0:
+                shrunk[TRUNCATED_KEY] = TRUNCATED_MARKER.format(count=len(keys) - position, unit="keys")
+                break
+            budget[0] -= len(str(key))
+            shrunk[str(key)] = _shrink_value(value[key], budget)
+        return shrunk
+
+    if isinstance(value, (list, tuple)):
+        shrunk = []
+        items = list(value)
+        for position, item in enumerate(items):
+            if budget[0] <= 0:
+                shrunk.append(TRUNCATED_MARKER.format(count=len(items) - position, unit="items"))
+                break
+            shrunk.append(_shrink_value(item, budget))
+        return shrunk
+
+    budget[0] -= len(str(value))
+    return value
 
 
 def _safe_getattr(obj: Any, name: str, default: Any = None) -> Any:
@@ -191,7 +250,7 @@ def _truncate(value: str, max_chars: int) -> str:
     """Truncates a string, appending a marker when content was dropped."""
     if max_chars is None or max_chars <= 0 or len(value) <= max_chars:
         return value
-    return value[:max_chars] + f"...[truncated {len(value) - max_chars} chars]"
+    return value[:max_chars] + TRUNCATED_MARKER.format(count=len(value) - max_chars, unit="chars")
 
 
 def _headers_to_dict(headers: Any, redact: bool, redacted_headers: frozenset) -> Optional[dict]:
@@ -451,7 +510,7 @@ class Tracer:
         max_entries: int = DEFAULT_MAX_ENTRIES,
         capture_bodies: bool = True,
         capture_headers: bool = True,
-        max_body_chars: int = DEFAULT_MAX_BODY_CHARS,
+        max_body_chars: Optional[int] = DEFAULT_MAX_BODY_CHARS,
         redact_headers: bool = True,
         redacted_headers: Optional[set] = None,
     ):
@@ -463,7 +522,8 @@ class Tracer:
         :param max_entries: Maximum number of entries kept (oldest are dropped)
         :param capture_bodies: Whether request/response bodies are recorded
         :param capture_headers: Whether request/response headers are recorded
-        :param max_body_chars: Maximum size of a recorded body, in characters
+        :param max_body_chars: Maximum size of a recorded body, in characters, or
+            None (the default) to record the bodies in full
         :param redact_headers: Whether sensitive headers are masked
         :param redacted_headers: Custom set of header names to mask
         """
