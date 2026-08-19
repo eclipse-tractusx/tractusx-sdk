@@ -1217,6 +1217,109 @@ class TestSaturnConnectorConsumerService(TestCase):
             self.assertIn(custom_key, str(filter_expr[0]))
             self.assertIn(dct_type, str(filter_expr[0]))
 
+    # ------------------------------------------------------------------
+    # Transfer process based EDR readiness
+    # ------------------------------------------------------------------
+
+    def _transfer_process_response(self, payload):
+        """Builds a mocked query response returning the given transfer process list."""
+        response = mock.Mock(spec=Response)
+        response.status_code = 200
+        response.json.return_value = payload
+        return response
+
+    def test_get_transfer_process_returns_entry(self):
+        """The transfer process matching the agreement is returned."""
+        transfer_process = {"@id": "transfer-123", "state": "STARTED"}
+        self.service.transfer_processes.query.return_value = self._transfer_process_response([transfer_process])
+
+        result = self.service.get_transfer_process(agreement_id="agreement-123")
+
+        self.assertEqual(result, transfer_process)
+
+    def test_get_transfer_process_not_created_yet(self):
+        """An empty list means the transfer process does not exist yet, not an error."""
+        self.service.transfer_processes.query.return_value = self._transfer_process_response([])
+
+        self.assertIsNone(self.service.get_transfer_process(agreement_id="agreement-123"))
+
+    def test_get_transfer_process_filters_by_agreement_id(self):
+        """The query spec filters on the contract agreement id."""
+        query_spec = self.service.get_transfer_process_filter(agreement_id="agreement-123")
+
+        self.assertIn(self.service.AGREEMENT_ID_KEY, query_spec.to_data())
+        self.assertIn("agreement-123", query_spec.to_data())
+
+    def test_wait_for_transfer_process_returns_id_once_started(self):
+        """Polling stops and returns the transfer id as soon as the process can serve data."""
+        with mock.patch.object(self.service, 'get_transfer_process') as mock_get:
+            mock_get.side_effect = [None, {"@id": "transfer-123", "state": "STARTED"}]
+
+            with mock.patch('tractusx_sdk.dataspace.services.connector.base_connector_consumer.op.wait'):
+                result = self.service._wait_for_transfer_process(
+                    agreement_id="agreement-123",
+                    counter_party_address="https://provider.example.com",
+                    max_wait=10,
+                    poll_interval=1,
+                )
+
+        self.assertEqual(result, "transfer-123")
+
+    def test_wait_for_transfer_process_fails_fast_on_terminated(self):
+        """A TERMINATED transfer raises immediately and surfaces the connector error detail."""
+        with mock.patch.object(self.service, 'get_transfer_process') as mock_get:
+            mock_get.return_value = {
+                "@id": "transfer-123",
+                "state": "TERMINATED",
+                "errorDetail": "provider refused the transfer",
+            }
+
+            with mock.patch('tractusx_sdk.dataspace.services.connector.base_connector_consumer.op.wait'):
+                with self.assertRaises(RuntimeError) as ctx:
+                    self.service._wait_for_transfer_process(
+                        agreement_id="agreement-123",
+                        counter_party_address="https://provider.example.com",
+                        max_wait=10,
+                        poll_interval=1,
+                    )
+
+        self.assertIn("provider refused the transfer", str(ctx.exception))
+
+    def test_wait_for_transfer_process_times_out_with_last_state(self):
+        """A transfer stuck in a non ready state times out reporting the state it was left in."""
+        with mock.patch.object(self.service, 'get_transfer_process') as mock_get:
+            mock_get.return_value = {"@id": "transfer-123", "state": "REQUESTING"}
+
+            with mock.patch('tractusx_sdk.dataspace.services.connector.base_connector_consumer.op.wait'):
+                with self.assertRaises(TimeoutError) as ctx:
+                    self.service._wait_for_transfer_process(
+                        agreement_id="agreement-123",
+                        counter_party_address="https://provider.example.com",
+                        max_wait=3,
+                        poll_interval=1,
+                    )
+
+        self.assertIn("REQUESTING", str(ctx.exception))
+
+    def test_get_agreement_id_reads_finalized_negotiation(self):
+        """The complete negotiation is only fetched to read the agreement id."""
+        response = mock.Mock(spec=Response)
+        response.status_code = 200
+        response.json.return_value = {"state": "FINALIZED", "contractAgreementId": "agreement-123"}
+        self.service.contract_negotiations.get_by_id.return_value = response
+
+        self.assertEqual(self.service._get_agreement_id(negotiation_id="negotiation-123"), "agreement-123")
+
+    def test_get_agreement_id_missing_raises(self):
+        """A finalized negotiation without an agreement id is an error, not a silent None."""
+        response = mock.Mock(spec=Response)
+        response.status_code = 200
+        response.json.return_value = {"state": "FINALIZED"}
+        self.service.contract_negotiations.get_by_id.return_value = response
+
+        with self.assertRaises(RuntimeError):
+            self.service._get_agreement_id(negotiation_id="negotiation-123")
+
 
 if __name__ == '__main__':
     main()
