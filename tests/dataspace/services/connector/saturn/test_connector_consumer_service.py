@@ -1320,6 +1320,70 @@ class TestSaturnConnectorConsumerService(TestCase):
         with self.assertRaises(RuntimeError):
             self.service._get_agreement_id(negotiation_id="negotiation-123")
 
+    def test_get_transfer_process_probes_filter_keys(self):
+        """A filter key the connector rejects is skipped and the next candidate is used."""
+        rejected = mock.Mock(spec=Response)
+        rejected.status_code = 400
+        rejected.text = "Invalid filter expression"
+        accepted = self._transfer_process_response([{"@id": "transfer-123", "state": "STARTED"}])
+        self.service.transfer_processes.query.side_effect = [rejected, accepted]
+
+        result = self.service.get_transfer_process(agreement_id="agreement-123")
+
+        self.assertEqual(result["@id"], "transfer-123")
+        self.assertEqual(self.service.transfer_processes.query.call_count, 2)
+
+    def test_get_transfer_process_reuses_accepted_filter_key(self):
+        """Once a filter key is accepted, later polls send a single request."""
+        rejected = mock.Mock(spec=Response)
+        rejected.status_code = 400
+        rejected.text = "Invalid filter expression"
+        self.service.transfer_processes.query.side_effect = [
+            rejected,
+            self._transfer_process_response([{"@id": "transfer-123", "state": "STARTED"}]),
+            self._transfer_process_response([{"@id": "transfer-123", "state": "STARTED"}]),
+        ]
+
+        self.service.get_transfer_process(agreement_id="agreement-123")
+        self.service.get_transfer_process(agreement_id="agreement-123")
+
+        self.assertEqual(self.service.transfer_processes.query.call_count, 3)
+
+    def test_get_transfer_process_all_keys_rejected_raises(self):
+        """When no candidate key is accepted the connector response is surfaced."""
+        rejected = mock.Mock(spec=Response)
+        rejected.status_code = 400
+        rejected.text = "Invalid filter expression"
+        self.service.transfer_processes.query.return_value = rejected
+
+        with self.assertRaises(ValueError) as ctx:
+            self.service.get_transfer_process(agreement_id="agreement-123")
+
+        self.assertIn("Invalid filter expression", str(ctx.exception))
+        self.assertIn("contractAgreementId", str(ctx.exception))
+
+    def test_wait_for_transfer_process_does_not_retry_rejected_query(self):
+        """A rejected query fails immediately instead of polling until the timeout."""
+        with mock.patch.object(self.service, 'get_transfer_process') as mock_get:
+            mock_get.side_effect = ValueError("rejected by the connector")
+
+            with mock.patch('tractusx_sdk.dataspace.services.connector.base_connector_consumer.op.wait'):
+                with self.assertRaises(ValueError):
+                    self.service._wait_for_transfer_process(
+                        agreement_id="agreement-123",
+                        counter_party_address="https://provider.example.com",
+                        max_wait=60,
+                        poll_interval=1,
+                    )
+
+        self.assertEqual(mock_get.call_count, 1)
+
+    def test_get_transfer_process_no_response_is_transient(self):
+        """A missing response is treated as transient so the caller keeps polling."""
+        self.service.transfer_processes.query.return_value = None
+
+        self.assertIsNone(self.service.get_transfer_process(agreement_id="agreement-123"))
+
 
 if __name__ == '__main__':
     main()

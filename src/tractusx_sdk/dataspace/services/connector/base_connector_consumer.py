@@ -74,6 +74,11 @@ class BaseConnectorConsumerService(BaseService):
 
     NEGOTIATION_ID_KEY = "contractNegotiationId"
     AGREEMENT_ID_KEY = "contractAgreementId"
+    ## EDC names the agreement differently per entity and per connector version, and the queryable
+    ## name is not always the one used in the response, so the transfer process query probes these
+    ## keys in order and then reuses whichever one the connector accepted.
+    TRANSFER_PROCESS_AGREEMENT_ID_KEYS = ("contractAgreementId", "contractId", "agreementId")
+    _transfer_process_agreement_id_key: str | None = None
     ## States in which the transfer process is able to serve data, so the EDR is already cached
     TRANSFER_PROCESS_READY_STATES = ("STARTED", "COMPLETED")
     ## States from which the transfer process will never become ready
@@ -382,12 +387,13 @@ class BaseConnectorConsumerService(BaseService):
                 self.get_filter_expression(key=self.NEGOTIATION_ID_KEY, operator="=", value=negotiation_id)]
         )
 
-    def get_transfer_process_filter(self, agreement_id: str) -> BaseQuerySpecModel:
+    def get_transfer_process_filter(self, agreement_id: str, agreement_id_key: str = None) -> BaseQuerySpecModel:
 
         return ModelFactory.get_queryspec_model(
             dataspace_version=self.dataspace_version,
             filter_expression=[
-                self.get_filter_expression(key=self.AGREEMENT_ID_KEY, operator="=", value=agreement_id)]
+                self.get_filter_expression(key=agreement_id_key or self.AGREEMENT_ID_KEY,
+                                           operator="=", value=agreement_id)]
         )
 
     def get_catalogs_by_dct_type(self, counter_party_id: str, edcs: list, dct_type: str,
@@ -834,24 +840,49 @@ class BaseConnectorConsumerService(BaseService):
         ```
         """
 
-        request: BaseQuerySpecModel = self.get_transfer_process_filter(agreement_id=agreement_id)
-
         # Use service-level verify_ssl if verify not explicitly provided
         if verify is None:
             verify = getattr(self, 'verify_ssl', True)
-        response: Response = self.transfer_processes.query(request, verify=verify)
-        ## In case the response code is not successfull or the response is null
-        if (response is None or response.status_code != 200):
-            raise ConnectionError(
-                f"[Connector Service]: Transfer Process not found for the agreement_id=[{agreement_id}]!")
 
-        ## The response is a list
-        data = response.json()
+        ## Probe the known filter key names once, then keep using the one the connector accepted.
+        candidate_keys = ([self._transfer_process_agreement_id_key]
+                          if self._transfer_process_agreement_id_key is not None
+                          else list(self.TRANSFER_PROCESS_AGREEMENT_ID_KEYS))
 
-        if (len(data) == 0):
-            return None
+        rejected: dict = {}
+        for agreement_id_key in candidate_keys:
+            request: BaseQuerySpecModel = self.get_transfer_process_filter(
+                agreement_id=agreement_id, agreement_id_key=agreement_id_key)
+            response: Response = self.transfer_processes.query(request, verify=verify)
 
-        return data.pop()  ## Return last entry of the list (should be just one entry because of the filter)
+            ## No response at all is transient, so it is retried by the caller on the next poll
+            if response is None:
+                return None
+
+            if response.status_code != 200:
+                rejected[agreement_id_key] = f"status=[{response.status_code}] body=[{getattr(response, 'text', None)}]"
+                continue
+
+            ## Remember the key so the following polls only send one request
+            if self._transfer_process_agreement_id_key != agreement_id_key:
+                self._transfer_process_agreement_id_key = agreement_id_key
+                if self.logger:
+                    self.logger.debug(
+                        "[Connector Service]: Transfer processes are filtered by [%s] on this connector",
+                        agreement_id_key)
+
+            ## The response is a list
+            data = response.json()
+
+            if (len(data) == 0):
+                return None
+
+            return data.pop()  ## Return last entry of the list (should be just one entry because of the filter)
+
+        ## Every candidate key was rejected, so the query itself is wrong and retrying will not help
+        raise ValueError(
+            f"[Connector Service]: The Transfer Process query for the agreement_id=[{agreement_id}] was rejected by the connector! "
+            f"Tried the filter keys {rejected}. Set the accepted one in TRANSFER_PROCESS_AGREEMENT_ID_KEYS.")
 
     def _build_optional_kwargs(self, protocol: str = None, context: dict = None, 
                                 protocol_key: str = 'protocol', context_key: str = 'context') -> dict:
@@ -1062,6 +1093,9 @@ class BaseConnectorConsumerService(BaseService):
             transfer_process: dict | None = None
             try:
                 transfer_process = self.get_transfer_process(agreement_id=agreement_id)
+            except ValueError:
+                ## The connector rejected the query itself, polling again would only repeat it
+                raise
             except Exception as e:
                 if self.logger:
                     self.logger.warning(
