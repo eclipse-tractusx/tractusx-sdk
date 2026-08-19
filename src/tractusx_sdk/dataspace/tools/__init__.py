@@ -28,7 +28,20 @@ __license__ = "Apache License, Version 2.0"
 ## Software Development KIT specific tools
 
 from .http_tools import HttpTools
-from .dsp_tools import DspTools
+from .tracing import (
+    Tracer,
+    TraceEntry,
+    TraceOperation,
+    TraceableMixin,
+    trace_call,
+    resolve_tracer,
+    traced_http,
+    tracing_context,
+    get_active_tracers,
+    get_active_context,
+    get_active_operation,
+)
+from .dsp_tools import DspTools, PolicyMismatchError
 from .operators import op
 from .encoding_tools import encode_as_base64_url_safe, decode_base64_url_safe
 from .utils import get_arguments, get_app_config, get_log_config

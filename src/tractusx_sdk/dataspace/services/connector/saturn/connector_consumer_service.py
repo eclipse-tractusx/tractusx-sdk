@@ -47,7 +47,13 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     APPLICATION_JSON_CONTENT_TYPE: str = "application/json"
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
                  connection_manager: BaseConnectionManager = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None,
-                 verify_ssl: bool = True):
+                 verify_ssl: bool = True, trace: bool = False):
+        """
+        :param trace: Flag enabling the tracing of the requests sent to (and the
+            responses received from) the connector and the dataplane (default: False).
+            The collected trace is available through `get_trace()`/`get_trace_json()`,
+            and `set_tracer()` shares it with other services
+        """
         # Set attributes before accessing them
         self.verbose = verbose
         self.debug = debug
@@ -67,7 +73,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             dataspace_version=self.dataspace_version,
             base_url=base_url,
             dma_path=dma_path,
-            headers=headers
+            headers=headers,
+            tracer=self._tracer
         )
 
         self.controllers = ControllerFactory.get_dma_controllers_for_version(
@@ -90,7 +97,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             connection_manager=connection_manager,
             verbose=verbose,
             debug=debug,
-            logger=logger
+            logger=logger,
+            trace=trace
         )
         
     @property
@@ -152,33 +160,33 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             if method == 'GET':
                 return HttpTools.do_get_with_session(
                     url=url, headers=merged_headers, verify=verify, timeout=timeout,
-                    allow_redirects=allow_redirects, session=session
+                    allow_redirects=allow_redirects, session=session, **self._trace_kwargs()
                 )
             elif method == 'POST':
                 return HttpTools.do_post_with_session(
                     url=url, json=json, data=data, headers=merged_headers, verify=verify,
-                    timeout=timeout, allow_redirects=allow_redirects, session=session
+                    timeout=timeout, allow_redirects=allow_redirects, session=session, **self._trace_kwargs()
                 )
             elif method == 'PUT':
                 return HttpTools.do_put_with_session(
                     url=url, json=json, data=data, headers=merged_headers, verify=verify,
-                    timeout=timeout, allow_redirects=allow_redirects, session=session
+                    timeout=timeout, allow_redirects=allow_redirects, session=session, **self._trace_kwargs()
                 )
 
         if method == 'GET':
             return HttpTools.do_get(
                 url=url, headers=merged_headers, verify=verify, timeout=timeout,
-                params=params, allow_redirects=allow_redirects
+                params=params, allow_redirects=allow_redirects, **self._trace_kwargs()
             )
         elif method == 'POST':
             return HttpTools.do_post(
                 url=url, json=json, data=data, headers=merged_headers, verify=verify,
-                timeout=timeout, allow_redirects=allow_redirects
+                timeout=timeout, allow_redirects=allow_redirects, **self._trace_kwargs()
             )
         elif method == 'PUT':
             return HttpTools.do_put(
                 url=url, json=json, data=data, headers=merged_headers, verify=verify,
-                timeout=timeout, allow_redirects=allow_redirects
+                timeout=timeout, allow_redirects=allow_redirects, **self._trace_kwargs()
             )
 
     def _get_catalog_internal(self, counter_party_id: str = None, counter_party_address: str = None,

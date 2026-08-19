@@ -34,19 +34,27 @@ class BaseConnectorProviderService(BaseService):
     _contract_definition_controller: BaseDmaController
     _policy_controller: BaseDmaController
 
-    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None, verify_ssl: bool = True):
+    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None, verify_ssl: bool = True,
+                 trace: bool = False):
+        """
+        :param trace: Flag enabling the tracing of the requests sent to (and the
+            responses received from) the connector (default: False). The collected
+            trace is available through `get_trace()`/`get_trace_json()`, and
+            `set_tracer()` shares it with other services
+        """
         self.dataspace_version = dataspace_version
         self.verbose = verbose
         self.debug = debug
         self.logger = logger or logging.getLogger(__name__)
         self.verify_ssl = verify_ssl
 
-        dma_adapter = AdapterFactory.get_dma_adapter(
+        self.dma_adapter = AdapterFactory.get_dma_adapter(
             dataspace_version=dataspace_version,
             base_url=base_url,
             dma_path=dma_path,
             headers=headers
         )
+        dma_adapter = self.dma_adapter
 
         controllers = ControllerFactory.get_dma_controllers_for_version(
             dataspace_version=dataspace_version,
@@ -61,6 +69,9 @@ class BaseConnectorProviderService(BaseService):
         self._asset_controller = controllers.get(ControllerType.ASSET)
         self._contract_definition_controller = controllers.get(ControllerType.CONTRACT_DEFINITION)
         self._policy_controller = controllers.get(ControllerType.POLICY)
+
+        # Configured last: the tracer is shared with the adapter and the controllers
+        self._init_tracing(trace=trace)
 
     class _Builder(BaseService._Builder):
         def dma_path(self, dma_path: str):

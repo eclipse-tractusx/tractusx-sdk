@@ -1217,6 +1217,173 @@ class TestSaturnConnectorConsumerService(TestCase):
             self.assertIn(custom_key, str(filter_expr[0]))
             self.assertIn(dct_type, str(filter_expr[0]))
 
+    # ------------------------------------------------------------------
+    # Transfer process based EDR readiness
+    # ------------------------------------------------------------------
+
+    def _transfer_process_response(self, payload):
+        """Builds a mocked query response returning the given transfer process list."""
+        response = mock.Mock(spec=Response)
+        response.status_code = 200
+        response.json.return_value = payload
+        return response
+
+    def test_get_transfer_process_returns_entry(self):
+        """The transfer process matching the agreement is returned."""
+        transfer_process = {"@id": "transfer-123", "state": "STARTED"}
+        self.service.transfer_processes.query.return_value = self._transfer_process_response([transfer_process])
+
+        result = self.service.get_transfer_process(agreement_id="agreement-123")
+
+        self.assertEqual(result, transfer_process)
+
+    def test_get_transfer_process_not_created_yet(self):
+        """An empty list means the transfer process does not exist yet, not an error."""
+        self.service.transfer_processes.query.return_value = self._transfer_process_response([])
+
+        self.assertIsNone(self.service.get_transfer_process(agreement_id="agreement-123"))
+
+    def test_get_transfer_process_filters_by_agreement_id(self):
+        """The query spec filters on the contract agreement id."""
+        query_spec = self.service.get_transfer_process_filter(agreement_id="agreement-123")
+
+        self.assertIn(self.service.AGREEMENT_ID_KEY, query_spec.to_data())
+        self.assertIn("agreement-123", query_spec.to_data())
+
+    def test_wait_for_transfer_process_returns_id_once_started(self):
+        """Polling stops and returns the transfer id as soon as the process can serve data."""
+        with mock.patch.object(self.service, 'get_transfer_process') as mock_get:
+            mock_get.side_effect = [None, {"@id": "transfer-123", "state": "STARTED"}]
+
+            with mock.patch('tractusx_sdk.dataspace.services.connector.base_connector_consumer.op.wait'):
+                result = self.service._wait_for_transfer_process(
+                    agreement_id="agreement-123",
+                    counter_party_address="https://provider.example.com",
+                    max_wait=10,
+                    poll_interval=1,
+                )
+
+        self.assertEqual(result, "transfer-123")
+
+    def test_wait_for_transfer_process_fails_fast_on_terminated(self):
+        """A TERMINATED transfer raises immediately and surfaces the connector error detail."""
+        with mock.patch.object(self.service, 'get_transfer_process') as mock_get:
+            mock_get.return_value = {
+                "@id": "transfer-123",
+                "state": "TERMINATED",
+                "errorDetail": "provider refused the transfer",
+            }
+
+            with mock.patch('tractusx_sdk.dataspace.services.connector.base_connector_consumer.op.wait'):
+                with self.assertRaises(RuntimeError) as ctx:
+                    self.service._wait_for_transfer_process(
+                        agreement_id="agreement-123",
+                        counter_party_address="https://provider.example.com",
+                        max_wait=10,
+                        poll_interval=1,
+                    )
+
+        self.assertIn("provider refused the transfer", str(ctx.exception))
+
+    def test_wait_for_transfer_process_times_out_with_last_state(self):
+        """A transfer stuck in a non ready state times out reporting the state it was left in."""
+        with mock.patch.object(self.service, 'get_transfer_process') as mock_get:
+            mock_get.return_value = {"@id": "transfer-123", "state": "REQUESTING"}
+
+            with mock.patch('tractusx_sdk.dataspace.services.connector.base_connector_consumer.op.wait'):
+                with self.assertRaises(TimeoutError) as ctx:
+                    self.service._wait_for_transfer_process(
+                        agreement_id="agreement-123",
+                        counter_party_address="https://provider.example.com",
+                        max_wait=3,
+                        poll_interval=1,
+                    )
+
+        self.assertIn("REQUESTING", str(ctx.exception))
+
+    def test_get_agreement_id_reads_finalized_negotiation(self):
+        """The complete negotiation is only fetched to read the agreement id."""
+        response = mock.Mock(spec=Response)
+        response.status_code = 200
+        response.json.return_value = {"state": "FINALIZED", "contractAgreementId": "agreement-123"}
+        self.service.contract_negotiations.get_by_id.return_value = response
+
+        self.assertEqual(self.service._get_agreement_id(negotiation_id="negotiation-123"), "agreement-123")
+
+    def test_get_agreement_id_missing_raises(self):
+        """A finalized negotiation without an agreement id is an error, not a silent None."""
+        response = mock.Mock(spec=Response)
+        response.status_code = 200
+        response.json.return_value = {"state": "FINALIZED"}
+        self.service.contract_negotiations.get_by_id.return_value = response
+
+        with self.assertRaises(RuntimeError):
+            self.service._get_agreement_id(negotiation_id="negotiation-123")
+
+    def test_get_transfer_process_probes_filter_keys(self):
+        """A filter key the connector rejects is skipped and the next candidate is used."""
+        rejected = mock.Mock(spec=Response)
+        rejected.status_code = 400
+        rejected.text = "Invalid filter expression"
+        accepted = self._transfer_process_response([{"@id": "transfer-123", "state": "STARTED"}])
+        self.service.transfer_processes.query.side_effect = [rejected, accepted]
+
+        result = self.service.get_transfer_process(agreement_id="agreement-123")
+
+        self.assertEqual(result["@id"], "transfer-123")
+        self.assertEqual(self.service.transfer_processes.query.call_count, 2)
+
+    def test_get_transfer_process_reuses_accepted_filter_key(self):
+        """Once a filter key is accepted, later polls send a single request."""
+        rejected = mock.Mock(spec=Response)
+        rejected.status_code = 400
+        rejected.text = "Invalid filter expression"
+        self.service.transfer_processes.query.side_effect = [
+            rejected,
+            self._transfer_process_response([{"@id": "transfer-123", "state": "STARTED"}]),
+            self._transfer_process_response([{"@id": "transfer-123", "state": "STARTED"}]),
+        ]
+
+        self.service.get_transfer_process(agreement_id="agreement-123")
+        self.service.get_transfer_process(agreement_id="agreement-123")
+
+        self.assertEqual(self.service.transfer_processes.query.call_count, 3)
+
+    def test_get_transfer_process_all_keys_rejected_raises(self):
+        """When no candidate key is accepted the connector response is surfaced."""
+        rejected = mock.Mock(spec=Response)
+        rejected.status_code = 400
+        rejected.text = "Invalid filter expression"
+        self.service.transfer_processes.query.return_value = rejected
+
+        with self.assertRaises(ValueError) as ctx:
+            self.service.get_transfer_process(agreement_id="agreement-123")
+
+        self.assertIn("Invalid filter expression", str(ctx.exception))
+        self.assertIn("contractAgreementId", str(ctx.exception))
+
+    def test_wait_for_transfer_process_does_not_retry_rejected_query(self):
+        """A rejected query fails immediately instead of polling until the timeout."""
+        with mock.patch.object(self.service, 'get_transfer_process') as mock_get:
+            mock_get.side_effect = ValueError("rejected by the connector")
+
+            with mock.patch('tractusx_sdk.dataspace.services.connector.base_connector_consumer.op.wait'):
+                with self.assertRaises(ValueError):
+                    self.service._wait_for_transfer_process(
+                        agreement_id="agreement-123",
+                        counter_party_address="https://provider.example.com",
+                        max_wait=60,
+                        poll_interval=1,
+                    )
+
+        self.assertEqual(mock_get.call_count, 1)
+
+    def test_get_transfer_process_no_response_is_transient(self):
+        """A missing response is treated as transient so the caller keeps polling."""
+        self.service.transfer_processes.query.return_value = None
+
+        self.assertIsNone(self.service.get_transfer_process(agreement_id="agreement-123"))
+
 
 if __name__ == '__main__':
     main()

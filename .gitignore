@@ -144,3 +144,6 @@ mvnw.cmd
 *.lock
 # Allow Poetry lock
 !poetry.lock
+
+# Local runs of the examples (i.e. tracing_example.py)
+tracing_example.log

@@ -73,9 +73,26 @@ class BaseConnectorConsumerService(BaseService):
     dataspace_version: str
 
     NEGOTIATION_ID_KEY = "contractNegotiationId"
+    AGREEMENT_ID_KEY = "contractAgreementId"
+    ## EDC names the agreement differently per entity and per connector version, and the queryable
+    ## name is not always the one used in the response, so the transfer process query probes these
+    ## keys in order and then reuses whichever one the connector accepted.
+    TRANSFER_PROCESS_AGREEMENT_ID_KEYS = ("contractAgreementId", "contractId", "agreementId")
+    _transfer_process_agreement_id_key: str | None = None
+    ## States in which the transfer process is able to serve data, so the EDR is already cached
+    TRANSFER_PROCESS_READY_STATES = ("STARTED", "COMPLETED")
+    ## States from which the transfer process will never become ready
+    TRANSFER_PROCESS_ERROR_STATES = ("TERMINATED",)
 
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
-                 connection_manager: BaseConnectionManager = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None, verify_ssl: bool = True):
+                 connection_manager: BaseConnectionManager = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None, verify_ssl: bool = True,
+                 trace: bool = False):
+        """
+        :param trace: Flag enabling the tracing of the requests sent to (and the
+            responses received from) the connector and the dataplane (default: False).
+            The collected trace is available through `get_trace()`/`get_trace_json()`,
+            and `set_tracer()` shares it with other services
+        """
         self.dataspace_version = dataspace_version
         self.verbose = verbose
         self.debug = debug
@@ -109,6 +126,9 @@ class BaseConnectorConsumerService(BaseService):
         self._transfer_process_controller = self.controllers.get(ControllerType.TRANSFER_PROCESS)
 
         self.connection_manager = connection_manager if connection_manager is not None else MemoryConnectionManager()
+
+        # Configured last: the tracer is shared with the adapter and the controllers
+        self._init_tracing(trace=trace)
 
     class _Builder(BaseService._Builder):  # NOSONAR - used by ServiceFactory via BaseService._Builder pattern
         def dma_path(self, dma_path: str):
@@ -365,6 +385,15 @@ class BaseConnectorConsumerService(BaseService):
             dataspace_version=self.dataspace_version,
             filter_expression=[
                 self.get_filter_expression(key=self.NEGOTIATION_ID_KEY, operator="=", value=negotiation_id)]
+        )
+
+    def get_transfer_process_filter(self, agreement_id: str, agreement_id_key: str = None) -> BaseQuerySpecModel:
+
+        return ModelFactory.get_queryspec_model(
+            dataspace_version=self.dataspace_version,
+            filter_expression=[
+                self.get_filter_expression(key=agreement_id_key or self.AGREEMENT_ID_KEY,
+                                           operator="=", value=agreement_id)]
         )
 
     def get_catalogs_by_dct_type(self, counter_party_id: str, edcs: list, dct_type: str,
@@ -783,6 +812,78 @@ class BaseConnectorConsumerService(BaseService):
 
         return data.pop()  ## Return last entry of the list (should be just one entry because of the filter)
 
+    def get_transfer_process(self, agreement_id: str, verify: bool = None) -> dict | None:
+        """
+        Gets the transfer process started for a given contract agreement id.
+
+        The EDR flow starts the transfer process automatically once the negotiation is FINALIZED,
+        so the transfer process is the first entity that reports what is happening: it exists (and
+        carries a state) before the EDR is written into the cache, and it carries an ``errorDetail``
+        when it fails. Polling it therefore replaces waiting for the EDR query to stop being empty.
+
+        @param agreement_id: The contract agreement id resulting from the negotiation.
+        @param verify: Whether to verify SSL certificates. If None, uses service default.
+
+        @returns: TransferProcess:dict or if not created yet -> None
+
+        TransferProcess Example:
+        ```
+            {
+                "@id": "04e9ec58-a053-4e40-85d8-35efb4a3a343",
+                "@type": "TransferProcess",
+                "state": "STARTED",
+                "type": "CONSUMER",
+                "contractAgreementId": "a6816e69-a6ea-491c-b842-3532aafb75dd",
+                "assetId": "urn:uuid:0c3d2db0-e5c6-27f9-5875-15a9a00e7a27",
+                "transferType": "HttpData-PULL"
+            }
+        ```
+        """
+
+        # Use service-level verify_ssl if verify not explicitly provided
+        if verify is None:
+            verify = getattr(self, 'verify_ssl', True)
+
+        ## Probe the known filter key names once, then keep using the one the connector accepted.
+        candidate_keys = ([self._transfer_process_agreement_id_key]
+                          if self._transfer_process_agreement_id_key is not None
+                          else list(self.TRANSFER_PROCESS_AGREEMENT_ID_KEYS))
+
+        rejected: dict = {}
+        for agreement_id_key in candidate_keys:
+            request: BaseQuerySpecModel = self.get_transfer_process_filter(
+                agreement_id=agreement_id, agreement_id_key=agreement_id_key)
+            response: Response = self.transfer_processes.query(request, verify=verify)
+
+            ## No response at all is transient, so it is retried by the caller on the next poll
+            if response is None:
+                return None
+
+            if response.status_code != 200:
+                rejected[agreement_id_key] = f"status=[{response.status_code}] body=[{getattr(response, 'text', None)}]"
+                continue
+
+            ## Remember the key so the following polls only send one request
+            if self._transfer_process_agreement_id_key != agreement_id_key:
+                self._transfer_process_agreement_id_key = agreement_id_key
+                if self.logger:
+                    self.logger.debug(
+                        "[Connector Service]: Transfer processes are filtered by [%s] on this connector",
+                        agreement_id_key)
+
+            ## The response is a list
+            data = response.json()
+
+            if (len(data) == 0):
+                return None
+
+            return data.pop()  ## Return last entry of the list (should be just one entry because of the filter)
+
+        ## Every candidate key was rejected, so the query itself is wrong and retrying will not help
+        raise ValueError(
+            f"[Connector Service]: The Transfer Process query for the agreement_id=[{agreement_id}] was rejected by the connector! "
+            f"Tried the filter keys {rejected}. Set the accepted one in TRANSFER_PROCESS_AGREEMENT_ID_KEYS.")
+
     def _build_optional_kwargs(self, protocol: str = None, context: dict = None, 
                                 protocol_key: str = 'protocol', context_key: str = 'context') -> dict:
         """
@@ -832,8 +933,12 @@ class BaseConnectorConsumerService(BaseService):
                 allowed_policies=policies
             )
         except Exception as e:
+            ## Chained, not swallowed: the cause carries the catalog that was read and the
+            ## allow-list it was compared against (``PolicyMismatchError``), which is what
+            ## lets the caller say *which* offers were rejected instead of only that none
+            ## were accepted. A bare ``raise RuntimeError(...)`` decapitated that evidence.
             raise RuntimeError(
-                f"[Connector Service]: [{counter_party_address}] It was not possible to find a valid policy in the catalog! Reason: [{str(e)}]")
+                f"[Connector Service]: [{counter_party_address}] It was not possible to find a valid policy in the catalog! Reason: [{str(e)}]") from e
 
         if len(valid_assets_policies) == 0:
             raise RuntimeError(
@@ -878,7 +983,9 @@ class BaseConnectorConsumerService(BaseService):
         @returns: Tuple of (negotiation_state, updated_last_logged_state).
         @raises RuntimeError: If negotiation is TERMINATED.
         """
-        state_response = self.contract_negotiations.get_by_id(negotiation_id)
+        ## Use the lightweight "/state" endpoint instead of fetching the complete negotiation payload.
+        ## It returns only {"@type": "NegotiationState", "state": "<STATE>"} on every poll tick.
+        state_response = self.contract_negotiations.get_state_by_id(negotiation_id)
         if state_response is None or state_response.status_code != 200:
             return None, last_logged_state
             
@@ -899,8 +1006,32 @@ class BaseConnectorConsumerService(BaseService):
         
         return negotiation_state, last_logged_state
 
+    def _get_agreement_id(self, negotiation_id: str) -> str:
+        """
+        Reads the contract agreement id from a FINALIZED negotiation.
+
+        This is the only point where the complete negotiation payload is needed, so it is fetched
+        once, at the end, instead of on every poll attempt.
+
+        @param negotiation_id: The unique identifier for the negotiation process.
+        @returns: The contract agreement id.
+        @raises RuntimeError: If the negotiation cannot be read or carries no agreement id.
+        """
+        response: Response = self.contract_negotiations.get_by_id(negotiation_id)
+        if response is None or response.status_code != 200:
+            raise RuntimeError(
+                f"[Connector Service]: It was not possible to retrieve the negotiation [{negotiation_id}] to read the contract agreement id!")
+
+        data = response.json()
+        agreement_id = data.get(self.AGREEMENT_ID_KEY, data.get(f"edc:{self.AGREEMENT_ID_KEY}"))
+        if agreement_id is None:
+            raise RuntimeError(
+                f"[Connector Service]: The negotiation [{negotiation_id}] is FINALIZED but no contract agreement id was returned!")
+
+        return agreement_id
+
     def _poll_negotiation_state(self, negotiation_id: str, counter_party_address: str,
-                                 max_wait: int, poll_interval: int) -> None:
+                                 max_wait: int, poll_interval: int) -> str:
         """
         Poll negotiation status until it reaches FINALIZED state.
         
@@ -908,6 +1039,7 @@ class BaseConnectorConsumerService(BaseService):
         @param counter_party_address: The URL of the EDC provider (for logging).
         @param max_wait: Maximum seconds to wait.
         @param poll_interval: Seconds to wait between poll attempts.
+        @returns: The contract agreement id of the finalized negotiation.
         @raises TimeoutError: If negotiation doesn't reach FINALIZED within max_wait.
         @raises RuntimeError: If negotiation is TERMINATED.
         """
@@ -921,7 +1053,7 @@ class BaseConnectorConsumerService(BaseService):
                     negotiation_id, counter_party_address, last_logged_state)
                 
                 if negotiation_state == "FINALIZED":
-                    return
+                    return self._get_agreement_id(negotiation_id=negotiation_id)
             except RuntimeError:
                 raise
             except Exception as e:
@@ -935,6 +1067,71 @@ class BaseConnectorConsumerService(BaseService):
 
         raise TimeoutError(
             f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] did not reach FINALIZED state after {max_wait}s (last state: {negotiation_state})!")
+
+    def _wait_for_transfer_process(self, agreement_id: str, counter_party_address: str,
+                                   max_wait: int, poll_interval: int) -> str:
+        """
+        Poll the transfer process started for the agreement until it is able to serve data.
+
+        This replaces waiting for the EDR cache query to stop returning an empty list: the transfer
+        process is created before the EDR is cached, reports a real state on every attempt, and
+        fails fast with an ``errorDetail`` instead of timing out silently.
+
+        @param agreement_id: The contract agreement id resulting from the negotiation.
+        @param counter_party_address: The URL of the EDC provider (for logging).
+        @param max_wait: Maximum seconds to wait.
+        @param poll_interval: Seconds to wait between poll attempts.
+        @returns: The transfer process id.
+        @raises TimeoutError: If the transfer process does not become ready within max_wait.
+        @raises RuntimeError: If the transfer process reaches an error state.
+        """
+        elapsed: float = 0.0
+        transfer_state: str | None = None
+        last_logged_state: str | None = None
+
+        while elapsed < max_wait:
+            transfer_process: dict | None = None
+            try:
+                transfer_process = self.get_transfer_process(agreement_id=agreement_id)
+            except ValueError:
+                ## The connector rejected the query itself, polling again would only repeat it
+                raise
+            except Exception as e:
+                if self.logger:
+                    self.logger.warning(
+                        "[Connector Service]: [%s] Failed to check the transfer process state: %s",
+                        counter_party_address, e)
+
+            if transfer_process is not None:
+                transfer_process_id = transfer_process.get("@id")
+                transfer_state = transfer_process.get("state", transfer_process.get("edc:state"))
+
+                # Log state change if logger is available and state changed
+                if self.logger and transfer_state != last_logged_state:
+                    self.logger.info(
+                        "[Connector Service]: [%s] Transfer process [%s] state: %s",
+                        counter_party_address, transfer_process_id, transfer_state)
+                    last_logged_state = transfer_state
+
+                # Check terminal states
+                if transfer_state in self.TRANSFER_PROCESS_ERROR_STATES:
+                    error_detail = transfer_process.get("errorDetail", transfer_process.get("edc:errorDetail"))
+                    raise RuntimeError(
+                        f"[Connector Service]: [{counter_party_address}] The Transfer Process [{transfer_process_id}] for the agreement [{agreement_id}] is in state [{transfer_state}]! Reason: [{error_detail}]")
+
+                if transfer_state in self.TRANSFER_PROCESS_READY_STATES and transfer_process_id is not None:
+                    return transfer_process_id
+
+            elif self.logger:
+                self.logger.info(
+                    "[Connector Service]: [%s] Transfer process for the agreement [%s] not yet created, waiting %ss...",
+                    counter_party_address, agreement_id, poll_interval)
+
+            op.wait(seconds=poll_interval)
+            elapsed += poll_interval
+
+        raise TimeoutError(
+            f"[Connector Service]: [{counter_party_address}] The Transfer Process for the agreement [{agreement_id}] did not become ready after {max_wait}s (last state: {transfer_state})!")
 
     def _wait_for_edr_entry(self, negotiation_id: str, counter_party_address: str,
                             max_wait: int, poll_interval: int) -> dict:
@@ -1007,15 +1204,24 @@ class BaseConnectorConsumerService(BaseService):
             **negotiation_kwargs
         )
 
-        # Phase 3: Poll negotiation state until FINALIZED
-        self._poll_negotiation_state(
+        # Phase 3: Poll negotiation state until FINALIZED, then read its contract agreement id
+        agreement_id = self._poll_negotiation_state(
             negotiation_id=negotiation_id,
             counter_party_address=counter_party_address,
             max_wait=max_wait,
             poll_interval=poll_interval
         )
 
-        # Phase 4: Wait for EDR entry to become available
+        # Phase 4: Poll the transfer process started for that agreement until it can serve data.
+        # Once it is ready the EDR is guaranteed to be in the cache, so phase 5 resolves immediately.
+        self._wait_for_transfer_process(
+            agreement_id=agreement_id,
+            counter_party_address=counter_party_address,
+            max_wait=max_wait,
+            poll_interval=poll_interval
+        )
+
+        # Phase 5: Read the EDR entry, which the connection manager caches as the connection entry
         edr_entry = self._wait_for_edr_entry(
             negotiation_id=negotiation_id,
             counter_party_address=counter_party_address,
@@ -1594,7 +1800,8 @@ class BaseConnectorConsumerService(BaseService):
                 verify=verify,
                 timeout=timeout,
                 allow_redirects=allow_redirects,
-                session=session
+                session=session,
+                **self._trace_kwargs()
             )
 
         ## Do get request to get a response!
@@ -1604,7 +1811,8 @@ class BaseConnectorConsumerService(BaseService):
             verify=verify,
             timeout=timeout,
             params=params,
-            allow_redirects=allow_redirects
+            allow_redirects=allow_redirects,
+            **self._trace_kwargs()
         )
 
     def do_post(
@@ -1692,7 +1900,8 @@ class BaseConnectorConsumerService(BaseService):
                 verify=verify,
                 timeout=timeout,
                 allow_redirects=allow_redirects,
-                session=session
+                session=session,
+                **self._trace_kwargs()
             )
 
         return HttpTools.do_post(
@@ -1702,7 +1911,8 @@ class BaseConnectorConsumerService(BaseService):
             headers=merged_headers,
             verify=verify,
             timeout=timeout,
-            allow_redirects=allow_redirects
+            allow_redirects=allow_redirects,
+            **self._trace_kwargs()
         )
     def do_put(
         self,
@@ -1789,7 +1999,8 @@ class BaseConnectorConsumerService(BaseService):
                 verify=verify,
                 timeout=timeout,
                 allow_redirects=allow_redirects,
-                session=session
+                session=session,
+                **self._trace_kwargs()
             )
 
         return HttpTools.do_put(
@@ -1799,5 +2010,6 @@ class BaseConnectorConsumerService(BaseService):
             headers=merged_headers,
             verify=verify,
             timeout=timeout,
-            allow_redirects=allow_redirects
+            allow_redirects=allow_redirects,
+            **self._trace_kwargs()
         )

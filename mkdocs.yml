@@ -158,6 +158,7 @@ nav:
       - API Reference: tck/connector/api-reference.md
   - Core Concepts:
     - SDK Architecture: core-concepts/sdk-architecture/sdk-structure-and-components.md
+    - Request Tracing: core-concepts/sdk-architecture/request-tracing.md
     - Dataspace Concepts: core-concepts/dataspace-concepts/index.md
     - Industry Concepts: core-concepts/industry-concepts/index.md
     - Extensions Concepts: core-concepts/extensions-concepts/index.md

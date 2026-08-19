@@ -27,6 +27,7 @@ from unittest.mock import Mock
 
 import httpx
 
+from tractusx_sdk.dataspace.tools.tracing import Tracer
 from tractusx_sdk.industry.adapters.submodel_adapters.http_submodel_adapter import HttpSubmodelAdapter
 
 
@@ -151,3 +152,76 @@ class TestHttpSubmodelAdapter(unittest.TestCase):
         result = self.adapter.read(metadata)
 
         self.assertEqual(result, {"ok": True})
+
+
+class TestHttpSubmodelAdapterTracing(unittest.TestCase):
+    """An optional tracer records the calls to the submodel service."""
+
+    METADATA = {
+        "semantic_id": "urn:sample:semantic",
+        "submodel_id": "123e4567-e89b-12d3-a456-426614174000",
+    }
+
+    @staticmethod
+    def _adapter(**kwargs):
+        adapter = HttpSubmodelAdapter(
+            base_url="https://example.org",
+            api_path="/api/v1",
+            auth_type="none",
+            **kwargs
+        )
+        return adapter
+
+    @staticmethod
+    def _httpx_response(body=None):
+        """A real, unread `httpx.Response`, as returned by the httpx client."""
+        return httpx.Response(
+            200,
+            json=body if body is not None else {"k": "v"},
+            request=httpx.Request("GET", "https://example.org"),
+        )
+
+    def test_no_trace_by_default(self):
+        adapter = self._adapter()
+        adapter.client = Mock()
+        adapter.client.get.return_value = self._httpx_response()
+
+        adapter.read(self.METADATA)
+
+        self.assertFalse(adapter.trace_enabled)
+        self.assertEqual([], adapter.get_trace())
+
+    def test_trace_records_the_call(self):
+        adapter = self._adapter(tracer=Tracer())
+        adapter.client = Mock()
+        adapter.client.get.return_value = self._httpx_response({"k": "v"})
+
+        result = adapter.read(self.METADATA)
+
+        self.assertEqual({"k": "v"}, result)
+        trace = adapter.get_trace()
+        self.assertEqual(1, len(trace))
+        self.assertEqual("GET", trace[0]["request"]["method"])
+        self.assertEqual(200, trace[0]["response"]["status_code"])
+        self.assertEqual({"k": "v"}, trace[0]["response"]["body"])
+
+    def test_trace_records_the_written_body(self):
+        adapter = self._adapter(tracer=Tracer())
+        adapter.client = Mock()
+        adapter.client.post.return_value = self._httpx_response({})
+
+        adapter.write_json(self.METADATA, {"hello": "world"})
+
+        self.assertEqual({"hello": "world"}, adapter.get_trace()[0]["request"]["body"])
+
+    def test_trace_records_connection_errors(self):
+        adapter = self._adapter(tracer=Tracer())
+        adapter.client = Mock()
+        request = httpx.Request("GET", "https://example.org")
+        adapter.client.get.side_effect = httpx.RequestError("network issue", request=request)
+
+        with self.assertRaises(ConnectionError):
+            adapter.read(self.METADATA)
+
+        self.assertEqual("RequestError", adapter.get_trace()[0]["error"]["type"])
+

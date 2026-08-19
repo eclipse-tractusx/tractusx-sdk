@@ -33,7 +33,8 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
     oauth:OAuth2Manager
     
     def __init__(self, oauth:OAuth2Manager, discovery_finder_service:DiscoveryFinderService, connector_discovery_key:str="bpn", 
-                 cache_timeout_seconds:int = 60 * 60 * 12, verbose:bool=False, logger:Optional[logging.Logger]=None):
+                 cache_timeout_seconds:int = 60 * 60 * 12, verbose:bool=False, logger:Optional[logging.Logger]=None,
+                 trace: bool = False):
         """
         Initialize the Connector Discovery Service with caching functionality.
         
@@ -43,6 +44,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
             cache_timeout_seconds (int): Cache timeout in seconds (default: 12 hours).
             verbose (bool): Enable verbose logging (default: False).
             logger (Optional[logging.Logger]): Logger instance for logging (default: None).
+            trace (bool): Enable the tracing of the requests/responses (default: False).
         """
         self.oauth=oauth
         super().__init__(
@@ -50,7 +52,8 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
             discovery_finder_service=discovery_finder_service,
             cache_timeout_seconds=cache_timeout_seconds,
             verbose=verbose,
-            logger=logger
+            logger=logger,
+            trace=trace
         )
         self.connector_discovery_key = connector_discovery_key
 
@@ -140,7 +143,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         
         headers:dict = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})
 
-        response = HttpTools.do_post(url=discovery_url, headers=headers, json=body)
+        response = HttpTools.do_post(url=discovery_url, headers=headers, json=body, **self._trace_kwargs())
         if(response is None or response.status_code != 200):
             raise Exception("[Connector Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
         

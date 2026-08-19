@@ -23,9 +23,10 @@
 import requests
 
 from ..tools import HttpTools
+from ..tools.tracing import TraceableMixin, Tracer, trace_call
 
 
-class Adapter:
+class Adapter(TraceableMixin):
     """
     Base adapter class
     """
@@ -36,13 +37,17 @@ class Adapter:
     def __init__(
             self,
             base_url: str,
-            headers: dict = None
+            headers: dict = None,
+            tracer: Tracer = None
     ):
         """
         Create a new adapter instance
 
         :param base_url: The URL of the application to be requested
         :param headers: The headers (i.e.: API Key) of the application to be requested
+        :param tracer: Optional tracer recording the requests/responses performed by
+            this adapter. Adapters do not have a `trace` flag of their own: they
+            receive the tracer of the service they belong to, or None
         """
 
         self.base_url = base_url
@@ -50,6 +55,8 @@ class Adapter:
 
         if headers:
             self.session.headers.update(headers)
+
+        self._init_tracing(tracer=tracer)
 
     @classmethod
     def builder(cls):
@@ -77,6 +84,13 @@ class Adapter:
 
         def headers(self, headers: dict):
             self._data["headers"] = headers
+            return self
+
+        def tracer(self, tracer: Tracer):
+            """
+            Sets the tracer recording the requests/responses of this adapter.
+            """
+            self._data["tracer"] = tracer
             return self
 
         def data(self, data: dict):
@@ -165,10 +179,23 @@ class Adapter:
 
         url = HttpTools.concat_into_url(self.base_url, path)
 
-        response = self.session.request(
-            method=method,
-            url=url,
-            **kwargs
-        )
+        body = kwargs.get("json")
+        if body is None:
+            body = kwargs.get("data")
+
+        with trace_call(
+                method=method,
+                url=url,
+                tracer=self._tracer,
+                headers=kwargs.get("headers", self.session.headers),
+                params=kwargs.get("params"),
+                body=body
+        ) as call:
+            response = self.session.request(
+                method=method,
+                url=url,
+                **kwargs
+            )
+            call.set_response(response)
 
         return response
