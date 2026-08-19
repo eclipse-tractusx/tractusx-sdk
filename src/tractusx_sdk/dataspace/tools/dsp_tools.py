@@ -474,6 +474,28 @@ def _fmt(value) -> str:
         return repr(value)
 
 
+class PolicyMismatchError(ValueError):
+    """
+    Raised when a catalog was read and no offer in it carried an acceptable policy.
+
+    Still a ``ValueError``, so a caller that already catches one keeps working.
+    What it adds is the evidence behind the verdict: the catalog that was read
+    and the allow-list it was compared against. Without them the caller can only
+    repeat that nothing matched — the offers the provider actually made, and how
+    they differed from the ones configured, were computed here and then dropped.
+
+    @param message: What failed, in the wording the caller used before.
+    @param catalog: The DCAT catalog the offers were taken from.
+    @param allowed_policies: The allow-list they were compared against;
+        ``None`` means no filtering was asked for and ``[]`` accepts nothing.
+    """
+
+    def __init__(self, message: str, catalog: dict = None, allowed_policies: list = None) -> None:
+        super().__init__(message)
+        self.catalog = catalog
+        self.allowed_policies = allowed_policies
+
+
 class DspTools:
     """
     Class responsible for doing trivial dsp operations.
@@ -506,7 +528,11 @@ class DspTools:
         if isinstance(dataset, dict):
             policy = DspTools.get_dataset_policy(dataset=dataset, allowed_policies=allowed_policies)
             if policy is None:
-                raise ValueError("No valid asset and policy allowed at the DCAT Catalog dataset!")
+                raise PolicyMismatchError(
+                    "No valid asset and policy allowed at the DCAT Catalog dataset!",
+                    catalog=catalog,
+                    allowed_policies=allowed_policies,
+                )
 
             valid_assets.append((dataset.get("@id"), policy)) ## Return the assetid and the policy
             return valid_assets
@@ -522,7 +548,11 @@ class DspTools:
                 valid_assets.append((item.get("@id"), policy)) ## Return the assetid and the policy
 
         if len(valid_assets) == 0:
-            raise ValueError("No valid policy was found for any item in the list. No valid asset found!")
+            raise PolicyMismatchError(
+                "No valid policy was found for any item in the list. No valid asset found!",
+                catalog=catalog,
+                allowed_policies=allowed_policies,
+            )
         
         return valid_assets
     

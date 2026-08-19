@@ -842,8 +842,12 @@ class BaseConnectorConsumerService(BaseService):
                 allowed_policies=policies
             )
         except Exception as e:
+            ## Chained, not swallowed: the cause carries the catalog that was read and the
+            ## allow-list it was compared against (``PolicyMismatchError``), which is what
+            ## lets the caller say *which* offers were rejected instead of only that none
+            ## were accepted. A bare ``raise RuntimeError(...)`` decapitated that evidence.
             raise RuntimeError(
-                f"[Connector Service]: [{counter_party_address}] It was not possible to find a valid policy in the catalog! Reason: [{str(e)}]")
+                f"[Connector Service]: [{counter_party_address}] It was not possible to find a valid policy in the catalog! Reason: [{str(e)}]") from e
 
         if len(valid_assets_policies) == 0:
             raise RuntimeError(
@@ -888,7 +892,9 @@ class BaseConnectorConsumerService(BaseService):
         @returns: Tuple of (negotiation_state, updated_last_logged_state).
         @raises RuntimeError: If negotiation is TERMINATED.
         """
-        state_response = self.contract_negotiations.get_by_id(negotiation_id)
+        ## Use the lightweight "/state" endpoint instead of fetching the complete negotiation payload.
+        ## It returns only {"@type": "NegotiationState", "state": "<STATE>"} on every poll tick.
+        state_response = self.contract_negotiations.get_state_by_id(negotiation_id)
         if state_response is None or state_response.status_code != 200:
             return None, last_logged_state
             

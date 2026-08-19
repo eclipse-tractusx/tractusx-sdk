@@ -11,6 +11,8 @@ See also the overarching [CHANGELOG.md](https://eclipse-tractusx.github.io/chang
 
 ### Added
 
+- feat: `PolicyMismatchError` - a rejected catalog now says what was rejected. `DspTools.filter_assets_and_policies` raises it (a `ValueError`, so existing handlers are unaffected) carrying the `catalog` it read and the `allowed_policies` it compared against, and `_fetch_and_validate_catalog` chains it as the cause of its own `RuntimeError` instead of discarding it. Callers can report which offers were turned down and how they differed; before, the evidence was computed for a DEBUG log line and dropped
+
 - feat: optional `trace` flag on the SDK services, adapters and factories, recording the requests sent to (and the responses received from) the external services and exposing them as JSON through `get_trace()` / `get_trace_json()`, or as `TraceEntry` objects through `get_trace_entries()`
 - feat: named trace operations - `service.trace_operation(name)` and `Tracer.activate(name)` group the calls of a `with` block and hand them back on their own; traces now record the response `content_type`, keep non-JSON bodies (HTML as text, binary as base64), and can be filtered by `operation` / `operation_id`
 

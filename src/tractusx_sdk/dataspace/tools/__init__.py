@@ -41,7 +41,7 @@ from .tracing import (
     get_active_context,
     get_active_operation,
 )
-from .dsp_tools import DspTools
+from .dsp_tools import DspTools, PolicyMismatchError
 from .operators import op
 from .encoding_tools import encode_as_base64_url_safe, decode_base64_url_safe
 from .utils import get_arguments, get_app_config, get_log_config
