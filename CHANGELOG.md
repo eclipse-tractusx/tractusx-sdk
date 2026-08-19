@@ -16,6 +16,10 @@ See also the overarching [CHANGELOG.md](https://eclipse-tractusx.github.io/chang
 - feat: optional `trace` flag on the SDK services, adapters and factories, recording the requests sent to (and the responses received from) the external services and exposing them as JSON through `get_trace()` / `get_trace_json()`, or as `TraceEntry` objects through `get_trace_entries()`
 - feat: named trace operations - `service.trace_operation(name)` and `Tracer.activate(name)` group the calls of a `with` block and hand them back on their own; traces now record the response `content_type`, keep non-JSON bodies (HTML as text, binary as base64), and can be filtered by `operation` / `operation_id`
 
+### Changed
+
+- chore: every state poll now reads the EDC `/state` endpoints through `get_state_by_id` instead of fetching the complete entity payload with `get_by_id` on each attempt. A tick returns just `{"@type": "NegotiationState", "state": "<STATE>"}` rather than the full object (policy, callback addresses, counterparty details, timestamps), which also keeps the request traces readable during long negotiations. Applied to the negotiation poll in `do_dsp` (`_check_single_negotiation_state`) and to both TCK connector runner steps - `_step_wait_for_agreement` and `_step_wait_for_edr`. No behaviour change: the state values compared are the same, `do_dsp` already took the agreement and transfer process identifiers from the EDR entry, and the TCK runner still fetches the full negotiation once - only after a terminal state is reached - for its diagnostic dump and the contract agreement id
+
 ## [0.8.0] - 2026-06-15
 
 ### Added
