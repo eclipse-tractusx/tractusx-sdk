@@ -109,7 +109,7 @@ class BaseConnectorProviderService(BaseService):
             "proxyBody": "false"
         },
         headers: dict = None,
-        properties: dict = {},
+        properties: dict = None,
         private_properties: dict = None,
         oauth2_config: dict = None,
         context: dict = None,
@@ -157,6 +157,9 @@ class BaseConnectorProviderService(BaseService):
         if headers is not None:
             for key, value in headers.items():
                 data_address["header:" + key] = value
+
+        if properties is None:
+            properties: dict = {}
 
         if dct_type is not None:
             properties["dct:type"] = {
