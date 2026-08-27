@@ -162,7 +162,7 @@ class BaseConnectorProviderService(BaseService):
             dataspace_version=self.dataspace_version,
             context=context,
             oid=asset_id,
-            properties=build_properties(dct_type=dct_type, 
+            properties=self.build_properties(dct_type=dct_type, 
                                         dct_subject=dct_subject,
                                         version=version,
                                         semantic_id=semantic_id,
@@ -187,7 +187,7 @@ class BaseConnectorProviderService(BaseService):
         return asset_response.json()
 
     
-    def build_properties(dct_type=None, dct_subject=None, version=None,
+    def build_properties(self, dct_type=None, dct_subject=None, version=None,
                      semantic_id=None, properties=None):
                          
         _properties: dict = {}   # local — a fresh dict each call
