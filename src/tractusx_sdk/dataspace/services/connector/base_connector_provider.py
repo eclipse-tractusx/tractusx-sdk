@@ -157,32 +157,16 @@ class BaseConnectorProviderService(BaseService):
         if headers is not None:
             for key, value in headers.items():
                 data_address["header:" + key] = value
-
-        if properties is None:
-            properties: dict = {}
-
-        if dct_type is not None:
-            properties["dct:type"] = {
-                "@id": dct_type
-            }
-
-        if dct_subject is not None:
-            properties["dct:subject"] = {
-                "@id": dct_subject
-            }
-
-        if version is not None:
-            properties["cx-common:version"] = version
-
-        if semantic_id is not None:
-            context["aas-semantics"] = "https://admin-shell.io/aas/3/0/HasSemantics/"
-            properties["aas-semantics:semanticId"] = {"@id": semantic_id}
-
+            
         asset = ModelFactory.get_asset_model(
             dataspace_version=self.dataspace_version,
             context=context,
             oid=asset_id,
-            properties=properties,
+            properties=build_properties(dct_type=dct_type, 
+                                        dct_subject=dct_subject,
+                                        version=version,
+                                        semantic_id=semantic_id,
+                                        properties=properties),
             private_properties=private_properties,
             data_address=data_address,
             kwargs=kwargs
@@ -202,6 +186,35 @@ class BaseConnectorProviderService(BaseService):
 
         return asset_response.json()
 
+    
+    def build_properties(dct_type=None, dct_subject=None, version=None,
+                     semantic_id=None, properties=None):
+                         
+        _properties: dict = {}   # local — a fresh dict each call
+    
+        if dct_type is not None:
+            _properties["dct:type"] = {
+                "@id": dct_type
+            }
+    
+        if dct_subject is not None:
+            _properties["dct:subject"] = {
+                "@id": dct_subject
+            }
+    
+        if version is not None:
+            _properties["cx-common:version"] = version
+    
+        if semantic_id is not None:
+            context["aas-semantics"] = "https://admin-shell.io/aas/3/0/HasSemantics/"
+            _properties["aas-semantics:semanticId"] = {"@id": semantic_id}
+            
+        if properties is not None:
+            _properties.update(properties)
+    
+        return _properties
+
+    
     def create_contract(
         self,
         contract_id: str,
