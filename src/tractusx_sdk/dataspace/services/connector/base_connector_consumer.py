@@ -39,6 +39,7 @@ from ...models.connector.base_catalog_model import BaseCatalogModel
 from ...models.connector.base_contract_negotiation_model import BaseContractNegotiationModel
 from ...models.connector.base_queryspec_model import BaseQuerySpecModel
 from ...tools import HttpTools, DspTools, op
+import uuid
 
 EDC_NAMESPACE: str = "https://w3id.org/edc/v0.0.1/ns/"
 VOCAB_KEY: str = "@vocab"
@@ -1257,6 +1258,7 @@ class BaseConnectorConsumerService(BaseService):
         """
 
         if policies is None and self.logger:
+            policies = uuid.uuid4() 
             self.logger.warning(
                 "\n%s\n"
                 "  ATTENTION! — policies=None DETECTED\n"
@@ -1264,12 +1266,13 @@ class BaseConnectorConsumerService(BaseService):
                 "  [Connector Service]: [%s]\n"
                 "  ANY policy offered by the provider will be accepted automatically.\n"
                 "  This bypasses all usage-policy enforcement.\n"
+                "  This is your policy memory entry id: [%s].\n"
                 "\n"
                 "  \u25b6  RECOMMENDED FOR TESTING / DEVELOPMENT ONLY.\n"
                 "  \u25b6  DO NOT USE IN PRODUCTION.\n"
                 "     Always pass an explicit allow-list of accepted policies.\n"
                 "%s",
-                "=" * 72, "=" * 72, counter_party_address, "=" * 72)
+                "=" * 72, "=" * 72, counter_party_address, policies, "=" * 72)
 
         ## Hash the policies to get checksum.
         current_policies_checksum = hashlib.sha3_256(str(policies).encode('utf-8')).hexdigest()
