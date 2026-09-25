@@ -4,6 +4,8 @@ Eclipse Tractus-X - Software Development KIT
 
 Copyright (c) 2026 Mondragon Unibertsitatea
 Copyright (c) 2025 LKS Next
+Copyright (c) 2026 DRÄXLMAIER Group
+(represented by Lisa Dräxlmaier GmbH)
 Copyright (c) 2025 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
@@ -63,9 +65,19 @@ from tractusx_sdk.industry.adapters import (
 # Create a file system adapter
 adapter = SubmodelAdapterFactory.get_file_system(root_path="./submodels")
 
-# Alternative: Using the internal factory method
-adapter = SubmodelAdapterFactory._get_adapter_builder(
-    adapter_type=SubmodelAdapterType.FILE_SYSTEM
+# Create from key-value configuration
+adapter = SubmodelAdapterFactory.from_config({
+    "type": "file_system",
+    "root_path": "./submodels"
+})
+
+# Use a custom key to select the adapter type
+adapter = SubmodelAdapterFactory.from_config(
+    {
+        "adapter": SubmodelAdapterType.FILE_SYSTEM,
+        "root_path": "./submodels"
+    },
+    type_key="adapter"
 )
 ```
 
@@ -179,19 +191,61 @@ class MyCustomAdapter(SubmodelAdapter):
 
 ### Registering Custom Adapters
 
-To use your custom adapter with the factory:
+You can register external adapter implementations from outside the framework,
+without modifying SDK source code.
+
+#### Option 1: Register adapter class (with classmethod builder)
 
 ```python
-from tractusx_sdk.industry.adapters import SubmodelAdapterType
-from enum import Enum
+from tractusx_sdk.industry.adapters import SubmodelAdapterFactory
 
-# Extend the enum
-class ExtendedAdapterType(Enum):
-    FILE_SYSTEM = "FileSystem"
-    MY_CUSTOM = "MyCustom"
+class MyCustomAdapter(SubmodelAdapter):
+    @classmethod
+    def builder(cls):
+        return cls._Builder(cls)
 
-# Use your adapter
-adapter = MyCustomAdapter(connection_string="...")
+    class _Builder:
+        def __init__(self, cls):
+            self.cls = cls
+            self._data = {}
+
+        def connection_string(self, connection_string: str):
+            self._data["connection_string"] = connection_string
+            return self
+
+        def build(self):
+            return self.cls(**self._data)
+
+SubmodelAdapterFactory.register_adapter(
+    adapter_type="my_custom",
+    adapter_class=MyCustomAdapter,
+)
+
+adapter = SubmodelAdapterFactory.from_config({
+    "type": "my_custom",
+    "connection_string": "postgresql://user:pass@host/db",
+})
+```
+
+#### Option 2: Register a standalone builder factory
+
+```python
+from tractusx_sdk.industry.adapters import SubmodelAdapterFactory
+
+def my_external_builder_factory():
+    return ExternalAdapter.builder()
+
+SubmodelAdapterFactory.register_adapter(
+    adapter_type="external_adapter",
+    builder_factory=my_external_builder_factory,
+)
+```
+
+#### Manage external registrations
+
+```python
+registered = SubmodelAdapterFactory.get_registered_adapter_types()
+SubmodelAdapterFactory.unregister_adapter("external_adapter")
 ```
 
 ## Builder Pattern

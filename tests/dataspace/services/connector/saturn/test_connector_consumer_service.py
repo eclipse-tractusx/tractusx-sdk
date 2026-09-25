@@ -1017,5 +1017,373 @@ class TestSaturnConnectorConsumerService(TestCase):
 
 
 
+    def test_do_get_by_dct_type_with_bpnl_success(self):
+        """Test do_get_by_dct_type_with_bpnl delegates to do_get_with_bpnl with the correct filter expression."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "https://w3id.org/catenax/taxonomy#PcfExchange"
+        policies = [{"@id": "policy-123"}]
+        path = "/pcf"
+        mock_response = mock.Mock(spec=Response)
+
+        with mock.patch.object(self.service, 'do_get_with_bpnl') as mock_do_get:
+            mock_do_get.return_value = mock_response
+
+            result = self.service.do_get_by_dct_type_with_bpnl(
+                bpnl=bpnl,
+                counter_party_address=counter_party_address,
+                dct_type=dct_type,
+                policies=policies,
+                path=path,
+            )
+
+            self.assertEqual(result, mock_response)
+            mock_do_get.assert_called_once()
+            call_kwargs = mock_do_get.call_args[1]
+            self.assertEqual(call_kwargs["bpnl"], bpnl)
+            self.assertEqual(call_kwargs["counter_party_address"], counter_party_address)
+            self.assertEqual(call_kwargs["policies"], policies)
+            self.assertEqual(call_kwargs["path"], path)
+            # Verify filter expression targets the dct_type value
+            filter_expr = call_kwargs["filter_expression"]
+            self.assertEqual(len(filter_expr), 1)
+            self.assertIn(dct_type, str(filter_expr[0]))
+
+    def test_do_get_by_dct_type_with_bpnl_uses_bpnl_for_discovery(self):
+        """Test that do_get_by_dct_type_with_bpnl triggers BPNL-based discovery (Saturn-aware URL resolution)."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "https://w3id.org/catenax/taxonomy#PcfExchange"
+        dataplane_url = "https://dataplane.example.com"
+        access_token = "token-abc"
+        mock_response = mock.Mock(spec=Response)
+
+        with mock.patch.object(self.service, 'do_dsp_with_bpnl') as mock_dsp, \
+             mock.patch.object(self.service, '_execute_http_request') as mock_execute:
+            mock_dsp.return_value = (dataplane_url, access_token)
+            mock_execute.return_value = mock_response
+
+            result = self.service.do_get_by_dct_type_with_bpnl(
+                bpnl=bpnl,
+                counter_party_address=counter_party_address,
+                dct_type=dct_type,
+            )
+
+            self.assertEqual(result, mock_response)
+            # do_dsp_with_bpnl must be called (not do_dsp), ensuring Saturn discovery endpoint is used
+            mock_dsp.assert_called_once()
+            dsp_kwargs = mock_dsp.call_args[1]
+            self.assertEqual(dsp_kwargs["bpnl"], bpnl)
+            self.assertEqual(dsp_kwargs["counter_party_address"], counter_party_address)
+
+    def test_do_get_by_dct_type_with_bpnl_missing_dataplane(self):
+        """Test do_get_by_dct_type_with_bpnl raises RuntimeError when DSP returns no dataplane info."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "https://w3id.org/catenax/taxonomy#PcfExchange"
+
+        with mock.patch.object(self.service, 'do_dsp_with_bpnl') as mock_dsp:
+            mock_dsp.return_value = (None, None)
+
+            with self.assertRaises(RuntimeError):
+                self.service.do_get_by_dct_type_with_bpnl(
+                    bpnl=bpnl,
+                    counter_party_address=counter_party_address,
+                    dct_type=dct_type,
+                )
+
+    def test_do_put_by_dct_type_with_bpnl_success(self):
+        """Test do_put_by_dct_type_with_bpnl delegates to do_put_with_bpnl with the correct filter expression."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "https://w3id.org/catenax/taxonomy#PcfExchange"
+        json_data = {"pcfValue": 3.14}
+        policies = [{"@id": "policy-456"}]
+        path = "/pcf"
+        mock_response = mock.Mock(spec=Response)
+
+        with mock.patch.object(self.service, 'do_put_with_bpnl') as mock_do_put:
+            mock_do_put.return_value = mock_response
+
+            result = self.service.do_put_by_dct_type_with_bpnl(
+                bpnl=bpnl,
+                counter_party_address=counter_party_address,
+                dct_type=dct_type,
+                json=json_data,
+                policies=policies,
+                path=path,
+            )
+
+            self.assertEqual(result, mock_response)
+            mock_do_put.assert_called_once()
+            call_kwargs = mock_do_put.call_args[1]
+            self.assertEqual(call_kwargs["bpnl"], bpnl)
+            self.assertEqual(call_kwargs["counter_party_address"], counter_party_address)
+            self.assertEqual(call_kwargs["json"], json_data)
+            self.assertEqual(call_kwargs["policies"], policies)
+            self.assertEqual(call_kwargs["path"], path)
+            filter_expr = call_kwargs["filter_expression"]
+            self.assertEqual(len(filter_expr), 1)
+            self.assertIn(dct_type, str(filter_expr[0]))
+
+    def test_do_put_by_dct_type_with_bpnl_uses_bpnl_for_discovery(self):
+        """Test that do_put_by_dct_type_with_bpnl triggers BPNL-based discovery (Saturn-aware URL resolution)."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "https://w3id.org/catenax/taxonomy#PcfExchange"
+        json_data = {"pcfValue": 1.0}
+        dataplane_url = "https://dataplane.example.com"
+        access_token = "token-xyz"
+        mock_response = mock.Mock(spec=Response)
+
+        with mock.patch.object(self.service, 'do_dsp_with_bpnl') as mock_dsp, \
+             mock.patch.object(self.service, '_execute_http_request') as mock_execute:
+            mock_dsp.return_value = (dataplane_url, access_token)
+            mock_execute.return_value = mock_response
+
+            result = self.service.do_put_by_dct_type_with_bpnl(
+                bpnl=bpnl,
+                counter_party_address=counter_party_address,
+                dct_type=dct_type,
+                json=json_data,
+            )
+
+            self.assertEqual(result, mock_response)
+            # do_dsp_with_bpnl must be called, ensuring Saturn discovery endpoint is used
+            mock_dsp.assert_called_once()
+            dsp_kwargs = mock_dsp.call_args[1]
+            self.assertEqual(dsp_kwargs["bpnl"], bpnl)
+            self.assertEqual(dsp_kwargs["counter_party_address"], counter_party_address)
+
+    def test_do_put_by_dct_type_with_bpnl_missing_dataplane(self):
+        """Test do_put_by_dct_type_with_bpnl raises RuntimeError when DSP returns no dataplane info."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "https://w3id.org/catenax/taxonomy#PcfExchange"
+
+        with mock.patch.object(self.service, 'do_dsp_with_bpnl') as mock_dsp:
+            mock_dsp.return_value = (None, None)
+
+            with self.assertRaises(RuntimeError):
+                self.service.do_put_by_dct_type_with_bpnl(
+                    bpnl=bpnl,
+                    counter_party_address=counter_party_address,
+                    dct_type=dct_type,
+                )
+
+    def test_do_get_by_dct_type_with_bpnl_custom_dct_type_key(self):
+        """Test do_get_by_dct_type_with_bpnl with a custom dct_type_key."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "PcfExchange"
+        custom_key = "dct:type"
+        mock_response = mock.Mock(spec=Response)
+
+        with mock.patch.object(self.service, 'do_get_with_bpnl') as mock_do_get:
+            mock_do_get.return_value = mock_response
+
+            self.service.do_get_by_dct_type_with_bpnl(
+                bpnl=bpnl,
+                counter_party_address=counter_party_address,
+                dct_type=dct_type,
+                dct_type_key=custom_key,
+            )
+
+            call_kwargs = mock_do_get.call_args[1]
+            filter_expr = call_kwargs["filter_expression"]
+            self.assertIn(custom_key, str(filter_expr[0]))
+            self.assertIn(dct_type, str(filter_expr[0]))
+
+    def test_do_put_by_dct_type_with_bpnl_custom_dct_type_key(self):
+        """Test do_put_by_dct_type_with_bpnl with a custom dct_type_key."""
+        bpnl = "BPNL000000000001"
+        counter_party_address = "https://provider.example.com/api/v1/dsp"
+        dct_type = "PcfExchange"
+        custom_key = "dct:type"
+        mock_response = mock.Mock(spec=Response)
+
+        with mock.patch.object(self.service, 'do_put_with_bpnl') as mock_do_put:
+            mock_do_put.return_value = mock_response
+
+            self.service.do_put_by_dct_type_with_bpnl(
+                bpnl=bpnl,
+                counter_party_address=counter_party_address,
+                dct_type=dct_type,
+                dct_type_key=custom_key,
+            )
+
+            call_kwargs = mock_do_put.call_args[1]
+            filter_expr = call_kwargs["filter_expression"]
+            self.assertIn(custom_key, str(filter_expr[0]))
+            self.assertIn(dct_type, str(filter_expr[0]))
+
+    # ------------------------------------------------------------------
+    # Transfer process based EDR readiness
+    # ------------------------------------------------------------------
+
+    def _transfer_process_response(self, payload):
+        """Builds a mocked query response returning the given transfer process list."""
+        response = mock.Mock(spec=Response)
+        response.status_code = 200
+        response.json.return_value = payload
+        return response
+
+    def test_get_transfer_process_returns_entry(self):
+        """The transfer process matching the agreement is returned."""
+        transfer_process = {"@id": "transfer-123", "state": "STARTED"}
+        self.service.transfer_processes.query.return_value = self._transfer_process_response([transfer_process])
+
+        result = self.service.get_transfer_process(agreement_id="agreement-123")
+
+        self.assertEqual(result, transfer_process)
+
+    def test_get_transfer_process_not_created_yet(self):
+        """An empty list means the transfer process does not exist yet, not an error."""
+        self.service.transfer_processes.query.return_value = self._transfer_process_response([])
+
+        self.assertIsNone(self.service.get_transfer_process(agreement_id="agreement-123"))
+
+    def test_get_transfer_process_filters_by_agreement_id(self):
+        """The query spec filters on the contract agreement id."""
+        query_spec = self.service.get_transfer_process_filter(agreement_id="agreement-123")
+
+        self.assertIn(self.service.AGREEMENT_ID_KEY, query_spec.to_data())
+        self.assertIn("agreement-123", query_spec.to_data())
+
+    def test_wait_for_transfer_process_returns_id_once_started(self):
+        """Polling stops and returns the transfer id as soon as the process can serve data."""
+        with mock.patch.object(self.service, 'get_transfer_process') as mock_get:
+            mock_get.side_effect = [None, {"@id": "transfer-123", "state": "STARTED"}]
+
+            with mock.patch('tractusx_sdk.dataspace.services.connector.base_connector_consumer.op.wait'):
+                result = self.service._wait_for_transfer_process(
+                    agreement_id="agreement-123",
+                    counter_party_address="https://provider.example.com",
+                    max_wait=10,
+                    poll_interval=1,
+                )
+
+        self.assertEqual(result, "transfer-123")
+
+    def test_wait_for_transfer_process_fails_fast_on_terminated(self):
+        """A TERMINATED transfer raises immediately and surfaces the connector error detail."""
+        with mock.patch.object(self.service, 'get_transfer_process') as mock_get:
+            mock_get.return_value = {
+                "@id": "transfer-123",
+                "state": "TERMINATED",
+                "errorDetail": "provider refused the transfer",
+            }
+
+            with mock.patch('tractusx_sdk.dataspace.services.connector.base_connector_consumer.op.wait'):
+                with self.assertRaises(RuntimeError) as ctx:
+                    self.service._wait_for_transfer_process(
+                        agreement_id="agreement-123",
+                        counter_party_address="https://provider.example.com",
+                        max_wait=10,
+                        poll_interval=1,
+                    )
+
+        self.assertIn("provider refused the transfer", str(ctx.exception))
+
+    def test_wait_for_transfer_process_times_out_with_last_state(self):
+        """A transfer stuck in a non ready state times out reporting the state it was left in."""
+        with mock.patch.object(self.service, 'get_transfer_process') as mock_get:
+            mock_get.return_value = {"@id": "transfer-123", "state": "REQUESTING"}
+
+            with mock.patch('tractusx_sdk.dataspace.services.connector.base_connector_consumer.op.wait'):
+                with self.assertRaises(TimeoutError) as ctx:
+                    self.service._wait_for_transfer_process(
+                        agreement_id="agreement-123",
+                        counter_party_address="https://provider.example.com",
+                        max_wait=3,
+                        poll_interval=1,
+                    )
+
+        self.assertIn("REQUESTING", str(ctx.exception))
+
+    def test_get_agreement_id_reads_finalized_negotiation(self):
+        """The complete negotiation is only fetched to read the agreement id."""
+        response = mock.Mock(spec=Response)
+        response.status_code = 200
+        response.json.return_value = {"state": "FINALIZED", "contractAgreementId": "agreement-123"}
+        self.service.contract_negotiations.get_by_id.return_value = response
+
+        self.assertEqual(self.service._get_agreement_id(negotiation_id="negotiation-123"), "agreement-123")
+
+    def test_get_agreement_id_missing_raises(self):
+        """A finalized negotiation without an agreement id is an error, not a silent None."""
+        response = mock.Mock(spec=Response)
+        response.status_code = 200
+        response.json.return_value = {"state": "FINALIZED"}
+        self.service.contract_negotiations.get_by_id.return_value = response
+
+        with self.assertRaises(RuntimeError):
+            self.service._get_agreement_id(negotiation_id="negotiation-123")
+
+    def test_get_transfer_process_probes_filter_keys(self):
+        """A filter key the connector rejects is skipped and the next candidate is used."""
+        rejected = mock.Mock(spec=Response)
+        rejected.status_code = 400
+        rejected.text = "Invalid filter expression"
+        accepted = self._transfer_process_response([{"@id": "transfer-123", "state": "STARTED"}])
+        self.service.transfer_processes.query.side_effect = [rejected, accepted]
+
+        result = self.service.get_transfer_process(agreement_id="agreement-123")
+
+        self.assertEqual(result["@id"], "transfer-123")
+        self.assertEqual(self.service.transfer_processes.query.call_count, 2)
+
+    def test_get_transfer_process_reuses_accepted_filter_key(self):
+        """Once a filter key is accepted, later polls send a single request."""
+        rejected = mock.Mock(spec=Response)
+        rejected.status_code = 400
+        rejected.text = "Invalid filter expression"
+        self.service.transfer_processes.query.side_effect = [
+            rejected,
+            self._transfer_process_response([{"@id": "transfer-123", "state": "STARTED"}]),
+            self._transfer_process_response([{"@id": "transfer-123", "state": "STARTED"}]),
+        ]
+
+        self.service.get_transfer_process(agreement_id="agreement-123")
+        self.service.get_transfer_process(agreement_id="agreement-123")
+
+        self.assertEqual(self.service.transfer_processes.query.call_count, 3)
+
+    def test_get_transfer_process_all_keys_rejected_raises(self):
+        """When no candidate key is accepted the connector response is surfaced."""
+        rejected = mock.Mock(spec=Response)
+        rejected.status_code = 400
+        rejected.text = "Invalid filter expression"
+        self.service.transfer_processes.query.return_value = rejected
+
+        with self.assertRaises(ValueError) as ctx:
+            self.service.get_transfer_process(agreement_id="agreement-123")
+
+        self.assertIn("Invalid filter expression", str(ctx.exception))
+        self.assertIn("contractAgreementId", str(ctx.exception))
+
+    def test_wait_for_transfer_process_does_not_retry_rejected_query(self):
+        """A rejected query fails immediately instead of polling until the timeout."""
+        with mock.patch.object(self.service, 'get_transfer_process') as mock_get:
+            mock_get.side_effect = ValueError("rejected by the connector")
+
+            with mock.patch('tractusx_sdk.dataspace.services.connector.base_connector_consumer.op.wait'):
+                with self.assertRaises(ValueError):
+                    self.service._wait_for_transfer_process(
+                        agreement_id="agreement-123",
+                        counter_party_address="https://provider.example.com",
+                        max_wait=60,
+                        poll_interval=1,
+                    )
+
+        self.assertEqual(mock_get.call_count, 1)
+
+    def test_get_transfer_process_no_response_is_transient(self):
+        """A missing response is treated as transient so the caller keeps polling."""
+        self.service.transfer_processes.query.return_value = None
+
+        self.assertIsNone(self.service.get_transfer_process(agreement_id="agreement-123"))
+
+
 if __name__ == '__main__':
     main()

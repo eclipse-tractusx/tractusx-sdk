@@ -1133,36 +1133,43 @@ def _step_wait_for_agreement(logger, consumer_service, negotiation_id):
         while elapsed < _MAX_POLL_WAIT:
             time.sleep(_POLL_INTERVAL)
             elapsed += _POLL_INTERVAL
+            ## Poll the lightweight "/state" endpoint instead of the complete negotiation
+            ## payload; the full object is only fetched once a terminal state is reached.
+            state_response = consumer_service.contract_negotiations.get_state_by_id(
+                negotiation_id,
+            )
+            if state_response.status_code != 200:
+                continue
+
+            state_data = state_response.json()
+            state = state_data.get("state", state_data.get("edc:state"))
+            logger.info("  Negotiation state: %s", state)
+
+            if state not in ("TERMINATED", "FINALIZED"):
+                continue
+
+            ## Terminal state reached: fetch the complete negotiation once, for the
+            ## diagnostic dump and the contract agreement id.
             status_response = consumer_service.contract_negotiations.get_by_id(
                 negotiation_id,
             )
-            if status_response.status_code != 200:
-                continue
-
-            status_data = status_response.json()
-            state = status_data.get("state", status_data.get("edc:state"))
-            logger.info("  Negotiation state: %s", state)
+            status_data = status_response.json() if status_response.status_code == 200 else {}
+            logger.info(
+                "[NEGOTIATION STATE RESPONSE]:\n%s",
+                json.dumps(status_data, indent=2),
+            )
 
             if state == "TERMINATED":
-                logger.info(
-                    "[NEGOTIATION STATE RESPONSE]:\n%s",
-                    json.dumps(status_data, indent=2),
-                )
                 raise RuntimeError("Contract negotiation was TERMINATED")
 
-            if state == "FINALIZED":
-                logger.info(
-                    "[NEGOTIATION STATE RESPONSE]:\n%s",
-                    json.dumps(status_data, indent=2),
-                )
-                contract_agreement_id = status_data.get(
-                    "contractAgreementId",
-                    status_data.get("edc:contractAgreementId"),
-                )
-                logger.info("✓ Contract Agreement finalized: %s", contract_agreement_id)
-                if contract_agreement_id is None:
-                    raise RuntimeError("Contract agreement ID not received")
-                return contract_agreement_id
+            contract_agreement_id = status_data.get(
+                "contractAgreementId",
+                status_data.get("edc:contractAgreementId"),
+            )
+            logger.info("✓ Contract Agreement finalized: %s", contract_agreement_id)
+            if contract_agreement_id is None:
+                raise RuntimeError("Contract agreement ID not received")
+            return contract_agreement_id
 
         raise TimeoutError("Contract negotiation timeout")
 
@@ -1234,7 +1241,9 @@ def _step_wait_for_edr(logger, consumer_service, transfer_id):
             time.sleep(_POLL_INTERVAL)
             elapsed += _POLL_INTERVAL
 
-            transfer_status = consumer_service.transfer_processes.get_by_id(transfer_id)
+            ## Only the state is needed here, so the lightweight "/state" endpoint is
+            ## used instead of the complete transfer process payload.
+            transfer_status = consumer_service.transfer_processes.get_state_by_id(transfer_id)
             if transfer_status.status_code != 200:
                 continue
 

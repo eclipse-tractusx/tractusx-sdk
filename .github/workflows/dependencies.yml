@@ -74,7 +74,7 @@ jobs:
       - name: Install dependencies
         run: |
           if [ -f poetry.lock ]; then
-            $POETRY_HOME_UNIX/bin/poetry sync --no-root
+            $POETRY_HOME_UNIX/bin/poetry sync --no-root --extras s3
           else
             echo "The project must have a poetry.lock file"
             exit 1
@@ -156,10 +156,10 @@ jobs:
         - name: Install dependencies - Pwsh version
           run: |
             if (Test-Path poetry.lock) {
-              & "$env:POETRY_HOME_WINDOWS\Scripts\poetry" sync --no-root
+              & "$env:POETRY_HOME_WINDOWS\Scripts\poetry" sync --no-root --extras s3
             } 
             else {
-              & "$env:POETRY_HOME_WINDOWS\Scripts\poetry" install --no-root
+              & "$env:POETRY_HOME_WINDOWS\Scripts\poetry" install --no-root --extras s3
             }
 
         - name: List packages - Pwsh version

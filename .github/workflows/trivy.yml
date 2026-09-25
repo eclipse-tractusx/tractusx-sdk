@@ -61,7 +61,7 @@ jobs:
 
       - name: Install dependencies including dev dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --with dev,test,docs
+        run: poetry install --no-interaction --no-root --with dev,test,docs --extras s3
 
       - name: Install project
         run: poetry install --no-interaction

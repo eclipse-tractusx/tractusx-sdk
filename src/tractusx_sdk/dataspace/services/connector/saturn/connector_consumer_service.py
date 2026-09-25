@@ -47,7 +47,13 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     APPLICATION_JSON_CONTENT_TYPE: str = "application/json"
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
                  connection_manager: BaseConnectionManager = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None,
-                 verify_ssl: bool = True):
+                 verify_ssl: bool = True, trace: bool = False):
+        """
+        :param trace: Flag enabling the tracing of the requests sent to (and the
+            responses received from) the connector and the dataplane (default: False).
+            The collected trace is available through `get_trace()`/`get_trace_json()`,
+            and `set_tracer()` shares it with other services
+        """
         # Set attributes before accessing them
         self.verbose = verbose
         self.debug = debug
@@ -67,7 +73,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             dataspace_version=self.dataspace_version,
             base_url=base_url,
             dma_path=dma_path,
-            headers=headers
+            headers=headers,
+            tracer=self._tracer
         )
 
         self.controllers = ControllerFactory.get_dma_controllers_for_version(
@@ -90,7 +97,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             connection_manager=connection_manager,
             verbose=verbose,
             debug=debug,
-            logger=logger
+            logger=logger,
+            trace=trace
         )
         
     @property
@@ -152,33 +160,33 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             if method == 'GET':
                 return HttpTools.do_get_with_session(
                     url=url, headers=merged_headers, verify=verify, timeout=timeout,
-                    allow_redirects=allow_redirects, session=session
+                    allow_redirects=allow_redirects, session=session, **self._trace_kwargs()
                 )
             elif method == 'POST':
                 return HttpTools.do_post_with_session(
                     url=url, json=json, data=data, headers=merged_headers, verify=verify,
-                    timeout=timeout, allow_redirects=allow_redirects, session=session
+                    timeout=timeout, allow_redirects=allow_redirects, session=session, **self._trace_kwargs()
                 )
             elif method == 'PUT':
                 return HttpTools.do_put_with_session(
                     url=url, json=json, data=data, headers=merged_headers, verify=verify,
-                    timeout=timeout, allow_redirects=allow_redirects, session=session
+                    timeout=timeout, allow_redirects=allow_redirects, session=session, **self._trace_kwargs()
                 )
 
         if method == 'GET':
             return HttpTools.do_get(
                 url=url, headers=merged_headers, verify=verify, timeout=timeout,
-                params=params, allow_redirects=allow_redirects
+                params=params, allow_redirects=allow_redirects, **self._trace_kwargs()
             )
         elif method == 'POST':
             return HttpTools.do_post(
                 url=url, json=json, data=data, headers=merged_headers, verify=verify,
-                timeout=timeout, allow_redirects=allow_redirects
+                timeout=timeout, allow_redirects=allow_redirects, **self._trace_kwargs()
             )
         elif method == 'PUT':
             return HttpTools.do_put(
                 url=url, json=json, data=data, headers=merged_headers, verify=verify,
-                timeout=timeout, allow_redirects=allow_redirects
+                timeout=timeout, allow_redirects=allow_redirects, **self._trace_kwargs()
             )
 
     def _get_catalog_internal(self, counter_party_id: str = None, counter_party_address: str = None,
@@ -1174,6 +1182,121 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             timeout=timeout, allow_redirects=allow_redirects, session=session
         )
         
+
+    def do_get_by_dct_type_with_bpnl(
+        self,
+        bpnl: str,
+        counter_party_address: str,
+        dct_type: str,
+        policies: list = None,
+        dct_type_key=DEFAULT_DCT_TYPE_KEY,
+        operator="=",
+        session=None,
+        **kwargs,
+    ):
+        """
+        Executes an HTTP GET request to an asset behind an EDC, filtered by DCT type.
+
+        Uses the BPNL to resolve the counterparty identity and the correct DSP
+        endpoint (including Saturn's ``/2025-1`` version suffix) via the consumer
+        EDC's ``/v4alpha/connectordiscovery/dspversionparams`` endpoint, instead
+        of relying on a pre-resolved ``counter_party_address``.
+
+        Parameters:
+        bpnl (str): The Business Partner Number (BPN) of the counterparty.
+        counter_party_address (str): Base DSP URL hint (e.g. from BDRS). The
+            consumer EDC resolves the final Saturn-aware endpoint from this.
+        dct_type (str): The DCT type to filter assets by (e.g., "PcfExchange").
+        policies (list, optional): List of allowed policies for contract
+            negotiation. Defaults to None.
+        dct_type_key (str, optional): The JSON path key for DCT type filtering.
+            Defaults to "'http://purl.org/dc/terms/type'.'@id'".
+        operator (str, optional): The comparison operator for filtering.
+            Defaults to "=".
+        session (requests.Session, optional): HTTP session for connection reuse.
+            Defaults to None.
+        **kwargs: Additional keyword arguments passed to the underlying
+            ``do_get_with_bpnl`` method (e.g., path, headers, timeout, verify,
+            params, allow_redirects).
+
+        Returns:
+        requests.Response: The HTTP response from the GET request to the dataplane.
+
+        Raises:
+        RuntimeError: If EDR negotiation fails or dataplane details cannot be retrieved.
+        ConnectionError: If catalog retrieval or HTTP request fails.
+        """
+        return self.do_get_with_bpnl(
+            bpnl=bpnl,
+            counter_party_address=counter_party_address,
+            filter_expression=[
+                self.get_filter_expression(key=dct_type_key, value=dct_type, operator=operator)
+            ],
+            policies=policies,
+            session=session,
+            **kwargs,
+        )
+
+    def do_put_by_dct_type_with_bpnl(
+        self,
+        bpnl: str,
+        counter_party_address: str,
+        dct_type: str,
+        json=None,
+        data=None,
+        policies: list = None,
+        dct_type_key=DEFAULT_DCT_TYPE_KEY,
+        operator="=",
+        session=None,
+        **kwargs,
+    ):
+        """
+        Performs an HTTP PUT request to an asset behind an EDC, filtered by DCT type.
+
+        Uses the BPNL to resolve the counterparty identity and the correct DSP
+        endpoint (including Saturn's ``/2025-1`` version suffix) via the consumer
+        EDC's ``/v4alpha/connectordiscovery/dspversionparams`` endpoint, instead
+        of relying on a pre-resolved ``counter_party_address``.
+
+        Parameters:
+        bpnl (str): The Business Partner Number (BPN) of the counterparty.
+        counter_party_address (str): Base DSP URL hint (e.g. from BDRS). The
+            consumer EDC resolves the final Saturn-aware endpoint from this.
+        dct_type (str): The DCT type to filter assets by (e.g., "PcfExchange").
+        json (dict, optional): JSON payload for the PUT request. Defaults to None.
+        data (dict, optional): Form data for the PUT request. Defaults to None.
+        policies (list, optional): List of allowed policies for contract
+            negotiation. Defaults to None.
+        dct_type_key (str, optional): The JSON path key for DCT type filtering.
+            Defaults to "'http://purl.org/dc/terms/type'.'@id'".
+        operator (str, optional): The comparison operator for filtering.
+            Defaults to "=".
+        session (requests.Session, optional): HTTP session for connection reuse.
+            Defaults to None.
+        **kwargs: Additional keyword arguments passed to the underlying
+            ``do_put_with_bpnl`` method (e.g., path, headers, timeout, verify,
+            allow_redirects).
+
+        Returns:
+        requests.Response: The HTTP response from the PUT request to the dataplane.
+
+        Raises:
+        RuntimeError: If EDR negotiation fails or dataplane details cannot be retrieved.
+        ConnectionError: If catalog retrieval or HTTP request fails.
+        """
+        return self.do_put_with_bpnl(
+            bpnl=bpnl,
+            counter_party_address=counter_party_address,
+            filter_expression=[
+                self.get_filter_expression(key=dct_type_key, value=dct_type, operator=operator)
+            ],
+            json=json,
+            data=data,
+            policies=policies,
+            session=session,
+            **kwargs,
+        )
+
     def do_put(
         self,
         counter_party_id: str,

@@ -26,6 +26,7 @@ from os import listdir, path
 import logging
 
 from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
+from tractusx_sdk.dataspace.tools.tracing import resolve_tracer
 
 
 class ServiceType(Enum):
@@ -103,6 +104,7 @@ class ServiceFactory:
             verbose: bool = True,
             debug: bool = False,
             logger: logging.Logger = None,
+            trace: bool = False,
             **kwargs
     ):
         """
@@ -115,6 +117,9 @@ class ServiceFactory:
         :param connection_manager: The connection manager to use for the service
         :param verbose: Verbose flag for the service
         :param debug: Debug flag to log request payloads before HTTP calls
+        :param trace: Flag enabling the tracing of the requests sent to (and the
+            responses received from) the external services (default: False). The
+            collected trace is available through `get_trace()`/`get_trace_json()`
         :return: An instance of the specified Service subclass
         """
 
@@ -130,7 +135,7 @@ class ServiceFactory:
         builder.connector_manager(connection_manager)
 
         # Include any additional parameters
-        builder.data({**kwargs, "verbose": verbose, "debug": debug, "logger": logger})
+        builder.data({**kwargs, "verbose": verbose, "debug": debug, "logger": logger, "trace": trace})
         return builder.build()
 
     @staticmethod
@@ -142,6 +147,7 @@ class ServiceFactory:
             verbose: bool = True,
             debug: bool = False,
             logger: logging.Logger = None,
+            trace: bool = False,
             **kwargs
     ):
         """
@@ -154,6 +160,9 @@ class ServiceFactory:
         :param verbose: Verbose flag for the service
         :param debug: Debug flag to log request payloads before HTTP calls
         :param logger: Logger instance for the service
+        :param trace: Flag enabling the tracing of the requests sent to (and the
+            responses received from) the external services (default: False). The
+            collected trace is available through `get_trace()`/`get_trace_json()`
         :return: An instance of the specified Service subclass
         """
 
@@ -168,7 +177,7 @@ class ServiceFactory:
         builder.headers(headers)
 
         # Include any additional parameters
-        builder.data({**kwargs, "verbose": verbose, "debug": debug, "logger": logger})
+        builder.data({**kwargs, "verbose": verbose, "debug": debug, "logger": logger, "trace": trace})
         return builder.build()
 
     @staticmethod
@@ -180,6 +189,7 @@ class ServiceFactory:
             connection_manager: BaseConnectionManager = None,
             logger: logging.Logger = None,
             verbose: bool = True,
+            trace: bool = False,
             **kwargs
     ):
         """
@@ -190,8 +200,16 @@ class ServiceFactory:
         :param dma_path: The DMA path of the Connector service
         :param headers: The extra headers to be used for requests to the service
         :param connection_manager: The connection manager to use for the service
+        :param trace: Flag enabling the tracing of the requests sent to (and the
+            responses received from) the external services (default: False), by
+            this service and by both the consumer and the provider services. The
+            collected trace is available through `get_trace()`/`get_trace_json()`
         :return: An instance of the specified Service subclass
         """
+
+        # One single tracer for the whole connector service, so that every request
+        # sent by the consumer and by the provider is part of the same trace
+        tracer = resolve_tracer(trace=trace, name="ConnectorService")
 
         consumer = ServiceFactory.get_connector_consumer_service(
             dataspace_version=dataspace_version,
@@ -226,4 +244,11 @@ class ServiceFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        service = builder.build()
+
+        if tracer is not None:
+            # Reaches this service, its adapter, and the consumer and provider
+            # services with everything they are built upon
+            service.set_tracer(tracer)
+
+        return service

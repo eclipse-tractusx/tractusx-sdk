@@ -35,6 +35,7 @@ from typing import Any, Dict, List, Optional
 
 from tractusx_sdk.dataspace.services.connector.base_connector_consumer import BaseConnectorConsumerService
 from tractusx_sdk.dataspace.tools import HttpTools
+from tractusx_sdk.dataspace.services.service import BaseService
 from tractusx_sdk.dataspace.tools.dsp_tools import _get_datasets
 
 from ...constants import DIGITAL_TWIN_EVENT_API_TYPE, DCT_TYPE_KEY
@@ -45,7 +46,7 @@ from .exceptions import (
 )
 
 
-class NotificationConsumerService:
+class NotificationConsumerService(BaseService):
     """
     Service for sending notifications through the Catena-X dataspace.
     
@@ -77,6 +78,7 @@ class NotificationConsumerService:
         connector_consumer: Optional[BaseConnectorConsumerService] = None,
         verbose: bool = True,
         logger: Optional[logging.Logger] = None,
+        trace: bool = False,
     ):
         """
         Initialize the NotificationConsumerService.
@@ -85,10 +87,18 @@ class NotificationConsumerService:
             connector_consumer: BaseConnectorConsumerService for EDC operations
             verbose: Enable verbose logging (default: True)
             logger: Optional custom logger instance
+            trace: Enable the tracing of the requests sent to (and the responses
+                received from) the connector and the notification endpoint
+                (default: False). The trace is shared with the connector consumer
+                service, is available through `get_trace()` and `get_trace_json()`,
+                and `set_tracer()` shares it with other services.
         """
         self.verbose = verbose
         self.logger = logger or logging.getLogger(__name__)
         self._connector_consumer = connector_consumer
+
+        # Configured last: the trace is shared with the connector consumer service
+        self._init_tracing(trace=trace)
     
     @property
     def connector_consumer(self) -> Optional[BaseConnectorConsumerService]:
@@ -660,6 +670,7 @@ class NotificationConsumerService:
                 headers=headers,
                 timeout=timeout,
                 verify=verify_ssl,
+                **self._trace_kwargs(),
             )
             
             if response.status_code not in (200, 201, 202, 204):

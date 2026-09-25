@@ -34,12 +34,13 @@ import logging
 from typing import Any, Dict, Optional
 
 from tractusx_sdk.dataspace.services.connector.base_connector_provider import BaseConnectorProviderService
+from tractusx_sdk.dataspace.services.service import BaseService
 
 from ..constants import DIGITAL_TWIN_EVENT_API_TYPE
 from ..exceptions import NotificationError
 
 
-class NotificationService:
+class NotificationService(BaseService):
     """
     Service for managing DigitalTwinEventAPI assets in the EDC connector.
     
@@ -64,6 +65,7 @@ class NotificationService:
         connector_provider: Optional[BaseConnectorProviderService] = None,
         verbose: bool = True,
         logger: Optional[logging.Logger] = None,
+        trace: bool = False,
     ):
         """
         Initialize the NotificationService.
@@ -72,10 +74,18 @@ class NotificationService:
             connector_provider: Connector provider service for asset management
             verbose: Enable verbose logging (default: True)
             logger: Optional custom logger instance
+            trace: Enable the tracing of the requests sent to (and the responses
+                received from) the connector (default: False). The trace is shared
+                with the connector provider service, is available through
+                `get_trace()` and `get_trace_json()`, and `set_tracer()` shares it
+                with other services.
         """
         self.verbose = verbose
         self.logger = logger or logging.getLogger(__name__)
         self._connector_provider = connector_provider
+
+        # Configured last: the trace is shared with the connector provider service
+        self._init_tracing(trace=trace)
     
     @property
     def connector_provider(self) -> Optional[BaseConnectorProviderService]:

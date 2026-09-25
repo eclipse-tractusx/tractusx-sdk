@@ -27,9 +27,10 @@ from abc import ABC, abstractmethod
 
 from tractusx_sdk.dataspace.managers.oauth2_manager import OAuth2Manager
 from tractusx_sdk.dataspace.services.discovery import DiscoveryFinderService
+from tractusx_sdk.dataspace.services.service import BaseService
 
 
-class BaseDiscoveryService(ABC):
+class BaseDiscoveryService(BaseService, ABC):
     """
     Base class for discovery services with common caching and logging functionality.
     
@@ -41,7 +42,8 @@ class BaseDiscoveryService(ABC):
     """
 
     def __init__(self, oauth: OAuth2Manager, discovery_finder_service: DiscoveryFinderService, cache_timeout_seconds: int = 60 * 60 * 12,
-                 verbose: bool = False, logger: Optional[logging.Logger] = None):
+                 verbose: bool = False, logger: Optional[logging.Logger] = None,
+                 trace: bool = False):
         """
         Initialize the base discovery service.
         
@@ -52,6 +54,9 @@ class BaseDiscoveryService(ABC):
             cache_timeout_seconds (int): Cache timeout in seconds (default: 12 hours).
             verbose (bool): Enable verbose logging (default: False).
             logger (Optional[logging.Logger]): Logger instance for logging (default: None).
+            trace (bool): Enable the tracing of the requests/responses (default: False).
+                The trace is shared with the discovery finder service, so that the
+                discovery lookups are part of it as well.
         """
         self.oauth = oauth
         self.discovery_finder_service = discovery_finder_service
@@ -59,6 +64,9 @@ class BaseDiscoveryService(ABC):
         self.verbose = verbose
         self.logger = logger
         self.discovery_cache = {}
+
+        # Configured last: the trace is shared with the discovery finder service
+        self._init_tracing(trace=trace)
 
     @abstractmethod
     def get_service_name(self) -> str:

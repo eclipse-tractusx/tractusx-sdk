@@ -22,16 +22,32 @@
 
 from abc import ABC, abstractmethod
 
+from ..tools.tracing import TraceableMixin
 
-class BaseService(ABC):
+
+class BaseService(TraceableMixin, ABC):
     """
-    Base service class
+    Base service class of the SDK, and the class every service inherits from.
+
+    Through `TraceableMixin`, it gives every service the optional `trace` flag,
+    which records the requests sent to (and the responses received from) the
+    external services contacted while its methods are executed. The collected
+    trace is available through `get_trace()` (list of dicts) and
+    `get_trace_json()`, and `set_tracer()` shares it with other services.
+    `trace_operation()` groups the calls of a single `with` block, and hands
+    them back on their own - whether or not the flag is set.
+
+    The tracer is handed over to everything the service is built upon (its
+    adapters, sessions, controllers and sub-services), which is discovered
+    automatically, so a service only has to call `_init_tracing(trace=trace)`
+    once it is built.
     """
 
     dataspace_version: str
 
     @abstractmethod
-    def __init__(self, dataspace_version: str, base_url: str, headers: dict = None):
+    def __init__(self, dataspace_version: str, base_url: str, headers: dict = None,
+                 trace: bool = False):
         """
         A base init method for services inheriting this class.
 
@@ -41,6 +57,10 @@ class BaseService(ABC):
         :param dataspace_version: The version of the service
         :param base_url: The base URL of the service
         :param headers: The headers to be used for requests to the service
+        :param trace: Flag enabling the tracing of the requests sent to (and the
+            responses received from) the external services (default: False). The
+            collected trace is available through `get_trace()`/`get_trace_json()`,
+            and `set_tracer()` shares it with other services
         """
         raise NotImplementedError
 
@@ -74,6 +94,13 @@ class BaseService(ABC):
 
         def headers(self, headers: dict):
             self._data["headers"] = headers
+            return self
+
+        def trace(self, trace: bool):
+            """
+            Enables the tracing of the requests/responses of this service.
+            """
+            self._data["trace"] = trace
             return self
 
         def data(self, data: dict):

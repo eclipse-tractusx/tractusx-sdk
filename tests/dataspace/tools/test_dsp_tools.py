@@ -35,7 +35,8 @@ import logging
 import pytest
 
 from tractusx_sdk.dataspace.tools.dsp_tools import (
-    DspTools, _normalize_policy_value, _explain_policy_diff, _check_policy_structure,
+    DspTools, PolicyMismatchError, _normalize_policy_value, _explain_policy_diff,
+    _check_policy_structure,
 )
 
 
@@ -1708,6 +1709,41 @@ class TestPolicyValidationLogging:
         assert "'use'" in log_text and "'transfer'" in log_text
         # Second should mention operator mismatch
         assert "operator differs" in log_text
+
+
+class TestPolicyMismatchEvidence:
+    """A rejection carries what was compared, so the caller can say why."""
+
+    def test_the_rejection_carries_the_catalog_and_the_allow_list(self):
+        """
+        ``filter_assets_and_policies`` knows the offers it turned down and the
+        allow-list it turned them down against. Both travel on the error, so a
+        caller can report which offer differed and how instead of repeating that
+        none matched.
+        """
+        wrong = copy.deepcopy(ALLOWED_POLICIES)
+        wrong[0]["permission"]["constraint"]["and"][0]["rightOperand"] = "NOPE"
+        wrong[1:] = []
+
+        with pytest.raises(PolicyMismatchError) as raised:
+            DspTools.filter_assets_and_policies(catalog=SATURN_CATALOG, allowed_policies=wrong)
+
+        assert raised.value.catalog is SATURN_CATALOG
+        assert raised.value.allowed_policies is wrong
+
+    def test_it_is_still_a_value_error(self):
+        """Callers that already catch ``ValueError`` keep working."""
+        assert issubclass(PolicyMismatchError, ValueError)
+
+    def test_a_single_dataset_rejection_carries_it_too(self):
+        single = copy.deepcopy(SATURN_CATALOG)
+        single["dataset"] = single["dataset"][0]
+
+        with pytest.raises(PolicyMismatchError) as raised:
+            DspTools.filter_assets_and_policies(catalog=single, allowed_policies=[])
+
+        assert raised.value.catalog is single
+        assert raised.value.allowed_policies == []
 
 
 class TestDspToolsCatalogEdgeCases:

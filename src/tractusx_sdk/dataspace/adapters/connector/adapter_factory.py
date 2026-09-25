@@ -24,6 +24,8 @@ from enum import Enum
 from importlib import import_module
 from os import listdir, path
 
+from ...tools.tracing import Tracer
+
 
 class AdapterType(Enum):
     """
@@ -96,6 +98,7 @@ class AdapterFactory:
             base_url: str,
             dma_path: str,
             headers: dict = None,
+            tracer: Tracer = None,
             **kwargs
     ):
         """
@@ -105,6 +108,8 @@ class AdapterFactory:
         :param base_url: The URL of the Connector DMA to be requested
         :param dma_path: The path of the Connector Data Management API to be requested
         :param headers: The headers (i.e.: API Key) of the Connector to be requested
+        :param tracer: Optional tracer recording the requests/responses, usually the
+            one of the service this adapter belongs to
         :return: An instance of the specified Adapter subclass
         """
 
@@ -116,6 +121,7 @@ class AdapterFactory:
         builder.base_url(base_url)
         builder.headers(headers)
         builder.dma_path(dma_path)
+        builder.tracer(tracer)
 
         # Include any additional parameters
         builder.data(kwargs)
@@ -126,6 +132,7 @@ class AdapterFactory:
             dataspace_version: str,
             base_url: str,
             headers: dict = None,
+            tracer: Tracer = None,
             **kwargs
     ):
         """
@@ -134,6 +141,8 @@ class AdapterFactory:
         :param dataspace_version: The version of the Dataspace dataplane (e.g., "jupiter")
         :param base_url: The URL of the Connector dataplane to be requested
         :param headers: The headers (i.e.: Edc-Bpn) of the Connector dataplane to be requested
+        :param tracer: Optional tracer recording the requests/responses, usually the
+            one of the service this adapter belongs to
         :return: An instance of the specified Adapter subclass
         """
 
@@ -144,6 +153,7 @@ class AdapterFactory:
 
         builder.base_url(base_url)
         builder.headers(headers)
+        builder.tracer(tracer)
 
         # Include any additional parameters
         builder.data(kwargs)

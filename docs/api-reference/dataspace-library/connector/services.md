@@ -63,6 +63,44 @@ provider_connector_service.create_asset(
 )
 ```
 
+### Creating an Asset with an OAuth2-Protected Data Address
+
+When the backend data source behind an asset is protected by an OAuth2 authorization server
+(for example a Keycloak realm using the client-credentials grant), pass an `oauth2_config`
+dictionary to `create_asset`. The SDK adds the corresponding `edc:oauth2:*` properties to the
+asset's data address, so the EDC data plane fetches and refreshes an access token before each
+call to the backend (this requires the EDC `data-plane-http-oauth2` extension).
+
+```python
+provider_connector_service.create_asset(
+    asset_id="my-protected-asset-id",
+    base_url="https://protected-backend.url/api",
+    dct_type="cx-taxo:SubmodelBundle",
+    version="3.0",
+    oauth2_config={
+        # Required
+        "tokenUrl": "https://keycloak.url/realms/my-realm/protocol/openid-connect/token",
+        "clientId": "my-client-id",
+        # Optional
+        "clientSecretKey": "my-vault-secret-alias",  # alias of the secret stored in the EDC vault
+        "scope": "openid",
+    },
+)
+```
+
+The `oauth2_config` dictionary accepts the following keys:
+
+| Key               | Required | Description                                                                                  |
+|-------------------|----------|----------------------------------------------------------------------------------------------|
+| `tokenUrl`        | Yes      | Token endpoint of the OAuth2 / Keycloak server used to obtain the access token               |
+| `clientId`        | Yes      | OAuth2 client identifier                                                                      |
+| `clientSecretKey` | No       | Alias of the client secret **stored in the EDC vault** (the secret value is never inlined)   |
+| `scope`           | No       | OAuth2 scope requested when fetching the token                                               |
+
+> The client secret is referenced by its vault alias (`clientSecretKey`), never embedded in the
+> asset definition. `tokenUrl` and `clientId` are mandatory; omitting or leaving either empty
+> raises a `ValueError`.
+
 For dedicated consumer and combined usage patterns, see the examples below. For even more advanced scenarios, refer to the [SDK Structure and Components](../../../core-concepts/sdk-architecture/sdk-structure-and-components.md) and [Dataspace Connector Usage](../../../api-reference/dataspace-library/legacy/edc-sdk-usage.md).
 
 ## Consumer Connector Example
@@ -163,7 +201,7 @@ Combined:
 | `get_filter_expression`    | `filter_params`                                | Build filter expression for catalog queries      |
 | `contract_negotiations`    | `counter_party_id`, `asset_id`, `policies`     | List or manage contract negotiations             |
 | `transfer_processes`       | `contract_id`, `asset_id`                      | List or manage data transfer processes           |
-| `create_asset`             | `asset_id`, `base_url`, `dct_type`, `version`, `semantic_id` | Create and publish an asset                      |
+| `create_asset`             | `asset_id`, `base_url`, `dct_type`, `dct_subject`, `version`, `semantic_id`, `oauth2_config` | Create and publish an asset                      |
 | `create_contract`          | `contract_params`                              | Create a contract definition                     |
 | `create_policy`            | `policy_params`                                | Create a policy for data sharing                 |
 | `assets`                   | `asset_id`, `asset_data`                       | Manage assets (CRUD operations)                  |
@@ -339,6 +377,7 @@ These methods wrap the full catalog → negotiate → transfer → HTTP request 
 | `do_get(counter_party_id, counter_party_address, filter_expression, ...)` | `filter_expression: list[dict]` | Full DSP flow + GET data from the data plane |
 | `do_get_with_bpnl(bpnl, counter_party_address, filter_expression, ...)` ⭐ | `bpnl: str` | Same with BPNL resolution — **Saturn only** |
 | `do_get_by_dct_type(counter_party_id, counter_party_address, dct_type, ...)` | `dct_type: str` | GET flow filtered by `dct:type` |
+| `do_get_by_dct_type_with_bpnl(bpnl, counter_party_address, dct_type, ...)` ⭐ | `bpnl: str`, `dct_type: str` | Same with BPNL resolution — **Saturn only** |
 | `do_get_by_asset_id(counter_party_id, counter_party_address, asset_id, ...)` | `asset_id: str` | GET flow filtered by asset ID |
 | `do_post(counter_party_id, counter_party_address, filter_expression, json, ...)` | `json: dict` | Full DSP flow + POST payload to the data plane |
 | `do_post_with_bpnl(bpnl, counter_party_address, filter_expression, json, ...)` ⭐ | `bpnl: str`, `json: dict` | Same with BPNL resolution — **Saturn only** |
@@ -346,6 +385,7 @@ These methods wrap the full catalog → negotiate → transfer → HTTP request 
 | `do_post_by_asset_id(counter_party_id, counter_party_address, asset_id, json, ...)` | `asset_id: str` | POST flow filtered by asset ID |
 | `do_put(counter_party_id, counter_party_address, filter_expression, json, ...)` | `json: dict` | Full DSP flow + PUT payload to the data plane |
 | `do_put_with_bpnl(bpnl, counter_party_address, filter_expression, json, ...)` ⭐ | `bpnl: str`, `json: dict` | Same with BPNL resolution — **Saturn only** |
+| `do_put_by_dct_type_with_bpnl(bpnl, counter_party_address, dct_type, json, ...)` ⭐ | `bpnl: str`, `dct_type: str`, `json: dict` | PUT flow filtered by `dct:type` with BPNL resolution — **Saturn only** |
 
 ---
 
@@ -365,7 +405,7 @@ The Saturn `ConnectorProviderService` is identical to the base. All methods are 
 
 | Method | Key Parameters | Description |
 |--------|---------------|-------------|
-| `create_asset(asset_id, base_url, dct_type, version, semantic_id, proxy_params, headers, private_properties, ...)` | `asset_id: str`, `base_url: str` | Build and POST a complete EDC asset (data address + properties + private properties) |
+| `create_asset(asset_id, base_url, dct_type, dct_subject, version, semantic_id, proxy_params, headers, private_properties, oauth2_config, ...)` | `asset_id: str`, `base_url: str` | Build and POST a complete EDC asset (data address + properties + private properties). Pass `oauth2_config` to protect the data address with an OAuth2 / Keycloak token (`tokenUrl`, `clientId`, optional `clientSecretKey`, `scope`). |
 | `create_contract(asset_id, access_policy_id, usage_policy_id, ...)` | `asset_id: str` | Build and POST a contract definition linking an asset to access and usage policies |
 | `create_policy(policy_id, permissions, ...)` | `policy_id: str` | Build and POST an ODRL policy |
 
@@ -428,6 +468,15 @@ provider.create_asset(
     base_url="https://submodel-service.example.com/",
     dct_type="https://w3id.org/catenax/taxonomy#Submodel",
     semantic_id="urn:samm:io.catenax.part_type_information:1.0.0#PartTypeInformation",
+    version="3.0",
+)
+
+# For notification APIs that use both dct:type (category) and dct:subject (specific API):
+provider.create_asset(
+    asset_id="urn:uuid:ccm-notification-asset",
+    base_url="https://notification-service.example.com/",
+    dct_type="cx-taxo:CCMAPI",
+    dct_subject="cx-taxo:CompanyCertificateManagementNotificationApi",
     version="3.0",
 )
 
