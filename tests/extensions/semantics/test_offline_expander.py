@@ -85,3 +85,21 @@ def test_expand_file_writes_expanded_document(tmp_path: Path) -> None:
     result = expander.expand_file(input_path, output_path)
 
     assert json.loads(output_path.read_text(encoding="utf-8")) == result
+
+
+def test_expand_uses_contexts_owned_by_host_application(tmp_path: Path) -> None:
+    context_url = "https://w3id.org/example/name.jsonld"
+    context_dir = tmp_path / "contexts"
+    context_dir.mkdir()
+    (context_dir / "name.jsonld").write_text(
+        json.dumps({"@context": {"name": "https://schema.org/name"}}),
+        encoding="utf-8",
+    )
+    expander = OfflineJsonLdExpander(
+        context_dir=context_dir,
+        contexts={context_url: "name.jsonld"},
+    )
+
+    assert expander.expand({"@context": context_url, "name": "catalog"}) == [
+        {"https://schema.org/name": [{"@value": "catalog"}]}
+    ]

@@ -51,7 +51,6 @@ s3 = ["boto3>=1.43.0,<2.0.0"]
 
 [tool.poetry]
 requires-poetry = ">=2.0"
-include = ["src/tractusx_sdk/extensions/semantics/contexts/*.jsonld"]
 
 [tool.poetry.group.dev.dependencies]
 fastapi-cli = "^0.0.7"

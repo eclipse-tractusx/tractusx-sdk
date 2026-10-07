@@ -25,28 +25,11 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from importlib import resources
 import json
 from pathlib import Path
 from typing import Any, Mapping
 
 from pyld import jsonld
-
-
-DEFAULT_CONTEXT_FILES: dict[str, str] = {
-    "https://w3id.org/dspace/2025/1/context.jsonld": "dspace-context.jsonld",
-    "https://w3id.org/dspace/2025/1/odrl-profile.jsonld": (
-        "dspace-odrl-profile.jsonld"
-    ),
-    "https://w3id.org/edc/dspace/v0.0.1": "edc-dspace-context.jsonld",
-    "https://w3id.org/tractusx/auth/v1.0.0": "tractusx-auth-context.jsonld",
-    "https://w3id.org/catenax/2025/9/policy/context.jsonld": (
-        "catenax-policy-context.jsonld"
-    ),
-    "https://w3id.org/catenax/2025/9/policy/odrl.jsonld": (
-        "catenax-policy-odrl.jsonld"
-    ),
-}
 
 
 class OfflineContextError(RuntimeError):
@@ -66,15 +49,9 @@ class OfflineJsonLdExpander:
         contexts: Mapping[str, str | Path | Mapping[str, Any]] | None = None,
         allow_remote: bool = False,
     ) -> None:
-        self._context_dir = (
-            Path(context_dir)
-            if context_dir is not None
-            else resources.files("tractusx_sdk.extensions.semantics").joinpath(
-                "contexts"
-            )
-        )
+        self._context_dir = Path(context_dir) if context_dir is not None else Path.cwd()
         self._contexts: dict[str, str | Path | Mapping[str, Any]] = dict(
-            DEFAULT_CONTEXT_FILES if contexts is None else contexts
+            {} if contexts is None else contexts
         )
         self._allow_remote = allow_remote
         self._default_loader = jsonld.requests_document_loader()
