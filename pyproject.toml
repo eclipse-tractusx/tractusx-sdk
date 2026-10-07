@@ -36,6 +36,7 @@ dependencies = [
     "uvicorn (>=0.30.0,<0.36.1)",
     "uvloop (>=0.21.0,<0.22.2); sys_platform == 'linux' or sys_platform == 'darwin'",
     "winloop (>=0.1.8,<0.2.0); sys_platform == 'win32'",
+    "pyld (>=3.3.0,<4.0.0)",
 ]
 
 [project.optional-dependencies]
