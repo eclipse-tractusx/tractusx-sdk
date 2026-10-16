@@ -65,7 +65,7 @@ pypi/pypi/-/pluggy/1.6.0, MIT, approved, #21292
 pypi/pypi/-/pycparser/3.0, BSD-3-Clause, approved, #25756
 pypi/pypi/-/pydantic/2.12.5, MIT, approved, #28335
 pypi/pypi/-/pydantic_core/2.41.5, MIT, approved, #26770
-pypi/pypi/-/pymdown-extensions/10.21.3, MIT AND (BSD-3-Clause AND MIT) AND (CC-BY-4.0 AND MIT) AND BSD-3-Clause, approved, #28377
+pypi/pypi/-/pymdown-extensions/11.0.1, BSD-3-Clause AND MIT AND CC-BY-4.0, approved, #32335
 pypi/pypi/-/pyparsing/3.3.2, MIT AND BSD-3-Clause AND BSD-2-Clause AND LicenseRef-scancode-other-permissive AND MIT-CMU AND LicenseRef-scancode-mit-synopsys, approved, #25754
 pypi/pypi/-/pyproject_hooks/1.2.0, MIT, approved, clearlydefined
 pypi/pypi/-/pytest-asyncio/0.15.1, Apache-2.0, approved, clearlydefined
