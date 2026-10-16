@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -19,6 +20,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
+
+import logging
+
+# A library must not configure logging or print on its own: applications opt in
+# to the SDK's output. The NullHandler keeps "no handler" warnings away until they do.
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __version__ = '0.8.1-rc2'
 __author__ = 'Eclipse Tractus-X Contributors'
