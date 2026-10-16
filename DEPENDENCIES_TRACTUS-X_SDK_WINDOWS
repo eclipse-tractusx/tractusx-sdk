@@ -4,7 +4,7 @@ pypi/pypi/-/MarkupSafe/3.0.3, BSD-3-Clause, approved, #25777
 pypi/pypi/-/PyYAML/6.0.3, MIT, approved, #25755
 pypi/pypi/-/Pygments/2.20.0, BSD-2-Clause AND LicenseRef-Public-domain AND Apache-2.0 AND MIT, approved, #27129
 pypi/pypi/-/SQLAlchemy/2.0.48, MIT AND LGPL-2.0-only AND BSD-3-Clause AND LGPL-2.0-or-later, approved, #19392
-pypi/pypi/-/Werkzeug/3.1.8, BSD-3-Clause AND (CC-BY-2.5 AND CC-BY-3.0), approved, #22848
+pypi/pypi/-/Werkzeug/3.1.9, BSD-3-Clause AND (CC-BY-2.5 AND CC-BY-3.0), approved, #22848
 pypi/pypi/-/annotated-doc/0.0.4, MIT, approved, #24552
 pypi/pypi/-/annotated-types/0.7.0, MIT, approved, clearlydefined
 pypi/pypi/-/anyio/4.12.1, MIT, approved, #25764
