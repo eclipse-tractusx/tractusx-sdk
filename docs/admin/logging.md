@@ -56,23 +56,97 @@ logging.getLogger("tractusx_sdk.dataspace.tools.dsp_tools").setLevel(logging.WAR
 
 | Level | What the SDK reports there | Examples |
 |-------|---------------------------|----------|
-| `DEBUG` | Diagnostic detail, **including request payloads** | `[CATALOG REQUEST]`, `[NEGOTIATION REQUEST]`, `[ASSET REQUEST]` bodies; cache hits and misses; why a policy did not match; the raw discovery response |
-| `INFO` | Lifecycle events you would want in an operations log | Asset, contract or policy created; negotiation and transfer state changes; "starting a new contract negotiation"; discovery cache updated |
-| `WARNING` | Something was recovered from, or is risky | A catalog could not be fetched from one of several connectors; a discovery refresh failed and the cached URL is used; `policies=None` (accept any policy) |
-| `ERROR` | A call failed (an exception is raised or returned as well) | Failed to create an asset; failed to send a notification; a database save or load failed |
+| `DEBUG` | Diagnostic detail: every HTTP request line and its outcome, state transitions and polling progress, cache hits and misses, the default or fallback used in place of a missing value, and the **catalog and negotiation request bodies** | `HTTP GET https://.../shell-descriptors -> 200 in 41 ms`; `Polling the state of negotiation [...], attempt 10`; `Local cache miss`; `No aspect prefix given, using 'pcf-aspect'`; why a policy did not match |
+| `INFO` | Lifecycle events you would want in an operations log | Asset, contract, policy created; negotiation started; negotiation and transfer state changes; DSP exchange completed; shell and submodel descriptors created, updated or deleted; adapters registered; services created |
+| `WARNING` | Something was recovered from, or is risky | A server failure (5xx); a catalog could not be fetched from one of several connectors; a discovery refresh failed and the cached URL is used; `policies=None` (accept any policy); a request rejected by an authentication manager; a notification to one provider failed |
+| `ERROR` | A call failed (an exception is raised or returned as well) | A negotiation could not be started; a negotiation was `TERMINATED`; a timeout; a store or identity provider failure; an unsupported dataspace version |
+
+Two rules keep the levels honest:
+
+- **An expected outcome is never above `DEBUG`.** A `404` (for example when checking whether a submodel exists before creating it), a BPN that has no connector registered yet, or an object missing from a store are normal answers, not alerts. The call returns or raises as it always did, and the caller decides whether it matters.
+- **A polling loop does not log every iteration.** The first attempt and then one in ten are logged (`attempt 1`, `attempt 10`, `attempt 20`...), so a negotiation that polls once per second for a minute produces a handful of lines, not sixty. A *change* of state is always logged.
 
 ## Logger names
 
 | Logger | Covers |
 |--------|--------|
 | `tractusx_sdk` | The whole SDK |
-| `tractusx_sdk.dataspace.services.connector` | Connector consumer and provider services |
+| `tractusx_sdk.dataspace.tools.http_tools`, `tractusx_sdk.dataspace.adapters.adapter` | Every HTTP request of the SDK (request line and outcome) |
+| `tractusx_sdk.dataspace.services.connector` | Connector consumer and provider services, the DSP state machine |
 | `tractusx_sdk.dataspace.services.discovery`, `tractusx_sdk.industry.services.discovery` | Discovery finder, connector discovery, BPN discovery |
 | `tractusx_sdk.dataspace.managers.connection` | The EDR connection managers (memory, file system, Postgres) |
-| `tractusx_sdk.dataspace.tools` | Policy matching (`dsp_tools`), submodel validation, tracing |
+| `tractusx_sdk.dataspace.managers.oauth2_manager`, `...auth_manager` | Authentication (see [What is never logged](#what-is-never-logged)) |
+| `tractusx_sdk.dataspace.tools` | Policy matching (`dsp_tools`), submodel validation, tracing, cache, file and encoding helpers |
+| `tractusx_sdk.industry.services.aas_service` | The Digital Twin Registry service |
 | `tractusx_sdk.industry.services.notifications` | Notification services (`tractusx_sdk.extensions.notification_api` for the extension copy) |
-| `tractusx_sdk.industry.adapters` | Submodel adapters |
+| `tractusx_sdk.industry.adapters` | Submodel adapters (S3, file system, HTTP) and their factory |
 | `tractusx_sdk.extensions.semantics` | The SAMM to JSON-LD translator |
+| `tractusx_sdk.extensions.geometry` | The geometry validator |
+
+## Structured context (`extra`)
+
+Beyond the message, a record carries named fields, so a structured handler can filter and group on them (`transfer_id == "..."`) without parsing text. The message still states the key facts, so a plain-text handler loses nothing.
+
+The fields come from one fixed list. The SDK builds them through a single helper that accepts only these names, so a record never carries a field outside the table:
+
+| Field | Meaning |
+|-------|---------|
+| `asset_id` | An asset (connector asset, notification asset, dataset) |
+| `policy_id` | A policy (`@id` of an offer, or the id of a policy being created) |
+| `negotiation_id`, `agreement_id`, `transfer_id`, `edr_id` | The identifiers of the DSP exchange |
+| `bpn` | A Business Partner Number |
+| `counter_party_id`, `counter_party_address` | The counter party of an exchange and its DSP address |
+| `aas_id`, `submodel_id` | A shell and a submodel of the Digital Twin Registry |
+| `message_id` | A notification |
+| `dataspace_version` | `jupiter` or `saturn` |
+| `http_method`, `url`, `status_code`, `elapsed_ms` | An HTTP request and its outcome |
+| `adapter_type`, `model`, `schema_urn`, `operation` | The component or the model involved, the semantic id of a schema, and the operation (`consumer.get_transfer_id`, `aas.create_submodel_descriptor`...) |
+
+A field that does not apply to a record is left out, and the names do not collide with the attributes Python reserves on a log record (`name`, `module`, `message`...).
+
+To see the fields, use a handler that renders them. This one writes JSON lines, which any log platform can index:
+
+```python
+import json
+import logging
+
+# The fields of the SDK (see the table above)
+SDK_FIELDS = (
+    "asset_id", "policy_id", "negotiation_id", "agreement_id", "transfer_id", "edr_id", "bpn",
+    "counter_party_id", "counter_party_address", "aas_id", "submodel_id", "message_id", "dataspace_version",
+    "http_method", "url", "status_code", "elapsed_ms", "adapter_type", "model", "schema_urn", "operation",
+)
+
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        entry = {"time": self.formatTime(record), "level": record.levelname, "logger": record.name, "message": record.getMessage()}
+        entry.update({field: getattr(record, field) for field in SDK_FIELDS if hasattr(record, field)})
+        if record.exc_info:
+            entry["exception"] = self.formatException(record.exc_info)
+        return json.dumps(entry)
+
+
+handler = logging.StreamHandler()
+handler.setFormatter(JsonFormatter())
+logging.getLogger("tractusx_sdk").addHandler(handler)
+```
+
+```json
+{"level": "INFO", "logger": "tractusx_sdk.dataspace.services.connector.base_connector_consumer", "message": "Contract negotiation [a1] started for asset [urn:uuid:...] with [BPNL000000000001]", "negotiation_id": "a1", "asset_id": "urn:uuid:...", "policy_id": "p1", "counter_party_id": "BPNL000000000001", "counter_party_address": "https://provider.example.com/dsp", "operation": "consumer.start_edr_negotiation"}
+```
+
+## What is never logged
+
+The SDK handles credentials and business data, and its logs are built so they cannot leak either. These guarantees hold at **every** level, `DEBUG` included, and tests enforce them:
+
+- **No credentials.** Request and response headers, API keys, access tokens, client secrets, the EDR `authorization` value, S3 access keys and the key the SDK itself is configured with are never logged. The `Authorization` header of a request is never part of a record. Where a service is configured with credentials (the OAuth2 manager, the API key manager, the S3 and HTTP submodel adapters, the adapter factory) the log says *what kind* of credential is used (`credentials from the environment or the IAM role`, `auth: bearer`), never its value, and the factory logs the *names* of the settings it receives, not their values.
+- **URLs are stripped.** Every URL is logged through `safe_url`: only the scheme, host, port and path are kept. The user information (`user:password@`), the query string, the fragment and path parameters (`;jsessionid=...`) are removed, because any of them can carry a token or a session id. `https://user:pw@host/api?token=abc` is logged as `https://host/api`.
+- **No payloads of stored or validated data.** The content of a submodel read from or written to S3, a file or an HTTP service is never logged, only its size. A validation reports *where* a document violates a schema (`path` and rule), never the offending value. The data address of an asset (which holds the headers and OAuth2 settings of your backend) is never logged: asset creation logs a one-line summary.
+- **No exception text where it could echo a secret.** The identity provider, the object store and the submodel services may repeat details of the request in their errors. In the modules that talk to them the SDK logs the *type* of the exception (`ConnectError`) or the store's error code (`AccessDenied`), never its message or traceback.
+- **Cache keys** are not logged, because callers are free to build them from sensitive data.
+
+What can still appear at `DEBUG`, as described in [Production guidance](#production-guidance): the catalog and negotiation request bodies (policies, filters, BPNs) and the policy comparison details.
 
 ## Configuring with `dictConfig`
 
@@ -110,10 +184,11 @@ logging.config.dictConfig({
 ## Production guidance
 
 !!! danger "`DEBUG` logs request payloads"
-    At `DEBUG` the SDK logs the requests it sends (assets, policies, contract definitions, catalog and negotiation requests) and the body of a failed catalog response. These can contain business data, BPNs and policy details. Do not enable `DEBUG` for `tractusx_sdk` in production, or route it to a restricted log. Also note that the notification services log the body of a failed notification response at `ERROR`, so it is in your logs at the default levels.
+    At `DEBUG` the SDK logs the catalog and negotiation requests it sends (with their policies, filters and BPNs), the details of why a policy did not match, and the body of a failed catalog response. These can contain business data. Do not enable `DEBUG` for `tractusx_sdk` in production, or route it to a restricted log. Also note that the notification services log the body of a failed notification response at `ERROR` (cut to 500 characters), so it is in your logs at the default levels. Credentials, headers and the data of your submodels are not part of this: see [What is never logged](#what-is-never-logged).
 
-- Run the SDK at `INFO` or `WARNING` in production. Raise one logger to `DEBUG` temporarily to investigate a problem, rather than the whole SDK.
-- The SDK does not log request headers, API keys or access tokens.
+- Run the SDK at `INFO` or `WARNING` in production. Raise one logger to `DEBUG` temporarily to investigate a problem, rather than the whole SDK. To follow only the HTTP traffic, raise `tractusx_sdk.dataspace.tools.http_tools` and `tractusx_sdk.dataspace.adapters.adapter`.
+- The SDK does not log request headers, API keys or access tokens, at any level.
+- Index the [structured fields](#structured-context-extra) rather than parsing messages: `transfer_id`, `negotiation_id` and `bpn` follow an exchange across the logs of a service.
 - To record the exact HTTP exchange of a call, with sensitive headers masked, use [Request Tracing](../core-concepts/sdk-architecture/request-tracing.md). It is separate from logging and is switched on with the `trace` flag.
 
 ## Errors are exceptions, not log lines
@@ -241,7 +316,7 @@ The arguments were removed in 0.9.0. Passing them raises a `TypeError`.
 | Before | Now |
 |--------|-----|
 | `verbose=True` | `logging.getLogger("tractusx_sdk").setLevel(logging.INFO)` |
-| `debug=True` (log request payloads) | `logging.getLogger("tractusx_sdk").setLevel(logging.DEBUG)` |
+| `debug=True` (detailed diagnostics; request and response payloads are never logged) | `logging.getLogger("tractusx_sdk").setLevel(logging.DEBUG)` |
 | `verbose=False` | Leave logging unconfigured, or `setLevel(logging.WARNING)` |
 | `logger=my_logger` | Configure handlers on the `tractusx_sdk` logger or on the root logger |
 | `Service.builder().verbose(True).logger(log)` | Remove both calls |
