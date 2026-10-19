@@ -21,7 +21,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 import logging
-from typing import Optional
 
 from tractusx_sdk.exceptions import DiscoveryEndpointNotFoundError, DiscoveryError
 
@@ -38,7 +37,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
     oauth:OAuth2Manager
     
     def __init__(self, oauth:OAuth2Manager, discovery_finder_service:DiscoveryFinderService, connector_discovery_key:str="bpn", 
-                 cache_timeout_seconds:int = 60 * 60 * 12, verbose:bool=False, logger:Optional[logging.Logger]=None,
+                 cache_timeout_seconds:int = 60 * 60 * 12,
                  trace: bool = False):
         """
         Initialize the Connector Discovery Service with caching functionality.
@@ -47,8 +46,6 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
             discovery_finder_service (DiscoveryFinderService): Discovery finder service instance for finding discovery URLs.
             connector_discovery_key (str): Key for connector discovery (default: "bpn").
             cache_timeout_seconds (int): Cache timeout in seconds (default: 12 hours).
-            verbose (bool): Enable verbose logging (default: False).
-            logger (Optional[logging.Logger]): Logger instance for logging (default: None).
             trace (bool): Enable the tracing of the requests/responses (default: False).
         """
         self.oauth=oauth
@@ -56,8 +53,6 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
             oauth=oauth,
             discovery_finder_service=discovery_finder_service,
             cache_timeout_seconds=cache_timeout_seconds,
-            verbose=verbose,
-            logger=logger,
             trace=trace
         )
         self.connector_discovery_key = connector_discovery_key

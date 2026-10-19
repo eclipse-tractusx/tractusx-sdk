@@ -34,7 +34,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class PostgresConnectionManager(BaseConnectionManager):
-    def __init__(self, engine: E | S, provider_id_key: str = "providerId", table_name: str = "edr_connections", logger:logging.Logger=None, verbose: bool = False):
+    def __init__(self, engine: E | S, provider_id_key: str = "providerId", table_name: str = "edr_connections"):
         """
         Initialize the PostgresConnectionManager.
 
@@ -42,8 +42,6 @@ class PostgresConnectionManager(BaseConnectionManager):
             engine (Engine | Session): SQLAlchemy engine or session to interact with the database.
             provider_id_key (str): The key used to identify the provider ID in the connection data.
             table_name (str): The name of the table to store EDR connections.
-            logger (logging.Logger, optional): Logger instance for outputting messages.
-            verbose (bool): Whether to output verbose log messages.
         """
         # Store the provided engine and configuration details
         self.engine = engine

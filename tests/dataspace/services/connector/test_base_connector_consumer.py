@@ -121,9 +121,7 @@ class TestBaseConsumerConnectorService(unittest.TestCase):
             base_url="http://test",
             dma_path="/test",
             headers={},
-            connection_manager=None,
-            verbose=False,
-            logger=None
+            connection_manager=None
         )
         service._catalog_controller = mock_catalog
         service._edr_controller = mock_edr

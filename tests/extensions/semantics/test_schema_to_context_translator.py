@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -142,10 +143,14 @@ class TestSammSchemaContextTranslatorInit:
         assert translator.recursionDepth == 2
         assert translator.depth == 0
 
-    def test_init_ignores_a_given_logger_and_verbose(self):
-        """The translator logs through its module logger; the arguments are only kept until they are retired."""
-        translator = SammSchemaContextTranslator(logger=Mock(spec=logging.Logger), verbose=True)
+    def test_init_rejects_the_removed_logger_and_verbose_arguments(self):
+        """The translator logs through its module logger; there is nothing to pass any more."""
+        with pytest.raises(TypeError):
+            SammSchemaContextTranslator(logger=Mock(spec=logging.Logger))
+        with pytest.raises(TypeError):
+            SammSchemaContextTranslator(verbose=True)
 
+        translator = SammSchemaContextTranslator()
         assert not hasattr(translator, "logger")
         assert not hasattr(translator, "verbose")
 

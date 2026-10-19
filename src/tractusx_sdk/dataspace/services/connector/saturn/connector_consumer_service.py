@@ -51,7 +51,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     ERROR_NO_DATAPLANE_OR_TOKEN: str = "[Connector Service]: No dataplane URL or access_token was able to be retrieved!"
     APPLICATION_JSON_CONTENT_TYPE: str = "application/json"
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
-                 connection_manager: BaseConnectionManager = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None,
+                 connection_manager: BaseConnectionManager = None,
                  verify_ssl: bool = True, trace: bool = False):
         """
         :param trace: Flag enabling the tracing of the requests sent to (and the
@@ -94,9 +94,6 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             dma_path=dma_path,
             headers=headers,
             connection_manager=connection_manager,
-            verbose=verbose,
-            debug=debug,
-            logger=logger,
             trace=trace
         )
         

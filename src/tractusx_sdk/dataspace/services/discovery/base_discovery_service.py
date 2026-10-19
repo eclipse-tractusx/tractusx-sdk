@@ -24,7 +24,6 @@
 import time
 import datetime
 import logging
-from typing import Optional
 from abc import ABC, abstractmethod
 
 from tractusx_sdk.dataspace.managers.oauth2_manager import OAuth2Manager
@@ -46,7 +45,6 @@ class BaseDiscoveryService(BaseService, ABC):
     """
 
     def __init__(self, oauth: OAuth2Manager, discovery_finder_service: DiscoveryFinderService, cache_timeout_seconds: int = 60 * 60 * 12,
-                 verbose: bool = False, logger: Optional[logging.Logger] = None,
                  trace: bool = False):
         """
         Initialize the base discovery service.
@@ -56,8 +54,6 @@ class BaseDiscoveryService(BaseService, ABC):
             discovery_finder_service: DiscoveryFinderService instance for finding discovery URLs.
             discovery_finder_url (str): URL for the discovery finder service.
             cache_timeout_seconds (int): Cache timeout in seconds (default: 12 hours).
-            verbose (bool): Enable verbose logging (default: False).
-            logger (Optional[logging.Logger]): Logger instance for logging (default: None).
             trace (bool): Enable the tracing of the requests/responses (default: False).
                 The trace is shared with the discovery finder service, so that the
                 discovery lookups are part of it as well.

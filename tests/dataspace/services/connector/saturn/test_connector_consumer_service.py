@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -58,8 +59,7 @@ class TestSaturnConnectorConsumerService(TestCase):
                 base_url=self.base_url,
                 dma_path=self.dma_path,
                 headers=self.headers,
-                connection_manager=self.mock_connection_manager,
-                verbose=True
+                connection_manager=self.mock_connection_manager
             )
     
     def test_initialization(self):
@@ -71,8 +71,8 @@ class TestSaturnConnectorConsumerService(TestCase):
         self.assertIsNotNone(self.service.connection_manager)
         self.assertIsNotNone(self.service.connector_discovery)
     
-    def test_initialization_does_not_keep_an_instance_logger(self):
-        """The module-level logger is used, whatever logger the caller passes (the parameter is being retired)."""
+    def test_initialization_rejects_the_removed_logger_argument(self):
+        """Logging goes through the module logger: there is no logger to inject."""
         custom_logger = logging.getLogger("test_logger")
         
         with mock.patch('tractusx_sdk.dataspace.adapters.connector.adapter_factory.AdapterFactory') as mock_adapter_factory, \
@@ -92,11 +92,17 @@ class TestSaturnConnectorConsumerService(TestCase):
                 dataspace_version=self.dataspace_version,
                 base_url=self.base_url,
                 dma_path=self.dma_path,
-                headers=self.headers,
-                logger=custom_logger
+                headers=self.headers
             )
             
             self.assertFalse(hasattr(service, "logger"))
+            with self.assertRaises(TypeError):
+                ConnectorConsumerService(
+                    dataspace_version=self.dataspace_version,
+                    base_url=self.base_url,
+                    dma_path=self.dma_path,
+                    logger=custom_logger
+                )
     
     def test_connector_discovery_property(self):
         """Test connector discovery property returns the correct controller."""

@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 Catena-X Automotive Network e.V.
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
@@ -117,12 +118,21 @@ DEFAULT_ASSET_CONFIG = {
 # ============================================================================
 
 
+_tck_handlers: list[logging.Handler] = []
+
+
 def setup_tck_logging(
     test_case_name: str,
     script_dir: str,
 ) -> tuple:
     """
     Set up TCK logging with console + timestamped file handlers.
+
+    This configures the logging of the whole process, so it belongs to the command
+    line entry point (:func:`run_simple_test` / :func:`run_detailed_test`) and to
+    nothing else: an application that embeds the SDK configures its own logging.
+    The handlers are added to the root logger, next to any that already exist, and
+    :func:`finalize_log` removes exactly these.
 
     Args:
         test_case_name: Name of the test case (used for log directory and file names).
@@ -147,11 +157,11 @@ def setup_tck_logging(
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(logging.Formatter(log_format))
 
-    logging.basicConfig(
-        level=logging.INFO,
-        handlers=[console_handler, file_handler],
-        force=True,
-    )
+    root = logging.getLogger()
+    for handler in (console_handler, file_handler):
+        root.addHandler(handler)
+        _tck_handlers.append(handler)
+    root.setLevel(logging.INFO)
 
     logger = logging.getLogger(test_case_name)
     logger.info("Logging to file: %s", log_file)
@@ -159,10 +169,13 @@ def setup_tck_logging(
 
 
 def finalize_log(log_file: str, result: str):
-    """Flush and close log handlers, then rename log file with PASS or FAIL result."""
-    for handler in logging.root.handlers[:]:
+    """Flush and close the handlers of :func:`setup_tck_logging`, then rename the log file with PASS or FAIL result."""
+    root = logging.getLogger()
+    for handler in _tck_handlers[:]:
         handler.flush()
         handler.close()
+        root.removeHandler(handler)
+        _tck_handlers.remove(handler)
     final_log = log_file.replace(".log", f"_{result}.log")
     os.rename(log_file, final_log)
     sys.stdout.write(f"Log saved as: {final_log}\n")
@@ -220,10 +233,7 @@ def initialize_provider_service(
         base_url=provider_config["base_url"],
         dma_path=provider_config["dma_path"],
         headers=provider_headers,
-        verbose=True,
-        debug=True,
         verify_ssl=False,
-        logger=logger,
     )
 
     identity_value = provider_config.get("bpn", provider_config.get("did", "N/A"))
@@ -273,10 +283,7 @@ def initialize_consumer_service(
         dma_path=consumer_config["dma_path"],
         headers=consumer_headers,
         connection_manager=connection_manager,
-        verbose=True,
-        debug=True,
         verify_ssl=False,
-        logger=logger,
     )
 
     identity_value = consumer_config.get("bpn", consumer_config.get("did", "N/A"))
@@ -300,17 +307,17 @@ def upload_sample_data(
     backend_config: dict,
     sample_data: dict,
     header_fn: Optional[Callable] = None,
-    verbose: bool = False,
 ):
     """
     Upload sample aspect model data to backend storage.
+
+    The request and response bodies are logged at DEBUG level.
 
     Args:
         logger: Logger instance.
         backend_config: Backend configuration dict.
         sample_data: Sample data dict to upload.
         header_fn: Function ``(title) -> None`` to print section header.
-        verbose: If True, log request/response bodies (detailed mode).
     """
     if header_fn is None:
         def header_fn(title):
@@ -322,36 +329,21 @@ def upload_sample_data(
     if backend_config.get("api_key"):
         headers[backend_config.get("api_key_header", "X-Api-Key")] = backend_config["api_key"]
 
-    if verbose:
-        payload = json.dumps(sample_data, indent=2)
-        logger.info(
-            "Uploading BusinessPartnerCertificate aspect model to: %s",
-            backend_config["base_url"],
-        )
-        logger.info("[UPLOAD REQUEST]:\n%s", payload)
+    logger.info("[UPLOAD REQUEST]: POST %s", backend_config["base_url"])
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("[UPLOAD REQUEST] Body:\n%s", json.dumps(sample_data, indent=2))
 
     try:
-        if verbose:
-            response = requests.post(
-                backend_config["base_url"],
-                data=json.dumps(sample_data, indent=2),
-                headers=headers,
-                verify=False,
-                timeout=30,
-            )
-        else:
-            logger.info("[UPLOAD REQUEST]: POST %s", backend_config["base_url"])
-            response = requests.post(
-                backend_config["base_url"],
-                json=sample_data,
-                headers=headers,
-                verify=False,
-                timeout=30,
-            )
+        response = requests.post(
+            backend_config["base_url"],
+            json=sample_data,
+            headers=headers,
+            verify=False,
+            timeout=30,
+        )
 
-        if verbose:
-            logger.info("[UPLOAD RESPONSE] Status: %s", response.status_code)
-            logger.info("[UPLOAD RESPONSE] Body:\n%s", response.text)
+        logger.debug("[UPLOAD RESPONSE] Status: %s", response.status_code)
+        logger.debug("[UPLOAD RESPONSE] Body:\n%s", response.text)
 
         if response.status_code not in (200, 201, 204):
             raise RuntimeError(
@@ -798,15 +790,18 @@ def apply_cli_overrides(
     return p_cfg, c_cfg, b_cfg
 
 
-def configure_debug_logging(logger: logging.Logger, debug: bool):
-    """Configure debug logging level based on CLI flag."""
-    if debug:
-        logging.root.setLevel(logging.DEBUG)
-        for h in logging.root.handlers:
-            h.setLevel(logging.DEBUG)
-        logger.info("DEBUG logging enabled")
-    else:
-        logger.info("DEBUG logging disabled (use without --no-debug to enable)")
+def enable_debug_logging(logger: logging.Logger):
+    """
+    Lower the TCK output to DEBUG level.
+
+    The SDK logs the requests it sends and the responses it gets at that level, so
+    this is what makes them show up in the console and in the log file. Only the
+    handlers of :func:`setup_tck_logging` are changed.
+    """
+    logging.getLogger().setLevel(logging.DEBUG)
+    for handler in _tck_handlers:
+        handler.setLevel(logging.DEBUG)
+    logger.info("DEBUG logging enabled")
 
 
 def log_config_warning(logger: logging.Logger):

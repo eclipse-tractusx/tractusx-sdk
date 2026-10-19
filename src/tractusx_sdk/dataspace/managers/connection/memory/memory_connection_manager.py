@@ -2,7 +2,7 @@
 # Eclipse Tractus-X - Software Development KIT
 #
 # Copyright (c) 2026 LKS Next
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -40,7 +40,7 @@ class MemoryConnectionManager(BaseConnectionManager):
     Manages EDR connections in an in-memory cache with thread-safe operations.
     """
 
-    def __init__(self, provider_id_key: str = "providerId", edrs_key: str = "edrs", logger:logging.Logger=None, verbose: bool = False):
+    def __init__(self, provider_id_key: str = "providerId", edrs_key: str = "edrs"):
         """
         Initializes the MemoryConnectionManager with specified keys for provider ID and EDR count.
 

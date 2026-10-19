@@ -22,15 +22,14 @@
 #################################################################################
 
 """
-Guards for the library-logging conventions of the SDK.
-
-The ``NullHandler`` checks and the rules satisfied so far are enforced right away.
-The rule that is still pending (the ``verbose`` / ``debug`` / ``logger`` parameters)
-is marked ``xfail`` and loses its marker in the phase that satisfies it.
+Guards for the library-logging conventions of the SDK. Every rule is enforced.
 
 The TCK command line runner (``extensions/tck``) is an application, not library
 code: it builds one logger per run, with its own file and console handlers, and
-hands it to its helpers. It is exempt from the module-logger rules below.
+hands it to its helpers. It is therefore allowed to take a ``logger`` argument and
+to configure the logging of its own process (in ``setup_tck_logging`` and
+``enable_debug_logging`` only). It is not exempt from the other rules: it takes no
+``verbose`` or ``debug`` arguments and does not print.
 """
 
 import ast
@@ -112,18 +111,49 @@ class TestNullHandler:
         source = ROOT_INIT.read_text(encoding="utf-8")
         assert source.count("NullHandler()") == 1
 
-    def test_the_sdk_does_not_configure_the_application_logging(self):
-        """Only the entry point of a command line tool (a ``main`` function) may configure logging."""
+    def test_the_library_never_configures_the_application_logging(self):
+        """Handlers, levels and logging configuration belong to the application, never to the SDK."""
+        configuring = {"basicConfig", "dictConfig", "fileConfig", "addHandler", "setLevel", "removeHandler"}
         offenders = []
         for path, tree in _modules():
             for function in ast.walk(tree):
+                # A ``main`` function is the entry point of a command line tool: it is the application there
                 if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)) or function.name == "main":
                     continue
-                if any(isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == "basicConfig"
+                if any(isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr in configuring
                        for n in ast.walk(function)):
                     offenders.append(f"{_rel(path)}:{function.name}")
-        # Phase 4 moves the TCK helper behind its CLI entry point
-        assert offenders == [] or all(o.startswith("extensions/tck/connector/helpers.py") for o in offenders), offenders
+        # The root __init__ attaches the NullHandler at module level (checked above). The only other place is a helper
+        # that an application calls on purpose, to load its own logging configuration from a file.
+        assert offenders == ["dataspace/tools/utils.py:get_log_config"], offenders
+
+    def test_only_the_tck_entry_point_configures_the_process_logging(self):
+        allowed = {
+            "extensions/tck/connector/helpers.py:setup_tck_logging",
+            "extensions/tck/connector/helpers.py:finalize_log",
+            "extensions/tck/connector/helpers.py:enable_debug_logging",
+        }
+        configuring = {"basicConfig", "dictConfig", "fileConfig", "addHandler", "setLevel", "removeHandler"}
+        offenders = set()
+        for path, tree in _modules(include_applications=True):
+            if not _rel(path).startswith(APPLICATION_PREFIXES):
+                continue
+            for function in ast.walk(tree):
+                if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    continue
+                for n in ast.walk(function):
+                    if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr in configuring:
+                        offenders.add(f"{_rel(path)}:{function.name}")
+        assert offenders == allowed, offenders
+
+    def test_nothing_calls_basic_config_with_force(self):
+        """``force=True`` throws away the handlers the host application already installed."""
+        offenders = [
+            f"{_rel(path)}:{node.lineno}" for path, tree in _modules(include_applications=True) for node in ast.walk(tree)
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "basicConfig"
+            and any(k.arg == "force" for k in node.keywords)
+        ]
+        assert offenders == []
 
     def test_importing_and_logging_stays_silent_without_application_setup(self):
         code = (
@@ -150,15 +180,16 @@ class TestSourceConventions:
         ]
         assert offenders == []
 
-    @pytest.mark.xfail(reason="Phase 4: verbose/debug/logger parameters are removed", strict=False)
     def test_no_verbose_debug_or_logger_parameters(self):
+        """No signature carries a flag for logging: the logging level decides. Only the TCK application takes a ``logger``."""
         offenders = []
-        for path, tree in _modules():
+        for path, tree in _modules(include_applications=True):
+            allowed = {"logger"} if _rel(path).startswith(APPLICATION_PREFIXES) else set()
             for node in ast.walk(tree):
                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     args = node.args.posonlyargs + node.args.args + node.args.kwonlyargs
-                    found = sorted(a.arg for a in args if a.arg in FLAG_NAMES)
-                    if found:
+                    found = sorted(a.arg for a in args if a.arg in FLAG_NAMES - allowed)
+                    if found or node.name in {"verbose", "logger"} - allowed:
                         offenders.append(f"{_rel(path)}:{node.name}({', '.join(found)})")
         assert offenders == []
 

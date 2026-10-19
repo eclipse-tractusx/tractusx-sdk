@@ -91,7 +91,7 @@ class BaseConnectorConsumerService(BaseService):
     TRANSFER_PROCESS_ERROR_STATES = ("TERMINATED",)
 
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
-                 connection_manager: BaseConnectionManager = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None, verify_ssl: bool = True,
+                 connection_manager: BaseConnectionManager = None, verify_ssl: bool = True,
                  trace: bool = False):
         """
         :param trace: Flag enabling the tracing of the requests sent to (and the

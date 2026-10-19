@@ -2,7 +2,7 @@
 # Eclipse Tractus-X - Software Development KIT
 #
 # Copyright (c) 2026 LKS Next
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -41,7 +41,7 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
     Inherits from MemoryConnectionManager to maintain an in-memory cache and extends it with persistent storage functionality.
     """
 
-    def __init__(self, engine, provider_id_key="providerId", table_name="edr_connections", edrs_key="edrs", logger:logging.Logger=None, verbose:bool=False):
+    def __init__(self, engine, provider_id_key="providerId", table_name="edr_connections", edrs_key="edrs"):
         """
         Initialize the Postgres memory-backed connection manager.
 
@@ -50,13 +50,11 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
             provider_id_key: Key for identifying the provider ID.
             table_name: Name of the database table for storing EDR connections.
             edrs_key: Key used to store EDR counts within open_connections.
-            logger: Optional logger instance for debug output.
-            verbose: Flag for enabling verbose logging.
         """
         # Initialize base memory connection manager and configure database.
         # Dynamically define the SQLModel table for EDR connections.
         # Load existing data from the database into memory.
-        super().__init__(provider_id_key=provider_id_key, edrs_key=edrs_key, logger=logger, verbose=verbose)
+        super().__init__(provider_id_key=provider_id_key, edrs_key=edrs_key)
         self.engine = engine
         self.provider_id_key = provider_id_key
         self.table_name = table_name

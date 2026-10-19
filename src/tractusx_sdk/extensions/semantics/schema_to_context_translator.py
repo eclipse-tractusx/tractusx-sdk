@@ -57,8 +57,6 @@ class SammSchemaContextTranslator:
         actualPathSep (str): Actual path separator for tracking references ("/-/")
         refPathSep (str): Reference path separator ("/")
         propertiesKey (str): Key for object properties ("properties")
-        logger (Optional[logging.Logger]): Logger instance for debugging
-        verbose (bool): Enable verbose logging
         itemKey (str): Key for array items ("items")
         schemaPrefix (str): Prefix for schema URIs ("schema")
         aspectPrefix (str): Prefix for aspect URIs ("aspect")
@@ -70,14 +68,12 @@ class SammSchemaContextTranslator:
         contextTemplate (Dict[str, Any]): Template for context objects
     """
     
-    def __init__(self, logger: Optional[logging.Logger] = None, verbose: bool = False) -> None:
+    def __init__(self) -> None:
         """
         Initialize the SAMM Schema Context Translator.
-        
-        Args:
-            logger (Optional[logging.Logger]): Logger instance for debugging and error reporting.
-                                             If None, no logging will be performed.
-            verbose (bool): Enable verbose logging output. Defaults to False.
+
+        Diagnostics are emitted through the standard ``logging`` module, under the
+        ``tractusx_sdk.extensions.semantics`` logger. Configure them in the application.
         
         Returns:
             None

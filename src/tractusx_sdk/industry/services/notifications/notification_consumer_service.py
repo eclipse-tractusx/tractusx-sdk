@@ -74,8 +74,6 @@ class NotificationConsumerService(BaseService):
     def __init__(
         self,
         connector_consumer: Optional[BaseConnectorConsumerService] = None,
-        verbose: bool = True,
-        logger: Optional[logging.Logger] = None,
         trace: bool = False,
     ):
         """
@@ -83,8 +81,6 @@ class NotificationConsumerService(BaseService):
         
         Args:
             connector_consumer: BaseConnectorConsumerService for EDC operations
-            verbose: Enable verbose logging (default: True)
-            logger: Optional custom logger instance
             trace: Enable the tracing of the requests sent to (and the responses
                 received from) the connector and the notification endpoint
                 (default: False). The trace is shared with the connector consumer
@@ -793,16 +789,6 @@ class NotificationConsumerService(BaseService):
         ) -> "NotificationConsumerService._Builder":
             """Set the connector consumer service for EDC operations."""
             self._data["connector_consumer"] = connector_consumer
-            return self
-        
-        def verbose(self, verbose: bool) -> "NotificationConsumerService._Builder":
-            """Enable or disable verbose logging."""
-            self._data["verbose"] = verbose
-            return self
-        
-        def logger(self, logger: logging.Logger) -> "NotificationConsumerService._Builder":
-            """Set a custom logger."""
-            self._data["logger"] = logger
             return self
         
         def data(self, data: Dict[str, Any]) -> "NotificationConsumerService._Builder":

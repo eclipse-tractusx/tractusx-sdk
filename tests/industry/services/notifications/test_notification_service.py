@@ -40,7 +40,7 @@ class TestNotificationService:
     @pytest.fixture
     def service(self):
         """Fixture for notification service."""
-        return NotificationService(verbose=False)
+        return NotificationService()
     
     def test_service_initialization(self, service):
         """Test service initialization."""
@@ -65,7 +65,6 @@ class TestNotificationServiceConnectorIntegration:
         """Fixture for notification service with connector provider."""
         return NotificationService(
             connector_provider=mock_connector_provider,
-            verbose=False,
         )
     
     def test_service_with_connector_provider(self, service_with_connector, mock_connector_provider):
@@ -74,7 +73,7 @@ class TestNotificationServiceConnectorIntegration:
     
     def test_ensure_notification_asset_exists_no_provider(self):
         """Test ensure_notification_asset_exists fails without connector provider."""
-        service = NotificationService(verbose=False)
+        service = NotificationService()
         
         with pytest.raises(NotificationError, match="Connector provider is required"):
             service.ensure_notification_asset_exists(
@@ -164,14 +163,16 @@ class TestNotificationServiceBuilder:
     
     def test_builder_creates_service(self):
         """Test creating service using builder."""
-        service = (
-            NotificationService.builder()
-            .verbose(True)
-            .build()
-        )
+        service = NotificationService.builder().build()
         
         assert isinstance(service, NotificationService)
-        assert not hasattr(service, "verbose")
+
+    def test_builder_has_no_logging_setters(self):
+        """Logging is configured through the logging module, not through the builder."""
+        builder = NotificationService.builder()
+
+        assert not hasattr(builder, "verbose")
+        assert not hasattr(builder, "logger")
     
     def test_builder_with_connector_provider(self):
         """Test builder with connector provider."""

@@ -61,8 +61,6 @@ class NotificationService(BaseService):
     def __init__(
         self,
         connector_provider: Optional[BaseConnectorProviderService] = None,
-        verbose: bool = True,
-        logger: Optional[logging.Logger] = None,
         trace: bool = False,
     ):
         """
@@ -70,8 +68,6 @@ class NotificationService(BaseService):
         
         Args:
             connector_provider: Connector provider service for asset management
-            verbose: Enable verbose logging (default: True)
-            logger: Optional custom logger instance
             trace: Enable the tracing of the requests sent to (and the responses
                 received from) the connector (default: False). The trace is shared
                 with the connector provider service, is available through
@@ -215,16 +211,6 @@ class NotificationService(BaseService):
         ) -> "NotificationService._Builder":
             """Set the connector provider service for asset management."""
             self._data["connector_provider"] = connector_provider
-            return self
-        
-        def verbose(self, verbose: bool) -> "NotificationService._Builder":
-            """Enable or disable verbose logging."""
-            self._data["verbose"] = verbose
-            return self
-        
-        def logger(self, logger: logging.Logger) -> "NotificationService._Builder":
-            """Set a custom logger."""
-            self._data["logger"] = logger
             return self
         
         def build(self) -> "NotificationService":

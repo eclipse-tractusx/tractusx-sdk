@@ -55,29 +55,15 @@ def service(mock_dma_adapter, mock_controllers):
             svc = BaseConnectorProviderService(
                 dataspace_version="jupiter",
                 base_url="http://test",
-                dma_path="/dma",
-                verbose=True
+                dma_path="/dma"
             )
             yield svc
 
 
-@pytest.fixture
-def service_verbose_false(mock_dma_adapter, mock_controllers):
-    with patch("tractusx_sdk.dataspace.adapters.connector.AdapterFactory.get_dma_adapter", return_value=mock_dma_adapter):
-        with patch("tractusx_sdk.dataspace.controllers.connector.ControllerFactory.get_dma_controllers_for_version") as mock_get_controllers:
-            mock_get_controllers.return_value = mock_controllers
-            svc = BaseConnectorProviderService(
-                dataspace_version="jupiter",
-                base_url="http://test",
-                dma_path="/dma",
-                verbose=False
-            )
-            yield svc
-
-
-@pytest.fixture
-def mock_logger():
-    return Mock()
+@pytest.mark.parametrize("removed", [{"verbose": True}, {"debug": True}, {"logger": logging.getLogger("x")}])
+def test_the_removed_logging_arguments_are_rejected(removed):
+    with pytest.raises(TypeError):
+        BaseConnectorProviderService(dataspace_version="jupiter", base_url="http://test", dma_path="/dma", **removed)
 
 
 @patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")

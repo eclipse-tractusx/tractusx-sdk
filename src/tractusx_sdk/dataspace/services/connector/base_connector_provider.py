@@ -36,7 +36,7 @@ class BaseConnectorProviderService(BaseService):
     _contract_definition_controller: BaseDmaController
     _policy_controller: BaseDmaController
 
-    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None, verify_ssl: bool = True,
+    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verify_ssl: bool = True,
                  trace: bool = False):
         """
         :param trace: Flag enabling the tracing of the requests sent to (and the
