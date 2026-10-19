@@ -307,7 +307,7 @@ def upload_sample_data(
     backend_config: dict,
     sample_data: dict,
     header_fn: Optional[Callable] = None,
-    verify: bool = False,
+    verify: bool = True,
 ):
     """
     Upload sample aspect model data to backend storage.
@@ -319,7 +319,7 @@ def upload_sample_data(
         backend_config: Backend configuration dict.
         sample_data: Sample data dict to upload.
         header_fn: Function ``(title) -> None`` to print section header.
-        verify: Whether to verify SSL certificates. Defaults to False.
+        verify: Whether to verify SSL certificates. Defaults to True.
     """
     if header_fn is None:
         def header_fn(title):
