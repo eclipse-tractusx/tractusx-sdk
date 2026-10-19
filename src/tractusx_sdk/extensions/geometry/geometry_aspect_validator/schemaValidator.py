@@ -1,6 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
 # Copyright (c) 2025 Threedy GmbH
 #
 # See the NOTICE file(s) distributed with this work for additional
@@ -30,10 +32,13 @@ Schema: https://github.com/eclipse-tractusx/sldt-semantic-models/blob/main/io.ca
 
 import json
 import logging
+import time
 import requests
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from jsonschema import validate, ValidationError, SchemaError
+
+from tractusx_sdk._logging_fields import log_extra, safe_url
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +55,15 @@ class SchemaValidator:
         self.infos: List[str] = []
     
     # The findings are kept as data (see GeometryValidationReport); the log only echoes them.
-    def add_error(self, message: str):
-        """Add an error message"""
-        logger.debug("Validation error: %s", message)
+    def add_error(self, message: str, log_message: Optional[str] = None):
+        """
+        Add an error message.
+
+        :param message: The finding, as kept in the report
+        :param log_message: What the DEBUG echo says instead of ``message``, when the finding quotes
+            values of the validated document, which are not logged
+        """
+        logger.debug("Validation error: %s", log_message or message)
         self.errors.append(message)
     
     def add_warning(self, message: str):
@@ -72,17 +83,27 @@ class SchemaValidator:
         Returns:
             bool: True if schema was loaded successfully, False otherwise
         """
+        logger.debug("Loading the schema from %s", safe_url(self.SCHEMA_URL), extra=log_extra(url=self.SCHEMA_URL, operation="geometry.load_schema"))
+        started = time.perf_counter()
         try:
             response = requests.get(self.SCHEMA_URL, timeout=10)
             response.raise_for_status()
             
             self.schema = response.json()
+            elapsed_ms = round((time.perf_counter() - started) * 1000)
+            logger.debug("The schema was loaded in %d ms", elapsed_ms,
+                         extra=log_extra(url=self.SCHEMA_URL, elapsed_ms=elapsed_ms, operation="geometry.load_schema"))
             return True
             
         except requests.exceptions.RequestException as e:
+            # Kept in the report as data: the log says it as well, as the validation cannot go on without the schema
+            logger.warning("The schema could not be loaded from %s (%s)", safe_url(self.SCHEMA_URL), type(e).__name__,
+                           extra=log_extra(url=self.SCHEMA_URL, operation="geometry.load_schema"))
             self.add_error(f"Failed to load schema from URL: {e}")
             return False
         except json.JSONDecodeError as e:
+            logger.warning("The schema loaded from %s is not valid JSON", safe_url(self.SCHEMA_URL),
+                           extra=log_extra(url=self.SCHEMA_URL, operation="geometry.load_schema"))
             self.add_error(f"Failed to parse schema JSON: {e}")
             return False
     
@@ -96,15 +117,18 @@ class SchemaValidator:
         Returns:
             bool: True if schema was loaded successfully, False otherwise
         """
+        logger.debug("Loading the schema from the file '%s'", schema_file, extra=log_extra(operation="geometry.load_schema"))
         try:
             with open(schema_file, 'r', encoding='utf-8') as f:
                 self.schema = json.load(f)
             return True
             
         except FileNotFoundError:
+            logger.warning("The schema file '%s' was not found", schema_file, extra=log_extra(operation="geometry.load_schema"))
             self.add_error(f"Schema file not found: {schema_file}")
             return False
         except json.JSONDecodeError as e:
+            logger.warning("The schema file '%s' is not valid JSON", schema_file, extra=log_extra(operation="geometry.load_schema"))
             self.add_error(f"Failed to parse schema JSON from file: {e}")
             return False
     
@@ -180,6 +204,7 @@ class SchemaValidator:
             bool: True if validation passed, False otherwise
         """
         if self.schema is None:
+            logger.warning("'%s' cannot be validated: no schema is loaded", file_name, extra=log_extra(operation="geometry.validate"))
             self.add_error("error: Schema not loaded.")
             return False
         
@@ -194,7 +219,11 @@ class SchemaValidator:
             return True
             
         except ValidationError as e:
-            self.add_error(f"[{file_name}] Schema validation error: {e.message}")
+            # The message of the finding quotes the offending value, which is data of the document: it is kept in
+            # the report, and the log only says where the violation is and which rule it breaks
+            location = " -> ".join(str(p) for p in e.path) if e.path else "root"
+            self.add_error(f"[{file_name}] Schema validation error: {e.message}",
+                           log_message=f"[{file_name}] Schema validation error at '{location}' ({e.validator})")
             
             # Add detailed path information if available
             if e.path:
@@ -204,7 +233,8 @@ class SchemaValidator:
             return False
             
         except SchemaError as e:
-            self.add_error(f"Schema error: {e.message}")
+            logger.warning("The loaded schema is not a valid JSON schema (%s)", e.validator, extra=log_extra(operation="geometry.validate"))
+            self.add_error(f"Schema error: {e.message}", log_message="Schema error: the loaded schema is not valid")
             return False
     
     def has_errors(self) -> bool:

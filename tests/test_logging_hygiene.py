@@ -384,6 +384,24 @@ class TestDocumentationAndExamples:
                             offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{node.lineno}:{keyword.arg}")
         assert offenders == []
 
+    def test_the_logging_guide_documents_every_structured_field_and_no_other(self):
+        """The ``extra`` fields of the guide and the ones the code accepts are the same list."""
+        from tractusx_sdk._logging_fields import EXTRA_FIELDS
+
+        guide = (REPO_ROOT / "docs" / "admin" / "logging.md").read_text(encoding="utf-8")
+        section = guide.split("## Structured context (`extra`)", 1)[1].split("## What is never logged", 1)[0]
+        table = section.split("```python", 1)[0]
+        documented = {name for cell in re.findall(r"^\| ((?:`[a-z_]+`(?:, )?)+) \|", table, re.MULTILINE)
+                      for name in re.findall(r"`([a-z_]+)`", cell)}
+        assert documented == set(EXTRA_FIELDS)
+
+    def test_the_formatter_example_of_the_guide_lists_the_same_fields(self):
+        from tractusx_sdk._logging_fields import EXTRA_FIELDS
+
+        guide = (REPO_ROOT / "docs" / "admin" / "logging.md").read_text(encoding="utf-8")
+        example = guide.split("SDK_FIELDS = (", 1)[1].split(")", 1)[0]
+        assert set(re.findall(r'"([a-z_]+)"', example)) == set(EXTRA_FIELDS)
+
     def test_the_logging_guide_exists_and_is_in_the_navigation(self):
         assert (REPO_ROOT / "docs/admin/logging.md").is_file()
         assert "admin/logging.md" in (REPO_ROOT / "mkdocs.yml").read_text(encoding="utf-8")
