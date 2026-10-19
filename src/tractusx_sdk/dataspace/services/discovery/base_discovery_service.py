@@ -26,6 +26,7 @@ import datetime
 import logging
 from abc import ABC, abstractmethod
 
+from tractusx_sdk._logging_fields import log_extra, safe_url
 from tractusx_sdk.dataspace.managers.oauth2_manager import OAuth2Manager
 from tractusx_sdk.dataspace.services.discovery import DiscoveryFinderService
 from tractusx_sdk.dataspace.services.service import BaseService
@@ -62,6 +63,7 @@ class BaseDiscoveryService(BaseService, ABC):
         self.discovery_finder_service = discovery_finder_service
         self.cache_timeout_seconds = cache_timeout_seconds
         self.discovery_cache = {}
+        logger.debug("[%s] Initialised with a cache timeout of %s seconds", self.get_service_name(), cache_timeout_seconds)
 
         # Configured last: the trace is shared with the discovery finder service
         self._init_tracing(trace=trace)
@@ -113,6 +115,9 @@ class BaseDiscoveryService(BaseService, ABC):
             (current_time - entry.get("timestamp", 0)) > self.cache_timeout_seconds
         ):
             try:
+                logger.debug(
+                    "[%s] Discovery URL for key '%s' is %s, asking the discovery finder", self.get_service_name(), discovery_key,
+                    "expired" if entry else "not cached yet", extra=log_extra(operation="discovery.refresh"))
                 url = self.get_discovery_url(
                     discovery_finder_service=self.discovery_finder_service,
                     discovery_key=discovery_key
@@ -126,24 +131,32 @@ class BaseDiscoveryService(BaseService, ABC):
                     if logger.isEnabledFor(logging.INFO):
                         valid_until = datetime.datetime.fromtimestamp(current_time + self.cache_timeout_seconds)
                         service_name = self.get_service_name()
-                        logger.info("[%s] Updated cache with new discovery URL for key '%s': %s", service_name, discovery_key, url)
+                        logger.info("[%s] Updated cache with new discovery URL for key '%s': %s", service_name, discovery_key, safe_url(url),
+                                    extra=log_extra(url=url, operation="discovery.refresh"))
                         logger.info("[%s] Cache status: %d URL(s) cached, valid until %s", service_name, len(self.discovery_cache), valid_until.strftime('%Y-%m-%d %H:%M:%S'))
+                else:
+                    logger.warning("[%s] The discovery finder returned no URL for key '%s'", self.get_service_name(), discovery_key,
+                                   extra=log_extra(operation="discovery.refresh"))
                     
             except Exception as e:
                 # If we have a cached entry, preserve it and continue using it
                 if entry:
                     # Log the error but continue with cached URL
-                    logger.warning("[%s] Failed to refresh discovery URL, using cached version. Error: %s", self.get_service_name(), e)
+                    logger.warning("[%s] Failed to refresh discovery URL, using cached version. Error: %s", self.get_service_name(), e,
+                                   extra=log_extra(url=entry["url"], operation="discovery.refresh"))
                     return entry["url"]
                 else:
                     # No cached entry available, re-raise the exception
+                    logger.error("[%s] Failed to get the discovery URL for key '%s' and there is no cached one to fall back to: %s",
+                                 self.get_service_name(), discovery_key, e, extra=log_extra(operation="discovery.refresh"))
                     raise
         else:
             # Using valid cached URL
             if entry and logger.isEnabledFor(logging.DEBUG):
                 valid_until = datetime.datetime.fromtimestamp(entry["timestamp"] + self.cache_timeout_seconds)
                 service_name = self.get_service_name()
-                logger.debug("[%s] Using cached discovery URL for key '%s': %s", service_name, discovery_key, entry['url'])
+                logger.debug("[%s] Using cached discovery URL for key '%s': %s", service_name, discovery_key, safe_url(entry['url']),
+                             extra=log_extra(url=entry['url'], operation="discovery.cache_hit"))
                 logger.debug("[%s] Cache status: %d URL(s) cached, this entry valid until %s", service_name, len(self.discovery_cache), valid_until.strftime('%Y-%m-%d %H:%M:%S'))
             
         return self.discovery_cache[discovery_key]["url"]

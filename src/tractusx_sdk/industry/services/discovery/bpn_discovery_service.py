@@ -24,6 +24,7 @@
 import logging
 from typing import Optional
 
+from tractusx_sdk._logging_fields import http_status, log_extra
 from tractusx_sdk.dataspace.tools.http_tools import HttpTools
 from tractusx_sdk.dataspace.managers import OAuth2Manager
 from tractusx_sdk.dataspace.services.discovery import DiscoveryFinderService
@@ -42,10 +43,17 @@ def _ensure_response(response: Optional[requests.Response], expected_status: int
     :raises DiscoveryError: There was no response, or its status was not the expected one.
     """
     if response is None:
+        logger.error("[BPN Discovery Service] No response received from the BPN discovery service",
+                     extra=log_extra(operation="bpn_discovery.request"))
         raise DiscoveryError("[BPN Discovery Service] No response received from the connector discovery service.")
     if response.status_code == 401:
+        logger.error("[BPN Discovery Service] The BPN discovery service answered 401 Unauthorized, check the permissions of the client",
+                     extra=log_extra(status_code=401, operation="bpn_discovery.request"))
         raise DiscoveryUnauthorizedError("[BPN Discovery Service] Unauthorized access. Please check your clientid permissions.")
     if response.status_code != expected_status:
+        logger.error("[BPN Discovery Service] Unexpected status %s from the BPN discovery service (expected %s)",
+                     response.status_code, expected_status,
+                     extra=log_extra(status_code=http_status(response), operation="bpn_discovery.request"))
         raise DiscoveryError(failure_message)
     return response
 
@@ -104,6 +112,8 @@ class BpnDiscoveryService(BaseDiscoveryService):
         """
         endpoints = discovery_finder_service.find_discovery_urls(keys=[discovery_key])
         if(discovery_key not in endpoints):
+          logger.error("[BPN Discovery Service] The discovery finder has no endpoint for key '%s'", discovery_key,
+                       extra=log_extra(operation="bpn_discovery.get_url"))
           raise DiscoveryEndpointNotFoundError("[BPN Discovery Service] BPN Discovery endpoint not found!")
 
         base_url:str = endpoints[discovery_key]
@@ -117,6 +127,8 @@ class BpnDiscoveryService(BaseDiscoveryService):
         # Construct the full URL
             full_url = f"{base_url}/{path}"
         else:
+            logger.debug("[BPN Discovery Service] The discovery endpoint already ends with the base path, using it as is",
+                         extra=log_extra(operation="bpn_discovery.get_url"))
             full_url = base_url
         
         return full_url
@@ -146,6 +158,8 @@ class BpnDiscoveryService(BaseDiscoveryService):
         if(not discovery_url.endswith("/search")):
             discovery_url += "/search"
 
+        logger.debug("[BPN Discovery Service] Searching the BPNs of %d identifier key(s) of type '%s'", len(keys), identifier_type,
+                     extra=log_extra(operation="bpn_discovery.search"))
         body:dict = {
             "searchFilter": [
                 {
@@ -185,19 +199,27 @@ class BpnDiscoveryService(BaseDiscoveryService):
             Exception: If the request fails or returns a non-200 response.
         """
         if not search_filters or not isinstance(search_filters, list):
+            logger.warning("[BPN Discovery Service] Invalid search: search_filters must be a non-empty list",
+                           extra=log_extra(operation="bpn_discovery.search_multi_type"))
             raise ValueError("search_filters must be a non-empty list of filter dictionaries")
         
         # Validate search filters format
         for filter_item in search_filters:
             if not isinstance(filter_item, dict) or "type" not in filter_item or "keys" not in filter_item:
+                logger.warning("[BPN Discovery Service] Invalid search: a filter lacks the 'type' or 'keys' field",
+                               extra=log_extra(operation="bpn_discovery.search_multi_type"))
                 raise ValueError("Each search filter must be a dictionary with 'type' and 'keys' fields")
             if not isinstance(filter_item["keys"], list) or not filter_item["keys"]:
+                logger.warning("[BPN Discovery Service] Invalid search: the 'keys' of the '%s' filter is not a non-empty list",
+                               filter_item["type"], extra=log_extra(operation="bpn_discovery.search_multi_type"))
                 raise ValueError("Each search filter must have a non-empty 'keys' list")
         
         # Use the first identifier type to get the discovery URL
         # (assuming all types use the same discovery endpoint)
         primary_type = search_filters[0]["type"]
         discovery_url = self._get_or_update_discovery_url(bpn_discovery_key=primary_type)
+        logger.debug("[BPN Discovery Service] Searching the BPNs with %d filter(s), using the endpoint of type '%s'",
+                     len(search_filters), primary_type, extra=log_extra(operation="bpn_discovery.search_multi_type"))
 
         body:dict = {
             "searchFilter": search_filters
@@ -225,6 +247,9 @@ class BpnDiscoveryService(BaseDiscoveryService):
         bpns_data = json_response.get("bpns", [])
         bpns = op.extract_dict_values(array=bpns_data, key="value")
         logger.debug("[BPN Discovery Service] Resolved %d BPN(s) for %d identifier key(s) of type '%s'.", len(set(bpns)), len(keys), identifier_type)
+        if not bpns:
+            logger.warning("[BPN Discovery Service] No BPN was found for %d identifier key(s) of type '%s'", len(keys), identifier_type,
+                           extra=log_extra(operation="bpn_discovery.find_bpns"))
         return list(set(bpns)) if bpns else None
 
     def find_bpns_multi_type(self, search_filters:list) -> list | None:
@@ -248,6 +273,10 @@ class BpnDiscoveryService(BaseDiscoveryService):
         json_response:dict = self.search_bpns_multi_type(search_filters=search_filters)
         bpns_data = json_response.get("bpns", [])
         bpns = op.extract_dict_values(array=bpns_data, key="value")
+        logger.debug("[BPN Discovery Service] Resolved %d BPN(s) for %d search filter(s).", len(set(bpns)), len(search_filters))
+        if not bpns:
+            logger.warning("[BPN Discovery Service] No BPN was found for the %d search filter(s)", len(search_filters),
+                           extra=log_extra(operation="bpn_discovery.find_bpns_multi_type"))
         return list(set(bpns)) if bpns else None
     
     def _get_or_update_discovery_url(self, bpn_discovery_key:str="manufacturerPartId") -> str:
@@ -285,6 +314,8 @@ class BpnDiscoveryService(BaseDiscoveryService):
 
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
         _ensure_response(response, 201, "[BPN Discovery Service] Failed to create BPN identifier.")
+        logger.info("[BPN Discovery Service] Registered an identifier of type '%s'", identifier_type,
+                    extra=log_extra(operation="bpn_discovery.set_identifier"))
 
         return response.json()
 
@@ -309,6 +340,8 @@ class BpnDiscoveryService(BaseDiscoveryService):
 
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
         _ensure_response(response, 201, "[BPN Discovery Service] Failed to create BPN identifiers batch.")
+        logger.info("[BPN Discovery Service] Registered %d identifier(s) of type '%s'", len(identifiers), identifier_type,
+                    extra=log_extra(operation="bpn_discovery.set_multiple_identifiers"))
 
         return response.json()
 
@@ -328,3 +361,5 @@ class BpnDiscoveryService(BaseDiscoveryService):
 
         response = HttpTools.do_delete_with_session(url=discovery_url, headers=headers, session=self.session)
         _ensure_response(response, 204, f"[BPN Discovery Service] Failed to delete BPN identifier with resourceId {resource_id}.")
+        logger.info("[BPN Discovery Service] Deleted the BPN identifier with resourceId '%s'", resource_id,
+                    extra=log_extra(operation="bpn_discovery.delete_identifier"))

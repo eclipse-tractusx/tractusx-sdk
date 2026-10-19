@@ -22,6 +22,7 @@
 #################################################################################
 import logging
 
+from tractusx_sdk._logging_fields import http_status, log_extra
 from tractusx_sdk.exceptions import DiscoveryEndpointNotFoundError, DiscoveryError
 
 from ...tools.http_tools import HttpTools
@@ -77,6 +78,8 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         """
         endpoints = discovery_finder_service.find_discovery_urls(keys=[discovery_key])
         if(discovery_key not in endpoints):
+          logger.error("[Connector Discovery Service] The discovery finder has no endpoint for key '%s'", discovery_key,
+                       extra=log_extra(operation="discovery.connector"))
           raise DiscoveryEndpointNotFoundError("[Connector Discovery Service] Connector Discovery endpoint not found!")
         
         return endpoints[discovery_key]
@@ -99,6 +102,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
             str: A valid discovery URL.
         """
         if connector_discovery_key is None:
+            logger.debug("[Connector Discovery Service] No discovery key given, using the default one '%s'", self.connector_discovery_key)
             connector_discovery_key = self.connector_discovery_key
         
         return super()._get_or_update_discovery_url(connector_discovery_key)
@@ -115,6 +119,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
             bool: True if the entry was found and removed, False if it didn't exist.
         """
         if connector_discovery_key is None:
+            logger.debug("[Connector Discovery Service] No discovery key given, using the default one '%s'", self.connector_discovery_key)
             connector_discovery_key = self.connector_discovery_key
         
         return super().invalidate_cache_entry(connector_discovery_key)
@@ -136,6 +141,8 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         """
         # Use cached discovery URL, refresh if necessary
         discovery_url = self._get_or_update_discovery_url()
+        logger.debug("[Connector Discovery Service] Looking up the connectors of BPN '%s'", bpn,
+                     extra=log_extra(bpn=bpn, operation="discovery.find_connector_by_bpn"))
 
         body:list = [
             bpn
@@ -145,6 +152,10 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
 
         response = HttpTools.do_post(url=discovery_url, headers=headers, json=body, **self._trace_kwargs())
         if(response is None or response.status_code != 200):
+            logger.error("[Connector Discovery Service] The connector discovery service did not answer successfully (status %s)",
+                         getattr(response, "status_code", None),
+                         extra=log_extra(bpn=bpn, url=discovery_url, status_code=http_status(response),
+                                         operation="discovery.find_connector_by_bpn"))
             raise DiscoveryError("[Connector Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
         
         json_response:dict = response.json()
@@ -152,7 +163,15 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         # Iterate over the json_response to find the connectorEndpoint for the specified BPN
         for item in json_response:
             if item.get(bpn_key) == bpn:
-                return item.get(connector_endpoint_key, [])
+                if connector_endpoint_key not in item:
+                    logger.warning("[Connector Discovery Service] BPN '%s' was found but it has no '%s', using an empty list",
+                                   bpn, connector_endpoint_key, extra=log_extra(bpn=bpn, operation="discovery.find_connector_by_bpn"))
+                    return []
+                endpoints = item[connector_endpoint_key]
+                logger.info("[Connector Discovery Service] Found %d connector endpoint(s) for BPN '%s'", len(endpoints or []), bpn,
+                            extra=log_extra(bpn=bpn, operation="discovery.find_connector_by_bpn"))
+                return endpoints
         # If the BPN is not found, return None or an empty list
-        logger.debug("[Connector Discovery Service] No connector endpoints were found for BPN '%s'.", bpn)
+        logger.warning("[Connector Discovery Service] No connector endpoints were found for BPN '%s'.", bpn,
+                       extra=log_extra(bpn=bpn, operation="discovery.find_connector_by_bpn"))
         return None

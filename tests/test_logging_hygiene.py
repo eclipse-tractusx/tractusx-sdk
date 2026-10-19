@@ -314,6 +314,30 @@ class TestStructuredContext:
         assert offenders == []
 
 
+    def test_the_auth_modules_never_log_exception_text_nor_tracebacks(self):
+        """
+        The identity provider may echo request details in its errors: the auth modules log the exception
+        TYPE only, never its message (``%s`` of the exception) nor a traceback (``exc_info``, ``exception()``).
+        """
+        auth_modules = {"dataspace/managers/oauth2_manager.py", "dataspace/managers/auth_manager.py"}
+        offenders = []
+        for path, tree in _modules():
+            if _rel(path) not in auth_modules:
+                continue
+            for call in _log_calls(tree):
+                if call.func.attr == "exception" or any(k.arg == "exc_info" for k in call.keywords):
+                    offenders.append(f"{_rel(path)}:{call.lineno}:traceback")
+                handlers = {h.name for h in ast.walk(tree) if isinstance(h, ast.ExceptHandler) and h.name}
+                for argument in call.args[1:]:
+                    typed = {id(n) for c in ast.walk(argument)
+                             if isinstance(c, ast.Call) and isinstance(c.func, ast.Name) and c.func.id == "type"
+                             for n in ast.walk(c)}
+                    for node in ast.walk(argument):
+                        if isinstance(node, ast.Name) and node.id in handlers and id(node) not in typed:
+                            offenders.append(f"{_rel(path)}:{call.lineno}:{node.id}")
+        assert offenders == []
+
+
 class TestDocumentationAndExamples:
     """What the documentation teaches must run: it never passes an argument the SDK removed."""
 
