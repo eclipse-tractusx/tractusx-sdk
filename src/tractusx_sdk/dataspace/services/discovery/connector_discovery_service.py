@@ -30,6 +30,8 @@ from ...managers import OAuth2Manager
 from .base_discovery_service import BaseDiscoveryService
 from .discovery_finder_service import DiscoveryFinderService
 
+logger = logging.getLogger(__name__)
+
 class ConnectorDiscoveryService(BaseDiscoveryService):
     
     connector_discovery_key:str
@@ -157,4 +159,5 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
             if item.get(bpn_key) == bpn:
                 return item.get(connector_endpoint_key, [])
         # If the BPN is not found, return None or an empty list
+        logger.debug("[Connector Discovery Service] No connector endpoints were found for BPN '%s'.", bpn)
         return None

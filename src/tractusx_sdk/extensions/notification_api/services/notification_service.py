@@ -39,6 +39,8 @@ from tractusx_sdk.dataspace.services.service import BaseService
 from ..constants import DIGITAL_TWIN_EVENT_API_TYPE
 from ..exceptions import NotificationError
 
+logger = logging.getLogger(__name__)
+
 
 class NotificationService(BaseService):
     """
@@ -49,16 +51,12 @@ class NotificationService(BaseService):
     
     Attributes:
         _connector_provider: Connector provider for asset management
-        verbose: Enable verbose logging
-        logger: Logger instance for this service
     """
     
     # Asset type constant for DigitalTwinEventAPI
     DIGITAL_TWIN_EVENT_API_TYPE = DIGITAL_TWIN_EVENT_API_TYPE
     
     _connector_provider: Optional[BaseConnectorProviderService]
-    verbose: bool
-    logger: logging.Logger
     
     def __init__(
         self,
@@ -80,8 +78,6 @@ class NotificationService(BaseService):
                 `get_trace()` and `get_trace_json()`, and `set_tracer()` shares it
                 with other services.
         """
-        self.verbose = verbose
-        self.logger = logger or logging.getLogger(__name__)
         self._connector_provider = connector_provider
 
         # Configured last: the trace is shared with the connector provider service
@@ -133,17 +129,11 @@ class NotificationService(BaseService):
         existing_asset = self._find_notification_asset(asset_id)
         
         if existing_asset is not None:
-            if self.verbose:
-                self.logger.info(
-                    f"DigitalTwinEventAPI asset '{asset_id}' already exists"
-                )
+            logger.info("DigitalTwinEventAPI asset '%s' already exists", asset_id)
             return existing_asset
         
         # Asset doesn't exist, create it
-        if self.verbose:
-            self.logger.info(
-                f"Creating DigitalTwinEventAPI asset '{asset_id}' at {notification_endpoint_url}"
-            )
+        logger.info("Creating DigitalTwinEventAPI asset '%s' at %s", asset_id, notification_endpoint_url)
         
         default_proxy_params = {
             "proxyQueryParams": "false",
@@ -191,18 +181,16 @@ class NotificationService(BaseService):
                 if self.DIGITAL_TWIN_EVENT_API_TYPE in type_id:
                     return asset_data
                 else:
-                    if self.verbose:
-                        self.logger.warning(
-                            f"Asset '{asset_id}' exists but is not a DigitalTwinEventAPI type "
-                            f"(found: {type_id})"
-                        )
+                    logger.warning(
+                        "Asset '%s' exists but is not a DigitalTwinEventAPI type (found: %s)",
+                        asset_id, type_id
+                    )
                     return None
             
             return None
             
         except Exception as e:
-            if self.verbose:
-                self.logger.debug(f"Asset '{asset_id}' not found: {e}")
+            logger.debug("Asset '%s' not found: %s", asset_id, e)
             return None
     
     @classmethod

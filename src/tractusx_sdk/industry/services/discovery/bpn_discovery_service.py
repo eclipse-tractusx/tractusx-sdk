@@ -32,6 +32,7 @@ from tractusx_sdk.dataspace.tools.operators import op
 from tractusx_sdk.exceptions import DiscoveryEndpointNotFoundError, DiscoveryError, DiscoveryUnauthorizedError
 import requests
 
+logger = logging.getLogger(__name__)
 
 def _ensure_response(response: Optional[requests.Response], expected_status: int, failure_message: str) -> requests.Response:
     """
@@ -228,6 +229,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         json_response:dict = self.search_bpns(keys=keys, identifier_type=identifier_type)
         bpns_data = json_response.get("bpns", [])
         bpns = op.extract_dict_values(array=bpns_data, key="value")
+        logger.debug("[BPN Discovery Service] Resolved %d BPN(s) for %d identifier key(s) of type '%s'.", len(set(bpns)), len(keys), identifier_type)
         return list(set(bpns)) if bpns else None
 
     def find_bpns_multi_type(self, search_filters:list) -> list | None:

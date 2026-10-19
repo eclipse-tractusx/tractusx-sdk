@@ -36,9 +36,8 @@ def translator():
 
 @pytest.fixture
 def translator_with_logger():
-    """Create a translator instance with a logger for verbose testing."""
-    logger = Mock(spec=logging.Logger)
-    return SammSchemaContextTranslator(logger=logger, verbose=True)
+    """Kept as a name for the tests that exercise logging: the translator logs through its module logger."""
+    return SammSchemaContextTranslator()
 
 
 @pytest.fixture
@@ -134,8 +133,8 @@ class TestSammSchemaContextTranslatorInit:
         assert translator.actualPathSep == "/-/"
         assert translator.refPathSep == "/"
         assert translator.propertiesKey == "properties"
-        assert translator.logger is None
-        assert translator.verbose is False
+        assert not hasattr(translator, "logger")
+        assert not hasattr(translator, "verbose")
         assert translator.itemKey == "items"
         assert translator.schemaPrefix == "schema"
         assert translator.aspectPrefix == "aspect"
@@ -143,13 +142,12 @@ class TestSammSchemaContextTranslatorInit:
         assert translator.recursionDepth == 2
         assert translator.depth == 0
 
-    def test_init_with_logger_and_verbose(self):
-        """Test initialization with logger and verbose mode."""
-        logger = Mock(spec=logging.Logger)
-        translator = SammSchemaContextTranslator(logger=logger, verbose=True)
-        
-        assert translator.logger == logger
-        assert translator.verbose is True
+    def test_init_ignores_a_given_logger_and_verbose(self):
+        """The translator logs through its module logger; the arguments are only kept until they are retired."""
+        translator = SammSchemaContextTranslator(logger=Mock(spec=logging.Logger), verbose=True)
+
+        assert not hasattr(translator, "logger")
+        assert not hasattr(translator, "verbose")
 
     def test_initial_jsonld_structure(self, translator):
         """Test the initial JSON-LD structure."""
@@ -659,7 +657,7 @@ class TestGetSchemaRef:
         assert result is None
 
     @patch('tractusx_sdk.extensions.semantics.schema_to_context_translator.op.get_attribute')
-    def test_get_schema_ref_recursion_detection(self, mock_get_attribute, translator_with_logger):
+    def test_get_schema_ref_recursion_detection(self, mock_get_attribute, translator_with_logger, caplog):
         """Test recursion detection in get_schema_ref."""
         import hashlib
         
@@ -678,11 +676,13 @@ class TestGetSchemaRef:
         # Set depth to exceed limit
         translator_with_logger.depth = translator_with_logger.recursionDepth  # Should trigger limit
         
-        result2 = translator_with_logger.get_schema_ref(ref, actualref_with_hash)
+        with caplog.at_level(logging.WARNING, logger="tractusx_sdk.extensions.semantics.schema_to_context_translator"):
+            result2 = translator_with_logger.get_schema_ref(ref, actualref_with_hash)
         assert result2 is None
         
         # Check that warning was logged
-        translator_with_logger.logger.warning.assert_called()
+        assert "Infinite recursion detected" in caplog.text
+        assert ref in caplog.text
 
 
 class TestExpandNode:

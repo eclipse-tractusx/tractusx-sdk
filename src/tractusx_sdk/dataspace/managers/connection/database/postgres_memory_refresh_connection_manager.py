@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -27,6 +28,8 @@ from sqlalchemy.orm import Session as S
 import threading
 import time
 import logging
+
+logger = logging.getLogger(__name__)
 
 class PostgresMemoryRefreshConnectionManager(PostgresMemoryConnectionManager):
     """
@@ -55,6 +58,7 @@ class PostgresMemoryRefreshConnectionManager(PostgresMemoryConnectionManager):
         """
         Start the background thread for periodic persistence and reloading from DB.
         """
+        logger.debug("[PostgresMemoryRefreshConnectionManager] Starting the background persistence every %s seconds.", self.persist_interval)
         threading.Thread(target=self._persistence_loop, daemon=True).start()
 
     def _persistence_loop(self):

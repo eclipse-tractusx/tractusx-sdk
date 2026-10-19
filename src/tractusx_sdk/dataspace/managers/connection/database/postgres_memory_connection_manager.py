@@ -32,6 +32,8 @@ from ..memory.memory_connection_manager import MemoryConnectionManager
 import logging
 from ....constants import JSONLDKeys  
 
+logger = logging.getLogger(__name__)
+
 
 class PostgresMemoryConnectionManager(MemoryConnectionManager):
     """
@@ -179,12 +181,10 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
                         _loaded_edrs += 1
 
                     self.open_connections[self.edrs_key] = _loaded_edrs
-                if self.logger and self.verbose:
-                    self.logger.info(f"[PostgresMemoryConnectionManager] Loaded {_loaded_edrs} edrs from the database.")
+                logger.debug("[PostgresMemoryConnectionManager] Loaded %d edrs from the database.", _loaded_edrs)
                 self._last_saved_hash = hashlib.sha256(json.dumps(self.open_connections, sort_keys=True, default=str).encode()).hexdigest()
-            except SQLAlchemyError as e:
-                if self.logger and self.verbose:
-                    self.logger.error(f"[PostgresMemoryConnectionManager] Error loading from db: {e}")
+            except SQLAlchemyError:
+                logger.exception("[PostgresMemoryConnectionManager] Error loading from db")
     
     def _calculate_connection_hash(self, provider_id, endpoint, query_checksum, policy_checksum):
         """
@@ -227,11 +227,9 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
                                     
                     session.commit()
                     self._last_saved_hash = current_hash
-                    if self.logger and self.verbose:
-                        self.logger.info(f"[PostgresMemoryConnectionManager] Saved {_saved_edrs} edrs to the database.")
-            except SQLAlchemyError as e:
-                if self.logger and self.verbose:
-                    self.logger.error(f"[PostgresMemoryConnectionManager] Error saving to db: {e}")
+                    logger.debug("[PostgresMemoryConnectionManager] Saved %d edrs to the database.", _saved_edrs)
+            except SQLAlchemyError:
+                logger.exception("[PostgresMemoryConnectionManager] Error saving to db")
 
     def stop(self):
         """

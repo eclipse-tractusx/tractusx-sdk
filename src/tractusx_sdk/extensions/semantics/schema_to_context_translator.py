@@ -36,6 +36,9 @@ from tractusx_sdk.dataspace.tools.validate_submodels import SchemaLookupResult, 
 from tractusx_sdk.exceptions import InvalidSemanticIdError, SchemaNotFoundError, SchemaTranslationError
 import copy
 
+logger = logging.getLogger(__name__)
+
+
 class SammSchemaContextTranslator:
     """
     A translator class that converts SAMM (Semantic Aspect Meta Model) schemas 
@@ -86,8 +89,6 @@ class SammSchemaContextTranslator:
         self.actualPathSep = "/-/"
         self.refPathSep = "/"
         self.propertiesKey = "properties"
-        self.logger = logger
-        self.verbose = verbose
         self.itemKey = "items"
         self.schemaPrefix = "schema"
         self.aspectPrefix = "aspect"
@@ -134,17 +135,14 @@ class SammSchemaContextTranslator:
             ...     print("Schema fetched successfully")
         """
         try:
-            if self.verbose and self.logger:
-                self.logger.info(f"Fetching schema for semantic ID: {semantic_id}")
+            logger.info("Fetching schema for semantic ID: %s", semantic_id)
             
             result = self._find_schema(semantic_id, link_core=link_core)
-            if self.verbose and self.logger:
-                self.logger.info(f"Successfully fetched schema: {result.message}")
+            logger.info("Successfully fetched schema: %s", result.message)
             return result.schema
                 
         except Exception as e:
-            if self.logger:
-                self.logger.error(f"Error fetching schema for {semantic_id}: {e}")
+            logger.error("Error fetching schema for %s: %s", semantic_id, e)
             return None
 
     def _find_schema(self, semantic_id: str, link_core: str) -> SchemaLookupResult:
@@ -188,8 +186,7 @@ class SammSchemaContextTranslator:
         """
         # If schema is None, try to fetch it using the semantic ID
         if schema is None:
-            if self.verbose and self.logger:
-                self.logger.info(f"Schema not provided, attempting to fetch from semantic ID: {semantic_id}")
+            logger.info("Schema not provided, attempting to fetch from semantic ID: %s", semantic_id)
             try:
                 schema = self._find_schema(semantic_id, link_core=link_core).schema
             except Exception as e:
@@ -1041,8 +1038,7 @@ class SammSchemaContextTranslator:
                 return op.get_attribute(self.baseSchema, attr_path=path, path_sep=self.refPathSep, default_value=None)
             
             if(self.depth >= self.recursionDepth):
-                if(self.verbose and self.logger is not None):
-                    self.logger.warning(f"[WARNING] Infinite recursion detected in the following path: ref[{ref}] and acumulated ref[{actualref}]!")
+                logger.warning("[WARNING] Infinite recursion detected in the following path: ref[%s] and acumulated ref[%s]!", ref, actualref)
                 self.depth=0
                 return None
             

@@ -44,6 +44,8 @@ from ...models.connector.base_queryspec_model import BaseQuerySpecModel
 from ...tools import HttpTools, DspTools, op
 import uuid
 
+logger = logging.getLogger(__name__)
+
 EDC_NAMESPACE: str = "https://w3id.org/edc/v0.0.1/ns/"
 VOCAB_KEY: str = "@vocab"
 DSP_0_8: str = "dataspace-protocol-http"
@@ -98,13 +100,7 @@ class BaseConnectorConsumerService(BaseService):
             and `set_tracer()` shares it with other services
         """
         self.dataspace_version = dataspace_version
-        self.verbose = verbose
-        self.debug = debug
-        self.logger = logger
         self.verify_ssl = verify_ssl
-        # Backwards compatibility: if verbose is True and no logger provided, use default logger
-        if self.verbose and self.logger is None:
-            self.logger = logging.getLogger(__name__)
 
         self.dma_adapter = AdapterFactory.get_dma_adapter(
             dataspace_version=dataspace_version,
@@ -230,8 +226,8 @@ class BaseConnectorConsumerService(BaseService):
             request = self.get_catalog_request(counter_party_id=counter_party_id,
                                                counter_party_address=counter_party_address, context=context)
         
-        if self.debug:
-            self.logger.info(f"[Connector Service] [CATALOG REQUEST]: {request.to_data()}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[Connector Service] [CATALOG REQUEST]: %s", request.to_data())
         
         ## Get catalog with configurable timeout
         # Use service-level verify_ssl if verify not explicitly provided
@@ -241,8 +237,8 @@ class BaseConnectorConsumerService(BaseService):
         ## In case the response code is not successfull or the response is null
         if response is None or response.status_code != 200:
             status_code = response.status_code if response is not None else 'None'
-            if response is not None and getattr(self, 'logger', None):
-                self.logger.debug("[get_catalog] Error response body: %s", response.text)
+            if response is not None:
+                logger.debug("[get_catalog] Error response body: %s", response.text)
             ## The response travels on the error, not in its message, so it only reaches who asks for it
             raise CatalogRequestError(
                 f"[Connector Service]: It was not possible to get the catalog from the EDC provider! Response code: [{status_code}]",
@@ -365,8 +361,8 @@ class BaseConnectorConsumerService(BaseService):
                                                                                  context=context)
 
         # Debug logging: log negotiation request
-        if self.debug:
-            self.logger.info(f"[Connector Service] [NEGOTIATION REQUEST]: {request.to_data()}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[Connector Service] [NEGOTIATION REQUEST]: %s", request.to_data())
 
         ## Build catalog api url
         # Use service-level verify_ssl if verify not explicitly provided
@@ -600,8 +596,7 @@ class BaseConnectorConsumerService(BaseService):
                                                                  filter_expression=filter_expression,
                                                                  timeout=timeout, context=context)
             except Exception as e:
-                if self.logger:
-                    self.logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
+                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
                 catalogs[edc_url] = {"error": str(e)}
         return catalogs
 
@@ -659,8 +654,7 @@ class BaseConnectorConsumerService(BaseService):
                                                                  filter_expression=filter_expression,
                                                                  timeout=timeout, context=context)
             except Exception as e:
-                if self.logger:
-                    self.logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
+                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
                 catalogs[edc_url] = {"error": str(e)}
 
         for edc_url in edcs:
@@ -871,10 +865,9 @@ class BaseConnectorConsumerService(BaseService):
             ## Remember the key so the following polls only send one request
             if self._transfer_process_agreement_id_key != agreement_id_key:
                 self._transfer_process_agreement_id_key = agreement_id_key
-                if self.logger:
-                    self.logger.debug(
-                        "[Connector Service]: Transfer processes are filtered by [%s] on this connector",
-                        agreement_id_key)
+                logger.debug(
+                    "[Connector Service]: Transfer processes are filtered by [%s] on this connector",
+                    agreement_id_key)
 
             ## The response is a list
             data = response.json()
@@ -997,9 +990,9 @@ class BaseConnectorConsumerService(BaseService):
         state_data = state_response.json()
         negotiation_state = state_data.get("state", state_data.get("edc:state"))
         
-        # Log state change if logger is available and state changed
-        if self.logger and negotiation_state != last_logged_state:
-            self.logger.info(
+        # Log state change if state changed
+        if negotiation_state != last_logged_state:
+            logger.info(
                 "[Connector Service]: [%s] Negotiation [%s] state: %s",
                 counter_party_address, negotiation_id, negotiation_state)
             last_logged_state = negotiation_state
@@ -1062,10 +1055,9 @@ class BaseConnectorConsumerService(BaseService):
             except RuntimeError:
                 raise
             except Exception as e:
-                if self.logger:
-                    self.logger.warning(
-                        "[Connector Service]: [%s] Failed to check negotiation state: %s",
-                        counter_party_address, e)
+                logger.warning(
+                    "[Connector Service]: [%s] Failed to check negotiation state: %s",
+                    counter_party_address, e)
             
             op.wait(seconds=poll_interval)
             elapsed += poll_interval
@@ -1102,18 +1094,17 @@ class BaseConnectorConsumerService(BaseService):
                 ## The connector rejected the query itself, polling again would only repeat it
                 raise
             except Exception as e:
-                if self.logger:
-                    self.logger.warning(
-                        "[Connector Service]: [%s] Failed to check the transfer process state: %s",
-                        counter_party_address, e)
+                logger.warning(
+                    "[Connector Service]: [%s] Failed to check the transfer process state: %s",
+                    counter_party_address, e)
 
             if transfer_process is not None:
                 transfer_process_id = transfer_process.get("@id")
                 transfer_state = transfer_process.get("state", transfer_process.get("edc:state"))
 
-                # Log state change if logger is available and state changed
-                if self.logger and transfer_state != last_logged_state:
-                    self.logger.info(
+                # Log state change if state changed
+                if transfer_state != last_logged_state:
+                    logger.info(
                         "[Connector Service]: [%s] Transfer process [%s] state: %s",
                         counter_party_address, transfer_process_id, transfer_state)
                     last_logged_state = transfer_state
@@ -1127,8 +1118,8 @@ class BaseConnectorConsumerService(BaseService):
                 if transfer_state in self.TRANSFER_PROCESS_READY_STATES and transfer_process_id is not None:
                     return transfer_process_id
 
-            elif self.logger:
-                self.logger.info(
+            else:
+                logger.info(
                     "[Connector Service]: [%s] Transfer process for the agreement [%s] not yet created, waiting %ss...",
                     counter_party_address, agreement_id, poll_interval)
 
@@ -1157,10 +1148,9 @@ class BaseConnectorConsumerService(BaseService):
             if edr_entry is not None:
                 return edr_entry
             
-            if self.logger:
-                self.logger.info(
-                    "[Connector Service]: [%s] EDR entry for negotiation [%s] not yet available, waiting %ss...",
-                    counter_party_address, negotiation_id, poll_interval)
+            logger.info(
+                "[Connector Service]: [%s] EDR entry for negotiation [%s] not yet available, waiting %ss...",
+                counter_party_address, negotiation_id, poll_interval)
             
             op.wait(seconds=poll_interval)
             elapsed += poll_interval
@@ -1261,9 +1251,12 @@ class BaseConnectorConsumerService(BaseService):
         Exception: If the EDR entry is not found or the transfer ID is not available.
         """
 
-        if policies is None and self.logger:
-            policies = uuid.uuid4() 
-            self.logger.warning(
+        ## policies=None accepts any offered policy. Such a selection gets its own memory entry id,
+        ## which is only the identity used for the cache key: the allow-list that is applied stays None.
+        policy_memory_id = None
+        if policies is None:
+            policy_memory_id = uuid.uuid4()
+            logger.warning(
                 "\n%s\n"
                 "  ATTENTION! — policies=None DETECTED\n"
                 "%s\n"
@@ -1276,10 +1269,10 @@ class BaseConnectorConsumerService(BaseService):
                 "  \u25b6  DO NOT USE IN PRODUCTION.\n"
                 "     Always pass an explicit allow-list of accepted policies.\n"
                 "%s",
-                "=" * 72, "=" * 72, counter_party_address, policies, "=" * 72)
+                "=" * 72, "=" * 72, counter_party_address, policy_memory_id, "=" * 72)
 
         ## Hash the policies to get checksum.
-        current_policies_checksum = hashlib.sha3_256(str(policies).encode('utf-8')).hexdigest()
+        current_policies_checksum = hashlib.sha3_256(str(policy_memory_id or policies).encode('utf-8')).hexdigest()
         filter_expression_checksum = hashlib.sha3_256(str(filter_expression).encode('utf-8')).hexdigest()
         ## If the counter party id is already available and the transfer key is also present
         transfer_process_id: str = self.connection_manager.get_connection_transfer_id(counter_party_id=counter_party_id,
@@ -1287,17 +1280,15 @@ class BaseConnectorConsumerService(BaseService):
                                                                                       query_checksum=filter_expression_checksum,
                                                                                       policy_checksum=current_policies_checksum)
         ## If is there return the cached one, if the selection is the same the transfer id can be reused!
-        if transfer_process_id is not None and self.logger:
-            self.logger.debug(
+        if transfer_process_id is not None:
+            logger.debug(
                 "[Connector Service]: [%s]: EDR transfer_id=[%s] found in the cache for counter_party_id=[%s], filter=[%s] and selected policies",
                 counter_party_address, transfer_process_id, counter_party_id, filter_expression)
-        if transfer_process_id is not None:
             return transfer_process_id
 
-        if self.logger:
-            self.logger.info(
-                "[Connector Service]: The EDR was not found in the cache for counter_party_address=[%s], counter_party_id=[%s], filter=[%s] and selected policies, starting new contract negotiation!",
-                counter_party_address, counter_party_id, filter_expression)
+        logger.info(
+            "[Connector Service]: The EDR was not found in the cache for counter_party_address=[%s], counter_party_id=[%s], filter=[%s] and selected policies, starting new contract negotiation!",
+            counter_party_address, counter_party_id, filter_expression)
 
         ## If not the contract negotiation MUST be done!
         edr_entry: dict = self.negotiate_and_transfer(counter_party_id=counter_party_id,
@@ -1318,8 +1309,7 @@ class BaseConnectorConsumerService(BaseService):
                                                                       query_checksum=filter_expression_checksum,
                                                                       policy_checksum=current_policies_checksum,
                                                                       connection_entry=edr_entry)
-        if self.logger:
-            self.logger.info("[Connector Service]: The EDR Entry was found! Transfer Process ID: [%s]", transfer_process_id)
+        logger.info("[Connector Service]: The EDR Entry was found! Transfer Process ID: [%s]", transfer_process_id)
 
         return transfer_process_id
 

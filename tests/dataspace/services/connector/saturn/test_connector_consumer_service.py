@@ -71,8 +71,8 @@ class TestSaturnConnectorConsumerService(TestCase):
         self.assertIsNotNone(self.service.connection_manager)
         self.assertIsNotNone(self.service.connector_discovery)
     
-    def test_initialization_with_logger(self):
-        """Test service initialization with custom logger."""
+    def test_initialization_does_not_keep_an_instance_logger(self):
+        """The module-level logger is used, whatever logger the caller passes (the parameter is being retired)."""
         custom_logger = logging.getLogger("test_logger")
         
         with mock.patch('tractusx_sdk.dataspace.adapters.connector.adapter_factory.AdapterFactory') as mock_adapter_factory, \
@@ -96,7 +96,7 @@ class TestSaturnConnectorConsumerService(TestCase):
                 logger=custom_logger
             )
             
-            self.assertEqual(service.logger, custom_logger)
+            self.assertFalse(hasattr(service, "logger"))
     
     def test_connector_discovery_property(self):
         """Test connector discovery property returns the correct controller."""

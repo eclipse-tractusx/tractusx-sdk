@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -26,12 +27,16 @@ Extends MemoryConnectionManager to support persistence using JSON files with fil
 ## Code created partially using a LLM (GPT 4o) and reviewed by a human committer
 
 import json
+import logging
 import os
 import threading
 import time
 from filelock import FileLock
 from ..memory import MemoryConnectionManager
 import hashlib
+
+logger = logging.getLogger(__name__)
+
 class FileSystemConnectionManager(MemoryConnectionManager):
     """
     Manages EDR connections with persistence to the filesystem using JSON files.
@@ -89,8 +94,8 @@ class FileSystemConnectionManager(MemoryConnectionManager):
                 with open(self.file_path, "w") as f:
                     json.dump(self.open_connections, f)
                 self._last_loaded_hash = current_hash
-        except Exception as e:
-            print(f"[FileSystemConnectionManager] Error saving to file: {e}")
+        except Exception:
+            logger.exception("[FileSystemConnectionManager] Error saving to file '%s'", self.file_path)
 
     def _load_if_updated(self):
         """
@@ -106,8 +111,8 @@ class FileSystemConnectionManager(MemoryConnectionManager):
                 if file_hash != self._last_loaded_hash:
                     self.open_connections = file_connections
                     self._last_loaded_hash = file_hash
-        except Exception as e:
-            print(f"[FileSystemConnectionManager] Error loading from file: {e}")
+        except Exception:
+            logger.exception("[FileSystemConnectionManager] Error loading from file '%s'", self.file_path)
 
     def _calculate_hash(self, data):
         """

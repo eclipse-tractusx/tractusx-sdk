@@ -31,6 +31,8 @@ from sqlalchemy.orm import Session as S
 from ....constants import JSONLDKeys
 import logging
 
+logger = logging.getLogger(__name__)
+
 class PostgresConnectionManager(BaseConnectionManager):
     def __init__(self, engine: E | S, provider_id_key: str = "providerId", table_name: str = "edr_connections", logger:logging.Logger=None, verbose: bool = False):
         """
@@ -47,8 +49,6 @@ class PostgresConnectionManager(BaseConnectionManager):
         self.engine = engine
         self.provider_id_key = provider_id_key
         self.table_name = table_name
-        self.logger = logger
-        self.verbose = verbose
 
         # Define a dynamic SQLModel class tied to the specified table name for storing EDR connections
         class DynamicEDRConnection(EDRBase, table=True):
@@ -99,8 +99,7 @@ class PostgresConnectionManager(BaseConnectionManager):
             if not session.get(self.EDRConnection, transfer_process_id):
                 session.add(new_entry)
                 session.commit()
-                if self.logger and self.verbose:
-                    self.logger.info("[Postgres Connection Manager] A new EDR entry was saved in the database.")
+                logger.debug("[Postgres Connection Manager] A new EDR entry was saved in the database.")
         return transfer_process_id
 
     def get_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
@@ -174,17 +173,14 @@ class PostgresConnectionManager(BaseConnectionManager):
             self.EDRConnection.policy_checksum == policy_checksum
         )
         # If found, delete the connection and commit the transaction
-        # Log the action if verbose logging is enabled
         # Return True if deleted, False if not found
         with Session(self.engine) as session:
             result = session.exec(stmt).first()
             if result:
                 session.delete(result)
                 session.commit()
-                if self.logger and self.verbose:
-                    self.logger.info(f"[Postgres Connection Manager] Deleted EDR entry for policy checksum '{policy_checksum}'.")
+                logger.debug("[Postgres Connection Manager] Deleted EDR entry for policy checksum '%s'.", policy_checksum)
                 return True
             else:
-                if self.logger and self.verbose:
-                    self.logger.info(f"[Postgres Connection Manager] No EDR found to delete for the provided keys.")
+                logger.debug("[Postgres Connection Manager] No EDR found to delete for the provided keys.")
                 return False

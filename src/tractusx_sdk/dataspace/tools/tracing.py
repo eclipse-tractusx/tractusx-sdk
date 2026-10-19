@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
@@ -66,6 +67,7 @@ import base64
 import functools
 import inspect
 import json
+import logging
 import sys
 import threading
 import uuid
@@ -77,6 +79,8 @@ from time import perf_counter
 from typing import Any, Iterator, Optional
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 # Attribute used to bind a tracer to a `requests.Session` (or any other object
 # carrying the connection), so that every call made with that session is traced.
@@ -661,7 +665,7 @@ class Tracer:
         try:
             return _json_safe(response.json(), self.max_body_chars)
         except Exception:  # NOSONAR - any parsing issue falls back to the raw content
-            pass
+            logger.debug("The response body is not JSON, falling back to its raw content", exc_info=True)
 
         content = _safe_getattr(response, "content")
         if isinstance(content, (bytes, bytearray)):
@@ -678,6 +682,7 @@ class Tracer:
         try:
             return _body_safe(response.text, self.max_body_chars)
         except Exception:  # NOSONAR - streamed responses may not expose their content
+            logger.debug("The response body could not be read for the trace", exc_info=True)
             return None
 
     ############################# Consumption

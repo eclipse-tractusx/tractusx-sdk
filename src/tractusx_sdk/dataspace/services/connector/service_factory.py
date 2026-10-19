@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -27,6 +28,8 @@ import logging
 
 from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
 from tractusx_sdk.dataspace.tools.tracing import resolve_tracer
+
+logger = logging.getLogger(__name__)
 
 
 class ServiceType(Enum):
@@ -84,6 +87,7 @@ class ServiceFactory:
             # Dynamically import the service class
             module = import_module(module_name)
             service_class = getattr(module, service_class_name)
+            logger.debug("Resolved %s from %s", service_class_name, module_name)
             return service_class.builder()
         except AttributeError as attr_exception:
             raise AttributeError(

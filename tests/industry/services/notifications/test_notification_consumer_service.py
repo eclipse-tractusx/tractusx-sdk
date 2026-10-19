@@ -67,7 +67,7 @@ class TestNotificationConsumerServiceConstruction:
         )
         
         assert service is not None
-        assert service.verbose is True
+        assert not hasattr(service, "verbose")
         assert service.connector_consumer is mock_connector_consumer
     
     def test_builder_construction(self, mock_connector_consumer):
@@ -80,7 +80,7 @@ class TestNotificationConsumerServiceConstruction:
         )
         
         assert service is not None
-        assert service.verbose is False
+        assert not hasattr(service, "verbose")
         assert service.connector_consumer is mock_connector_consumer
     
     def test_construction_without_connector_consumer(self):

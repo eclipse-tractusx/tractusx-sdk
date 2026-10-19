@@ -149,6 +149,37 @@ class TestBaseConsumerConnectorService(unittest.TestCase):
         expr = service.get_filter_expression("foo", "bar", operator="!=")
         self.assertEqual(expr, {"operandLeft": "foo", "operator": "!=", "operandRight": "bar"})
 
+    def _service_for_transfer_id(self):
+        service, *_ = self.create_mock_service()
+        service.connection_manager = mock.Mock()
+        service.connection_manager.get_connection_transfer_id.return_value = None
+        service.connection_manager.add_connection.return_value = "transfer-1"
+        service.negotiate_and_transfer = mock.Mock(return_value={"@id": "edr"})
+        return service
+
+    def test_get_transfer_id_without_policies_accepts_any_and_warns(self):
+        """policies=None means accept any policy: it must stay None for the catalog filter, with or without a logger."""
+        service = self._service_for_transfer_id()
+        with self.assertLogs(bcc.logger, level="WARNING") as logs:
+            result = service.get_transfer_id("bpn", "http://provider", filter_expression=[])
+        self.assertEqual(result, "transfer-1")
+        self.assertIsNone(service.negotiate_and_transfer.call_args.kwargs["policies"])
+        self.assertIn("policies=None DETECTED", logs.output[0])
+
+    def test_get_transfer_id_without_policies_uses_an_own_cache_identity(self):
+        service = self._service_for_transfer_id()
+        service.get_transfer_id("bpn", "http://provider", filter_expression=[])
+        service.get_transfer_id("bpn", "http://provider", filter_expression=[])
+        checksums = [c.kwargs["policy_checksum"] for c in service.connection_manager.add_connection.call_args_list]
+        self.assertEqual(len(set(checksums)), 2)
+
+    def test_get_transfer_id_with_policies_is_not_affected(self):
+        service = self._service_for_transfer_id()
+        policies = [{"permission": {"action": "use"}}]
+        with self.assertNoLogs(bcc.logger, level="WARNING"):
+            service.get_transfer_id("bpn", "http://provider", filter_expression=[], policies=policies)
+        self.assertIs(service.negotiate_and_transfer.call_args.kwargs["policies"], policies)
+
     def test_get_query_spec(self):
         service, *_ = self.create_mock_service()
         filter_expr = [{"operandLeft": "foo", "operator": "=", "operandRight": "bar"}]

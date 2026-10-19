@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,6 +22,7 @@
 #################################################################################
 
 import time
+import datetime
 import logging
 from typing import Optional
 from abc import ABC, abstractmethod
@@ -28,6 +30,8 @@ from abc import ABC, abstractmethod
 from tractusx_sdk.dataspace.managers.oauth2_manager import OAuth2Manager
 from tractusx_sdk.dataspace.services.discovery import DiscoveryFinderService
 from tractusx_sdk.dataspace.services.service import BaseService
+
+logger = logging.getLogger(__name__)
 
 
 class BaseDiscoveryService(BaseService, ABC):
@@ -61,8 +65,6 @@ class BaseDiscoveryService(BaseService, ABC):
         self.oauth = oauth
         self.discovery_finder_service = discovery_finder_service
         self.cache_timeout_seconds = cache_timeout_seconds
-        self.verbose = verbose
-        self.logger = logger
         self.discovery_cache = {}
 
         # Configured last: the trace is shared with the discovery finder service
@@ -125,34 +127,28 @@ class BaseDiscoveryService(BaseService, ABC):
                         "url": url,
                         "timestamp": current_time
                     }
-                    if self.verbose and self.logger:
-                        import datetime
-                        cache_count = len(self.discovery_cache)
+                    if logger.isEnabledFor(logging.INFO):
                         valid_until = datetime.datetime.fromtimestamp(current_time + self.cache_timeout_seconds)
                         service_name = self.get_service_name()
-                        self.logger.info(f"[{service_name}] Updated cache with new discovery URL for key '{discovery_key}': {url}")
-                        self.logger.info(f"[{service_name}] Cache status: {cache_count} URL(s) cached, valid until {valid_until.strftime('%Y-%m-%d %H:%M:%S')}")
+                        logger.info("[%s] Updated cache with new discovery URL for key '%s': %s", service_name, discovery_key, url)
+                        logger.info("[%s] Cache status: %d URL(s) cached, valid until %s", service_name, len(self.discovery_cache), valid_until.strftime('%Y-%m-%d %H:%M:%S'))
                     
             except Exception as e:
                 # If we have a cached entry, preserve it and continue using it
                 if entry:
                     # Log the error but continue with cached URL
-                    if self.verbose and self.logger:
-                        service_name = self.get_service_name()
-                        self.logger.warning(f"[{service_name}] Failed to refresh discovery URL, using cached version. Error: {str(e)}")
+                    logger.warning("[%s] Failed to refresh discovery URL, using cached version. Error: %s", self.get_service_name(), e)
                     return entry["url"]
                 else:
                     # No cached entry available, re-raise the exception
-                    raise e
+                    raise
         else:
             # Using valid cached URL
-            if self.verbose and self.logger and entry:
-                import datetime
-                cache_count = len(self.discovery_cache)
+            if entry and logger.isEnabledFor(logging.DEBUG):
                 valid_until = datetime.datetime.fromtimestamp(entry["timestamp"] + self.cache_timeout_seconds)
                 service_name = self.get_service_name()
-                self.logger.debug(f"[{service_name}] Using cached discovery URL for key '{discovery_key}': {entry['url']}")
-                self.logger.debug(f"[{service_name}] Cache status: {cache_count} URL(s) cached, this entry valid until {valid_until.strftime('%Y-%m-%d %H:%M:%S')}")
+                logger.debug("[%s] Using cached discovery URL for key '%s': %s", service_name, discovery_key, entry['url'])
+                logger.debug("[%s] Cache status: %d URL(s) cached, this entry valid until %s", service_name, len(self.discovery_cache), valid_until.strftime('%Y-%m-%d %H:%M:%S'))
             
         return self.discovery_cache[discovery_key]["url"]
 
@@ -166,9 +162,7 @@ class BaseDiscoveryService(BaseService, ABC):
         cache_count = len(self.discovery_cache)
         self.discovery_cache.clear()
         
-        if self.verbose and self.logger:
-            service_name = self.get_service_name()
-            self.logger.info(f"[{service_name}] Cache flushed: {cache_count} entries removed")
+        logger.info("[%s] Cache flushed: %d entries removed", self.get_service_name(), cache_count)
         
         return cache_count
 
@@ -186,13 +180,9 @@ class BaseDiscoveryService(BaseService, ABC):
         
         if entry_existed:
             del self.discovery_cache[discovery_key]
-            if self.verbose and self.logger:
-                service_name = self.get_service_name()
-                self.logger.info(f"[{service_name}] Cache entry invalidated for key '{discovery_key}'")
+            logger.info("[%s] Cache entry invalidated for key '%s'", self.get_service_name(), discovery_key)
         else:
-            if self.verbose and self.logger:
-                service_name = self.get_service_name()
-                self.logger.debug(f"[{service_name}] No cache entry found for key '{discovery_key}' to invalidate")
+            logger.debug("[%s] No cache entry found for key '%s' to invalidate", self.get_service_name(), discovery_key)
         
         return entry_existed
 

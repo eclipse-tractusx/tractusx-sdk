@@ -24,9 +24,13 @@
 """
 Guards for the library-logging conventions of the SDK.
 
-The ``NullHandler`` checks are enforced right away. The source-scanning rules
-are marked ``xfail`` until the refactoring phase that satisfies each of them
-lands, and lose their marker in that same phase.
+The ``NullHandler`` checks and the rules satisfied so far are enforced right away.
+The rule that is still pending (the ``verbose`` / ``debug`` / ``logger`` parameters)
+is marked ``xfail`` and loses its marker in the phase that satisfies it.
+
+The TCK command line runner (``extensions/tck``) is an application, not library
+code: it builds one logger per run, with its own file and console handlers, and
+hands it to its helpers. It is exempt from the module-logger rules below.
 """
 
 import ast
@@ -44,15 +48,18 @@ SRC_ROOT = Path(tractusx_sdk.__file__).parent
 ROOT_INIT = SRC_ROOT / "__init__.py"
 LOG_METHODS = {"debug", "info", "warning", "error", "critical", "exception", "log"}
 FLAG_NAMES = {"verbose", "debug", "logger"}
+APPLICATION_PREFIXES = ("extensions/tck/",)
 
 
-def _modules():
+def _modules(include_applications: bool = False):
     for path in sorted(SRC_ROOT.rglob("*.py")):
+        if not include_applications and _rel(path).startswith(APPLICATION_PREFIXES):
+            continue
         yield path, ast.parse(path.read_text(encoding="utf-8"))
 
 
 def _rel(path: Path) -> str:
-    return str(path.relative_to(SRC_ROOT))
+    return path.relative_to(SRC_ROOT).as_posix()
 
 
 def _is_logger_target(node: ast.expr) -> bool:
@@ -80,15 +87,17 @@ def _defines_module_logger(tree: ast.Module) -> bool:
     return False
 
 
-def _uses_logging(tree: ast.Module) -> bool:
+def _emits_log_records(tree: ast.Module) -> bool:
+    """True when the module logs, or asks for a logger. Importing ``logging`` for an annotation does not count."""
     for node in ast.walk(tree):
-        if isinstance(node, ast.Import) and any(alias.name.split(".")[0] == "logging" for alias in node.names):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+            continue
+        if node.func.attr == "getLogger":
             return True
-        if isinstance(node, ast.ImportFrom) and (node.module or "").split(".")[0] == "logging":
-            return True
-        if isinstance(node, ast.Name) and node.id == "logger":
-            return True
-        if isinstance(node, ast.Attribute) and node.attr == "logger":
+        if node.func.attr in LOG_METHODS and (
+            _is_logger_target(node.func.value)
+            or (isinstance(node.func.value, ast.Name) and node.func.value.id == "logging")
+        ):
             return True
     return False
 
@@ -134,10 +143,9 @@ class TestNullHandler:
 
 class TestSourceConventions:
 
-    @pytest.mark.xfail(reason="Phase 3: the remaining print() calls (file-system manager and adapter) are replaced", strict=False)
     def test_no_print_calls(self):
         offenders = [
-            f"{_rel(path)}:{node.lineno}" for path, tree in _modules() for node in ast.walk(tree)
+            f"{_rel(path)}:{node.lineno}" for path, tree in _modules(include_applications=True) for node in ast.walk(tree)
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "print"
         ]
         assert offenders == []
@@ -154,15 +162,13 @@ class TestSourceConventions:
                         offenders.append(f"{_rel(path)}:{node.name}({', '.join(found)})")
         assert offenders == []
 
-    @pytest.mark.xfail(reason="Phase 3: every module gets logger = logging.getLogger(__name__)", strict=False)
     def test_modules_that_log_define_a_module_logger(self):
         offenders = [
             _rel(path) for path, tree in _modules()
-            if path != ROOT_INIT and _uses_logging(tree) and not _defines_module_logger(tree)
+            if path != ROOT_INIT and _emits_log_records(tree) and not _defines_module_logger(tree)
         ]
         assert offenders == []
 
-    @pytest.mark.xfail(reason="Phase 3: self.logger is replaced by the module logger", strict=False)
     def test_no_instance_loggers(self):
         offenders = [
             f"{_rel(path)}:{node.lineno}" for path, tree in _modules() for node in ast.walk(tree)
@@ -171,7 +177,31 @@ class TestSourceConventions:
         ]
         assert offenders == []
 
-    @pytest.mark.xfail(reason="Phase 3: log calls use lazy %-style arguments", strict=False)
+    def test_no_instance_verbose_or_debug_flags(self):
+        """Nothing is gated by ``self.verbose`` / ``self.debug``: the logging level decides what is emitted."""
+        offenders = [
+            f"{_rel(path)}:{node.lineno}" for path, tree in _modules() for node in ast.walk(tree)
+            if isinstance(node, ast.Attribute) and node.attr in {"verbose", "debug"}
+            and isinstance(node.value, ast.Name) and node.value.id == "self"
+            and isinstance(node.ctx, ast.Load)
+        ]
+        assert offenders == []
+
+    def test_logger_parameters_never_shadow_the_module_logger(self):
+        """A ``logger`` parameter that is then logged through would silently replace the module logger."""
+        offenders = []
+        for path, tree in _modules():
+            for function in ast.walk(tree):
+                if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    continue
+                params = function.args.posonlyargs + function.args.args + function.args.kwonlyargs
+                if not any(a.arg == "logger" for a in params):
+                    continue
+                for call in _log_calls(function):
+                    if isinstance(call.func.value, ast.Name):
+                        offenders.append(f"{_rel(path)}:{function.name}:{call.lineno}")
+        assert offenders == []
+
     def test_log_calls_are_lazy(self):
         offenders = []
         for path, tree in _modules():
@@ -180,5 +210,15 @@ class TestSourceConventions:
                 if isinstance(first, ast.JoinedStr) or (isinstance(first, ast.BinOp)) or (
                     isinstance(first, ast.Call) and isinstance(first.func, ast.Attribute) and first.func.attr == "format"
                 ):
+                    offenders.append(f"{_rel(path)}:{call.lineno}")
+        assert offenders == []
+
+    def test_log_calls_do_not_swallow_the_exception_text_into_the_format(self):
+        """``logger.error("... %s", e)`` is fine; ``logger.error(str(e))`` as the whole message is not diagnostic."""
+        offenders = []
+        for path, tree in _modules():
+            for call in _log_calls(tree):
+                first = call.args[0] if call.args else None
+                if isinstance(first, ast.Call) and isinstance(first.func, ast.Name) and first.func.id == "str":
                     offenders.append(f"{_rel(path)}:{call.lineno}")
         assert offenders == []
