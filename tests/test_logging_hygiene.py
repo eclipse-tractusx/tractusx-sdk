@@ -314,26 +314,32 @@ class TestStructuredContext:
         assert offenders == []
 
 
-    def test_the_auth_modules_never_log_exception_text_nor_tracebacks(self):
+    def test_the_credential_modules_never_log_exception_text_nor_tracebacks(self):
         """
-        The identity provider may echo request details in its errors: the auth modules log the exception
-        TYPE only, never its message (``%s`` of the exception) nor a traceback (``exc_info``, ``exception()``).
+        The identity provider, the object store and the submodel service may echo request details in their errors: the
+        modules handling credentials log the exception TYPE (or the S3 error code) only, never its message
+        (``%s`` of the exception) nor a traceback (``exc_info``, ``exception()``).
         """
-        auth_modules = {"dataspace/managers/oauth2_manager.py", "dataspace/managers/auth_manager.py"}
+        credential_modules = {
+            "dataspace/managers/oauth2_manager.py", "dataspace/managers/auth_manager.py",
+            "industry/adapters/submodel_adapters/s3_adapter.py", "industry/adapters/submodel_adapters/http_submodel_adapter.py",
+        }
+        # What is allowed to read an exception: its type, or the error code of an S3 error
+        allowed_readers = {"type", "_error_code"}
         offenders = []
         for path, tree in _modules():
-            if _rel(path) not in auth_modules:
+            if _rel(path) not in credential_modules:
                 continue
+            handlers = {h.name for h in ast.walk(tree) if isinstance(h, ast.ExceptHandler) and h.name}
             for call in _log_calls(tree):
                 if call.func.attr == "exception" or any(k.arg == "exc_info" for k in call.keywords):
                     offenders.append(f"{_rel(path)}:{call.lineno}:traceback")
-                handlers = {h.name for h in ast.walk(tree) if isinstance(h, ast.ExceptHandler) and h.name}
                 for argument in call.args[1:]:
-                    typed = {id(n) for c in ast.walk(argument)
-                             if isinstance(c, ast.Call) and isinstance(c.func, ast.Name) and c.func.id == "type"
-                             for n in ast.walk(c)}
+                    allowed = {id(n) for c in ast.walk(argument)
+                               if isinstance(c, ast.Call) and isinstance(c.func, ast.Name) and c.func.id in allowed_readers
+                               for n in ast.walk(c)}
                     for node in ast.walk(argument):
-                        if isinstance(node, ast.Name) and node.id in handlers and id(node) not in typed:
+                        if isinstance(node, ast.Name) and node.id in handlers and id(node) not in allowed:
                             offenders.append(f"{_rel(path)}:{call.lineno}:{node.id}")
         assert offenders == []
 

@@ -33,6 +33,7 @@ in the EDC connector with optional authentication support.
 import logging
 from typing import Any, Dict, Optional
 
+from tractusx_sdk._logging_fields import log_extra, safe_url
 from tractusx_sdk.dataspace.services.connector.base_connector_provider import BaseConnectorProviderService
 from tractusx_sdk.dataspace.services.service import BaseService
 
@@ -78,6 +79,8 @@ class NotificationService(BaseService):
 
         # Configured last: the trace is shared with the connector provider service
         self._init_tracing(trace=trace)
+        logger.debug("NotificationService created (connector provider: %s)",
+                     type(connector_provider).__name__ if connector_provider is not None else "none")
     
     @property
     def connector_provider(self) -> Optional[BaseConnectorProviderService]:
@@ -116,6 +119,8 @@ class NotificationService(BaseService):
             NotificationError: If connector provider is not configured or operation fails
         """
         if self._connector_provider is None:
+            logger.error("The notification service has no connector provider: initialise it with a connector_provider",
+                         extra=log_extra(asset_id=asset_id, operation="notification.ensure_asset"))
             raise NotificationError(
                 "Connector provider is required for asset management. "
                 "Initialize the service with a connector_provider parameter."
@@ -125,11 +130,13 @@ class NotificationService(BaseService):
         existing_asset = self._find_notification_asset(asset_id)
         
         if existing_asset is not None:
-            logger.info("DigitalTwinEventAPI asset '%s' already exists", asset_id)
+            logger.info("DigitalTwinEventAPI asset '%s' already exists", asset_id,
+                        extra=log_extra(asset_id=asset_id, operation="notification.ensure_asset"))
             return existing_asset
         
         # Asset doesn't exist, create it
-        logger.info("Creating DigitalTwinEventAPI asset '%s' at %s", asset_id, notification_endpoint_url)
+        logger.info("Creating DigitalTwinEventAPI asset '%s' at %s", asset_id, safe_url(notification_endpoint_url),
+                    extra=log_extra(asset_id=asset_id, url=notification_endpoint_url, operation="notification.ensure_asset"))
         
         default_proxy_params = {
             "proxyQueryParams": "false",
@@ -137,6 +144,9 @@ class NotificationService(BaseService):
             "proxyMethod": "true",
             "proxyBody": "true",
         }
+        if not proxy_params:
+            logger.debug("No proxy parameters given for asset '%s', using the defaults", asset_id,
+                         extra=log_extra(asset_id=asset_id, operation="notification.ensure_asset"))
         
         return self._connector_provider.create_asset(
             asset_id=asset_id,
@@ -179,14 +189,20 @@ class NotificationService(BaseService):
                 else:
                     logger.warning(
                         "Asset '%s' exists but is not a DigitalTwinEventAPI type (found: %s)",
-                        asset_id, type_id
+                        asset_id, type_id,
+                        extra=log_extra(asset_id=asset_id, operation="notification.find_asset")
                     )
                     return None
             
+            # An expected outcome when the asset is checked before being created
+            logger.debug("Asset '%s' was not found (status %s)", asset_id, response.status_code,
+                         extra=log_extra(asset_id=asset_id, status_code=response.status_code, operation="notification.find_asset"))
             return None
             
         except Exception as e:
-            logger.debug("Asset '%s' not found: %s", asset_id, e)
+            # Not a "not found": the lookup itself failed. It is treated as absent, so the asset will be created
+            logger.warning("The lookup of asset '%s' failed, treating it as not existing: %s", asset_id, e, exc_info=True,
+                           extra=log_extra(asset_id=asset_id, operation="notification.find_asset"))
             return None
     
     @classmethod

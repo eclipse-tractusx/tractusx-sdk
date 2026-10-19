@@ -83,6 +83,9 @@ def http_status(response: Any) -> Optional[int]:
 def log_extra(
     *,
     asset_id: Optional[str] = None,
+    aas_id: Optional[str] = None,
+    submodel_id: Optional[str] = None,
+    message_id: Optional[str] = None,
     bpn: Optional[str] = None,
     policy_id: Optional[str] = None,
     negotiation_id: Optional[str] = None,

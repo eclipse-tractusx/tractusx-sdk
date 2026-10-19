@@ -27,6 +27,7 @@ from .. import SubmodelAdapter
 import logging
 import os
 from pathlib import Path
+from tractusx_sdk._logging_fields import log_extra
 from tractusx_sdk.dataspace.tools import op
 from typing import Any, List, Mapping
 
@@ -55,10 +56,14 @@ class FileSystemAdapter(SubmodelAdapter):
                 )
             
         except PermissionError as e:
+            logger.exception("No write permission for the submodel storage path '%s'", root_path,
+                             extra=log_extra(adapter_type="FileSystemAdapter"))
             raise PermissionError(
                 f"Permission denied accessing submodel storage path: {root_path}. Error: {e}" 
             ) from e
         except Exception as e:
+            logger.exception("The submodel storage path '%s' could not be initialised", root_path,
+                             extra=log_extra(adapter_type="FileSystemAdapter"))
             raise RuntimeError(f"Failed to initialize submodel storage: {e}") from e
         self.root_path = root_path
 
@@ -68,10 +73,15 @@ class FileSystemAdapter(SubmodelAdapter):
         # Explicit pattern can redefine how submodel_metadata fields map to a path.
         if path_pattern is not None:
             self.path_pattern = path_pattern
+        else:
+            logger.debug("No path pattern given, using the default '%s'", self.path_pattern)
 
         if not isinstance(self.path_pattern, str) or not self.path_pattern.strip():
+            logger.error("The path pattern of the file system adapter must be a non-empty string",
+                         extra=log_extra(adapter_type="FileSystemAdapter"))
             raise ValueError("path_pattern must be a non-empty string")
-        logger.debug("FileSystem submodel adapter initialized at '%s' with path pattern '%s'", self.root_path, self.path_pattern)
+        logger.debug("FileSystem submodel adapter initialized at '%s' with path pattern '%s'", self.root_path, self.path_pattern,
+                     extra=log_extra(adapter_type="FileSystemAdapter"))
 
     @classmethod
     def builder(cls):
@@ -100,16 +110,20 @@ class FileSystemAdapter(SubmodelAdapter):
         Resolve the relative file path from key/value input.
         """
         if not isinstance(submodel_metadata, Mapping):
+            logger.warning("The submodel metadata of a file system operation is not a mapping", extra=log_extra(adapter_type="FileSystemAdapter"))
             raise TypeError("submodel_metadata must be a mapping")
 
         try:
             relative_path = self.path_pattern.format(**submodel_metadata)
         except KeyError as key_error:
+            logger.warning("The submodel metadata lacks '%s', which the path pattern '%s' needs", key_error.args[0], self.path_pattern,
+                           extra=log_extra(adapter_type="FileSystemAdapter"))
             raise KeyError(
                 f"Missing required path key '{key_error.args[0]}' for pattern '{self.path_pattern}'"
             ) from key_error
 
         if not isinstance(relative_path, str) or not relative_path.strip():
+            logger.warning("The path pattern '%s' resolved to an empty path", self.path_pattern, extra=log_extra(adapter_type="FileSystemAdapter"))
             raise ValueError("Resolved path value must be a non-empty string")
 
         return relative_path
@@ -126,6 +140,7 @@ class FileSystemAdapter(SubmodelAdapter):
                 current.rmdir()
             except OSError:
                 break
+            logger.debug("Removed the empty directory '%s'", current.relative_to(root) if current.is_relative_to(root) else current)
             current = current.parent
     
 
@@ -135,6 +150,7 @@ class FileSystemAdapter(SubmodelAdapter):
         """
         path = self._extract_relative_path(submodel_metadata)
         total_path = op.join_paths(self.root_path, path)
+        logger.debug("File system read: '%s'", path, extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.read"))
         return op.read_json_file(total_path)
          
 
@@ -143,10 +159,14 @@ class FileSystemAdapter(SubmodelAdapter):
         Write raw bytes to a file.
         """
         if not isinstance(content, bytes):
+            logger.warning("File system write rejected: the content must be bytes",
+                           extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.write"))
             raise TypeError("content must be bytes")
 
         path = self._extract_relative_path(submodel_metadata)
         total_path = op.join_paths(self.root_path, path)
+        logger.debug("File system write: '%s', %d bytes", path, len(content),
+                     extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.write"))
         Path(total_path).parent.mkdir(parents=True, exist_ok=True)
         Path(total_path).write_bytes(content)
 
@@ -155,10 +175,13 @@ class FileSystemAdapter(SubmodelAdapter):
         Write JSON content to a file.
         """
         if content is not None and not isinstance(content, Mapping):
+            logger.warning("File system JSON write rejected: the content must be a mapping or None",
+                           extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.write_json"))
             raise TypeError("content must be a mapping or None")
 
         path = self._extract_relative_path(submodel_metadata)
         total_path = op.join_paths(self.root_path, path)
+        logger.debug("File system JSON write: '%s'", path, extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.write_json"))
         Path(total_path).parent.mkdir(parents=True, exist_ok=True)
         op.to_json_file(content, json_file_path=total_path)
 
@@ -168,6 +191,7 @@ class FileSystemAdapter(SubmodelAdapter):
         """
         path = self._extract_relative_path(submodel_metadata)
         total_path = op.join_paths(self.root_path, path)
+        logger.debug("File system delete: '%s'", path, extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.delete"))
         op.delete_file(total_path)
         self._cleanup_empty_parent_directories(total_path)
 
@@ -177,7 +201,9 @@ class FileSystemAdapter(SubmodelAdapter):
         """
         path = self._extract_relative_path(submodel_metadata)
         total_path = op.join_paths(self.root_path, path)
-        return op.path_exists(total_path)
+        found = op.path_exists(total_path)
+        logger.debug("File system exists: '%s' -> %s", path, found, extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.exists"))
+        return found
 
     def list_contents(self, directory_path: str) -> List[dict]:
         """
@@ -194,6 +220,8 @@ class FileSystemAdapter(SubmodelAdapter):
                     continue
                 except PermissionError:
                     continue
+        logger.debug("File system list: %d file(s) in '%s'", len(results), directory_path,
+                     extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.list"))
         return results
 
 
