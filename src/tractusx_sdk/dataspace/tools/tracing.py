@@ -29,7 +29,7 @@ when no tracer is active every instrumented call takes a fast path and simply
 performs the original request.
 
 Enabling it is a matter of passing ``trace=True`` to any SDK service, adapter or
-factory, exactly like the ``verbose`` flag::
+factory::
 
     service = ServiceFactory.get_connector_consumer_service(..., trace=True)
     service.get_catalog(...)

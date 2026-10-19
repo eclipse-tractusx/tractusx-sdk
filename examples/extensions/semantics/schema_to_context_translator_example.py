@@ -41,12 +41,12 @@ from tractusx_sdk.extensions.semantics import SammSchemaContextTranslator
 
 
 def main():
-    # Set up logging
+    # Set up logging: the translator logs through the standard logging module
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     
     # Create translator instance
-    translator = SammSchemaContextTranslator(logger=logger, verbose=True)
+    translator = SammSchemaContextTranslator()
     
     # Use a SerialPart semantic ID - the translator will automatically fetch the schema
     semantic_id = "urn:samm:io.catenax.pcf:7.0.0#Pcf"

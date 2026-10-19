@@ -27,6 +27,6 @@ import logging
 # to the SDK's output. The NullHandler keeps "no handler" warnings away until they do.
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-__version__ = '0.8.1-rc2'
+__version__ = '0.9.0'
 __author__ = 'Eclipse Tractus-X Contributors'
 __license__ = "Apache License, Version 2.0"

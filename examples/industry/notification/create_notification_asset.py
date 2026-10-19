@@ -94,8 +94,6 @@ def main():
             "x-api-key": connector_api_key,
             "Content-Type": "application/json",
         },
-        verbose=True,
-        logger=logger,
     )
     
     # ==========================================================================
@@ -106,8 +104,6 @@ def main():
     
     notification_service = NotificationService(
         connector_provider=connector_provider,
-        verbose=True,
-        logger=logger,
     )
     
     # ==========================================================================

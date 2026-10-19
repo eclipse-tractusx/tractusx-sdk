@@ -29,7 +29,7 @@ import logging
 
 from requests import Response
 
-from tractusx_sdk.exceptions import CatalogError, CatalogRequestError
+from tractusx_sdk.exceptions import CatalogError, CatalogRequestError, NegotiationError, TransferError
 
 from ..service import BaseService
 from ...adapters.connector.adapter_factory import AdapterFactory
@@ -967,7 +967,7 @@ class BaseConnectorConsumerService(BaseService):
             if negotiation_id is not None:
                 return negotiation_id
 
-        raise RuntimeError(
+        raise NegotiationError(
             f"[Connector Service]: [{counter_party_address}] It was not possible to start the EDR Negotiation! The negotiation id is empty!")
 
     def _check_single_negotiation_state(self, negotiation_id: str, counter_party_address: str, 
@@ -999,7 +999,7 @@ class BaseConnectorConsumerService(BaseService):
         
         # Check terminal states
         if negotiation_state == "TERMINATED":
-            raise RuntimeError(
+            raise NegotiationError(
                 f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] was TERMINATED by the provider!")
         
         return negotiation_state, last_logged_state
@@ -1017,13 +1017,13 @@ class BaseConnectorConsumerService(BaseService):
         """
         response: Response = self.contract_negotiations.get_by_id(negotiation_id)
         if response is None or response.status_code != 200:
-            raise RuntimeError(
+            raise NegotiationError(
                 f"[Connector Service]: It was not possible to retrieve the negotiation [{negotiation_id}] to read the contract agreement id!")
 
         data = response.json()
         agreement_id = data.get(self.AGREEMENT_ID_KEY, data.get(f"edc:{self.AGREEMENT_ID_KEY}"))
         if agreement_id is None:
-            raise RuntimeError(
+            raise NegotiationError(
                 f"[Connector Service]: The negotiation [{negotiation_id}] is FINALIZED but no contract agreement id was returned!")
 
         return agreement_id
@@ -1112,7 +1112,7 @@ class BaseConnectorConsumerService(BaseService):
                 # Check terminal states
                 if transfer_state in self.TRANSFER_PROCESS_ERROR_STATES:
                     error_detail = transfer_process.get("errorDetail", transfer_process.get("edc:errorDetail"))
-                    raise RuntimeError(
+                    raise TransferError(
                         f"[Connector Service]: [{counter_party_address}] The Transfer Process [{transfer_process_id}] for the agreement [{agreement_id}] is in state [{transfer_state}]! Reason: [{error_detail}]")
 
                 if transfer_state in self.TRANSFER_PROCESS_READY_STATES and transfer_process_id is not None:

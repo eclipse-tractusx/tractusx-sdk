@@ -27,6 +27,7 @@ from requests import Response
 
 from tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service import ConnectorConsumerService
 from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
+from tractusx_sdk.exceptions import NegotiationError, TractusXSDKError, TransferError
 
 
 class TestSaturnConnectorConsumerService(TestCase):
@@ -1290,6 +1291,9 @@ class TestSaturnConnectorConsumerService(TestCase):
                     )
 
         self.assertIn("provider refused the transfer", str(ctx.exception))
+        # a RuntimeError as before, and now one the caller can tell apart
+        self.assertIsInstance(ctx.exception, TransferError)
+        self.assertIsInstance(ctx.exception, TractusXSDKError)
 
     def test_wait_for_transfer_process_times_out_with_last_state(self):
         """A transfer stuck in a non ready state times out reporting the state it was left in."""
@@ -1323,8 +1327,21 @@ class TestSaturnConnectorConsumerService(TestCase):
         response.json.return_value = {"state": "FINALIZED"}
         self.service.contract_negotiations.get_by_id.return_value = response
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as ctx:
             self.service._get_agreement_id(negotiation_id="negotiation-123")
+        self.assertIsInstance(ctx.exception, NegotiationError)
+
+    def test_a_terminated_negotiation_raises_a_negotiation_error(self):
+        state = mock.Mock(spec=Response)
+        state.status_code = 200
+        state.json.return_value = {"state": "TERMINATED"}
+        self.service.contract_negotiations.get_state_by_id.return_value = state
+
+        with self.assertRaises(RuntimeError) as ctx:
+            self.service._check_single_negotiation_state("negotiation-123", "https://provider.example.com", None)
+
+        self.assertIsInstance(ctx.exception, NegotiationError)
+        self.assertIn("TERMINATED", str(ctx.exception))
 
     def test_get_transfer_process_probes_filter_keys(self):
         """A filter key the connector rejects is skipped and the next candidate is used."""

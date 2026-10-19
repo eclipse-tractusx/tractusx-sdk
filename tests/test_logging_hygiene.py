@@ -35,6 +35,7 @@ to configure the logging of its own process (in ``setup_tck_logging`` and
 import ast
 import logging
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -44,6 +45,7 @@ import pytest
 import tractusx_sdk
 
 SRC_ROOT = Path(tractusx_sdk.__file__).parent
+REPO_ROOT = SRC_ROOT.parent.parent
 ROOT_INIT = SRC_ROOT / "__init__.py"
 LOG_METHODS = {"debug", "info", "warning", "error", "critical", "exception", "log"}
 FLAG_NAMES = {"verbose", "debug", "logger"}
@@ -253,3 +255,79 @@ class TestSourceConventions:
                 if isinstance(first, ast.Call) and isinstance(first.func, ast.Name) and first.func.id == "str":
                     offenders.append(f"{_rel(path)}:{call.lineno}")
         assert offenders == []
+
+
+class TestDocumentationAndExamples:
+    """What the documentation teaches must run: it never passes an argument the SDK removed."""
+
+    # The Keras ``verbose=1`` of the TensorFlow tutorial does not match: only ``verbose=True|False`` does.
+    REMOVED_API = re.compile(
+        r"\b(verbose|debug)=(True|False)\b|\blogger=\w|\.verbose\(|\.logger\(|"
+        r"configure_debug_logging|print_results\(|print_tree_structure"
+    )
+    # These pages show the removed arguments on purpose, to explain how to migrate away from them
+    MIGRATION_PAGES = {"docs/admin/logging.md", "docs/admin/upgrade-guide.md"}
+
+    def _documents(self):
+        roots = [REPO_ROOT / "docs", REPO_ROOT / "examples", REPO_ROOT / "tck"]
+        files = [REPO_ROOT / "README.md", REPO_ROOT / "INSTALL.md"]
+        for root in roots:
+            files.extend(p for p in root.rglob("*") if p.suffix in {".md", ".py"} and "logs" not in p.parts)
+        return sorted(f for f in files if f.is_file() and f.relative_to(REPO_ROOT).as_posix() not in self.MIGRATION_PAGES)
+
+    def test_the_repository_layout_is_the_expected_one(self):
+        assert (REPO_ROOT / "docs").is_dir() and (REPO_ROOT / "examples").is_dir() and (REPO_ROOT / "README.md").is_file()
+        assert len(self._documents()) > 50
+
+    def test_no_document_or_example_uses_the_removed_api(self):
+        offenders = []
+        for path in self._documents():
+            for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+                if self.REMOVED_API.search(line):
+                    offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{number}: {line.strip()[:80]}")
+        assert offenders == []
+
+    def test_no_example_passes_a_logging_keyword_to_anything(self):
+        offenders = []
+        for path in sorted((REPO_ROOT / "examples").rglob("*.py")) + sorted((REPO_ROOT / "tck").rglob("*.py")):
+            for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+                if isinstance(node, ast.Call):
+                    for keyword in node.keywords:
+                        if keyword.arg in FLAG_NAMES:
+                            offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{node.lineno}:{keyword.arg}")
+        assert offenders == []
+
+    def test_the_logging_guide_exists_and_is_in_the_navigation(self):
+        assert (REPO_ROOT / "docs/admin/logging.md").is_file()
+        assert "admin/logging.md" in (REPO_ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+
+    def test_the_migration_pages_describe_the_removed_api(self):
+        """The two pages that are exempt above must keep explaining the migration."""
+        upgrade = (REPO_ROOT / "docs/admin/upgrade-guide.md").read_text(encoding="utf-8")
+        logging_guide = (REPO_ROOT / "docs/admin/logging.md").read_text(encoding="utf-8")
+        assert "Upgrading to 0.9.0" in upgrade and "verbose" in upgrade
+        assert "Migrating from `verbose`" in logging_guide
+
+
+class TestVersion:
+
+    def test_the_version_agrees_everywhere(self):
+        pyproject = re.search(r'^version = "([^"]+)"', (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"), re.M).group(1)
+        declared = {
+            path: re.search(r"__version__ = '([^']+)'", (REPO_ROOT / path).read_text(encoding="utf-8")).group(1)
+            for path in (
+                "src/tractusx_sdk/__init__.py",
+                "src/tractusx_sdk/dataspace/__init__.py",
+                "src/tractusx_sdk/industry/__init__.py",
+                "src/tractusx_sdk/extensions/__init__.py",
+            )
+        }
+        assert declared == {path: pyproject for path in declared}
+        assert tractusx_sdk.__version__ == pyproject
+
+    def test_the_changelog_has_an_entry_for_the_version(self):
+        pyproject = re.search(r'^version = "([^"]+)"', (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"), re.M).group(1)
+        changelog = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        assert f"## [{pyproject}]" in changelog
+        assert changelog.index(f"## [{pyproject}]") < changelog.index("## [0.8.2]")
+        assert "### Breaking Changes" in changelog.split(f"## [{pyproject}]")[1].split("\n## [")[0]
