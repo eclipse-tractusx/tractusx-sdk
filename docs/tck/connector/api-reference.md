@@ -1,6 +1,7 @@
 <!--
 Eclipse Tractus-X - Tractus-X SDK
 
+Copyright (c) 2026 LKS Next
 Copyright (c) 2026 Catena-X Automotive Network e.V.
 Copyright (c) 2026 Contributors to the Eclipse Foundation
 
@@ -47,7 +48,7 @@ from tractusx_sdk.extensions.tck.connector import (
     cleanup_provider_resources, cleanup_backend_data,
     setup_tck_logging, finalize_log, print_summary,
     run_step, mark_skipped_phases,
-    build_tck_cli_parser, apply_cli_overrides, configure_debug_logging,
+    build_tck_cli_parser, apply_cli_overrides, enable_debug_logging,
     SAMPLE_ASPECT_MODEL_DATA, DEFAULT_ASSET_CONFIG,
 )
 ```
@@ -80,8 +81,8 @@ All public exports from `tractusx_sdk.extensions.tck.connector`, grouped by cate
 
 | Function | Returns | Description |
 |----------|---------|-------------|
-| `setup_tck_logging(test_case_name, script_dir)` | `(logger, log_file_path)` | Create console + timestamped file logger under `logs/<name>/<date>/` |
-| `finalize_log(log_file, result)` | `None` | Flush/close all handlers; rename log file with `_PASS` or `_FAIL` suffix |
+| `setup_tck_logging(test_case_name, script_dir)` | `(logger, log_file_path)` | Add console + timestamped file handlers (next to any existing ones) and return the logger of the run; files go under `logs/<name>/<date>/` |
+| `finalize_log(log_file, result)` | `None` | Flush, close and remove the handlers added by `setup_tck_logging`; rename log file with `_PASS` or `_FAIL` suffix |
 | `print_header(logger, title)` | `None` | Print an 80-char `═`-bordered section heading to the log |
 | `print_separator(logger, title)` | `None` | Print a 70-char `─`-bordered separator line |
 
@@ -96,7 +97,7 @@ All public exports from `tractusx_sdk.extensions.tck.connector`, grouped by cate
 
 | Function / Constant | Returns | Description |
 |---------------------|---------|-------------|
-| `upload_sample_data(logger, backend_config, sample_data, header_fn=None, verbose=False)` | `None` | POST sample data to the backend storage endpoint; raises on non-2xx |
+| `upload_sample_data(logger, backend_config, sample_data, header_fn=None)` | `None` | POST sample data to the backend storage endpoint; raises on non-2xx. The request and response bodies are logged at `DEBUG` |
 | `SAMPLE_ASPECT_MODEL_DATA` | `dict` | Built-in `BusinessPartnerCertificate` sample payload ready to upload |
 
 ### Provision (Phase 1)
@@ -138,7 +139,7 @@ All public exports from `tractusx_sdk.extensions.tck.connector`, grouped by cate
 | Function | Returns | Description |
 |----------|---------|-------------|
 | `build_tck_cli_parser(description, epilog="", include_did=False)` | `ArgumentParser` | Build the standard TCK argument parser with all `--provider-*`, `--consumer-*`, `--config`, and `--no-cleanup` flags |
-| `configure_debug_logging(logger, debug)` | `None` | Elevate all handlers to `DEBUG` level when `debug=True` |
+| `enable_debug_logging(logger)` | `None` | Lower the TCK console and log file handlers (and the root logger) to `DEBUG`, which is where the SDK logs the requests it sends. The runners call it unless `--no-debug` is given |
 | `apply_cli_overrides(args, provider_config, consumer_config, backend_config)` | `(p, c, b)` | Apply parsed CLI flags onto config dicts and return modified copies (originals not mutated) |
 
 ### Constants
@@ -415,9 +416,11 @@ Set up console + timestamped file logging. Creates `logs/<test_name>/<date>/` st
 logger, log_file = setup_tck_logging("my_test", os.path.dirname(__file__))
 ```
 
+This configures the logging of the whole process, so call it from the entry point of a command line script, as the runners do, and not from an application that embeds the SDK. The console and file handlers are added to the root logger next to any handler that already exists, and the root logger is set to `INFO`. Nothing is replaced.
+
 #### `finalize_log(log_file, result)`
 
-Flush, close all handlers, and rename the log file with `_PASS` or `_FAIL` suffix.
+Flush, close and remove the handlers that `setup_tck_logging` added (and only those), and rename the log file with `_PASS` or `_FAIL` suffix.
 
 #### `print_header(logger, title)` / `print_separator(logger, title)`
 
@@ -449,7 +452,7 @@ Both functions accept a `header_fn(title)` callable for custom section formattin
 
 ### Backend Operations
 
-#### `upload_sample_data(logger, backend_config, sample_data, header_fn=None, verbose=False)`
+#### `upload_sample_data(logger, backend_config, sample_data, header_fn=None)`
 
 `POST` `sample_data` to `backend_config["base_url"]`. Raises on non-2xx responses.
 
@@ -457,7 +460,7 @@ Both functions accept a `header_fn(title)` callable for custom section formattin
 upload_sample_data(logger, backend.to_dict(), {"key": "value"})
 ```
 
-Set `verbose=True` to log the full request/response bodies (used by detailed tests).
+The request is always announced at `INFO`. The full request and response bodies are logged at `DEBUG`, which is on by default in the TCK (see `--no-debug`).
 
 #### `SAMPLE_ASPECT_MODEL_DATA`
 
@@ -584,9 +587,9 @@ parser = build_tck_cli_parser("My custom TCK test", include_did=True)
 args = parser.parse_args()
 ```
 
-#### `configure_debug_logging(logger, debug: bool)`
+#### `enable_debug_logging(logger)`
 
-Elevate all handlers to `DEBUG` level when `debug=True`.
+Lower the TCK handlers (and the root logger) to `DEBUG`. Only the handlers created by `setup_tck_logging` are changed. The SDK logs the requests it sends and the responses it gets at that level, so this is what makes them show up. The runners call it unless the `--no-debug` flag is given.
 
 #### `apply_cli_overrides(args, provider_config, consumer_config, backend_config) → (p, c, b)`
 

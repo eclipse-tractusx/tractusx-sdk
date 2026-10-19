@@ -2,8 +2,8 @@
 
 Eclipse Tractus-X - Software Development KIT
 
-Copyright (c) 2025 LKS Next
-Copyright (c) 2025 Contributors to the Eclipse Foundation
+Copyright (c) 2025,2026 LKS Next
+Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -50,8 +50,7 @@ provider_connector_service = ServiceFactory.get_connector_provider_service(
     dataspace_version="jupiter",
     base_url="https://my-connector-controlplane.url",
     dma_path="/management",
-    headers={"X-Api-Key": "my-api-key", "Content-Type": "application/json"},
-    verbose=True
+    headers={"X-Api-Key": "my-api-key", "Content-Type": "application/json"}
 )
 
 provider_connector_service.create_asset(
@@ -114,8 +113,7 @@ consumer_connector_service = ServiceFactory.get_connector_consumer_service(
 	dataspace_version="jupiter",
 	base_url="https://partner-connector.url",
 	dma_path="/management",
-	headers={"X-Api-Key": "my-api-key", "Content-Type": "application/json"},
-	verbose=True
+	headers={"X-Api-Key": "my-api-key", "Content-Type": "application/json"}
 )
 
 # Discover available catalogs
@@ -146,8 +144,7 @@ connector_service = ServiceFactory.get_connector_service(
 	dataspace_version="jupiter",
 	base_url="https://my-connector-controlplane.url",
 	dma_path="/management",
-	headers={"X-Api-Key": "my-api-key", "Content-Type": "application/json"},
-	verbose=True
+	headers={"X-Api-Key": "my-api-key", "Content-Type": "application/json"}
 )
 
 # Provider: Create and publish an asset
@@ -174,22 +171,22 @@ catalog = connector_service.consumer.get_catalog(counter_party_id="BPNL00000003A
 
 | Service Type                | Controller Methods (Main)                                                                 | Required Attributes for Instantiation                                                                                   |
 |-----------------------------|------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
-| Consumer Connector Service  | `get_catalog`, `get_edr`, `get_endpoint_with_token`, `get_filter_expression`, `contract_negotiations`, `transfer_processes` | `dataspace_version`, `base_url`, `dma_path`, `headers`, `connection_manager`, `verbose`, `logger`                     |
-| Provider Connector Service  | `create_asset`, `create_contract`, `create_policy`, `assets`, `contract_definitions`, `policies`                          | `dataspace_version`, `base_url`, `dma_path`, `headers`, `verbose`, `logger`                                           |
-| Combined Connector Service  | All consumer and provider methods via `.consumer` and `.provider`                        | `dataspace_version`, `base_url`, `dma_path`, `headers`, `consumer_service`, `provider_service`, `verbose`, `logger`   |
+| Consumer Connector Service  | `get_catalog`, `get_edr`, `get_endpoint_with_token`, `get_filter_expression`, `contract_negotiations`, `transfer_processes` | `dataspace_version`, `base_url`, `dma_path`, `headers`, `connection_manager`                                          |
+| Provider Connector Service  | `create_asset`, `create_contract`, `create_policy`, `assets`, `contract_definitions`, `policies`                          | `dataspace_version`, `base_url`, `dma_path`, `headers`                                                                |
+| Combined Connector Service  | All consumer and provider methods via `.consumer` and `.provider`                        | `dataspace_version`, `base_url`, `dma_path`, `headers`, `consumer_service`, `provider_service`                        |
 
 **Supported Versions:** `jupiter`, `saturn`
 
 **Instantiation Example:**
 
 Consumer:
-`ServiceFactory.get_connector_consumer_service(dataspace_version, base_url, dma_path, headers, connection_manager, verbose, logger)`
+`ServiceFactory.get_connector_consumer_service(dataspace_version, base_url, dma_path, headers, connection_manager)`
 
 Provider:
-`ServiceFactory.get_connector_provider_service(dataspace_version, base_url, dma_path, headers, verbose, logger)`
+`ServiceFactory.get_connector_provider_service(dataspace_version, base_url, dma_path, headers)`
 
 Combined:
-`ServiceFactory.get_connector_service(dataspace_version, base_url, dma_path, headers, connection_manager, verbose, logger)`
+`ServiceFactory.get_connector_service(dataspace_version, base_url, dma_path, headers, connection_manager)`
 
 ## Connector Service Methods Reference
 
@@ -218,8 +215,9 @@ Combined:
 | `dma_path`          | `str`               | Path for connector management API (e.g., `/management`)                                      |
 | `headers`           | `dict` (optional)   | HTTP headers for authentication and content type                                             |
 | `connection_manager`| `BaseConnectionManager` (optional, consumer/combined) | Manages connector connections and state                                 |
-| `verbose`           | `bool` (optional)   | Enables verbose logging                                                                     |
-| `logger`            | `logging.Logger` (optional) | Custom logger instance for SDK output                                         |
+| `trace`             | `bool` (optional)   | Records the requests sent and responses received (default: `False`)                          |
+
+Logging is configured through the standard `logging` module, not through arguments. See [Logging and Error Handling](../../../admin/logging.md).
 
 ## Saturn Protocol Module (DSP 2025-1)
 

@@ -2,8 +2,8 @@
 
 Eclipse Tractus-X - Software Development KIT
 
-Copyright (c) 2025 LKS Next
-Copyright (c) 2025 Contributors to the Eclipse Foundation
+Copyright (c) 2025,2026 LKS Next
+Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -57,8 +57,6 @@ The service makes it simple to find and connect to other participants in the dat
 | `discovery_finder_service`| DiscoveryFinderService  | Used to look up discovery endpoints (instance attribute)          |
 | `connector_discovery_key` | str                     | Key used for connector discovery (default: "bpn") (instance)     |
 | `cache_timeout_seconds`   | int                     | Cache timeout in seconds (default: 43200 = 12 hours) (instance)   |
-| `verbose`                 | bool                    | Enables verbose logging (default: False) (instance)               |
-| `logger`                  | Optional[logging.Logger]| Custom logger instance (default: None) (instance)                 |
 | `bpn_key`                 | str                     | Key for BPN in API response (default: "bpn") (method param)      |
 | `connector_endpoint_key`  | str                     | Key for connector endpoints in response (default: "connectorEndpoint") (method param) |
 
@@ -96,9 +94,7 @@ connector_discovery = ConnectorDiscoveryService(
     oauth=oauth_manager,
     discovery_finder_service=discovery_finder,
     connector_discovery_key="bpn",          # Optional, defaults to "bpn"
-    cache_timeout_seconds=43200,            # Optional, defaults to 12 hours
-    verbose=False,                          # Optional, defaults to False
-    logger=None                             # Optional, provide custom logger
+    cache_timeout_seconds=43200             # Optional, defaults to 12 hours
 )
 ```
 
@@ -187,14 +183,13 @@ oauth_manager.connect()  # Do this before using the service
 
 ## Debugging
 
-Turn on verbose logging to see what's happening:
+Raise the log level of the SDK to see what's happening (see [Logging and Error Handling](../../../admin/logging.md)):
 
 ```python
-connector_discovery = ConnectorDiscoveryService(
-    oauth=oauth_manager,
-    discovery_finder_service=discovery_finder,
-    verbose=True  # This will show detailed logs
-)
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("tractusx_sdk.dataspace.services.discovery").setLevel(logging.DEBUG)  # cache hits, refreshes, failures
 ```
 
 !!! tip
