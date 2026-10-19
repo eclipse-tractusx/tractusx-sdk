@@ -97,7 +97,7 @@ All public exports from `tractusx_sdk.extensions.tck.connector`, grouped by cate
 
 | Function / Constant | Returns | Description |
 |---------------------|---------|-------------|
-| `upload_sample_data(logger, backend_config, sample_data, header_fn=None, verify=False)` | `None` | POST sample data to the backend storage endpoint; raises on non-2xx. The request and response bodies are logged at `DEBUG` |
+| `upload_sample_data(logger, backend_config, sample_data, header_fn=None, verify=True)` | `None` | POST sample data to the backend storage endpoint; raises on non-2xx. The request and response bodies are logged at `DEBUG` |
 | `SAMPLE_ASPECT_MODEL_DATA` | `dict` | Built-in `BusinessPartnerCertificate` sample payload ready to upload |
 
 ### Provision (Phase 1)
@@ -452,9 +452,9 @@ Both functions accept a `header_fn(title)` callable for custom section formattin
 
 ### Backend Operations
 
-#### `upload_sample_data(logger, backend_config, sample_data, header_fn=None, verify=False)`
+#### `upload_sample_data(logger, backend_config, sample_data, header_fn=None, verify=True)`
 
-`POST` `sample_data` to `backend_config["base_url"]`. Raises on non-2xx responses. `verify` controls the verification of the SSL certificate (the runners pass `config.verify_ssl`).
+`POST` `sample_data` to `backend_config["base_url"]`. Raises on non-2xx responses. `verify` controls the verification of the SSL certificate. Unlike the other helpers on this page, it defaults to `True`, so a backend with a self-signed certificate needs `verify=False` (the runners pass `config.verify_ssl`, which is `False` by default).
 
 ```python
 upload_sample_data(logger, backend.to_dict(), {"key": "value"})
@@ -672,7 +672,7 @@ ALL_PHASES = ["Phase 0 · Upload data", "Phase 1 · Provision", "Phase 2 · Cons
 
 try:
     run_step(steps, "Phase 0 · Upload data",
-             lambda: upload_sample_data(logger, backend.to_dict(), SAMPLE_ASPECT_MODEL_DATA))
+             lambda: upload_sample_data(logger, backend.to_dict(), SAMPLE_ASPECT_MODEL_DATA, verify=False))
 
     ids = run_step(steps, "Phase 1 · Provision",
                    lambda: provision_simple(

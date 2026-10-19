@@ -319,7 +319,7 @@ def upload_sample_data(
         backend_config: Backend configuration dict.
         sample_data: Sample data dict to upload.
         header_fn: Function ``(title) -> None`` to print section header.
-        verify: Whether to verify SSL certificates. Defaults to True.
+        verify: Whether to verify SSL certificates. Defaults to True. The TCK runners pass ``config.verify_ssl``.
     """
     if header_fn is None:
         def header_fn(title):

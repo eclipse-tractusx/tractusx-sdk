@@ -197,10 +197,15 @@ class TestUploadSampleData:
         assert kwargs["json"] == self.DATA
         assert kwargs["headers"]["X-Api-Key"] == "k"
 
-    def test_the_verify_flag_reaches_the_request(self, response):
+    def test_the_certificate_is_verified_by_default(self, response):
         logger = logging.getLogger("tck-upload")
         helpers.upload_sample_data(logger, self.BACKEND, self.DATA, header_fn=lambda title: None)
-        assert response.call_args.kwargs["verify"] is False   # the TCK default: test backends use self-signed certificates
+        assert response.call_args.kwargs["verify"] is True
+
+    def test_the_verify_flag_reaches_the_request(self, response):
+        logger = logging.getLogger("tck-upload")
+        helpers.upload_sample_data(logger, self.BACKEND, self.DATA, header_fn=lambda title: None, verify=False)
+        assert response.call_args.kwargs["verify"] is False
 
         helpers.upload_sample_data(logger, self.BACKEND, self.DATA, header_fn=lambda title: None, verify=True)
         assert response.call_args.kwargs["verify"] is True
