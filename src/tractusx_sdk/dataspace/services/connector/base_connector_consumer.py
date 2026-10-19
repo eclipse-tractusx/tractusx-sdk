@@ -29,6 +29,7 @@ import logging
 
 from requests import Response
 
+from tractusx_sdk._logging_fields import http_status, log_extra, safe_url
 from tractusx_sdk.exceptions import CatalogError, CatalogRequestError, NegotiationError, TransferError
 
 from ..service import BaseService
@@ -67,6 +68,35 @@ DEFAULT_ID_KEY: str = "https://w3id.org/edc/v0.0.1/ns/id"
 _NO_DATAPLANE_ERROR: str = (
     "[Connector Service]: No dataplane URL or access_token was able to be retrieved!"
 )
+
+# A polling loop logs its first attempt and then one in every N: it can run once per second for minutes
+POLL_LOG_EVERY: int = 10
+
+
+def should_log_poll(attempt: int) -> bool:
+    """True for the attempts of a polling loop that are worth a log record (the first one, then every POLL_LOG_EVERY-th)."""
+    return attempt == 1 or attempt % POLL_LOG_EVERY == 0
+
+
+def policy_id_of(policy) -> str | None:
+    """The id of a policy (``@id``), or None when it has none."""
+    return policy.get("@id") if isinstance(policy, dict) else None
+
+
+def log_dataplane_call(method: str, counter_party_id: str, counter_party_address: str, path: str, request_kwargs: dict) -> None:
+    """
+    Logs a request that goes through a dataspace connector to a dataplane (DSP exchange + HTTP call).
+
+    The headers (which carry the EDR authorization), the parameters and the body are never logged. The default
+    TLS verification of these calls is disabled when the caller does not decide, which is noted as it is a fallback.
+    """
+    logger.debug("[Connector Service] %s %s through the connector of [%s] at %s", method, safe_url(path), counter_party_id,
+                 safe_url(counter_party_address),
+                 extra=log_extra(http_method=method, counter_party_id=counter_party_id,
+                                 counter_party_address=counter_party_address, operation="consumer.dataplane_call"))
+    if "verify" not in request_kwargs:
+        logger.debug("[Connector Service] No 'verify' given: the TLS verification of the dataplane request is disabled by default",
+                     extra=log_extra(http_method=method, operation="consumer.dataplane_call"))
 
 
 class BaseConnectorConsumerService(BaseService):
@@ -125,10 +155,15 @@ class BaseConnectorConsumerService(BaseService):
         self._contract_negotiation_controller = self.controllers.get(ControllerType.CONTRACT_NEGOTIATION)
         self._transfer_process_controller = self.controllers.get(ControllerType.TRANSFER_PROCESS)
 
+        if connection_manager is None:
+            logger.debug("[Connector Service] No connection manager given, using an in-memory one")
         self.connection_manager = connection_manager if connection_manager is not None else MemoryConnectionManager()
 
         # Configured last: the tracer is shared with the adapter and the controllers
         self._init_tracing(trace=trace)
+        logger.debug("[Connector Service] Consumer service created for dataspace version %s (connection manager: %s, verify_ssl: %s)",
+                     dataspace_version, type(self.connection_manager).__name__, verify_ssl,
+                     extra=log_extra(dataspace_version=dataspace_version))
 
     class _Builder(BaseService._Builder):  # NOSONAR - used by ServiceFactory via BaseService._Builder pattern
         def dma_path(self, dma_path: str):
@@ -188,8 +223,13 @@ class BaseConnectorConsumerService(BaseService):
         # Use service-level verify_ssl if verify not explicitly provided
         if verify is None:
             verify = getattr(self, 'verify_ssl', True)
+        logger.debug("[Connector Service] Getting the EDR of transfer [%s]", transfer_id,
+                     extra=log_extra(transfer_id=transfer_id, operation="consumer.get_edr"))
         response: Response = self.edrs.get_data_address(oid=transfer_id, params={"auto_refresh": True}, verify=verify)
         if (response is None or response.status_code != 200):
+            logger.error("[Connector Service] The EDC did not return the EDR of transfer [%s] (status %s)", transfer_id,
+                         getattr(response, "status_code", None),
+                         extra=log_extra(transfer_id=transfer_id, status_code=http_status(response), operation="consumer.get_edr"))
             raise ConnectionError(
                 "[Connector Service]: It was not possible to get the edr because the EDC response was not successful!")
         return response.json()
@@ -201,6 +241,8 @@ class BaseConnectorConsumerService(BaseService):
         ## Get authorization key from the edr
         edr: dict = self.get_edr(transfer_id=transfer_id)
         if (edr is None):
+            logger.error("[Connector Service] No EDR was returned for transfer [%s]", transfer_id,
+                         extra=log_extra(transfer_id=transfer_id, operation="consumer.get_endpoint_with_token"))
             raise RuntimeError("[Connector Service]: It was not possible to retrieve the edr token and the dataplane endpoint!")
 
         return edr["endpoint"], edr["authorization"]
@@ -221,6 +263,8 @@ class BaseConnectorConsumerService(BaseService):
         ## Get EDC DCAT catalog
         if request is None:
             if counter_party_id is None or counter_party_address is None:
+                logger.error("[Connector Service] A catalog request needs either a request or the counter party id and address",
+                             extra=log_extra(operation="consumer.get_catalog"))
                 raise ValueError(
                     "[Connector Service]: Either request or counter_party_id and counter_party_address are required to build a catalog request")
             request = self.get_catalog_request(counter_party_id=counter_party_id,
@@ -233,12 +277,19 @@ class BaseConnectorConsumerService(BaseService):
         # Use service-level verify_ssl if verify not explicitly provided
         if verify is None:
             verify = getattr(self, 'verify_ssl', True)
+        logger.debug("[Connector Service] Requesting the catalog of [%s] at %s", counter_party_id, safe_url(counter_party_address),
+                     extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                     operation="consumer.get_catalog"))
         response: Response = self.catalogs.get_catalog(obj=request, timeout=timeout, verify=verify)
         ## In case the response code is not successfull or the response is null
         if response is None or response.status_code != 200:
             status_code = response.status_code if response is not None else 'None'
             if response is not None:
                 logger.debug("[get_catalog] Error response body: %s", response.text)
+            logger.error("[Connector Service] The catalog of [%s] at %s could not be retrieved (status %s)", counter_party_id,
+                         safe_url(counter_party_address), status_code,
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         status_code=http_status(response), operation="consumer.get_catalog"))
             ## The response travels on the error, not in its message, so it only reaches who asks for it
             raise CatalogRequestError(
                 f"[Connector Service]: It was not possible to get the catalog from the EDC provider! Response code: [{status_code}]",
@@ -371,14 +422,29 @@ class BaseConnectorConsumerService(BaseService):
         response: Response = self.edrs.create(request, verify=verify)
         ## In case the response code is not successfull or the response is null
         if (response is None or response.status_code != 200):
+            logger.error("[Connector Service] The negotiation of asset [%s] with [%s] could not be started (status %s)", target,
+                         counter_party_id, getattr(response, "status_code", None),
+                         extra=log_extra(asset_id=target, counter_party_id=counter_party_id,
+                                         counter_party_address=counter_party_address, policy_id=policy_id_of(policy),
+                                         status_code=http_status(response), operation="consumer.start_edr_negotiation"))
             return None
 
         content: dict = response.json()
         ## Check if the id was returned in the response
         if ("@id" not in content):
+            logger.error("[Connector Service] The connector accepted the negotiation of asset [%s] but returned no negotiation id", target,
+                         extra=log_extra(asset_id=target, counter_party_id=counter_party_id,
+                                         counter_party_address=counter_party_address, policy_id=policy_id_of(policy),
+                                         operation="consumer.start_edr_negotiation"))
             return None
 
-        return content.get("@id", None)
+        negotiation_id = content.get("@id", None)
+        logger.info("[Connector Service] Contract negotiation [%s] started for asset [%s] with [%s]", negotiation_id, target,
+                    counter_party_id,
+                    extra=log_extra(negotiation_id=negotiation_id, asset_id=target, counter_party_id=counter_party_id,
+                                    counter_party_address=counter_party_address, policy_id=policy_id_of(policy),
+                                    operation="consumer.start_edr_negotiation"))
+        return negotiation_id
 
     def get_edr_negotiation_filter(self, negotiation_id: str) -> BaseQuerySpecModel:
 
@@ -409,6 +475,8 @@ class BaseConnectorConsumerService(BaseService):
         ## Where the catalogs get stored
         catalogs: dict = {}
         threads: list[threading.Thread] = []
+        logger.debug("[Connector Service] Fetching the catalog of [%s] from %d connector(s) in parallel", counter_party_id, len(edcs),
+                     extra=log_extra(counter_party_id=counter_party_id, operation="consumer.get_catalogs_with_filter"))
 
         for edc_url in edcs:
             thread_kwargs = {
@@ -428,6 +496,8 @@ class BaseConnectorConsumerService(BaseService):
         for thread in threads:
             thread.join()  ## Waiting until they process
 
+        logger.debug("[Connector Service] Received %d of %d catalog(s) of [%s]", len(catalogs), len(edcs), counter_party_id,
+                     extra=log_extra(counter_party_id=counter_party_id, operation="consumer.get_catalogs_with_filter"))
         return catalogs
 
     def get_catalog_by_dct_type(self, counter_party_id: str, counter_party_address: str, dct_type: str,
@@ -596,7 +666,8 @@ class BaseConnectorConsumerService(BaseService):
                                                                  filter_expression=filter_expression,
                                                                  timeout=timeout, context=context)
             except Exception as e:
-                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
+                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", safe_url(edc_url), e,
+                               extra=log_extra(bpn=bpnl, counter_party_address=edc_url, operation="consumer.get_catalogs_with_filter_with_bpnl"))
                 catalogs[edc_url] = {"error": str(e)}
         return catalogs
 
@@ -654,7 +725,8 @@ class BaseConnectorConsumerService(BaseService):
                                                                  filter_expression=filter_expression,
                                                                  timeout=timeout, context=context)
             except Exception as e:
-                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
+                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", safe_url(edc_url), e,
+                               extra=log_extra(bpn=bpnl, counter_party_address=edc_url, operation="consumer.get_catalogs_with_filter_with_bpnl_parallel"))
                 catalogs[edc_url] = {"error": str(e)}
 
         for edc_url in edcs:
@@ -730,10 +802,17 @@ class BaseConnectorConsumerService(BaseService):
     def get_catalog_with_filter_parallel(self, counter_party_id: str, counter_party_address: str,
                                          filter_expression: list[dict], catalogs: dict = None,
                                          timeout: int = None, context: dict = DEFAULT_CONTEXT, **kwargs) -> None:
-        catalogs[counter_party_address] = self.get_catalog_with_filter(counter_party_id=counter_party_id,
-                                                                       counter_party_address=counter_party_address,
-                                                                       filter_expression=filter_expression,
-                                                                       timeout=timeout, context=context, **kwargs)
+        try:
+            catalogs[counter_party_address] = self.get_catalog_with_filter(counter_party_id=counter_party_id,
+                                                                           counter_party_address=counter_party_address,
+                                                                           filter_expression=filter_expression,
+                                                                           timeout=timeout, context=context, **kwargs)
+        except Exception:
+            ## Runs in a thread, where the exception would otherwise only reach the thread's excepthook
+            logger.exception("[Connector Service] Failed to get the catalog of [%s] from %s", counter_party_id, safe_url(counter_party_address),
+                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                             operation="consumer.get_catalog_with_filter_parallel"))
+            raise
 
     ## Get catalog request with filter
     def get_catalog_with_filter(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
@@ -801,15 +880,26 @@ class BaseConnectorConsumerService(BaseService):
         response: Response = self.edrs.query(request, verify=verify)
         ## In case the response code is not successfull or the response is null
         if (response is None or response.status_code != 200):
+            logger.error("[Connector Service] The EDR entry of negotiation [%s] could not be queried (status %s)", negotiation_id,
+                         getattr(response, "status_code", None),
+                         extra=log_extra(negotiation_id=negotiation_id, status_code=http_status(response),
+                                         operation="consumer.get_edr_entry"))
             raise ConnectionError(f"[Connector Service]: EDR Entry not found for the negotiation_id=[{negotiation_id}]!")
 
         ## The response is a list
         data = response.json()
 
         if (len(data) == 0):
+            logger.debug("[Connector Service] No EDR entry exists yet for negotiation [%s]", negotiation_id,
+                         extra=log_extra(negotiation_id=negotiation_id, operation="consumer.get_edr_entry"))
             return None
 
-        return data.pop()  ## Return last entry of the list (should be just one entry because of the filter)
+        entry = data.pop()  ## Return last entry of the list (should be just one entry because of the filter)
+        # Only the identifiers are logged: the entry belongs to an EDR
+        logger.debug("[Connector Service] EDR entry found for negotiation [%s]", negotiation_id,
+                     extra=log_extra(negotiation_id=negotiation_id, transfer_id=entry.get("transferProcessId") if isinstance(entry, dict) else None,
+                                     operation="consumer.get_edr_entry"))
+        return entry
 
     def get_transfer_process(self, agreement_id: str, verify: bool = None) -> dict | None:
         """
@@ -856,10 +946,16 @@ class BaseConnectorConsumerService(BaseService):
 
             ## No response at all is transient, so it is retried by the caller on the next poll
             if response is None:
+                logger.debug("[Connector Service] No response to the transfer process query for agreement [%s], it is retried by the caller",
+                             agreement_id, extra=log_extra(agreement_id=agreement_id, operation="consumer.get_transfer_process"))
                 return None
 
             if response.status_code != 200:
                 rejected[agreement_id_key] = f"status=[{response.status_code}] body=[{getattr(response, 'text', None)}]"
+                logger.debug("[Connector Service] The connector rejected the filter key [%s] for agreement [%s] (status %s)",
+                             agreement_id_key, agreement_id, response.status_code,
+                             extra=log_extra(agreement_id=agreement_id, status_code=http_status(response),
+                                             operation="consumer.get_transfer_process"))
                 continue
 
             ## Remember the key so the following polls only send one request
@@ -878,6 +974,9 @@ class BaseConnectorConsumerService(BaseService):
             return data.pop()  ## Return last entry of the list (should be just one entry because of the filter)
 
         ## Every candidate key was rejected, so the query itself is wrong and retrying will not help
+        logger.error("[Connector Service] The transfer process query for agreement [%s] was rejected for every filter key tried: %s",
+                     agreement_id, list(rejected),
+                     extra=log_extra(agreement_id=agreement_id, operation="consumer.get_transfer_process"))
         raise ValueError(
             f"[Connector Service]: The Transfer Process query for the agreement_id=[{agreement_id}] was rejected by the connector! "
             f"Tried the filter keys {rejected}. Set the accepted one in TRANSFER_PROCESS_AGREEMENT_ID_KEYS.")
@@ -914,6 +1013,9 @@ class BaseConnectorConsumerService(BaseService):
         @returns: List of (asset_id, policy) tuples.
         @raises RuntimeError: If catalog retrieval or policy validation fails.
         """
+        logger.debug("[Connector Service] Fetching and validating the catalog of [%s] at %s", counter_party_id, safe_url(counter_party_address),
+                     extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                     operation="consumer.fetch_and_validate_catalog"))
         catalog_response = self.get_catalog_with_filter(
             counter_party_id=counter_party_id,
             counter_party_address=counter_party_address,
@@ -922,6 +1024,9 @@ class BaseConnectorConsumerService(BaseService):
         )
         
         if catalog_response is None:
+            logger.error("[Connector Service] The catalog of [%s] at %s is empty", counter_party_id, safe_url(counter_party_address),
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         operation="consumer.fetch_and_validate_catalog"))
             raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] It was not possible to retrieve the catalog from the edc provider! Catalog response is empty!")
 
@@ -931,6 +1036,10 @@ class BaseConnectorConsumerService(BaseService):
                 allowed_policies=policies
             )
         except Exception as e:
+            logger.exception("[Connector Service] No offer of [%s] at %s matches the accepted policies", counter_party_id,
+                             safe_url(counter_party_address),
+                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                             operation="consumer.fetch_and_validate_catalog"))
             ## Chained, not swallowed: the cause carries the catalog that was read and the
             ## allow-list it was compared against (``PolicyMismatchError``), which is what
             ## lets the caller say *which* offers were rejected instead of only that none
@@ -939,9 +1048,16 @@ class BaseConnectorConsumerService(BaseService):
                 f"[Connector Service]: [{counter_party_address}] It was not possible to find a valid policy in the catalog! Reason: [{str(e)}]") from e
 
         if len(valid_assets_policies) == 0:
+            logger.error("[Connector Service] The catalog of [%s] at %s has no valid asset and policy", counter_party_id,
+                         safe_url(counter_party_address),
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         operation="consumer.fetch_and_validate_catalog"))
             raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] It was not possible to find a valid policy in the catalog! Asset ID and the Policy are empty!")
 
+        logger.debug("[Connector Service] The catalog of [%s] has %d valid asset and policy pair(s)", counter_party_id, len(valid_assets_policies),
+                     extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                     operation="consumer.fetch_and_validate_catalog"))
         return valid_assets_policies
 
     def _start_negotiation_for_assets(self, counter_party_id: str, counter_party_address: str,
@@ -966,7 +1082,14 @@ class BaseConnectorConsumerService(BaseService):
             )
             if negotiation_id is not None:
                 return negotiation_id
+            logger.warning("[Connector Service] The negotiation of asset [%s] could not be started, trying the next offer, if any", asset_id,
+                           extra=log_extra(asset_id=asset_id, policy_id=policy_id_of(policy), counter_party_id=counter_party_id,
+                                           counter_party_address=counter_party_address, operation="consumer.start_negotiation_for_assets"))
 
+        logger.error("[Connector Service] No negotiation could be started with [%s] at %s (%d offer(s) tried)", counter_party_id,
+                     safe_url(counter_party_address), len(valid_assets_policies),
+                     extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                     operation="consumer.start_negotiation_for_assets"))
         raise NegotiationError(
             f"[Connector Service]: [{counter_party_address}] It was not possible to start the EDR Negotiation! The negotiation id is empty!")
 
@@ -994,11 +1117,17 @@ class BaseConnectorConsumerService(BaseService):
         if negotiation_state != last_logged_state:
             logger.info(
                 "[Connector Service]: [%s] Negotiation [%s] state: %s",
-                counter_party_address, negotiation_id, negotiation_state)
+                safe_url(counter_party_address), negotiation_id, negotiation_state,
+                extra=log_extra(negotiation_id=negotiation_id, counter_party_address=counter_party_address,
+                                operation="consumer.check_negotiation_state"))
             last_logged_state = negotiation_state
         
         # Check terminal states
         if negotiation_state == "TERMINATED":
+            logger.error("[Connector Service] [%s] The negotiation [%s] was TERMINATED by the provider", safe_url(counter_party_address),
+                         negotiation_id,
+                         extra=log_extra(negotiation_id=negotiation_id, counter_party_address=counter_party_address,
+                                         operation="consumer.check_negotiation_state"))
             raise NegotiationError(
                 f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] was TERMINATED by the provider!")
         
@@ -1017,15 +1146,23 @@ class BaseConnectorConsumerService(BaseService):
         """
         response: Response = self.contract_negotiations.get_by_id(negotiation_id)
         if response is None or response.status_code != 200:
+            logger.error("[Connector Service] Negotiation [%s] could not be read to get its contract agreement id (status %s)", negotiation_id,
+                         getattr(response, "status_code", None),
+                         extra=log_extra(negotiation_id=negotiation_id, status_code=http_status(response),
+                                         operation="consumer.get_agreement_id"))
             raise NegotiationError(
                 f"[Connector Service]: It was not possible to retrieve the negotiation [{negotiation_id}] to read the contract agreement id!")
 
         data = response.json()
         agreement_id = data.get(self.AGREEMENT_ID_KEY, data.get(f"edc:{self.AGREEMENT_ID_KEY}"))
         if agreement_id is None:
+            logger.error("[Connector Service] Negotiation [%s] is FINALIZED but carries no contract agreement id", negotiation_id,
+                         extra=log_extra(negotiation_id=negotiation_id, operation="consumer.get_agreement_id"))
             raise NegotiationError(
                 f"[Connector Service]: The negotiation [{negotiation_id}] is FINALIZED but no contract agreement id was returned!")
 
+        logger.debug("[Connector Service] Negotiation [%s] was finalized with contract agreement [%s]", negotiation_id, agreement_id,
+                     extra=log_extra(negotiation_id=negotiation_id, agreement_id=agreement_id, operation="consumer.get_agreement_id"))
         return agreement_id
 
     def _poll_negotiation_state(self, negotiation_id: str, counter_party_address: str,
@@ -1044,8 +1181,17 @@ class BaseConnectorConsumerService(BaseService):
         elapsed: float = 0.0
         negotiation_state: str | None = None
         last_logged_state: str | None = None
+        attempt: int = 0
+        logger.debug("[Connector Service] [%s] Waiting for negotiation [%s] to be FINALIZED (max %ss, every %ss)",
+                     safe_url(counter_party_address), negotiation_id, max_wait, poll_interval,
+                     extra=log_extra(negotiation_id=negotiation_id, counter_party_address=counter_party_address,
+                                     operation="consumer.poll_negotiation_state"))
         
         while elapsed < max_wait:
+            attempt += 1
+            if should_log_poll(attempt):
+                logger.debug("[Connector Service] Polling the state of negotiation [%s], attempt %d (last state: %s)", negotiation_id, attempt,
+                             negotiation_state, extra=log_extra(negotiation_id=negotiation_id, operation="consumer.poll_negotiation_state"))
             try:
                 negotiation_state, last_logged_state = self._check_single_negotiation_state(
                     negotiation_id, counter_party_address, last_logged_state)
@@ -1055,13 +1201,21 @@ class BaseConnectorConsumerService(BaseService):
             except RuntimeError:
                 raise
             except Exception as e:
-                logger.warning(
-                    "[Connector Service]: [%s] Failed to check negotiation state: %s",
-                    counter_party_address, e)
+                ## Transient: it is retried, so only the first failure and then one in every few are warnings
+                logger.log(
+                    logging.WARNING if should_log_poll(attempt) else logging.DEBUG,
+                    "[Connector Service]: [%s] Failed to check negotiation state (attempt %d): %s",
+                    safe_url(counter_party_address), attempt, e,
+                    extra=log_extra(negotiation_id=negotiation_id, counter_party_address=counter_party_address,
+                                    operation="consumer.poll_negotiation_state"))
             
             op.wait(seconds=poll_interval)
             elapsed += poll_interval
 
+        logger.error("[Connector Service] [%s] Negotiation [%s] did not reach FINALIZED after %ss and %d attempt(s) (last state: %s)",
+                     safe_url(counter_party_address), negotiation_id, max_wait, attempt, negotiation_state,
+                     extra=log_extra(negotiation_id=negotiation_id, counter_party_address=counter_party_address,
+                                     operation="consumer.poll_negotiation_state"))
         raise TimeoutError(
             f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] did not reach FINALIZED state after {max_wait}s (last state: {negotiation_state})!")
 
@@ -1085,8 +1239,14 @@ class BaseConnectorConsumerService(BaseService):
         elapsed: float = 0.0
         transfer_state: str | None = None
         last_logged_state: str | None = None
+        attempt: int = 0
+        logger.debug("[Connector Service] [%s] Waiting for the transfer process of agreement [%s] to be ready (max %ss, every %ss)",
+                     safe_url(counter_party_address), agreement_id, max_wait, poll_interval,
+                     extra=log_extra(agreement_id=agreement_id, counter_party_address=counter_party_address,
+                                     operation="consumer.wait_for_transfer_process"))
 
         while elapsed < max_wait:
+            attempt += 1
             transfer_process: dict | None = None
             try:
                 transfer_process = self.get_transfer_process(agreement_id=agreement_id)
@@ -1094,9 +1254,13 @@ class BaseConnectorConsumerService(BaseService):
                 ## The connector rejected the query itself, polling again would only repeat it
                 raise
             except Exception as e:
-                logger.warning(
-                    "[Connector Service]: [%s] Failed to check the transfer process state: %s",
-                    counter_party_address, e)
+                ## Transient: it is retried, so only the first failure and then one in every few are warnings
+                logger.log(
+                    logging.WARNING if should_log_poll(attempt) else logging.DEBUG,
+                    "[Connector Service]: [%s] Failed to check the transfer process state (attempt %d): %s",
+                    safe_url(counter_party_address), attempt, e,
+                    extra=log_extra(agreement_id=agreement_id, counter_party_address=counter_party_address,
+                                    operation="consumer.wait_for_transfer_process"))
 
             if transfer_process is not None:
                 transfer_process_id = transfer_process.get("@id")
@@ -1106,12 +1270,18 @@ class BaseConnectorConsumerService(BaseService):
                 if transfer_state != last_logged_state:
                     logger.info(
                         "[Connector Service]: [%s] Transfer process [%s] state: %s",
-                        counter_party_address, transfer_process_id, transfer_state)
+                        safe_url(counter_party_address), transfer_process_id, transfer_state,
+                        extra=log_extra(transfer_id=transfer_process_id, agreement_id=agreement_id,
+                                        counter_party_address=counter_party_address, operation="consumer.wait_for_transfer_process"))
                     last_logged_state = transfer_state
 
                 # Check terminal states
                 if transfer_state in self.TRANSFER_PROCESS_ERROR_STATES:
                     error_detail = transfer_process.get("errorDetail", transfer_process.get("edc:errorDetail"))
+                    logger.error("[Connector Service] [%s] The transfer process [%s] of agreement [%s] is in state [%s]: %s",
+                                 safe_url(counter_party_address), transfer_process_id, agreement_id, transfer_state, error_detail,
+                                 extra=log_extra(transfer_id=transfer_process_id, agreement_id=agreement_id,
+                                                 counter_party_address=counter_party_address, operation="consumer.wait_for_transfer_process"))
                     raise TransferError(
                         f"[Connector Service]: [{counter_party_address}] The Transfer Process [{transfer_process_id}] for the agreement [{agreement_id}] is in state [{transfer_state}]! Reason: [{error_detail}]")
 
@@ -1119,13 +1289,20 @@ class BaseConnectorConsumerService(BaseService):
                     return transfer_process_id
 
             else:
-                logger.info(
-                    "[Connector Service]: [%s] Transfer process for the agreement [%s] not yet created, waiting %ss...",
-                    counter_party_address, agreement_id, poll_interval)
+                if should_log_poll(attempt):
+                    logger.debug(
+                        "[Connector Service]: [%s] Transfer process for the agreement [%s] not yet created, attempt %d, waiting %ss...",
+                        safe_url(counter_party_address), agreement_id, attempt, poll_interval,
+                        extra=log_extra(agreement_id=agreement_id, counter_party_address=counter_party_address,
+                                        operation="consumer.wait_for_transfer_process"))
 
             op.wait(seconds=poll_interval)
             elapsed += poll_interval
 
+        logger.error("[Connector Service] [%s] The transfer process of agreement [%s] was not ready after %ss and %d attempt(s) (last state: %s)",
+                     safe_url(counter_party_address), agreement_id, max_wait, attempt, transfer_state,
+                     extra=log_extra(agreement_id=agreement_id, counter_party_address=counter_party_address,
+                                     operation="consumer.wait_for_transfer_process"))
         raise TimeoutError(
             f"[Connector Service]: [{counter_party_address}] The Transfer Process for the agreement [{agreement_id}] did not become ready after {max_wait}s (last state: {transfer_state})!")
 
@@ -1142,19 +1319,28 @@ class BaseConnectorConsumerService(BaseService):
         @raises TimeoutError: If EDR entry is not found within max_wait.
         """
         elapsed: float = 0.0
+        attempt: int = 0
         
         while elapsed < max_wait:
+            attempt += 1
             edr_entry = self.get_edr_entry(negotiation_id=negotiation_id)
             if edr_entry is not None:
                 return edr_entry
             
-            logger.info(
-                "[Connector Service]: [%s] EDR entry for negotiation [%s] not yet available, waiting %ss...",
-                counter_party_address, negotiation_id, poll_interval)
+            if should_log_poll(attempt):
+                logger.debug(
+                    "[Connector Service]: [%s] EDR entry for negotiation [%s] not yet available, attempt %d, waiting %ss...",
+                    safe_url(counter_party_address), negotiation_id, attempt, poll_interval,
+                    extra=log_extra(negotiation_id=negotiation_id, counter_party_address=counter_party_address,
+                                    operation="consumer.wait_for_edr_entry"))
             
             op.wait(seconds=poll_interval)
             elapsed += poll_interval
 
+        logger.error("[Connector Service] [%s] The EDR entry of negotiation [%s] was not found after %ss and %d attempt(s)",
+                     safe_url(counter_party_address), negotiation_id, max_wait, attempt,
+                     extra=log_extra(negotiation_id=negotiation_id, counter_party_address=counter_party_address,
+                                     operation="consumer.wait_for_edr_entry"))
         raise TimeoutError(
             f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] has failed! The EDR entry was not found after {max_wait}s!")
 
@@ -1180,50 +1366,78 @@ class BaseConnectorConsumerService(BaseService):
         @param negotiation_context: JSON-LD context for negotiation requests. Pass ``None`` to use the subclass default. Defaults to None.
         @returns: edr_entry:dict, if fails Exception
         """
-        # Phase 1: Fetch catalog and validate policies
-        catalog_kwargs = self._build_optional_kwargs(protocol=protocol, context=catalog_context)
-        valid_assets_policies = self._fetch_and_validate_catalog(
-            counter_party_id=counter_party_id,
-            counter_party_address=counter_party_address,
-            filter_expression=filter_expression,
-            policies=policies,
-            **catalog_kwargs
-        )
+        negotiation_id: str | None = None
+        agreement_id: str | None = None
+        transfer_id: str | None = None
+        edr_entry: dict | None = None
+        phase: str = "catalog"
+        logger.info("[Connector Service] Starting the DSP exchange with [%s] at %s", counter_party_id, safe_url(counter_party_address),
+                    extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                    operation="consumer.negotiate_and_transfer"))
+        try:
+            # Phase 1: Fetch catalog and validate policies
+            catalog_kwargs = self._build_optional_kwargs(protocol=protocol, context=catalog_context)
+            valid_assets_policies = self._fetch_and_validate_catalog(
+                counter_party_id=counter_party_id,
+                counter_party_address=counter_party_address,
+                filter_expression=filter_expression,
+                policies=policies,
+                **catalog_kwargs
+            )
 
-        # Phase 2: Start negotiation for the first valid asset
-        negotiation_kwargs = self._build_optional_kwargs(protocol=protocol, context=negotiation_context)
-        negotiation_id = self._start_negotiation_for_assets(
-            counter_party_id=counter_party_id,
-            counter_party_address=counter_party_address,
-            valid_assets_policies=valid_assets_policies,
-            **negotiation_kwargs
-        )
+            # Phase 2: Start negotiation for the first valid asset
+            phase = "negotiation"
+            negotiation_kwargs = self._build_optional_kwargs(protocol=protocol, context=negotiation_context)
+            negotiation_id = self._start_negotiation_for_assets(
+                counter_party_id=counter_party_id,
+                counter_party_address=counter_party_address,
+                valid_assets_policies=valid_assets_policies,
+                **negotiation_kwargs
+            )
 
-        # Phase 3: Poll negotiation state until FINALIZED, then read its contract agreement id
-        agreement_id = self._poll_negotiation_state(
-            negotiation_id=negotiation_id,
-            counter_party_address=counter_party_address,
-            max_wait=max_wait,
-            poll_interval=poll_interval
-        )
+            # Phase 3: Poll negotiation state until FINALIZED, then read its contract agreement id
+            phase = "negotiation state"
+            agreement_id = self._poll_negotiation_state(
+                negotiation_id=negotiation_id,
+                counter_party_address=counter_party_address,
+                max_wait=max_wait,
+                poll_interval=poll_interval
+            )
 
-        # Phase 4: Poll the transfer process started for that agreement until it can serve data.
-        # Once it is ready the EDR is guaranteed to be in the cache, so phase 5 resolves immediately.
-        self._wait_for_transfer_process(
-            agreement_id=agreement_id,
-            counter_party_address=counter_party_address,
-            max_wait=max_wait,
-            poll_interval=poll_interval
-        )
+            # Phase 4: Poll the transfer process started for that agreement until it can serve data.
+            # Once it is ready the EDR is guaranteed to be in the cache, so phase 5 resolves immediately.
+            phase = "transfer process"
+            transfer_id = self._wait_for_transfer_process(
+                agreement_id=agreement_id,
+                counter_party_address=counter_party_address,
+                max_wait=max_wait,
+                poll_interval=poll_interval
+            )
 
-        # Phase 5: Read the EDR entry, which the connection manager caches as the connection entry
-        edr_entry = self._wait_for_edr_entry(
-            negotiation_id=negotiation_id,
-            counter_party_address=counter_party_address,
-            max_wait=max_wait,
-            poll_interval=poll_interval
-        )
+            # Phase 5: Read the EDR entry, which the connection manager caches as the connection entry
+            phase = "EDR entry"
+            edr_entry = self._wait_for_edr_entry(
+                negotiation_id=negotiation_id,
+                counter_party_address=counter_party_address,
+                max_wait=max_wait,
+                poll_interval=poll_interval
+            )
+        except Exception:
+            ## One record, with the traceback and every identifier known when it failed. The helpers
+            ## log the specific cause without it.
+            logger.exception(
+                "[Connector Service] The DSP exchange with [%s] at %s failed at the %s phase (negotiation [%s], agreement [%s], transfer [%s])",
+                counter_party_id, safe_url(counter_party_address), phase, negotiation_id, agreement_id, transfer_id,
+                extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                negotiation_id=negotiation_id, agreement_id=agreement_id, transfer_id=transfer_id,
+                                operation="consumer.negotiate_and_transfer"))
+            raise
 
+        logger.info("[Connector Service] DSP exchange with [%s] completed (negotiation [%s], agreement [%s], transfer [%s])",
+                    counter_party_id, negotiation_id, agreement_id, transfer_id,
+                    extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                    negotiation_id=negotiation_id, agreement_id=agreement_id, transfer_id=transfer_id,
+                                    operation="consumer.negotiate_and_transfer"))
         return edr_entry
 
     def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
@@ -1269,7 +1483,9 @@ class BaseConnectorConsumerService(BaseService):
                 "  \u25b6  DO NOT USE IN PRODUCTION.\n"
                 "     Always pass an explicit allow-list of accepted policies.\n"
                 "%s",
-                "=" * 72, "=" * 72, counter_party_address, policy_memory_id, "=" * 72)
+                "=" * 72, "=" * 72, safe_url(counter_party_address), policy_memory_id, "=" * 72,
+                extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                operation="consumer.get_transfer_id"))
 
         ## Hash the policies to get checksum.
         current_policies_checksum = hashlib.sha3_256(str(policy_memory_id or policies).encode('utf-8')).hexdigest()
@@ -1283,12 +1499,16 @@ class BaseConnectorConsumerService(BaseService):
         if transfer_process_id is not None:
             logger.debug(
                 "[Connector Service]: [%s]: EDR transfer_id=[%s] found in the cache for counter_party_id=[%s], filter=[%s] and selected policies",
-                counter_party_address, transfer_process_id, counter_party_id, filter_expression)
+                safe_url(counter_party_address), transfer_process_id, counter_party_id, filter_expression,
+                extra=log_extra(transfer_id=transfer_process_id, counter_party_id=counter_party_id,
+                                counter_party_address=counter_party_address, operation="consumer.get_transfer_id"))
             return transfer_process_id
 
         logger.info(
             "[Connector Service]: The EDR was not found in the cache for counter_party_address=[%s], counter_party_id=[%s], filter=[%s] and selected policies, starting new contract negotiation!",
-            counter_party_address, counter_party_id, filter_expression)
+            safe_url(counter_party_address), counter_party_id, filter_expression,
+            extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                            operation="consumer.get_transfer_id"))
 
         ## If not the contract negotiation MUST be done!
         edr_entry: dict = self.negotiate_and_transfer(counter_party_id=counter_party_id,
@@ -1302,6 +1522,10 @@ class BaseConnectorConsumerService(BaseService):
 
         ## Check if the edr entry is not none
         if (edr_entry is None):
+            logger.error("[Connector Service] No EDR entry was returned by the DSP exchange with [%s] at %s", counter_party_id,
+                         safe_url(counter_party_address),
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         operation="consumer.get_transfer_id"))
             raise RuntimeError("[Connector Service]: Failed to get edr entry! Response was none!")
 
         transfer_process_id = self.connection_manager.add_connection(counter_party_id=counter_party_id,
@@ -1309,7 +1533,9 @@ class BaseConnectorConsumerService(BaseService):
                                                                       query_checksum=filter_expression_checksum,
                                                                       policy_checksum=current_policies_checksum,
                                                                       connection_entry=edr_entry)
-        logger.info("[Connector Service]: The EDR Entry was found! Transfer Process ID: [%s]", transfer_process_id)
+        logger.info("[Connector Service]: The EDR Entry was found! Transfer Process ID: [%s]", transfer_process_id,
+                    extra=log_extra(transfer_id=transfer_process_id, counter_party_id=counter_party_id,
+                                    counter_party_address=counter_party_address, operation="consumer.get_transfer_id"))
 
         return transfer_process_id
 
@@ -1713,13 +1939,24 @@ class BaseConnectorConsumerService(BaseService):
                                                    counter_party_address=counter_party_address,
                                                    filter_expression=filter_expression, timeout=timeout)
         except Exception:
+            logger.exception("[Connector Service] Failed to get the catalog of [%s] at %s to check whether the asset exists", counter_party_id,
+                             safe_url(counter_party_address),
+                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                             operation="consumer.assets_exists"))
             raise ConnectionError(
                 f"[Connector Service]: Failed to get catalog for counter_party_id=[{counter_party_id}], counter_party_address=[{counter_party_address}], filter_expression=[{filter_expression}]")
 
         if catalog is None:
+            logger.debug("[Connector Service] The catalog of [%s] is empty: the asset does not exist", counter_party_id,
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         operation="consumer.assets_exists"))
             return False
 
-        return not DspTools.is_catalog_empty(catalog=catalog)
+        exists = not DspTools.is_catalog_empty(catalog=catalog)
+        logger.debug("[Connector Service] The asset %s in the catalog of [%s]", "exists" if exists else "does not exist", counter_party_id,
+                     extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                     operation="consumer.assets_exists"))
+        return exists
 
     def do_get(
         self,
@@ -1760,6 +1997,7 @@ class BaseConnectorConsumerService(BaseService):
         Returns:
         Response: The HTTP response from the GET request. If the request fails, an Exception is raised.
         """
+        log_dataplane_call("GET", counter_party_id, counter_party_address, path, kwargs)
         ## Extract request kwargs
         protocol = kwargs.pop("protocol", DSP_0_8)
         verify = kwargs.pop("verify", False)
@@ -1858,6 +2096,7 @@ class BaseConnectorConsumerService(BaseService):
         Returns:
         Response: The HTTP response from the POST request. If the request fails, an Exception is raised.
         """
+        log_dataplane_call("POST", counter_party_id, counter_party_address, path, kwargs)
         ## Extract request kwargs
         protocol = kwargs.pop("protocol", DSP_0_8)
         content_type = kwargs.pop("content_type", "application/json")
@@ -1957,6 +2196,7 @@ class BaseConnectorConsumerService(BaseService):
         Returns:
         Response: The HTTP response from the PUT request. If the request fails, an Exception is raised.
         """
+        log_dataplane_call("PUT", counter_party_id, counter_party_address, path, kwargs)
         ## Extract request kwargs
         protocol = kwargs.pop("protocol", DSP_0_8)
         content_type = kwargs.pop("content_type", "application/json")

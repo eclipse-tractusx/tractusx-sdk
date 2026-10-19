@@ -485,27 +485,28 @@ class TestConnectorDiscoveryServiceLogging:
         response.json.return_value = payload
         return response
 
-    def test_found_endpoints_are_logged_at_info(self, service, caplog):
+    def test_found_endpoints_are_logged_at_debug(self, service, caplog):
         with patch(self.HTTP) as http, caplog.at_level(logging.DEBUG):
             http.do_post.return_value = self._answer([{"bpn": "BPNL1", "connectorEndpoint": ["a", "b"]}])
             assert service.find_connector_by_bpn("BPNL1") == ["a", "b"]
 
         looking, found = _records(caplog, self.LOGGER)
-        assert looking.bpn == "BPNL1" and found.levelno == logging.INFO
+        assert looking.bpn == "BPNL1" and found.levelno == logging.DEBUG
         assert "Found 2 connector endpoint(s)" in found.getMessage()
         assert SECRET not in _dump(caplog)
 
-    def test_a_bpn_without_endpoints_key_falls_back_to_an_empty_list_with_a_warning(self, service, caplog):
+    def test_a_bpn_without_endpoints_key_falls_back_to_an_empty_list_at_debug(self, service, caplog):
         with patch(self.HTTP) as http, caplog.at_level(logging.DEBUG):
             http.do_post.return_value = self._answer([{"bpn": "BPNL1"}])
             assert service.find_connector_by_bpn("BPNL1") == []
-        assert _records(caplog, self.LOGGER)[-1].levelno == logging.WARNING
+        assert _records(caplog, self.LOGGER)[-1].levelno == logging.DEBUG
 
-    def test_an_unknown_bpn_is_a_warning_and_returns_none(self, service, caplog):
+    def test_an_unknown_bpn_is_an_expected_outcome_logged_at_debug(self, service, caplog):
         with patch(self.HTTP) as http, caplog.at_level(logging.DEBUG):
             http.do_post.return_value = self._answer([{"bpn": "OTHER", "connectorEndpoint": ["a"]}])
             assert service.find_connector_by_bpn("BPNL1") is None
-        assert _records(caplog, self.LOGGER)[-1].levelno == logging.WARNING
+        assert _records(caplog, self.LOGGER)[-1].levelno == logging.DEBUG
+        assert [r for r in caplog.records if r.levelno >= logging.INFO] == []
 
     def test_an_unsuccessful_answer_is_logged_before_it_is_raised(self, service, caplog):
         with patch(self.HTTP) as http, caplog.at_level(logging.DEBUG), pytest.raises(DiscoveryError):
@@ -538,12 +539,13 @@ class TestBpnDiscoveryServiceLogging:
             assert service.find_bpns(["secret-part-id"]) == ["BPNL1"]
         assert "secret-part-id" not in _dump(caplog)
 
-    def test_no_result_is_a_warning(self, service, caplog):
+    def test_no_result_is_an_expected_outcome_logged_at_debug(self, service, caplog):
         with patch(self.HTTP) as http, caplog.at_level(logging.DEBUG):
             http.do_post_with_session.return_value = self._answer({"bpns": []})
             assert service.find_bpns(["a"]) is None
             assert service.find_bpns_multi_type([{"type": "t", "keys": ["a"]}]) is None
-        assert [r.levelno for r in _records(caplog, self.LOGGER) if r.levelno >= logging.WARNING] == [logging.WARNING] * 2
+        assert [r for r in _records(caplog, self.LOGGER) if r.levelno >= logging.INFO] == []
+        assert sum("No BPN was found" in r.getMessage() for r in _records(caplog, self.LOGGER)) == 2
 
     @pytest.mark.parametrize("status, expected", [(401, "Unauthorized"), (500, "Unexpected status 500")])
     def test_a_failed_answer_is_logged_before_it_is_raised(self, service, caplog, status, expected):

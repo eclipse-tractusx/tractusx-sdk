@@ -248,8 +248,9 @@ class BpnDiscoveryService(BaseDiscoveryService):
         bpns = op.extract_dict_values(array=bpns_data, key="value")
         logger.debug("[BPN Discovery Service] Resolved %d BPN(s) for %d identifier key(s) of type '%s'.", len(set(bpns)), len(keys), identifier_type)
         if not bpns:
-            logger.warning("[BPN Discovery Service] No BPN was found for %d identifier key(s) of type '%s'", len(keys), identifier_type,
-                           extra=log_extra(operation="bpn_discovery.find_bpns"))
+            # An expected outcome (e.g. a partner that has not registered yet), so it is not a warning
+            logger.debug("[BPN Discovery Service] No BPN was found for %d identifier key(s) of type '%s'", len(keys), identifier_type,
+                         extra=log_extra(operation="bpn_discovery.find_bpns"))
         return list(set(bpns)) if bpns else None
 
     def find_bpns_multi_type(self, search_filters:list) -> list | None:
@@ -275,8 +276,8 @@ class BpnDiscoveryService(BaseDiscoveryService):
         bpns = op.extract_dict_values(array=bpns_data, key="value")
         logger.debug("[BPN Discovery Service] Resolved %d BPN(s) for %d search filter(s).", len(set(bpns)), len(search_filters))
         if not bpns:
-            logger.warning("[BPN Discovery Service] No BPN was found for the %d search filter(s)", len(search_filters),
-                           extra=log_extra(operation="bpn_discovery.find_bpns_multi_type"))
+            logger.debug("[BPN Discovery Service] No BPN was found for the %d search filter(s)", len(search_filters),
+                         extra=log_extra(operation="bpn_discovery.find_bpns_multi_type"))
         return list(set(bpns)) if bpns else None
     
     def _get_or_update_discovery_url(self, bpn_discovery_key:str="manufacturerPartId") -> str:

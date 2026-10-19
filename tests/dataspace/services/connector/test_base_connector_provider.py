@@ -175,7 +175,7 @@ def test_create_asset_is_silent_when_the_level_is_above_info(mock_get_asset_mode
 
 
 @patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
-def test_create_asset_payload_is_logged_only_at_debug_level(mock_get_asset_model, service, caplog):
+def test_create_asset_request_summary_is_logged_only_at_debug_level_and_never_the_payload(mock_get_asset_model, service, caplog):
     service._asset_controller = Mock()
     service._asset_controller.create.return_value = Mock(status_code=200, json=lambda: {"asset": "ok"})
     asset = Mock()
@@ -185,12 +185,16 @@ def test_create_asset_payload_is_logged_only_at_debug_level(mock_get_asset_model
     with caplog.at_level(logging.INFO, logger=PROVIDER_LOGGER):
         service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
     assert "[ASSET REQUEST]" not in caplog.text
-    asset.to_data.assert_not_called()
 
     caplog.clear()
     with caplog.at_level(logging.DEBUG, logger=PROVIDER_LOGGER):
-        service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
-    assert "[ASSET REQUEST]: {'payload': 'visible'}" in caplog.text
+        service.create_asset(asset_id="123", base_url="http://test", dct_type="test",
+                             headers={"X-Api-Key": "backend-s3cr3t"},
+                             oauth2_config={"tokenUrl": "https://idp/token", "clientId": "c", "clientSecretKey": "vault-ref-s3cr3t"})
+    assert "[ASSET REQUEST]: asset 123, data address type HttpData, 1 backend header(s), OAuth2: True" in caplog.text
+    # The data address holds the backend credentials: the payload is never logged
+    asset.to_data.assert_not_called()
+    assert "s3cr3t" not in "\n".join(f"{r.getMessage()} {r.__dict__}" for r in caplog.records)
 
 
 @patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")

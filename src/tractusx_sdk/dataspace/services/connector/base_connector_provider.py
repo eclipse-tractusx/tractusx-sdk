@@ -28,6 +28,8 @@ from ...controllers.connector.controller_factory import ControllerType, Controll
 from ...models.connector.model_factory import ModelFactory
 import logging
 
+from tractusx_sdk._logging_fields import log_extra, safe_url
+
 logger = logging.getLogger(__name__)
 
 
@@ -71,6 +73,8 @@ class BaseConnectorProviderService(BaseService):
 
         # Configured last: the tracer is shared with the adapter and the controllers
         self._init_tracing(trace=trace)
+        logger.debug("[Connector Service] Provider service created for dataspace version %s (verify_ssl: %s)", dataspace_version, verify_ssl,
+                     extra=log_extra(dataspace_version=dataspace_version))
 
     class _Builder(BaseService._Builder):
         def dma_path(self, dma_path: str):
@@ -115,10 +119,13 @@ class BaseConnectorProviderService(BaseService):
         data_address_type: str = "HttpData",
         **kwargs
     ):
-        logger.info("Creating asset %s at %s.", asset_id, base_url)
+        logger.info("Creating asset %s at %s.", asset_id, safe_url(base_url),
+                    extra=log_extra(asset_id=asset_id, url=base_url, operation="provider.create_asset"))
 
         # Use provided context or default
         if context is None:
+            logger.debug("No context given for asset %s, using the default one", asset_id,
+                         extra=log_extra(asset_id=asset_id, operation="provider.create_asset"))
             context = {
                 "edc": "https://w3id.org/edc/v0.0.1/ns/",
                 "cx-common": "https://w3id.org/catenax/ontology/common#",
@@ -138,6 +145,8 @@ class BaseConnectorProviderService(BaseService):
         if oauth2_config is not None:
             # 'tokenUrl' and 'clientId' are mandatory; reject missing or empty values.
             if not oauth2_config.get("tokenUrl") or not oauth2_config.get("clientId"):
+                logger.error("The OAuth2 data address of asset %s needs a tokenUrl and a clientId", asset_id,
+                             extra=log_extra(asset_id=asset_id, operation="provider.create_asset"))
                 raise ValueError(
                     "During asset creation, OAuth2-protected data addresses require at least 'tokenUrl' and 'clientId' in the oauth2_config parameter."
                 )
@@ -170,16 +179,22 @@ class BaseConnectorProviderService(BaseService):
             kwargs=kwargs
         )
 
+        # The request is not logged as such: the data address holds the headers (API keys) and the OAuth2 settings
+        # of the backend the asset points to. Only its shape is.
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("[Connector Service] [ASSET REQUEST]: %s", asset.to_data())
+            logger.debug("[Connector Service] [ASSET REQUEST]: asset %s, data address type %s, %d backend header(s), OAuth2: %s",
+                         asset_id, data_address_type, len(headers or {}), oauth2_config is not None,
+                         extra=log_extra(asset_id=asset_id, operation="provider.create_asset"))
 
         asset_response = self.assets.create(obj=asset, verify=self.verify_ssl)
 
         if asset_response.status_code != 200:
-            logger.error("Failed to create asset %s: %s", asset_id, asset_response.text)
+            logger.error("Failed to create asset %s: %s", asset_id, asset_response.text,
+                         extra=log_extra(asset_id=asset_id, status_code=asset_response.status_code, operation="provider.create_asset"))
             raise ValueError(f"Failed to create asset {asset_id}. Status code: {asset_response.status_code}")
 
-        logger.info("Asset %s created successfully.", asset_id)
+        logger.info("Asset %s created successfully.", asset_id,
+                    extra=log_extra(asset_id=asset_id, operation="provider.create_asset"))
 
         return asset_response.json()
 
@@ -220,7 +235,8 @@ class BaseConnectorProviderService(BaseService):
         asset_id: str,
         **kwargs
     ) -> dict:
-        logger.info("Creating new contract with ID %s.", contract_id)
+        logger.info("Creating new contract with ID %s.", contract_id,
+                    extra=log_extra(asset_id=asset_id, policy_id=usage_policy_id, operation="provider.create_contract"))
 
         context = {
             "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
@@ -250,9 +266,14 @@ class BaseConnectorProviderService(BaseService):
         created_contract = self.contract_definitions.create(obj=contract, verify=self.verify_ssl)
 
         if created_contract.status_code != 200:
+            logger.error("Failed to create contract %s for asset %s (status %s): %s", contract_id, asset_id, created_contract.status_code,
+                         created_contract.text,
+                         extra=log_extra(asset_id=asset_id, policy_id=usage_policy_id, status_code=created_contract.status_code,
+                                         operation="provider.create_contract"))
             raise ValueError(f"Failed to create contract {contract_id}. Status code: {created_contract.status_code}")
 
-        logger.info("Contract %s created successfully.", contract_id)
+        logger.info("Contract %s created successfully.", contract_id,
+                    extra=log_extra(asset_id=asset_id, policy_id=usage_policy_id, operation="provider.create_contract"))
 
         return created_contract.json()
 
@@ -265,7 +286,8 @@ class BaseConnectorProviderService(BaseService):
         obligations: dict | list[dict] = [],
         **kwargs
     ) -> dict:
-        logger.info("Creating new policy with ID %s.", policy_id)
+        logger.info("Creating new policy with ID %s.", policy_id,
+                    extra=log_extra(policy_id=policy_id, operation="provider.create_policy"))
 
         policy = ModelFactory.get_policy_model(
             dataspace_version=self.dataspace_version,
@@ -283,8 +305,11 @@ class BaseConnectorProviderService(BaseService):
         created_policy = self.policies.create(obj=policy, verify=self.verify_ssl)
 
         if created_policy.status_code != 200:
+            logger.error("Failed to create policy %s (status %s): %s", policy_id, created_policy.status_code, created_policy.text,
+                         extra=log_extra(policy_id=policy_id, status_code=created_policy.status_code, operation="provider.create_policy"))
             raise ValueError(f"Failed to create policy {policy_id}. Status code: {created_policy.status_code}, Response: {created_policy.text}")
 
-        logger.info("Policy %s created successfully.", policy_id)
+        logger.info("Policy %s created successfully.", policy_id,
+                    extra=log_extra(policy_id=policy_id, operation="provider.create_policy"))
 
         return created_policy.json()

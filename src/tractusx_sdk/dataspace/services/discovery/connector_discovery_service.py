@@ -164,14 +164,15 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         for item in json_response:
             if item.get(bpn_key) == bpn:
                 if connector_endpoint_key not in item:
-                    logger.warning("[Connector Discovery Service] BPN '%s' was found but it has no '%s', using an empty list",
-                                   bpn, connector_endpoint_key, extra=log_extra(bpn=bpn, operation="discovery.find_connector_by_bpn"))
+                    logger.debug("[Connector Discovery Service] BPN '%s' was found but it has no '%s', using an empty list",
+                                 bpn, connector_endpoint_key, extra=log_extra(bpn=bpn, operation="discovery.find_connector_by_bpn"))
                     return []
                 endpoints = item[connector_endpoint_key]
-                logger.info("[Connector Discovery Service] Found %d connector endpoint(s) for BPN '%s'", len(endpoints or []), bpn,
-                            extra=log_extra(bpn=bpn, operation="discovery.find_connector_by_bpn"))
+                logger.debug("[Connector Discovery Service] Found %d connector endpoint(s) for BPN '%s'", len(endpoints or []), bpn,
+                             extra=log_extra(bpn=bpn, operation="discovery.find_connector_by_bpn"))
                 return endpoints
         # If the BPN is not found, return None or an empty list
-        logger.warning("[Connector Discovery Service] No connector endpoints were found for BPN '%s'.", bpn,
-                       extra=log_extra(bpn=bpn, operation="discovery.find_connector_by_bpn"))
+        # An expected outcome (e.g. a partner that has not registered yet), so it is not a warning
+        logger.debug("[Connector Discovery Service] No connector endpoints were found for BPN '%s'.", bpn,
+                     extra=log_extra(bpn=bpn, operation="discovery.find_connector_by_bpn"))
         return None
