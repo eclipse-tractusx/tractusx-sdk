@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,7 +22,12 @@
 #################################################################################
 
 
+import logging
+
+from tractusx_sdk._logging_fields import log_extra
 from tractusx_sdk.dataspace.controllers.controller import Controller
+
+logger = logging.getLogger(__name__)
 
 
 def controller_method(func):
@@ -40,15 +46,27 @@ def controller_method(func):
         func_name = func.__name__
 
         if not isinstance(self, Controller):
+            logger.error(
+                "%s cannot use %s: it does not inherit from Controller", class_name, func_name,
+                extra=log_extra(operation=f"{class_name}.{func_name}"),
+            )
             raise ValueError(
                 f"Please ensure that {class_name} inherits from Controller in order to use {func_name}."
             )
 
         if not hasattr(self, "endpoint_url"):
+            logger.error(
+                "%s cannot use %s: it does not define an endpoint_url", class_name, func_name,
+                extra=log_extra(operation=f"{class_name}.{func_name}"),
+            )
             raise ValueError(
                 f"Please ensure that {class_name} defines an 'endpoint_url' attribute in order to use {func_name}."
             )
 
+        logger.debug(
+            "Controller operation %s.%s", class_name, func_name,
+            extra=log_extra(operation=f"{class_name}.{func_name}"),
+        )
         ret_val = func(*args, **kwargs)
         return ret_val
 

@@ -255,6 +255,65 @@ class TestSourceConventions:
         assert offenders == []
 
 
+class TestStructuredContext:
+    """The ``extra`` of a record only carries the documented fields, and no log call receives a secret."""
+
+    SECRET_NAME = re.compile(r"token|secret|password|passwd|authorization|api_?key|credential|cookie|headers$", re.IGNORECASE)
+
+    @staticmethod
+    def _extra_values(tree):
+        for call in _log_calls(tree):
+            for keyword in call.keywords:
+                if keyword.arg == "extra":
+                    yield call, keyword.value
+
+    def test_extra_is_always_built_with_log_extra(self):
+        """``log_extra`` knows the complete list of fields, rejects any other and sanitises the URLs."""
+        offenders = []
+        for path, tree in _modules():
+            for call, value in self._extra_values(tree):
+                is_helper = (isinstance(value, ast.Call) and isinstance(value.func, ast.Name)
+                             and value.func.id == "log_extra")
+                if not is_helper:
+                    offenders.append(f"{_rel(path)}:{call.lineno}")
+        assert offenders == []
+
+    def test_log_extra_only_receives_documented_fields(self):
+        from tractusx_sdk._logging_fields import EXTRA_FIELDS
+
+        offenders = []
+        for path, tree in _modules():
+            for call, value in self._extra_values(tree):
+                if isinstance(value, ast.Call):
+                    unknown = [k.arg for k in value.keywords if k.arg is None or k.arg not in EXTRA_FIELDS]
+                    if unknown:
+                        offenders.append(f"{_rel(path)}:{call.lineno}:{unknown}")
+        assert offenders == []
+
+    def test_log_calls_are_never_given_secrets(self):
+        """
+        Neither a value named after a secret (token, password, headers, ...) nor an ``Authorization`` key.
+        Only the size of such a value (``len(headers)``) is allowed.
+        """
+        offenders = []
+        for path, tree in _modules():
+            for call in _log_calls(tree):
+                for argument in call.args[1:]:
+                    measured = {
+                        id(inner) for node in ast.walk(argument)
+                        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "len"
+                        for inner in ast.walk(node)
+                    }
+                    for node in ast.walk(argument):
+                        if id(node) in measured:
+                            continue
+                        name = (node.id if isinstance(node, ast.Name) else node.attr if isinstance(node, ast.Attribute)
+                                else node.value if isinstance(node, ast.Constant) and isinstance(node.value, str) else None)
+                        if name and self.SECRET_NAME.search(name):
+                            offenders.append(f"{_rel(path)}:{call.lineno}:{name}")
+        assert offenders == []
+
+
 class TestDocumentationAndExamples:
     """What the documentation teaches must run: it never passes an argument the SDK removed."""
 
