@@ -97,12 +97,13 @@ class TestSaturnConnectorConsumerService(TestCase):
             )
             
             self.assertFalse(hasattr(service, "logger"))
+            removed = {"logger": custom_logger}
             with self.assertRaises(TypeError):
                 ConnectorConsumerService(
                     dataspace_version=self.dataspace_version,
                     base_url=self.base_url,
                     dma_path=self.dma_path,
-                    logger=custom_logger
+                    **removed
                 )
     
     def test_connector_discovery_property(self):

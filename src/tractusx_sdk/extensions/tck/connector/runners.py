@@ -417,7 +417,7 @@ def run_simple_test(config: SimpleTckConfig, script_dir: str) -> str:
             steps,
             _PHASE_0_NAME,
             lambda: upload_sample_data(
-                logger, backend_dict, sample_data, header_fn=sep,
+                logger, backend_dict, sample_data, header_fn=sep, verify=config.verify_ssl,
             ),
         )
 
@@ -632,7 +632,7 @@ def run_detailed_test(config: DetailedTckConfig, script_dir: str) -> str:
             _PHASE_0_NAME,
             lambda: upload_sample_data(
                 logger, backend_dict, sample_data,
-                header_fn=hdr,
+                header_fn=hdr, verify=config.verify_ssl,
             ),
         )
 

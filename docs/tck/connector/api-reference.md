@@ -97,7 +97,7 @@ All public exports from `tractusx_sdk.extensions.tck.connector`, grouped by cate
 
 | Function / Constant | Returns | Description |
 |---------------------|---------|-------------|
-| `upload_sample_data(logger, backend_config, sample_data, header_fn=None)` | `None` | POST sample data to the backend storage endpoint; raises on non-2xx. The request and response bodies are logged at `DEBUG` |
+| `upload_sample_data(logger, backend_config, sample_data, header_fn=None, verify=False)` | `None` | POST sample data to the backend storage endpoint; raises on non-2xx. The request and response bodies are logged at `DEBUG` |
 | `SAMPLE_ASPECT_MODEL_DATA` | `dict` | Built-in `BusinessPartnerCertificate` sample payload ready to upload |
 
 ### Provision (Phase 1)
@@ -452,9 +452,9 @@ Both functions accept a `header_fn(title)` callable for custom section formattin
 
 ### Backend Operations
 
-#### `upload_sample_data(logger, backend_config, sample_data, header_fn=None)`
+#### `upload_sample_data(logger, backend_config, sample_data, header_fn=None, verify=False)`
 
-`POST` `sample_data` to `backend_config["base_url"]`. Raises on non-2xx responses.
+`POST` `sample_data` to `backend_config["base_url"]`. Raises on non-2xx responses. `verify` controls the verification of the SSL certificate (the runners pass `config.verify_ssl`).
 
 ```python
 upload_sample_data(logger, backend.to_dict(), {"key": "value"})

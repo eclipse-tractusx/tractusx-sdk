@@ -143,12 +143,11 @@ class TestSammSchemaContextTranslatorInit:
         assert translator.recursionDepth == 2
         assert translator.depth == 0
 
-    def test_init_rejects_the_removed_logger_and_verbose_arguments(self):
+    @pytest.mark.parametrize("removed", [{"logger": Mock(spec=logging.Logger)}, {"verbose": True}, {"debug": True}])
+    def test_init_rejects_the_removed_logger_and_verbose_arguments(self, removed):
         """The translator logs through its module logger; there is nothing to pass any more."""
         with pytest.raises(TypeError):
-            SammSchemaContextTranslator(logger=Mock(spec=logging.Logger))
-        with pytest.raises(TypeError):
-            SammSchemaContextTranslator(verbose=True)
+            SammSchemaContextTranslator(**removed)
 
         translator = SammSchemaContextTranslator()
         assert not hasattr(translator, "logger")

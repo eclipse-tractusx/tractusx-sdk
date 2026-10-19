@@ -43,7 +43,6 @@ from tractusx_sdk.extensions.semantics import SammSchemaContextTranslator
 def main():
     # Set up logging: the translator logs through the standard logging module
     logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
     
     # Create translator instance
     translator = SammSchemaContextTranslator()

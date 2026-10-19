@@ -197,9 +197,18 @@ class TestUploadSampleData:
         assert kwargs["json"] == self.DATA
         assert kwargs["headers"]["X-Api-Key"] == "k"
 
-    def test_the_verbose_argument_is_gone(self, response):
+    def test_the_verify_flag_reaches_the_request(self, response):
+        logger = logging.getLogger("tck-upload")
+        helpers.upload_sample_data(logger, self.BACKEND, self.DATA, header_fn=lambda title: None)
+        assert response.call_args.kwargs["verify"] is False   # the TCK default: test backends use self-signed certificates
+
+        helpers.upload_sample_data(logger, self.BACKEND, self.DATA, header_fn=lambda title: None, verify=True)
+        assert response.call_args.kwargs["verify"] is True
+
+    @pytest.mark.parametrize("removed", [{"verbose": True}, {"verbose": False}])
+    def test_the_verbose_argument_is_gone(self, response, removed):
         with pytest.raises(TypeError):
-            helpers.upload_sample_data(logging.getLogger("tck-upload"), self.BACKEND, self.DATA, verbose=True)
+            helpers.upload_sample_data(logging.getLogger("tck-upload"), self.BACKEND, self.DATA, **removed)
 
 
 class TestServiceInitialisation:

@@ -128,7 +128,7 @@ def test_schema_finder_returns_a_structured_result(valid_semantic_id):
     assert result["status"] == "ok"
     assert result.get("missing", "default") == "default"
     with pytest.raises(KeyError):
-        result["missing"]
+        result.__getitem__("missing")
 
 
 def test_schema_finder_errors_are_sdk_errors_and_still_http_errors(valid_semantic_id):

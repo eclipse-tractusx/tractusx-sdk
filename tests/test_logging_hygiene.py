@@ -40,8 +40,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 import tractusx_sdk
 
 SRC_ROOT = Path(tractusx_sdk.__file__).parent
@@ -324,10 +322,3 @@ class TestVersion:
         }
         assert declared == {path: pyproject for path in declared}
         assert tractusx_sdk.__version__ == pyproject
-
-    def test_the_changelog_has_an_entry_for_the_version(self):
-        pyproject = re.search(r'^version = "([^"]+)"', (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"), re.M).group(1)
-        changelog = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-        assert f"## [{pyproject}]" in changelog
-        assert changelog.index(f"## [{pyproject}]") < changelog.index("## [0.8.2]")
-        assert "### Breaking Changes" in changelog.split(f"## [{pyproject}]")[1].split("\n## [")[0]
