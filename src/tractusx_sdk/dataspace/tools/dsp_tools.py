@@ -31,6 +31,7 @@ from dataclasses import dataclass, replace
 from enum import Enum
 from typing import NamedTuple
 
+from tractusx_sdk._logging_fields import log_extra
 from tractusx_sdk.exceptions import EmptyCatalogError, PolicyMismatchError
 
 from ..constants import (
@@ -556,16 +557,33 @@ class AssetPolicySelection(NamedTuple):
     policy: dict
 
 
+def _allow_list_summary(allowed_policies) -> str:
+    """How an allow-list reads in a log message: its meaning (None accepts any policy, [] none) or its size."""
+    if allowed_policies is None:
+        return "no allow-list: any policy is valid"
+    if len(allowed_policies) == 0:
+        return "empty allow-list: no policy is valid"
+    return f"{len(allowed_policies)} allowed policies"
+
+
 def _log_evaluation(evaluation: PolicyEvaluation, allowed_count: int) -> None:
     """Echo an evaluation at DEBUG level. Nothing here feeds back into the verdict."""
-    if evaluation.verdict is PolicyVerdict.EMPTY_ALLOW_LIST:
-        logger.debug("Policy rejected: allowed_policies list is empty.")
+    if not logger.isEnabledFor(logging.DEBUG):
+        return
+    policy_id, asset_id = evaluation.policy_id, evaluation.asset_id
+    if evaluation.verdict is PolicyVerdict.ANY_ALLOWED:
+        logger.debug("Policy '%s' accepted: there is no allow-list, any policy is valid.", policy_id or "<unknown>",
+                     extra=log_extra(policy_id=policy_id, asset_id=asset_id))
+    elif evaluation.verdict is PolicyVerdict.EMPTY_ALLOW_LIST:
+        logger.debug("Policy rejected: allowed_policies list is empty.", extra=log_extra(policy_id=policy_id, asset_id=asset_id))
     elif evaluation.verdict is PolicyVerdict.MATCHED:
-        logger.debug("Policy matched allowed policy at index %d.", evaluation.matched_index)
-    elif evaluation.verdict is PolicyVerdict.NO_MATCH and logger.isEnabledFor(logging.DEBUG):
+        logger.debug("Policy matched allowed policy at index %d.", evaluation.matched_index,
+                     extra=log_extra(policy_id=policy_id, asset_id=asset_id))
+    elif evaluation.verdict is PolicyVerdict.NO_MATCH:
         logger.debug(
             "Policy '%s' did not match any of the %d allowed policies:\n%s",
-            evaluation.policy_id or "<unknown>", allowed_count, evaluation.explain(),
+            policy_id or "<unknown>", allowed_count, evaluation.explain(),
+            extra=log_extra(policy_id=policy_id, asset_id=asset_id),
         )
 
 
@@ -588,6 +606,7 @@ class DspTools:
         """
 
         if catalog is None:
+            logger.debug("Policy selection skipped: there is no catalog.")
             raise EmptyCatalogError("It was not possible to get the policy, because the catalog is empty!")
         
         dataset:list|dict = _get_datasets(catalog)
@@ -598,12 +617,17 @@ class DspTools:
 
         ## If dataset is None, the catalog returned no assets at all
         if dataset is None:
+            logger.debug("Policy selection skipped: the catalog has no dataset.")
             raise EmptyCatalogError("No asset was found in the catalog! The provider did not share any matching asset.")
 
         ## If just one asset is there
         if isinstance(dataset, dict):
+            logger.debug("Selecting the policy of the single dataset of the catalog (%s).",
+                         _allow_list_summary(allowed_policies), extra=log_extra(asset_id=dataset.get("@id")))
             policy, rejections = DspTools._select_policy(dataset=dataset, allowed_policies=allowed_policies)
             if policy is None:
+                logger.debug("The single dataset has no acceptable policy (%d rejected).", len(rejections),
+                             extra=log_extra(asset_id=dataset.get("@id")))
                 raise PolicyMismatchError(
                     "No valid asset and policy allowed at the DCAT Catalog dataset!",
                     catalog=catalog,
@@ -616,8 +640,10 @@ class DspTools:
         
         ## In case it is a empty list give error
         if(len(dataset) == 0):
+            logger.debug("Policy selection skipped: the dataset list of the catalog is empty.")
             raise EmptyCatalogError("No asset was found in the catalog! The dataset list is empty.")
 
+        logger.debug("Selecting the policies of the %d datasets of the catalog (%s).", len(dataset), _allow_list_summary(allowed_policies))
         ## More than one asset, the prio is set by the allowed policies order
         for item in dataset:
             policy, item_rejections = DspTools._select_policy(dataset=item, allowed_policies=allowed_policies)
@@ -626,6 +652,7 @@ class DspTools:
                 valid_assets.append(AssetPolicySelection(item.get("@id"), policy)) ## Return the assetid and the policy
 
         if len(valid_assets) == 0:
+            logger.debug("None of the %d datasets has an acceptable policy (%d rejected).", len(dataset), len(rejections))
             raise PolicyMismatchError(
                 "No valid policy was found for any item in the list. No valid asset found!",
                 catalog=catalog,
@@ -633,12 +660,14 @@ class DspTools:
                 evaluations=rejections,
             )
         
+        logger.debug("%d of the %d datasets have an acceptable policy.", len(valid_assets), len(dataset))
         return valid_assets
     
     @staticmethod
     def is_catalog_empty(catalog:dict) -> bool:
         dataset:list|dict = _get_datasets(catalog)
         if(dataset is None):
+            logger.debug("The catalog has no dataset key, it is not considered empty.")
             return False
         
         ## If just one asset is there
@@ -668,6 +697,8 @@ class DspTools:
         policies:dict|list = _get_policies(dataset)
         asset_id = dataset.get("@id")
         rejections:list[PolicyEvaluation] = []
+        logger.debug("Evaluating the policies of dataset '%s' (%s).", asset_id or "<unknown>", _allow_list_summary(allowed_policies),
+                     extra=log_extra(asset_id=asset_id))
 
         ## One Policy is a dict, more than one is a list
         for policy in ([policies] if isinstance(policies, dict) else policies):
