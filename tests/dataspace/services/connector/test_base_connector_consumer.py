@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -23,6 +24,7 @@
 import unittest
 
 from tractusx_sdk.dataspace.services.connector.service_factory import ServiceFactory
+from tractusx_sdk.exceptions import CatalogRequestError, TractusXSDKError
 from unittest import mock
 import tractusx_sdk.dataspace.services.connector.base_connector_consumer as bcc
 
@@ -177,6 +179,35 @@ class TestBaseConsumerConnectorService(unittest.TestCase):
         service.get_catalog_request = mock.Mock(return_value=mock_request)
         result = service.get_catalog(counter_party_id="bpn", counter_party_address="url")
         self.assertEqual(result, {"catalog": "data"})
+
+    def test_get_catalog_error_response_is_a_structured_error(self):
+        service, mock_catalog, *_ = self.create_mock_service()
+        mock_response = mock.Mock()
+        mock_response.status_code = 502
+        mock_response.text = "upstream said: secret-details"
+        mock_response.headers = {"X-Internal": "leak-me"}
+        mock_catalog.get_catalog = mock.Mock(return_value=mock_response)
+        service.get_catalog_request = mock.Mock(return_value=mock.Mock())
+        with self.assertRaises(CatalogRequestError) as raised:
+            service.get_catalog(counter_party_id="bpn", counter_party_address="url")
+        error = raised.exception
+        self.assertEqual(error.status_code, 502)
+        self.assertEqual(error.response_body, "upstream said: secret-details")
+        # the body and headers are data on the error, never part of the message
+        self.assertNotIn("secret-details", str(error))
+        self.assertNotIn("leak-me", str(error))
+        # still catchable the way it used to be
+        self.assertIsInstance(error, ConnectionError)
+        self.assertIsInstance(error, TractusXSDKError)
+
+    def test_get_catalog_without_response_is_a_structured_error(self):
+        service, mock_catalog, *_ = self.create_mock_service()
+        mock_catalog.get_catalog = mock.Mock(return_value=None)
+        service.get_catalog_request = mock.Mock(return_value=mock.Mock())
+        with self.assertRaises(CatalogRequestError) as raised:
+            service.get_catalog(counter_party_id="bpn", counter_party_address="url")
+        self.assertIsNone(raised.exception.status_code)
+        self.assertIsNone(raised.exception.response_body)
 
     def test_get_edr_success(self):
         service, _, mock_edr, *_ = self.create_mock_service()

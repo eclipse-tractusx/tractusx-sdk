@@ -34,6 +34,10 @@ catching (``ConnectionError``, ``ValueError``, ...), it also inherits from that
 builtin, so existing ``except`` clauses keep working.
 """
 
+from typing import Any, Sequence
+
+from requests import HTTPError
+
 
 class TractusXSDKError(Exception):
     """Base class of every error raised intentionally by the SDK."""
@@ -47,32 +51,102 @@ class ValidationError(TractusXSDKError, ValueError):
     """Input or data did not satisfy a validation rule."""
 
 
+class _LegacyHTTPError(HTTPError):
+    """
+    Compatibility base for errors that used to be raised as ``requests.HTTPError``.
+
+    ``ValueError`` ends the ``__init__`` chain before ``RequestException`` runs, so the
+    attributes it would have set are given here as defaults (``e.response`` stays ``None``).
+    """
+
+    response = None
+    request = None
+
+
+class SubmodelValidationError(ValidationError, _LegacyHTTPError):
+    """
+    A submodel payload did not conform to its JSON schema.
+
+    Also an ``HTTPError``: this is what the validation helpers used to raise, so
+    callers that translate it to a ``422`` keep working.
+
+    :param message: Summary of the failure.
+    :param issues: One structured record per violation (``ValidationIssue`` instances),
+        so callers can inspect them instead of parsing the message.
+    """
+
+    def __init__(self, message: str = "", issues: Sequence[Any] = ()) -> None:
+        super().__init__(message)
+        self.issues = tuple(issues)
+
+
 class SchemaError(TractusXSDKError):
     """A schema could not be located, fetched or processed."""
 
 
-class InvalidSemanticIdError(SchemaError, ValidationError):
-    """A semantic id does not follow the expected structure."""
+class SchemaTranslationError(SchemaError):
+    """A schema could not be translated (for example into a JSON-LD context)."""
 
 
-class SchemaNotFoundError(SchemaError):
-    """The schema referenced by a semantic id could not be retrieved or parsed."""
+class InvalidSemanticIdError(SchemaError, ValidationError, _LegacyHTTPError):
+    """A semantic id does not follow the expected structure. Also an ``HTTPError``, as it used to be."""
+
+
+class SchemaNotFoundError(SchemaError, _LegacyHTTPError):
+    """The schema referenced by a semantic id could not be retrieved or parsed. Also an ``HTTPError``, as it used to be."""
 
 
 class DiscoveryError(TractusXSDKError):
     """A discovery service (connector discovery, BPN discovery, ...) failed."""
 
 
+class DiscoveryEndpointNotFoundError(DiscoveryError):
+    """The discovery service did not list the endpoint that was looked for."""
+
+
+class DiscoveryUnauthorizedError(DiscoveryError):
+    """The discovery service refused the credentials that were used."""
+
+
 class ConnectionManagerError(TractusXSDKError):
     """A connection manager could not store, load or reach its backend."""
 
 
-class ConnectorError(TractusXSDKError):
+class ConnectorError(TractusXSDKError, RuntimeError):
     """A call to an EDC connector failed."""
 
 
 class CatalogError(ConnectorError):
     """A DCAT catalog could not be obtained, or it did not hold a usable offer."""
+
+
+class EmptyCatalogError(CatalogError):
+    """The catalog is missing, or the provider shared no dataset in it."""
+
+
+class PolicyMismatchError(CatalogError, ValueError):
+    """
+    A catalog was read and no offer in it carried an acceptable policy.
+
+    Still a ``ValueError``, so a caller that already catches one keeps working.
+    What it adds is the evidence behind the verdict: the catalog that was read,
+    the allow-list it was compared against and the evaluation of every rejected
+    policy, so the caller can say which offers differed and how rather than
+    repeating that nothing matched.
+
+    :param message: What failed.
+    :param catalog: The DCAT catalog the offers were taken from.
+    :param allowed_policies: The allow-list they were compared against;
+        ``None`` means no filtering was asked for and ``[]`` accepts nothing.
+    :param evaluations: The ``PolicyEvaluation`` of each policy that was rejected.
+    """
+
+    def __init__(self, message: str = "", catalog: dict | None = None,
+                 allowed_policies: list | None = None, evaluations: Sequence[Any] = ()) -> None:
+        super().__init__(message)
+        self.catalog = catalog
+        self.allowed_policies = allowed_policies
+        self.evaluations = tuple(evaluations)
 
 
 class CatalogRequestError(CatalogError, ConnectionError):

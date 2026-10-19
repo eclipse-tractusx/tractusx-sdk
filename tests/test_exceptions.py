@@ -24,6 +24,7 @@
 import inspect
 
 import pytest
+from requests import HTTPError
 
 from tractusx_sdk import exceptions
 from tractusx_sdk.exceptions import (
@@ -31,11 +32,17 @@ from tractusx_sdk.exceptions import (
     CatalogRequestError,
     ConnectionManagerError,
     ConnectorError,
+    DiscoveryEndpointNotFoundError,
     DiscoveryError,
+    DiscoveryUnauthorizedError,
+    EmptyCatalogError,
     InvalidSemanticIdError,
     NegotiationError,
+    PolicyMismatchError,
     SchemaError,
     SchemaNotFoundError,
+    SchemaTranslationError,
+    SubmodelValidationError,
     TractusXSDKError,
     TransferError,
     ValidationError,
@@ -47,7 +54,7 @@ from tractusx_sdk.industry.services.notifications import exceptions as industry_
 def _sdk_error_classes(module):
     return [
         cls for _, cls in inspect.getmembers(module, inspect.isclass)
-        if cls.__module__ == module.__name__ and issubclass(cls, Exception)
+        if cls.__module__ == module.__name__ and issubclass(cls, Exception) and not cls.__name__.startswith("_")
     ]
 
 
@@ -68,7 +75,13 @@ class TestHierarchy:
         (InvalidSemanticIdError, SchemaError),
         (InvalidSemanticIdError, ValidationError),
         (SchemaNotFoundError, SchemaError),
+        (SchemaTranslationError, SchemaError),
+        (SubmodelValidationError, ValidationError),
+        (DiscoveryEndpointNotFoundError, DiscoveryError),
+        (DiscoveryUnauthorizedError, DiscoveryError),
         (CatalogError, ConnectorError),
+        (EmptyCatalogError, CatalogError),
+        (PolicyMismatchError, CatalogError),
         (CatalogRequestError, CatalogError),
         (NegotiationError, ConnectorError),
         (TransferError, ConnectorError),
@@ -79,6 +92,13 @@ class TestHierarchy:
     @pytest.mark.parametrize("cls, builtin", [
         (ValidationError, ValueError),
         (InvalidSemanticIdError, ValueError),
+        (InvalidSemanticIdError, HTTPError),
+        (SchemaNotFoundError, HTTPError),
+        (SubmodelValidationError, HTTPError),
+        (SubmodelValidationError, ValueError),
+        (PolicyMismatchError, ValueError),
+        (ConnectorError, RuntimeError),
+        (CatalogError, RuntimeError),
         (CatalogRequestError, ConnectionError),
     ])
     def test_builtin_compatibility_is_kept(self, cls, builtin):

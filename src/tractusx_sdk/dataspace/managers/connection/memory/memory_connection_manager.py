@@ -27,6 +27,7 @@ Provides thread-safe methods for adding, retrieving, and deleting EDR connection
 """
 
 import copy
+from tractusx_sdk.exceptions import ConnectionManagerError
 from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
 from tractusx_sdk.dataspace.constants import JSONLDKeys
 import threading
@@ -71,7 +72,7 @@ class MemoryConnectionManager(BaseConnectionManager):
         with self._lock:
             transfer_process_id: str = connection_entry.get(self.TRANSFER_ID_KEY, None)
             if transfer_process_id is None or transfer_process_id == "":
-                raise Exception(
+                raise ConnectionManagerError(
                     "[Memory Connection Manager] The transfer id key was not found or is empty! Not able to do the contract negotiation!")
             
             # Initialize nested dictionaries as needed.

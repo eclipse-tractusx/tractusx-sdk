@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 Catena-X Automotive Network e.V.
 # Copyright (c) 2025 CGI Deutschland B.V. & Co. KG
 # Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
@@ -27,6 +28,8 @@ import threading
 import logging
 
 from requests import Response
+
+from tractusx_sdk.exceptions import CatalogError, CatalogRequestError
 
 from ..service import BaseService
 from ...adapters.connector.adapter_factory import AdapterFactory
@@ -238,13 +241,14 @@ class BaseConnectorConsumerService(BaseService):
         ## In case the response code is not successfull or the response is null
         if response is None or response.status_code != 200:
             status_code = response.status_code if response is not None else 'None'
-            error_msg = f"[Connector Service]: It was not possible to get the catalog from the EDC provider! Response code: [{status_code}]"
-            if getattr(self, 'verbose', False) and response is not None:
-                error_msg += f"\nResponse headers: {dict(response.headers)}"
-                error_msg += f"\nResponse body: {response.text}"
-            elif getattr(self, 'logger', None) and response is not None:
+            if response is not None and getattr(self, 'logger', None):
                 self.logger.debug("[get_catalog] Error response body: %s", response.text)
-            raise ConnectionError(error_msg)
+            ## The response travels on the error, not in its message, so it only reaches who asks for it
+            raise CatalogRequestError(
+                f"[Connector Service]: It was not possible to get the catalog from the EDC provider! Response code: [{status_code}]",
+                status_code=response.status_code if response is not None else None,
+                response_body=response.text if response is not None else None,
+            )
         return response.json()
 
     ## Simple catalog request with filter
@@ -925,7 +929,7 @@ class BaseConnectorConsumerService(BaseService):
         )
         
         if catalog_response is None:
-            raise RuntimeError(
+            raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] It was not possible to retrieve the catalog from the edc provider! Catalog response is empty!")
 
         try:
@@ -938,11 +942,11 @@ class BaseConnectorConsumerService(BaseService):
             ## allow-list it was compared against (``PolicyMismatchError``), which is what
             ## lets the caller say *which* offers were rejected instead of only that none
             ## were accepted. A bare ``raise RuntimeError(...)`` decapitated that evidence.
-            raise RuntimeError(
+            raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] It was not possible to find a valid policy in the catalog! Reason: [{str(e)}]") from e
 
         if len(valid_assets_policies) == 0:
-            raise RuntimeError(
+            raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] It was not possible to find a valid policy in the catalog! Asset ID and the Policy are empty!")
 
         return valid_assets_policies

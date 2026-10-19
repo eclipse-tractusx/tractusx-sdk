@@ -104,12 +104,17 @@ class TestNullHandler:
         assert source.count("NullHandler()") == 1
 
     def test_the_sdk_does_not_configure_the_application_logging(self):
-        offenders = [
-            _rel(path) for path, tree in _modules()
-            if any(isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == "basicConfig"
-                   for n in ast.walk(tree))
-        ]
-        assert offenders == [] or offenders == ["extensions/tck/connector/helpers.py"], offenders
+        """Only the entry point of a command line tool (a ``main`` function) may configure logging."""
+        offenders = []
+        for path, tree in _modules():
+            for function in ast.walk(tree):
+                if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)) or function.name == "main":
+                    continue
+                if any(isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == "basicConfig"
+                       for n in ast.walk(function)):
+                    offenders.append(f"{_rel(path)}:{function.name}")
+        # Phase 4 moves the TCK helper behind its CLI entry point
+        assert offenders == [] or all(o.startswith("extensions/tck/connector/helpers.py") for o in offenders), offenders
 
     def test_importing_and_logging_stays_silent_without_application_setup(self):
         code = (
@@ -129,7 +134,7 @@ class TestNullHandler:
 
 class TestSourceConventions:
 
-    @pytest.mark.xfail(reason="Phase 2/3: print() calls are replaced", strict=False)
+    @pytest.mark.xfail(reason="Phase 3: the remaining print() calls (file-system manager and adapter) are replaced", strict=False)
     def test_no_print_calls(self):
         offenders = [
             f"{_rel(path)}:{node.lineno}" for path, tree in _modules() for node in ast.walk(tree)

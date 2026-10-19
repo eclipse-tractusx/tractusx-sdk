@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,6 +22,8 @@
 #################################################################################
 import logging
 from typing import Optional
+
+from tractusx_sdk.exceptions import DiscoveryEndpointNotFoundError, DiscoveryError
 
 from ...tools.http_tools import HttpTools
 from ...managers import OAuth2Manager
@@ -77,7 +80,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         """
         endpoints = discovery_finder_service.find_discovery_urls(keys=[discovery_key])
         if(discovery_key not in endpoints):
-          raise Exception("[Connector Discovery Service] Connector Discovery endpoint not found!")
+          raise DiscoveryEndpointNotFoundError("[Connector Discovery Service] Connector Discovery endpoint not found!")
         
         return endpoints[discovery_key]
 
@@ -145,7 +148,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
 
         response = HttpTools.do_post(url=discovery_url, headers=headers, json=body, **self._trace_kwargs())
         if(response is None or response.status_code != 200):
-            raise Exception("[Connector Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
+            raise DiscoveryError("[Connector Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
         
         json_response:dict = response.json()
 

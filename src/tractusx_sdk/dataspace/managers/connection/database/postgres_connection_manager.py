@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -22,6 +23,7 @@
 ## Code created partially using a LLM (GPT 4o) and reviewed by a human committer
 
 from sqlmodel import Session, select
+from tractusx_sdk.exceptions import ConnectionManagerError
 from ..base_connection_manager import BaseConnectionManager
 from ....models.connection.database.edr_base import EDRBase
 from sqlalchemy.engine import Engine as E
@@ -74,7 +76,7 @@ class PostgresConnectionManager(BaseConnectionManager):
         # Extract transfer process ID from the EDR entry and validate it exists
         transfer_process_id: str = connection_entry.get(JSONLDKeys.AT_ID, None)
         if not transfer_process_id:
-            raise Exception("[Postgres Connection Manager] The transfer id key was not found or is empty! Not able to do the contract negotiation!")
+            raise ConnectionManagerError("[Postgres Connection Manager] The transfer id key was not found or is empty! Not able to do the contract negotiation!")
 
         # Remove metadata fields that are not needed for storage
         saved_edr = connection_entry.copy()

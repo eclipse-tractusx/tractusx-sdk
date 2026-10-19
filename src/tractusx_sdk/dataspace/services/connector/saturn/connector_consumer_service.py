@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2025 Catena-X Automotive Network e.V.
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
@@ -26,6 +27,7 @@ from ....tools import op, HttpTools, DspTools
 from ..base_connector_consumer import BaseConnectorConsumerService
 from ....managers.connection.base_connection_manager import BaseConnectionManager
 import logging
+from tractusx_sdk.exceptions import CatalogError
 from ....models.connector.model_factory import ModelFactory, DataspaceVersionMapping
 from ....adapters.connector.adapter_factory import AdapterFactory
 from ....controllers.connector.base_dma_controller import BaseDmaController
@@ -335,16 +337,16 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             filter_expression=filter_expression
         )
         if catalog_response is None:
-            raise RuntimeError(
+            raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] Could not retrieve the catalog to discover available policies!")
         try:
             valid_assets_policies = DspTools.filter_assets_and_policies(
                 catalog=catalog_response, allowed_policies=None)
         except Exception as e:
-            raise RuntimeError(
-                f"[Connector Service]: [{counter_party_address}] No policy found in catalog: [{str(e)}]")
+            raise CatalogError(
+                f"[Connector Service]: [{counter_party_address}] No policy found in catalog: [{str(e)}]") from e
         if not valid_assets_policies:
-            raise RuntimeError(
+            raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] No policy found in catalog!")
         ## Use the first available policy; strip @id/@type for a consistent cache key.
         _, raw_policy = valid_assets_policies[0]
