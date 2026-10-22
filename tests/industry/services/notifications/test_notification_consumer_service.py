@@ -63,11 +63,9 @@ class TestNotificationConsumerServiceConstruction:
         """Test direct construction with all parameters."""
         service = NotificationConsumerService(
             connector_consumer=mock_connector_consumer,
-            verbose=True,
         )
         
         assert service is not None
-        assert service.verbose is True
         assert service.connector_consumer is mock_connector_consumer
     
     def test_builder_construction(self, mock_connector_consumer):
@@ -75,13 +73,22 @@ class TestNotificationConsumerServiceConstruction:
         service = (
             NotificationConsumerService.builder()
             .connector_consumer(mock_connector_consumer)
-            .verbose(False)
             .build()
         )
         
         assert service is not None
-        assert service.verbose is False
         assert service.connector_consumer is mock_connector_consumer
+
+    def test_construction_rejects_the_removed_logging_arguments(self, mock_connector_consumer):
+        for removed in ({"verbose": True}, {"logger": None}):
+            with pytest.raises(TypeError):
+                NotificationConsumerService(connector_consumer=mock_connector_consumer, **removed)
+
+    def test_builder_has_no_logging_setters(self):
+        builder = NotificationConsumerService.builder()
+
+        assert not hasattr(builder, "verbose")
+        assert not hasattr(builder, "logger")
     
     def test_construction_without_connector_consumer(self):
         """Test construction without connector consumer."""

@@ -1,8 +1,9 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2025 CGI Deutschland B.V. & Co. KG
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -26,6 +27,12 @@
 
 import json
 import logging
+from dataclasses import dataclass, replace
+from enum import Enum
+from typing import NamedTuple
+
+from tractusx_sdk._logging_fields import log_extra
+from tractusx_sdk.exceptions import EmptyCatalogError, PolicyMismatchError
 
 from ..constants import (
     DSP_DATASET_KEY, DSP_POLICY_KEY,
@@ -415,9 +422,16 @@ def _explain_policy_diff(normalized_policy: dict, normalized_allowed: dict, path
     """
     diffs: list[str] = []
 
-    # --- Structural checks on the allowed policy config (only at root) ---
+    # Structural checks on the allowed policy config apply to the root only
     if not path:
         diffs.extend(_check_policy_structure(normalized_allowed, "Allowed policy"))
+
+    return diffs + _policy_differences(normalized_policy, normalized_allowed, path)
+
+
+def _policy_differences(normalized_policy: dict, normalized_allowed: dict, path: str = "") -> list[str]:
+    """The differences of :func:`_explain_policy_diff`, without the structural config checks."""
+    diffs: list[str] = []
 
     # --- Non-dict comparison ---
     if not isinstance(normalized_policy, dict) or not isinstance(normalized_allowed, dict):
@@ -474,26 +488,103 @@ def _fmt(value) -> str:
         return repr(value)
 
 
-class PolicyMismatchError(ValueError):
+class PolicyVerdict(str, Enum):
+    """Why a catalog policy was accepted or rejected."""
+
+    ANY_ALLOWED = "any_allowed"          # allowed_policies is None: nothing to compare against
+    MATCHED = "matched"                  # equal to one of the allowed policies
+    EMPTY_ALLOW_LIST = "empty_allow_list"  # allowed_policies is []: nothing can be accepted
+    NO_MATCH = "no_match"                # differs from every allowed policy
+
+
+@dataclass(frozen=True)
+class PolicyMismatch:
     """
-    Raised when a catalog was read and no offer in it carried an acceptable policy.
+    How a catalog policy differs from one policy of the allow-list.
 
-    Still a ``ValueError``, so a caller that already catches one keeps working.
-    What it adds is the evidence behind the verdict: the catalog that was read
-    and the allow-list it was compared against. Without them the caller can only
-    repeat that nothing matched — the offers the provider actually made, and how
-    they differed from the ones configured, were computed here and then dropped.
-
-    @param message: What failed, in the wording the caller used before.
-    @param catalog: The DCAT catalog the offers were taken from.
-    @param allowed_policies: The allow-list they were compared against;
-        ``None`` means no filtering was asked for and ``[]`` accepts nothing.
+    :param allowed_index: Position of the allowed policy in the allow-list.
+    :param config_issues: Structural problems found in the allowed policy itself
+        (e.g. a missing ``permission``), which make a match impossible.
+    :param differences: Human-readable differences between the two policies.
     """
 
-    def __init__(self, message: str, catalog: dict = None, allowed_policies: list = None) -> None:
-        super().__init__(message)
-        self.catalog = catalog
-        self.allowed_policies = allowed_policies
+    allowed_index: int
+    config_issues: tuple[str, ...] = ()
+    differences: tuple[str, ...] = ()
+
+    def explain(self) -> str:
+        details = (*self.config_issues, *self.differences)
+        return f"  Allowed policy [{self.allowed_index}] differences:\n" + "\n".join(f"    - {d}" for d in details)
+
+
+@dataclass(frozen=True)
+class PolicyEvaluation:
+    """
+    The outcome of comparing one catalog policy against an allow-list.
+
+    This is the source of truth for the verdict: logging only echoes it.
+
+    :param verdict: Why the policy was accepted or rejected.
+    :param policy_id: ``@id`` of the evaluated catalog policy, if it has one.
+    :param matched_index: Position of the allowed policy that matched, if any.
+    :param mismatches: One entry per allowed policy the catalog policy was compared with and did not match.
+    :param asset_id: ``@id`` of the dataset the policy was offered under, if known.
+    """
+
+    verdict: PolicyVerdict
+    policy_id: str | None = None
+    matched_index: int | None = None
+    mismatches: tuple[PolicyMismatch, ...] = ()
+    asset_id: str | None = None
+
+    @property
+    def accepted(self) -> bool:
+        return self.verdict in (PolicyVerdict.ANY_ALLOWED, PolicyVerdict.MATCHED)
+
+    def explain(self) -> str:
+        """Multi-line description of every mismatch, empty when the policy was accepted."""
+        return "\n".join(mismatch.explain() for mismatch in self.mismatches) if not self.accepted else ""
+
+
+class AssetPolicySelection(NamedTuple):
+    """
+    An asset together with the catalog policy selected for it.
+
+    A tuple, so code unpacking the former ``(asset_id, policy)`` pairs keeps working.
+    """
+
+    asset_id: str | None
+    policy: dict
+
+
+def _allow_list_summary(allowed_policies) -> str:
+    """How an allow-list reads in a log message: its meaning (None accepts any policy, [] none) or its size."""
+    if allowed_policies is None:
+        return "no allow-list: any policy is valid"
+    if len(allowed_policies) == 0:
+        return "empty allow-list: no policy is valid"
+    return f"{len(allowed_policies)} allowed policies"
+
+
+def _log_evaluation(evaluation: PolicyEvaluation, allowed_count: int) -> None:
+    """Echo an evaluation at DEBUG level. Nothing here feeds back into the verdict."""
+    if not logger.isEnabledFor(logging.DEBUG):
+        return
+    policy_id, asset_id = evaluation.policy_id, evaluation.asset_id
+    if evaluation.verdict is PolicyVerdict.ANY_ALLOWED:
+        logger.debug("Policy '%s' accepted: there is no allow-list, any policy is valid.", policy_id or "<unknown>",
+                     extra=log_extra(policy_id=policy_id, asset_id=asset_id))
+    elif evaluation.verdict is PolicyVerdict.EMPTY_ALLOW_LIST:
+        logger.debug("Policy rejected: allowed_policies list is empty.", extra=log_extra(policy_id=policy_id, asset_id=asset_id))
+    elif evaluation.verdict is PolicyVerdict.MATCHED:
+        logger.debug("Policy matched allowed policy at index %d.", evaluation.matched_index,
+                     extra=log_extra(policy_id=policy_id, asset_id=asset_id))
+    elif evaluation.verdict is PolicyVerdict.NO_MATCH:
+        logger.debug(
+            "Policy '%s' did not match any of the %d allowed policies:\n%s",
+            policy_id or "<unknown>", allowed_count, evaluation.explain(),
+            extra=log_extra(policy_id=policy_id, asset_id=asset_id),
+        )
 
 
 class DspTools:
@@ -504,62 +595,79 @@ class DspTools:
     """
     
     @staticmethod
-    def filter_assets_and_policies(catalog:dict, allowed_policies:list=[]) -> list[tuple[str, dict]]:
+    def filter_assets_and_policies(catalog:dict, allowed_policies:list=[]) -> list[AssetPolicySelection]:
         """
         Method to select a asset and policy from a DCAT Catalog.
 
-        @returns: Success -> tuple[targetid:str, policy:dict] Fail -> Exception
-        
+        @returns: The ``(asset_id, policy)`` selections, in priority order.
+        @raises EmptyCatalogError: The catalog is missing or holds no dataset.
+        @raises PolicyMismatchError: No offer carried an acceptable policy. It carries the
+            catalog, the allow-list and the ``PolicyEvaluation`` of every rejected policy.
         """
 
         if catalog is None:
-            raise Exception("It was not possible to get the policy, because the catalog is empty!")
+            logger.debug("Policy selection skipped: there is no catalog.")
+            raise EmptyCatalogError("It was not possible to get the policy, because the catalog is empty!")
         
         dataset:list|dict = _get_datasets(catalog)
         ### Asset Evaluation
 
-        valid_assets:list = []
+        valid_assets:list[AssetPolicySelection] = []
+        rejections:list[PolicyEvaluation] = []
 
         ## If dataset is None, the catalog returned no assets at all
         if dataset is None:
-            raise Exception("No asset was found in the catalog! The provider did not share any matching asset.")
+            logger.debug("Policy selection skipped: the catalog has no dataset.")
+            raise EmptyCatalogError("No asset was found in the catalog! The provider did not share any matching asset.")
 
         ## If just one asset is there
         if isinstance(dataset, dict):
-            policy = DspTools.get_dataset_policy(dataset=dataset, allowed_policies=allowed_policies)
+            logger.debug("Selecting the policy of the single dataset of the catalog (%s).",
+                         _allow_list_summary(allowed_policies), extra=log_extra(asset_id=dataset.get("@id")))
+            policy, rejections = DspTools._select_policy(dataset=dataset, allowed_policies=allowed_policies)
             if policy is None:
+                logger.debug("The single dataset has no acceptable policy (%d rejected).", len(rejections),
+                             extra=log_extra(asset_id=dataset.get("@id")))
                 raise PolicyMismatchError(
                     "No valid asset and policy allowed at the DCAT Catalog dataset!",
                     catalog=catalog,
                     allowed_policies=allowed_policies,
+                    evaluations=rejections,
                 )
 
-            valid_assets.append((dataset.get("@id"), policy)) ## Return the assetid and the policy
+            valid_assets.append(AssetPolicySelection(dataset.get("@id"), policy)) ## Return the assetid and the policy
             return valid_assets
         
         ## In case it is a empty list give error
         if(len(dataset) == 0):
-            raise Exception("No asset was found in the catalog! The dataset list is empty.")
+            logger.debug("Policy selection skipped: the dataset list of the catalog is empty.")
+            raise EmptyCatalogError("No asset was found in the catalog! The dataset list is empty.")
 
+        logger.debug("Selecting the policies of the %d datasets of the catalog (%s).", len(dataset), _allow_list_summary(allowed_policies))
         ## More than one asset, the prio is set by the allowed policies order
         for item in dataset:
-            policy = DspTools.get_dataset_policy(dataset=item, allowed_policies=allowed_policies)
+            policy, item_rejections = DspTools._select_policy(dataset=item, allowed_policies=allowed_policies)
+            rejections.extend(item_rejections)
             if policy is not None:
-                valid_assets.append((item.get("@id"), policy)) ## Return the assetid and the policy
+                valid_assets.append(AssetPolicySelection(item.get("@id"), policy)) ## Return the assetid and the policy
 
         if len(valid_assets) == 0:
+            logger.debug("None of the %d datasets has an acceptable policy (%d rejected).", len(dataset), len(rejections))
             raise PolicyMismatchError(
                 "No valid policy was found for any item in the list. No valid asset found!",
                 catalog=catalog,
                 allowed_policies=allowed_policies,
+                evaluations=rejections,
             )
         
+        logger.debug("%d of the %d datasets have an acceptable policy.", len(valid_assets), len(dataset))
         return valid_assets
     
     @staticmethod
     def is_catalog_empty(catalog:dict) -> bool:
         dataset:list|dict = _get_datasets(catalog)
         if(dataset is None):
+            logger.debug("The catalog has no dataset key, it is not considered empty.")
             return False
         
         ## If just one asset is there
@@ -575,47 +683,63 @@ class DspTools:
 
         @returns: dict: the selected policy or None if no valid policy was found
         """
-        ### Policy Evaluation
-        policies:dict|list = _get_policies(dataset)    
+        policy, _ = DspTools._select_policy(dataset=dataset, allowed_policies=allowed_policies)
+        return policy
 
-        ## One Policy
-        if isinstance(policies, dict):
-            return policies if DspTools.is_policy_valid(policy=policies, allowed_policies=allowed_policies) else None ## Return the policy object if is valid
-
-        ## More than one policy
-        for policy in policies:
-            ## In case the policy is not valid, continue
-            if not DspTools.is_policy_valid(policy=policy, allowed_policies=allowed_policies):
-               continue
-            return policy
-        
-        # In case no policy was selected it will return None
-        return None
-    
     @staticmethod
-    def is_policy_valid(policy:dict, allowed_policies:list=None) -> bool:
+    def _select_policy(dataset:dict, allowed_policies:list) -> tuple[dict | None, list[PolicyEvaluation]]:
         """
-        Checks whether a catalog offer policy is acceptable.
+        Selects the first acceptable policy of a dataset.
+
+        @returns: The selected policy (``None`` if there is none) and the evaluation of
+            every policy that was rejected on the way, tagged with the dataset's id.
+        """
+        policies:dict|list = _get_policies(dataset)
+        asset_id = dataset.get("@id")
+        rejections:list[PolicyEvaluation] = []
+        logger.debug("Evaluating the policies of dataset '%s' (%s).", asset_id or "<unknown>", _allow_list_summary(allowed_policies),
+                     extra=log_extra(asset_id=asset_id))
+
+        ## One Policy is a dict, more than one is a list
+        for policy in ([policies] if isinstance(policies, dict) else policies):
+            evaluation = replace(
+                DspTools.evaluate_policy(policy=policy, allowed_policies=allowed_policies),
+                asset_id=asset_id,
+            )
+            _log_evaluation(evaluation, len(allowed_policies or ()))
+            if evaluation.accepted:
+                return policy, rejections
+            rejections.append(evaluation)
+
+        # In case no policy was selected it will return None
+        return None, rejections
+
+    @staticmethod
+    def evaluate_policy(policy:dict, allowed_policies:list=None) -> PolicyEvaluation:
+        """
+        Compares a catalog offer policy against an allow-list and reports the outcome.
 
         allowed_policies semantics:
           None  – any policy is valid (no filtering applied).
-          []    – no policy is valid; always returns False.
+          []    – no policy is valid.
           [...] – the policy (stripped of ``@id`` / ``@type``) must appear in the list.
 
-        When a policy is rejected, detailed DEBUG-level log messages are
-        emitted explaining why it did not match each allowed policy.
+        The returned ``PolicyEvaluation`` is complete: when the policy is rejected it holds,
+        for every allowed policy, the structural issues and the differences found. Nothing
+        needs to be read back from the logs.
 
-        @returns: True if the policy is accepted, False otherwise.
+        @returns: The evaluation of the policy.
         """
+        policy_id = policy.get("@id") if isinstance(policy, dict) else None
+
         ## None → accept everything
         if allowed_policies is None:
-            return True
+            return PolicyEvaluation(PolicyVerdict.ANY_ALLOWED, policy_id=policy_id)
 
         ## Empty list → reject everything
         if len(allowed_policies) == 0:
-            logger.debug("Policy rejected: allowed_policies list is empty.")
-            return False
-        
+            return PolicyEvaluation(PolicyVerdict.EMPTY_ALLOW_LIST, policy_id=policy_id)
+
         ## Normalize the catalog policy (strips @id/@type, unwraps
         ## single-element lists, removes empty lists, sorts constraints).
         normalized_policy = _normalize_policy_value(policy)
@@ -624,26 +748,33 @@ class DspTools:
         ## Uses _policies_match which applies subset semantics for
         ## rightOperand arrays (all configured values must be present
         ## in the catalog, order-insensitive, extras tolerated).
-        mismatch_reports: list[str] = []
+        mismatches: list[PolicyMismatch] = []
         for idx, allowed in enumerate(allowed_policies):
             normalized_allowed = _normalize_policy_value(allowed)
             if _policies_match(normalized_policy, normalized_allowed):
-                logger.debug("Policy matched allowed policy at index %d.", idx)
-                return True
-            # Collect diff details for this candidate
-            diffs = _explain_policy_diff(normalized_policy, normalized_allowed)
-            mismatch_reports.append(
-                f"  Allowed policy [{idx}] differences:\n"
-                + "\n".join(f"    - {d}" for d in diffs)
-            )
+                return PolicyEvaluation(
+                    PolicyVerdict.MATCHED, policy_id=policy_id, matched_index=idx, mismatches=tuple(mismatches),
+                )
+            mismatches.append(PolicyMismatch(
+                allowed_index=idx,
+                config_issues=tuple(_check_policy_structure(normalized_allowed, "Allowed policy")),
+                differences=tuple(_policy_differences(normalized_policy, normalized_allowed)),
+            ))
 
-        # None matched – emit a comprehensive log
-        policy_id = policy.get("@id", "<unknown>")
-        logger.debug(
-            "Policy '%s' did not match any of the %d allowed policies:\n%s",
-            policy_id,
-            len(allowed_policies),
-            "\n".join(mismatch_reports),
-        )
-        return False
+        return PolicyEvaluation(PolicyVerdict.NO_MATCH, policy_id=policy_id, mismatches=tuple(mismatches))
+
+    @staticmethod
+    def is_policy_valid(policy:dict, allowed_policies:list=None) -> bool:
+        """
+        Checks whether a catalog offer policy is acceptable.
+
+        Convenience wrapper around :meth:`evaluate_policy` for callers that only need
+        the verdict. Use ``evaluate_policy`` to learn why a policy was rejected.
+        The evaluation is also echoed to the DEBUG log of this module.
+
+        @returns: True if the policy is accepted, False otherwise.
+        """
+        evaluation = DspTools.evaluate_policy(policy=policy, allowed_policies=allowed_policies)
+        _log_evaluation(evaluation, len(allowed_policies or ()))
+        return evaluation.accepted
 

@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -31,13 +32,15 @@ for Jupiter catalogs and vice versa.
 """
 
 import copy
+import dataclasses
 import logging
 import pytest
 
 from tractusx_sdk.dataspace.tools.dsp_tools import (
-    DspTools, PolicyMismatchError, _normalize_policy_value, _explain_policy_diff,
-    _check_policy_structure,
+    DspTools, PolicyMismatchError, PolicyEvaluation, PolicyVerdict, AssetPolicySelection,
+    _normalize_policy_value, _explain_policy_diff, _check_policy_structure,
 )
+from tractusx_sdk.exceptions import CatalogError, EmptyCatalogError, TractusXSDKError
 
 
 # ── Fixtures ─────────────────────────────────────────────────────────────────
@@ -1618,8 +1621,8 @@ class TestPolicyStructureChecks:
         good = {"odrl:permission": {"odrl:action": {"@id": "odrl:use"}, "odrl:constraint": {"odrl:and": []}}}
         assert _check_policy_structure(_normalize_policy_value(good), "Allowed policy") == []
 
-    def test_structure_issues_appear_in_is_policy_valid_logs(self, caplog):
-        """Structural issues in allowed policy are surfaced in DEBUG logs."""
+    def test_structure_issues_are_reported_on_the_evaluation(self):
+        """Structural issues in the allowed policy are data on the evaluation, not just log text."""
         policy = {
             "@id": "offer-1",
             "permission": {"action": "use", "constraint": {
@@ -1630,18 +1633,20 @@ class TestPolicyStructureChecks:
         bad_allowed = [{"action": "use", "constraint": {
             "leftOperand": "Membership", "operator": "eq", "rightOperand": "active"
         }}]
-        with caplog.at_level(logging.DEBUG, logger="tractusx_sdk.dataspace.tools.dsp_tools"):
-            result = DspTools.is_policy_valid(policy=policy, allowed_policies=bad_allowed)
-        assert result is False
-        assert "config issue" in caplog.text
-        assert "missing 'permission'" in caplog.text
+        evaluation = DspTools.evaluate_policy(policy=policy, allowed_policies=bad_allowed)
+        assert evaluation.accepted is False
+        assert evaluation.verdict is PolicyVerdict.NO_MATCH
+        assert len(evaluation.mismatches) == 1
+        issues = "\n".join(evaluation.mismatches[0].config_issues)
+        assert "config issue" in issues
+        assert "missing 'permission'" in issues
+        assert DspTools.is_policy_valid(policy=policy, allowed_policies=bad_allowed) is False
 
 
-class TestPolicyValidationLogging:
-    """Verify that ``is_policy_valid`` emits detailed DEBUG logs on mismatch."""
+class TestPolicyEvaluation:
+    """``evaluate_policy`` returns the verdict and its reasons as data."""
 
-    def test_logs_on_rejection_with_constraint_detail(self, caplog):
-        """When a policy is rejected, DEBUG logs must show constraint triplet and reason."""
+    def test_rejection_carries_constraint_detail(self):
         catalog_policy = {
             "@id": "offer-123",
             "permission": {"action": "use", "constraint": {"and": [
@@ -1653,37 +1658,39 @@ class TestPolicyValidationLogging:
                 {"leftOperand": "Membership", "operator": "eq", "rightOperand": "WRONG"},
             ]}}
         }]
-        with caplog.at_level(logging.DEBUG, logger="tractusx_sdk.dataspace.tools.dsp_tools"):
-            result = DspTools.is_policy_valid(policy=catalog_policy, allowed_policies=allowed)
-        assert result is False
-        log_text = caplog.text
-        # Must mention the policy ID
-        assert "offer-123" in log_text
-        # Must show the constraint triplet
-        assert "'Membership' 'eq' 'active'" in log_text
-        assert "'Membership' 'eq' 'WRONG'" in log_text
-        # Must explain the specific difference
-        assert "rightOperand differs" in log_text
+        evaluation = DspTools.evaluate_policy(policy=catalog_policy, allowed_policies=allowed)
+        assert evaluation.accepted is False
+        assert evaluation.verdict is PolicyVerdict.NO_MATCH
+        assert evaluation.policy_id == "offer-123"
+        assert evaluation.matched_index is None
+        details = "\n".join(evaluation.mismatches[0].differences)
+        assert "'Membership' 'eq' 'active'" in details
+        assert "'Membership' 'eq' 'WRONG'" in details
+        assert "rightOperand differs" in details
 
-    def test_logs_on_match(self, caplog):
-        """On successful match, a brief success DEBUG message is emitted."""
+    def test_match_reports_the_index_of_the_allowed_policy(self):
         policy = {"permission": {"action": "use"}}
-        allowed = [{"permission": {"action": "use"}}]
-        with caplog.at_level(logging.DEBUG, logger="tractusx_sdk.dataspace.tools.dsp_tools"):
-            result = DspTools.is_policy_valid(policy=policy, allowed_policies=allowed)
-        assert result is True
-        assert "matched" in caplog.text.lower()
+        allowed = [{"permission": {"action": "transfer"}}, {"permission": {"action": "use"}}]
+        evaluation = DspTools.evaluate_policy(policy=policy, allowed_policies=allowed)
+        assert evaluation.accepted is True
+        assert evaluation.verdict is PolicyVerdict.MATCHED
+        assert evaluation.matched_index == 1
+        assert [m.allowed_index for m in evaluation.mismatches] == [0]
+        assert evaluation.explain() == ""
 
-    def test_logs_empty_allowed_list(self, caplog):
-        """Empty allowed list should log a clear rejection reason."""
-        policy = {"permission": {"action": "use"}}
-        with caplog.at_level(logging.DEBUG, logger="tractusx_sdk.dataspace.tools.dsp_tools"):
-            result = DspTools.is_policy_valid(policy=policy, allowed_policies=[])
-        assert result is False
-        assert "empty" in caplog.text.lower()
+    def test_none_allow_list_accepts_everything(self):
+        evaluation = DspTools.evaluate_policy(policy={"@id": "x"}, allowed_policies=None)
+        assert evaluation.accepted is True
+        assert evaluation.verdict is PolicyVerdict.ANY_ALLOWED
+        assert evaluation.mismatches == ()
 
-    def test_logs_multiple_allowed_policies_all_diffs(self, caplog):
-        """When multiple allowed policies are checked, all diffs are logged."""
+    def test_empty_allow_list_rejects_everything(self):
+        evaluation = DspTools.evaluate_policy(policy={"permission": {"action": "use"}}, allowed_policies=[])
+        assert evaluation.accepted is False
+        assert evaluation.verdict is PolicyVerdict.EMPTY_ALLOW_LIST
+        assert evaluation.mismatches == ()
+
+    def test_every_allowed_policy_gets_its_own_mismatch(self):
         catalog_policy = {
             "@id": "offer-multi",
             "permission": {"action": "use", "constraint": {"and": [
@@ -1698,17 +1705,75 @@ class TestPolicyValidationLogging:
                 {"leftOperand": "Membership", "operator": "neq", "rightOperand": "active"},
             ]}}},
         ]
-        with caplog.at_level(logging.DEBUG, logger="tractusx_sdk.dataspace.tools.dsp_tools"):
-            result = DspTools.is_policy_valid(policy=catalog_policy, allowed_policies=allowed)
-        assert result is False
-        log_text = caplog.text
-        # Should show diffs for both allowed policies
-        assert "Allowed policy [0]" in log_text
-        assert "Allowed policy [1]" in log_text
-        # First should mention action mismatch
-        assert "'use'" in log_text and "'transfer'" in log_text
-        # Second should mention operator mismatch
-        assert "operator differs" in log_text
+        evaluation = DspTools.evaluate_policy(policy=catalog_policy, allowed_policies=allowed)
+        assert evaluation.accepted is False
+        assert [m.allowed_index for m in evaluation.mismatches] == [0, 1]
+        first = "\n".join(evaluation.mismatches[0].differences)
+        second = "\n".join(evaluation.mismatches[1].differences)
+        assert "'use'" in first and "'transfer'" in first
+        assert "operator differs" in second
+        assert "Allowed policy [0]" in evaluation.explain()
+        assert "Allowed policy [1]" in evaluation.explain()
+
+    def test_evaluation_is_immutable(self):
+        evaluation = DspTools.evaluate_policy(policy={}, allowed_policies=None)
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            evaluation.verdict = PolicyVerdict.NO_MATCH
+
+    def test_evaluating_does_not_need_logging(self):
+        """The verdict is the same whether or not anything listens to the logger."""
+        policy = {"permission": {"action": "use"}}
+        allowed = [{"permission": {"action": "transfer"}}]
+        dsp_logger = logging.getLogger("tractusx_sdk.dataspace.tools.dsp_tools")
+        previous = dsp_logger.disabled
+        dsp_logger.disabled = True
+        try:
+            evaluation = DspTools.evaluate_policy(policy=policy, allowed_policies=allowed)
+            assert DspTools.is_policy_valid(policy=policy, allowed_policies=allowed) is False
+        finally:
+            dsp_logger.disabled = previous
+        assert evaluation.verdict is PolicyVerdict.NO_MATCH
+        assert evaluation.mismatches
+
+
+class TestPolicyValidationLogging:
+    """The DEBUG log only echoes the evaluation; it is diagnostic, not an API."""
+
+    LOGGER = "tractusx_sdk.dataspace.tools.dsp_tools"
+
+    def test_rejection_is_logged_with_the_explanation(self, caplog):
+        catalog_policy = {
+            "@id": "offer-123",
+            "permission": {"action": "use", "constraint": {"and": [
+                {"leftOperand": "Membership", "operator": "eq", "rightOperand": "active"},
+            ]}}
+        }
+        allowed = [{
+            "permission": {"action": "use", "constraint": {"and": [
+                {"leftOperand": "Membership", "operator": "eq", "rightOperand": "WRONG"},
+            ]}}
+        }]
+        with caplog.at_level(logging.DEBUG, logger=self.LOGGER):
+            assert DspTools.is_policy_valid(policy=catalog_policy, allowed_policies=allowed) is False
+        assert "offer-123" in caplog.text
+        assert DspTools.evaluate_policy(catalog_policy, allowed).explain() in caplog.text
+
+    def test_match_is_logged_with_the_index(self, caplog):
+        policy = {"permission": {"action": "use"}}
+        with caplog.at_level(logging.DEBUG, logger=self.LOGGER):
+            assert DspTools.is_policy_valid(policy=policy, allowed_policies=[policy]) is True
+        assert "matched allowed policy at index 0" in caplog.text
+
+    def test_empty_allow_list_is_logged(self, caplog):
+        with caplog.at_level(logging.DEBUG, logger=self.LOGGER):
+            assert DspTools.is_policy_valid(policy={"permission": {"action": "use"}}, allowed_policies=[]) is False
+        assert "empty" in caplog.text.lower()
+
+    def test_nothing_is_logged_above_debug_level(self, caplog):
+        allowed = [{"permission": {"action": "transfer"}}]
+        with caplog.at_level(logging.INFO, logger=self.LOGGER):
+            DspTools.is_policy_valid(policy={"permission": {"action": "use"}}, allowed_policies=allowed)
+        assert caplog.text == ""
 
 
 class TestPolicyMismatchEvidence:
@@ -1731,9 +1796,30 @@ class TestPolicyMismatchEvidence:
         assert raised.value.catalog is SATURN_CATALOG
         assert raised.value.allowed_policies is wrong
 
+    def test_the_rejection_carries_the_evaluation_of_every_rejected_policy(self):
+        wrong = copy.deepcopy(ALLOWED_POLICIES)
+        wrong[0]["permission"]["constraint"]["and"][0]["rightOperand"] = "NOPE"
+        wrong[1:] = []
+
+        with pytest.raises(PolicyMismatchError) as raised:
+            DspTools.filter_assets_and_policies(catalog=SATURN_CATALOG, allowed_policies=wrong)
+
+        evaluations = raised.value.evaluations
+        assert evaluations
+        assert all(isinstance(e, PolicyEvaluation) and not e.accepted for e in evaluations)
+        assert all(e.asset_id == "ichub:asset:dtr:9foUM7pmSTrr5LZnx0NqiQ" for e in evaluations)
+        assert "rightOperand differs" in "\n".join(evaluations[0].mismatches[0].differences)
+
     def test_it_is_still_a_value_error(self):
         """Callers that already catch ``ValueError`` keep working."""
         assert issubclass(PolicyMismatchError, ValueError)
+
+    def test_it_is_an_sdk_error(self):
+        assert issubclass(PolicyMismatchError, TractusXSDKError)
+
+    def test_it_is_still_importable_from_dsp_tools(self):
+        from tractusx_sdk.exceptions import PolicyMismatchError as canonical
+        assert PolicyMismatchError is canonical
 
     def test_a_single_dataset_rejection_carries_it_too(self):
         single = copy.deepcopy(SATURN_CATALOG)
@@ -1744,6 +1830,26 @@ class TestPolicyMismatchEvidence:
 
         assert raised.value.catalog is single
         assert raised.value.allowed_policies == []
+        assert [e.verdict for e in raised.value.evaluations] == [PolicyVerdict.EMPTY_ALLOW_LIST]
+
+
+class TestAssetPolicySelection:
+
+    def test_selection_is_a_named_pair_that_still_unpacks(self):
+        result = DspTools.filter_assets_and_policies(catalog=SATURN_CATALOG, allowed_policies=ALLOWED_POLICIES)
+        selection = result[0]
+        assert isinstance(selection, AssetPolicySelection)
+        asset_id, policy = selection
+        assert asset_id == selection.asset_id == "ichub:asset:dtr:9foUM7pmSTrr5LZnx0NqiQ"
+        assert policy is selection.policy
+        assert selection == (asset_id, policy)
+
+    def test_empty_catalogs_raise_a_catalog_error(self):
+        for catalog in (None, {}, {"dataset": []}):
+            with pytest.raises(EmptyCatalogError) as raised:
+                DspTools.filter_assets_and_policies(catalog=catalog, allowed_policies=ALLOWED_POLICIES)
+            assert isinstance(raised.value, CatalogError)
+            assert isinstance(raised.value, TractusXSDKError)
 
 
 class TestDspToolsCatalogEdgeCases:

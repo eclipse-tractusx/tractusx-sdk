@@ -60,7 +60,7 @@ from .helpers import (
     # CLI
     build_tck_cli_parser,
     apply_cli_overrides,
-    configure_debug_logging,
+    enable_debug_logging,
     log_config_warning,
     # Simple flow helpers
     provision_simple,
@@ -121,7 +121,7 @@ __all__ = [
     # ── CLI ────────────────────────────────────────────────────────────
     "build_tck_cli_parser",
     "apply_cli_overrides",
-    "configure_debug_logging",
+    "enable_debug_logging",
     "log_config_warning",
     # ── Simple flow helpers ───────────────────────────────────────────
     "provision_simple",

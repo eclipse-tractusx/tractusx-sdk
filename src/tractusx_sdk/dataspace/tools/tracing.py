@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
@@ -28,7 +29,7 @@ when no tracer is active every instrumented call takes a fast path and simply
 performs the original request.
 
 Enabling it is a matter of passing ``trace=True`` to any SDK service, adapter or
-factory, exactly like the ``verbose`` flag::
+factory::
 
     service = ServiceFactory.get_connector_consumer_service(..., trace=True)
     service.get_catalog(...)
@@ -66,6 +67,7 @@ import base64
 import functools
 import inspect
 import json
+import logging
 import sys
 import threading
 import uuid
@@ -77,6 +79,25 @@ from time import perf_counter
 from typing import Any, Iterator, Optional
 
 import requests
+
+logger = logging.getLogger(__name__)
+
+# The tracing swallows its own failures on purpose (it must never break the call it observes), and runs on
+# the hot path of every request. Each swallowed failure is therefore logged once per site, with its traceback.
+_SWALLOWED_LOGGED: set = set()
+
+
+def _log_swallowed(site: str, message: str, *args: Any) -> None:
+    """
+    Logs, at DEBUG and with its traceback, an exception the tracing is about to swallow. Only the first
+    occurrence of each ``site`` is logged, and nothing is done at all while DEBUG is disabled.
+
+    Must be called from inside an ``except`` block.
+    """
+    if site in _SWALLOWED_LOGGED or not logger.isEnabledFor(logging.DEBUG):
+        return
+    _SWALLOWED_LOGGED.add(site)
+    logger.debug(message, *args, exc_info=True)
 
 # Attribute used to bind a tracer to a `requests.Session` (or any other object
 # carrying the connection), so that every call made with that session is traced.
@@ -147,6 +168,7 @@ def _json_safe(value: Any, max_chars: int) -> Any:
         try:
             serialized = json.dumps(value, default=str)
         except (TypeError, ValueError):
+            _log_swallowed("json_safe", "The %s could not be serialized as JSON for the trace, recording its text instead", type(value).__name__)
             return _truncate(str(value), max_chars)
         if max_chars is not None and max_chars > 0 and len(serialized) > max_chars:
             return _shrink(json.loads(serialized), max_chars)
@@ -219,6 +241,8 @@ def _safe_getattr(obj: Any, name: str, default: Any = None) -> Any:
     try:
         return getattr(obj, name, default)
     except Exception:  # NOSONAR - tracing must not interfere with the request
+        _log_swallowed(f"getattr:{type(obj).__name__}.{name}", "The attribute '%s' of a %s could not be read for the trace, using %r",
+                       name, type(obj).__name__, default)
         return default
 
 
@@ -261,6 +285,7 @@ def _headers_to_dict(headers: Any, redact: bool, redacted_headers: frozenset) ->
     try:
         items = headers.items()
     except AttributeError:
+        _log_swallowed("headers_items", "The headers of a %s have no items(), recording their text instead", type(headers).__name__)
         return {"headers": str(headers)}
 
     result: dict = {}
@@ -279,6 +304,7 @@ def _content_type(headers: Any) -> Optional[str]:
     try:
         return headers.get("Content-Type") or headers.get("content-type")
     except (AttributeError, TypeError):
+        _log_swallowed("content_type", "The content type could not be read from the headers of a %s", type(headers).__name__)
         return None
 
 
@@ -292,6 +318,7 @@ def _infer_context() -> Optional[str]:
     try:
         frame = sys._getframe(1)  # NOSONAR - only executed while tracing is enabled
     except (ValueError, AttributeError):  # pragma: no cover - platform dependent
+        _log_swallowed("infer_context", "The stack could not be inspected to infer the context of the traced call")
         return None
 
     while frame is not None:
@@ -542,6 +569,8 @@ class Tracer:
         self._entries: list = []
         self._counter: int = 0
         self._lock = threading.RLock()
+        self._limit_logged: bool = False
+        logger.debug("Tracer '%s' created (enabled: %s, max entries: %s)", name, enabled, max_entries)
 
     ############################# Recording
 
@@ -623,6 +652,11 @@ class Tracer:
             self._entries.append(entry)
             if self.max_entries and len(self._entries) > self.max_entries:
                 del self._entries[0:len(self._entries) - self.max_entries]
+                if not self._limit_logged:
+                    # Once per tracer: from then on every new entry evicts the oldest one
+                    self._limit_logged = True
+                    logger.debug("Tracer '%s' reached its limit of %d entries, the oldest ones are dropped from now on",
+                                 self.name, self.max_entries)
         return entry
 
     def _describe_response(self, response: Any) -> dict:
@@ -642,6 +676,7 @@ class Tracer:
             try:
                 description["elapsed_ms"] = round(elapsed.total_seconds() * 1000, 3)
             except AttributeError:  # pragma: no cover - non standard response
+                _log_swallowed("elapsed", "The elapsed time of a %s response could not be read for the trace", type(response).__name__)
                 description["elapsed_ms"] = None
 
         if self.capture_bodies:
@@ -661,7 +696,7 @@ class Tracer:
         try:
             return _json_safe(response.json(), self.max_body_chars)
         except Exception:  # NOSONAR - any parsing issue falls back to the raw content
-            pass
+            _log_swallowed("body_not_json", "The response body is not JSON, falling back to its raw content")
 
         content = _safe_getattr(response, "content")
         if isinstance(content, (bytes, bytearray)):
@@ -678,6 +713,7 @@ class Tracer:
         try:
             return _body_safe(response.text, self.max_body_chars)
         except Exception:  # NOSONAR - streamed responses may not expose their content
+            _log_swallowed("body_unreadable", "The response body could not be read for the trace")
             return None
 
     ############################# Consumption
@@ -796,7 +832,7 @@ class Tracer:
             try:
                 setattr(session, TRACER_ATTRIBUTE, self)
             except AttributeError:  # pragma: no cover - immutable objects
-                pass
+                _log_swallowed("attach", "The tracer could not be attached to a %s, its calls will not be traced", type(session).__name__)
         return session
 
     @staticmethod
@@ -806,7 +842,7 @@ class Tracer:
             try:
                 delattr(session, TRACER_ATTRIBUTE)
             except AttributeError:  # pragma: no cover - immutable objects
-                pass
+                _log_swallowed("detach", "The tracer could not be detached from a %s", type(session).__name__)
         return session
 
     @contextmanager
@@ -1071,6 +1107,9 @@ def traced_http(method: str):
                 bound.apply_defaults()
                 arguments = bound.arguments
             except TypeError:  # pragma: no cover - invalid calls are left to the callee
+                _log_swallowed(f"bind:{getattr(func, '__qualname__', '?')}",
+                               "The arguments of the call to %s do not match its signature, the callee will report it",
+                               getattr(func, "__qualname__", "?"))
                 arguments = kwargs
 
             body = arguments.get("json")

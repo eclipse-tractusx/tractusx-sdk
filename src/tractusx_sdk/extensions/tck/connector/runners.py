@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 Catena-X Automotive Network e.V.
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
@@ -67,7 +68,7 @@ from .helpers import (
     mark_skipped_phases,
     print_summary,
     build_tck_cli_parser,
-    configure_debug_logging,
+    enable_debug_logging,
 )
 
 if TYPE_CHECKING:
@@ -373,7 +374,10 @@ def run_simple_test(config: SimpleTckConfig, script_dir: str) -> str:
 
     # ── 2. Logging ────────────────────────────────────────────────────
     logger, log_file = setup_tck_logging(config.test_name, script_dir)
-    configure_debug_logging(logger, args.debug)
+    if args.debug:
+        enable_debug_logging(logger)
+    else:
+        logger.info("DEBUG logging disabled (use without --no-debug to enable)")
 
     # ── 3. Derive runtime values ──────────────────────────────────────
     provider_dict = config.provider.to_dict()
@@ -413,7 +417,7 @@ def run_simple_test(config: SimpleTckConfig, script_dir: str) -> str:
             steps,
             _PHASE_0_NAME,
             lambda: upload_sample_data(
-                logger, backend_dict, sample_data, header_fn=sep,
+                logger, backend_dict, sample_data, header_fn=sep, verify=config.verify_ssl,
             ),
         )
 
@@ -570,7 +574,10 @@ def run_detailed_test(config: DetailedTckConfig, script_dir: str) -> str:
 
     # ── 2. Logging ────────────────────────────────────────────────────
     logger, log_file = setup_tck_logging(config.test_name, script_dir)
-    configure_debug_logging(logger, args.debug)
+    if args.debug:
+        enable_debug_logging(logger)
+    else:
+        logger.info("DEBUG logging disabled (use without --no-debug to enable)")
 
     # ── 3. Derive runtime values ──────────────────────────────────────
     provider_dict = config.provider.to_dict()
@@ -625,7 +632,7 @@ def run_detailed_test(config: DetailedTckConfig, script_dir: str) -> str:
             _PHASE_0_NAME,
             lambda: upload_sample_data(
                 logger, backend_dict, sample_data,
-                header_fn=hdr, verbose=True,
+                header_fn=hdr, verify=config.verify_ssl,
             ),
         )
 

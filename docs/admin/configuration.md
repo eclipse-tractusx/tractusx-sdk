@@ -37,10 +37,10 @@ service = ServiceFactory.get_connector_consumer_service(
         "Content-Type": "application/json",
     },
     connection_manager=my_manager,     # optional, defaults to MemoryConnectionManager
-    logger=my_logger,                  # optional, defaults to tractusx_sdk logger
-    verbose=False,                     # optional, defaults to True; set False in production
 )
 ```
+
+Logging is not a service argument: see [Logging](#logging).
 
 ### Parameter Reference
 
@@ -51,8 +51,7 @@ service = ServiceFactory.get_connector_consumer_service(
 | `dma_path` | `str` | Yes | — | Path prefix for the Management API (e.g., `"/management"`). There is no built-in default — this must always be provided. |
 | `headers` | `dict` | Yes | — | HTTP headers injected into every request. Must include auth headers. |
 | `connection_manager` | `ConnectionManager` | No | `MemoryConnectionManager` | Manages EDR connection state. See [Connection Managers](#connection-managers). |
-| `logger` | `logging.Logger` | No | SDK default logger | Logger instance for SDK output. |
-| `verbose` | `bool` | No | `True` | When `True`, logs every HTTP request and response body at DEBUG level. Set `False` in production to avoid leaking sensitive data into logs. |
+| `trace` | `bool` | No | `False` | Records the requests sent and responses received. See [Request Tracing](../core-concepts/sdk-architecture/request-tracing.md). |
 
 ## Connection Managers
 
@@ -71,7 +70,7 @@ The connection manager controls how the SDK stores and retrieves EDR (Endpoint D
 ```python
 from tractusx_sdk.dataspace.managers.connection.memory import MemoryConnectionManager
 
-manager = MemoryConnectionManager(verbose=True)
+manager = MemoryConnectionManager()
 ```
 
 ### FileSystemConnectionManager
@@ -157,25 +156,18 @@ headers = auth_manager.add_auth_header({"Content-Type": "application/json"})
 
 ## Logging
 
-All SDK services accept a `logger` parameter. If omitted, a default logger named `tractusx_sdk` is used.
+The SDK logs through the standard `logging` module, under the `tractusx_sdk` logger, and stays silent until your application configures logging. There is no logger or verbosity argument on the services: set the level on the logger instead.
 
 ```python
 import logging
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("my-app.sdk")
 
-service = ServiceFactory.get_connector_consumer_service(
-    dataspace_version="saturn",
-    base_url="https://edc.example.com",
-    dma_path="/management",
-    headers=headers,
-    logger=logger,
-    verbose=False,  # set False to avoid logging HTTP bodies in production
-)
+# Use DEBUG only to investigate a problem: it logs request payloads
+logging.getLogger("tractusx_sdk").setLevel(logging.INFO)
 ```
 
-Set `verbose=False` in production — `verbose=True` (the default) logs full HTTP request/response bodies which may contain sensitive data.
+Keep the SDK at `INFO` or `WARNING` in production: at `DEBUG` it logs the requests it sends, which may contain sensitive data. See [Logging and Error Handling](logging.md) for the log levels, the logger names, `dictConfig` examples and how errors are reported.
 
 ## Environment Variable Reference
 

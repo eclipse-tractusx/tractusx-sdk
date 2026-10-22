@@ -4,7 +4,7 @@
 # Copyright (c) 2026 DRÄXLMAIER Group
 # (represented by Lisa Dräxlmaier GmbH)
 # Copyright (c) 2026 LKS Next
-# Copyright (c) 2026 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -23,13 +23,20 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Dict, Any, Mapping, Optional
+from typing import Dict, Any, Callable, Mapping, Optional
+import logging
+import time
 from uuid import UUID
 from urllib.parse import quote
 import httpx
 
+from tractusx_sdk._logging_fields import http_status, log_extra, safe_url
 from tractusx_sdk.dataspace.tools.tracing import TraceableMixin, Tracer, trace_call
 from tractusx_sdk.industry.adapters import SubmodelAdapter
+
+# Security: the headers of this adapter carry its credentials (bearer token or API key). They are never logged,
+# nor are the bodies. Failures are logged by exception TYPE only, as an httpx message can carry the URL.
+logger = logging.getLogger(__name__)
 
 class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
     """
@@ -138,12 +145,16 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         
         # Validate authentication configuration
         if self.auth_type not in ["bearer", "apikey", "none"]:
+            logger.error("Invalid auth_type '%s' for the HTTP submodel adapter", self.auth_type,
+                         extra=log_extra(adapter_type="HttpSubmodelAdapter"))
             raise ValueError(
                 f"Invalid auth_type: {self.auth_type}. "
                 f"Supported types: 'bearer', 'apikey', 'none'"
             )
         
         if self.auth_type == "apikey" and not self.auth_key_name:
+            logger.error("The HTTP submodel adapter needs an auth_key_name for the 'apikey' auth type",
+                         extra=log_extra(adapter_type="HttpSubmodelAdapter"))
             raise ValueError(
                 "auth_key_name is required when auth_type='apikey'"
             )
@@ -156,7 +167,42 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         )
 
         if not isinstance(self.url_pattern, str) or not self.url_pattern.strip():
+            logger.error("The URL pattern of the HTTP submodel adapter must be a non-empty string",
+                         extra=log_extra(adapter_type="HttpSubmodelAdapter"))
             raise ValueError("url_pattern must be a non-empty string")
+
+        # Only the kind of authentication is logged, never the token nor the name of the key header
+        auth_kind = self.auth_type if self.auth_token else "none"
+        logger.debug("HTTP submodel adapter initialised for %s (auth: %s, timeout: %ss, TLS verification: %s)", safe_url(self.base_url),
+                     auth_kind, timeout, verify_ssl,
+                     extra=log_extra(adapter_type="HttpSubmodelAdapter", url=self.base_url))
+
+    def _send(self, method: str, url: str, send: Callable[[], httpx.Response]) -> httpx.Response:
+        """
+        Performs a request, logging its line (method and URL without query string) and its outcome.
+
+        The headers and the body are never logged. A server failure (5xx) is a warning and a client error is not,
+        since some are expected (e.g. a 404 when checking whether a submodel exists).
+        """
+        logged_url = safe_url(url)
+        logger.debug("HTTP %s %s", method, logged_url,
+                     extra=log_extra(http_method=method, url=url, adapter_type="HttpSubmodelAdapter"))
+        started = time.perf_counter()
+        try:
+            response = send()
+        except httpx.RequestError as request_error:
+            elapsed_ms = round((time.perf_counter() - started) * 1000)
+            logger.error("HTTP %s %s failed after %d ms (%s)", method, logged_url, elapsed_ms, type(request_error).__name__,
+                         extra=log_extra(http_method=method, url=url, elapsed_ms=elapsed_ms, adapter_type="HttpSubmodelAdapter"))
+            raise
+
+        elapsed_ms = round((time.perf_counter() - started) * 1000)
+        status = http_status(response)
+        level = logging.WARNING if status is not None and status >= 500 else logging.DEBUG
+        logger.log(level, "HTTP %s %s -> %s in %d ms", method, logged_url, status, elapsed_ms,
+                   extra=log_extra(http_method=method, url=url, status_code=status, elapsed_ms=elapsed_ms,
+                                   adapter_type="HttpSubmodelAdapter"))
+        return response
 
     def _trace_call(self, method: str, url: str, headers: dict = None, body: Any = None):
         """
@@ -176,6 +222,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         Build the full URL for submodel operations from metadata and a URL pattern.
         """
         if not isinstance(submodel_metadata, Mapping):
+            logger.warning("The submodel metadata of an HTTP operation is not a mapping", extra=log_extra(adapter_type="HttpSubmodelAdapter"))
             raise TypeError("submodel_metadata must be a mapping")
 
         encoded_metadata: dict[str, str] = {
@@ -188,9 +235,12 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
                 encoded_metadata[key] = quote(str(value), safe="")
             elif isinstance(value, str):
                 if not value.strip():
+                    logger.warning("The submodel metadata '%s' is empty", key, extra=log_extra(adapter_type="HttpSubmodelAdapter"))
                     raise ValueError(f"submodel_metadata['{key}'] must be a non-empty string")
                 encoded_metadata[key] = quote(value, safe="")
             else:
+                logger.warning("The submodel metadata '%s' is a %s, not a string or a UUID", key, type(value).__name__,
+                               extra=log_extra(adapter_type="HttpSubmodelAdapter"))
                 raise TypeError(
                     f"submodel_metadata['{key}'] must be a string or UUID"
                 )
@@ -198,6 +248,9 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         try:
             return self.url_pattern.format(**encoded_metadata)
         except KeyError as key_error:
+            missing_key = key_error.args[0]  # the name of a metadata key of the pattern, not a value
+            logger.warning("The submodel metadata lacks '%s', which the URL pattern '%s' needs", missing_key, self.url_pattern,
+                           extra=log_extra(adapter_type="HttpSubmodelAdapter"))
             raise KeyError(
                 f"Missing required URL key '{key_error.args[0]}' for pattern '{self.url_pattern}'"
             ) from key_error
@@ -214,6 +267,9 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
                 headers["Authorization"] = f"Bearer {self.auth_token}"
             elif self.auth_type == "apikey" and self.auth_key_name:
                 headers[self.auth_key_name] = self.auth_token
+        elif self.auth_type != "none":
+            logger.debug("The authentication type is '%s' but no token is configured, the request is sent without credentials",
+                         self.auth_type)
         
         return headers
     
@@ -242,7 +298,9 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
                 return None
             try:
                 return response.json()
-            except Exception:
+            except Exception as parse_error:
+                logger.debug("HTTP %s answered %s with a body that is not valid JSON (%s), returning no data", operation, status,
+                             type(parse_error).__name__)
                 return None
         
         # Error cases
@@ -254,14 +312,22 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
             error_msg += f": {response.text[:200]}"
         
         if status == 404:
+            logger.debug("HTTP %s: the submodel was not found (404)", operation, extra=log_extra(status_code=status, adapter_type="HttpSubmodelAdapter"))
             raise FileNotFoundError(f"Submodel not found: {error_msg}")
         elif status in (400, 422):
+            logger.warning("HTTP %s rejected the request as invalid (%s)", operation, status,
+                           extra=log_extra(status_code=status, adapter_type="HttpSubmodelAdapter"))
             raise ValueError(f"Invalid request: {error_msg}")
         elif status in (401, 403):
+            logger.warning("HTTP %s was refused (%s): check the credentials and permissions of the adapter", operation, status,
+                           extra=log_extra(status_code=status, adapter_type="HttpSubmodelAdapter"))
             raise PermissionError(f"Authentication/Authorization failed: {error_msg}")
         elif status >= 500:
+            # The request line already reported the server failure
             raise RuntimeError(f"Server error: {error_msg}. Please retry later.")
         else:
+            logger.warning("HTTP %s answered with the unexpected status %s", operation, status,
+                           extra=log_extra(status_code=status, adapter_type="HttpSubmodelAdapter"))
             raise RuntimeError(f"Unexpected error: {error_msg}")
 
     def read(self, submodel_metadata: Mapping[str, Any]) -> Dict[str, Any]:
@@ -274,7 +340,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
 
         try:
             with self._trace_call("GET", url, headers=headers) as call:
-                response = call.set_response(self.client.get(url, headers=headers))
+                response = call.set_response(self._send("GET", url, lambda: self.client.get(url, headers=headers)))
             return self._handle_response(response, "GET")
         except httpx.RequestError as request_error:
             raise ConnectionError(f"Connection error while reading submodel: {request_error}") from request_error
@@ -284,6 +350,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         Upload/create a submodel in the external service using raw bytes.
         """
         if not isinstance(content, bytes):
+            logger.warning("HTTP write rejected: the content must be bytes", extra=log_extra(adapter_type="HttpSubmodelAdapter"))
             raise TypeError("content must be bytes")
 
         url = self._build_url(submodel_metadata)
@@ -292,11 +359,11 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
 
         try:
             with self._trace_call("POST", url, headers=headers, body=content) as call:
-                response = call.set_response(self.client.post(
+                response = call.set_response(self._send("POST", url, lambda: self.client.post(
                     url,
                     content=content,
                     headers=headers
-                ))
+                )))
             self._handle_response(response, "POST")
         except httpx.RequestError as request_error:
             raise ConnectionError(f"Connection error while writing submodel: {request_error}") from request_error
@@ -306,6 +373,8 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         Upload/create a submodel in the external service using a JSON body.
         """
         if content is not None and not isinstance(content, Mapping):
+            logger.warning("HTTP JSON write rejected: the content must be a mapping or None",
+                           extra=log_extra(adapter_type="HttpSubmodelAdapter"))
             raise TypeError("content must be a mapping or None")
 
         url = self._build_url(submodel_metadata)
@@ -314,11 +383,11 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
 
         try:
             with self._trace_call("POST", url, headers=headers, body=content) as call:
-                response = call.set_response(self.client.post(
+                response = call.set_response(self._send("POST", url, lambda: self.client.post(
                     url,
                     json=content,
                     headers=headers
-                ))
+                )))
             self._handle_response(response, "POST")
         except httpx.RequestError as request_error:
             raise ConnectionError(f"Connection error while writing submodel JSON: {request_error}") from request_error
@@ -333,7 +402,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
 
         try:
             with self._trace_call("DELETE", url, headers=headers) as call:
-                response = call.set_response(self.client.delete(url, headers=headers))
+                response = call.set_response(self._send("DELETE", url, lambda: self.client.delete(url, headers=headers)))
             self._handle_response(response, "DELETE")
         except httpx.RequestError as request_error:
             raise ConnectionError(f"Connection error while deleting submodel: {request_error}") from request_error
@@ -348,7 +417,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
 
         try:
             with self._trace_call("HEAD", url, headers=headers) as call:
-                response = call.set_response(self.client.head(url, headers=headers))
+                response = call.set_response(self._send("HEAD", url, lambda: self.client.head(url, headers=headers)))
             if response.status_code == 404:
                 return False
             self._handle_response(response, "HEAD")

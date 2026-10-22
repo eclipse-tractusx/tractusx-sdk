@@ -20,7 +20,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from .geometry_aspect_validator import GeometryValidator, ValidationLevel, SchemaValidator
+from .geometry_aspect_validator import (
+    GeometryValidator,
+    GeometryValidationReport,
+    SceneTreeNode,
+    ValidationLevel,
+    SchemaValidator,
+)
 
 # Package-level variables
 __author__ = 'Threedy GmbH'

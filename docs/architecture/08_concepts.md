@@ -76,19 +76,16 @@ Each version has its own set of controllers and adapters isolated under versione
 
 ## Logging
 
-The SDK uses the standard Python `logging` module. All services accept an optional `logger` parameter:
+The SDK uses the standard Python `logging` module, the way a library should. Every module has its own logger (`logging.getLogger(__name__)`), all of them under `tractusx_sdk`, and a `NullHandler` keeps the SDK silent until the application configures logging. There are no `logger` or `verbose` arguments:
 
 ```python
 import logging
-logger = logging.getLogger("my-app")
 
-service = ServiceFactory.get_connector_consumer_service(
-    ...
-    logger=logger,
-)
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("tractusx_sdk").setLevel(logging.DEBUG)   # optional: more SDK detail
 ```
 
-If no logger is provided, the SDK creates a default logger named `tractusx_sdk`.
+What the SDK finds out about a call is returned or raised, never only logged: errors derive from `TractusXSDKError`, and results such as a policy evaluation are dataclasses. See [Logging and Error Handling](../admin/logging.md).
 
 ## Data Models
 

@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS NEXT
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,6 +21,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+import logging
+
+from tractusx_sdk._logging_fields import log_extra
+
 from .base_connector_consumer import BaseConnectorConsumerService
 from .base_connector_provider import BaseConnectorProviderService
 from ..service import BaseService
@@ -28,6 +32,8 @@ from ...adapters.connector.adapter_factory import AdapterFactory
 from ...controllers.connector.base_dma_controller import BaseDmaController
 from ...controllers.connector.controller_factory import ControllerFactory
 from ...managers.auth_manager import AuthManagerInterface
+
+logger = logging.getLogger(__name__)
 
 
 class BaseConnectorService(BaseService):
@@ -50,6 +56,9 @@ class BaseConnectorService(BaseService):
 
         merged_headers = headers or {}
         if auth_manager is not None:
+            # Only the kind of manager is logged: the headers it adds are credentials
+            logger.debug("[Connector Service] Adding the authentication headers of a %s", type(auth_manager).__name__,
+                         extra=log_extra(dataspace_version=dataspace_version))
             merged_headers = auth_manager.add_auth_header(merged_headers)
 
         self.dma_adapter = AdapterFactory.get_dma_adapter(
@@ -71,6 +80,8 @@ class BaseConnectorService(BaseService):
         # Configured last: one single trace for this service, its adapter and the
         # consumer/provider services it is composed of
         self._init_tracing(trace=trace)
+        logger.debug("[Connector Service] Connector service created for dataspace version %s", dataspace_version,
+                     extra=log_extra(dataspace_version=dataspace_version))
 
     class _Builder(BaseService._Builder):
         def dma_path(self, dma_path: str):

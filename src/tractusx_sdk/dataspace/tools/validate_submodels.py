@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,10 +21,90 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Optional
+import logging
+import time
+from dataclasses import dataclass, fields
+from typing import Any, Optional
 
-from requests import HTTPError, get
+from requests import get
 import jsonschema
+
+from tractusx_sdk._logging_fields import http_status, log_extra, safe_url
+from tractusx_sdk.exceptions import (
+    InvalidSemanticIdError,
+    SchemaNotFoundError,
+    SubmodelValidationError,
+)
+
+logger = logging.getLogger(__name__)
+
+# At most this many violations are listed in the DEBUG log of a validation
+MAX_LOGGED_ISSUES = 10
+
+
+class _DictAccess:
+    """Read access by key (``result["schema"]``), kept so code written for the former ``dict`` results keeps working."""
+
+    def __getitem__(self, key: str) -> Any:
+        if key not in {f.name for f in fields(self)}:
+            raise KeyError(key)
+        return getattr(self, key)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+
+@dataclass(frozen=True)
+class SchemaLookupResult(_DictAccess):
+    """
+    The JSON schema found for a semantic id.
+
+    :param schema: The JSON schema document.
+    :param link: Where it was retrieved from.
+    """
+
+    schema: dict
+    link: str = ""
+    status: str = "ok"
+    message: str = "Submodel validation schema retrieved successfully"
+
+
+@dataclass(frozen=True)
+class ValidationIssue:
+    """One violation found while validating a JSON document against a schema."""
+
+    path: str
+    message: str
+    validator: str
+    expected: Any = "N/A"
+    invalid_value: Any = None
+
+    def as_dict(self) -> dict:
+        return {
+            "path": self.path,
+            "message": self.message,
+            "validator": self.validator,
+            "expected": self.expected,
+            "invalid_value": self.invalid_value,
+        }
+
+
+@dataclass(frozen=True)
+class ValidationResult(_DictAccess):
+    """
+    The outcome of validating a JSON document against a schema.
+
+    :param valid: ``True`` when the document conforms to the schema.
+    :param issues: Every violation found; empty when ``valid``.
+    """
+
+    valid: bool
+    issues: tuple[ValidationIssue, ...] = ()
+    status: str = "ok"
+    message: str = "Congratulations, your JSON file passed the validation test"
 
 
 ## Test Orchestrator of Eclipse Tractus-X SDK Services
@@ -33,67 +114,116 @@ import jsonschema
 @staticmethod
 def submodel_schema_finder(
         semantic_id,
-        link_core: Optional[str] = 'https://raw.githubusercontent.com/eclipse-tractusx/sldt-semantic-models/main/'):
+        link_core: Optional[str] = 'https://raw.githubusercontent.com/eclipse-tractusx/sldt-semantic-models/main/') -> SchemaLookupResult:
     """
     Function to facilitate the validation of the submodel output by retrieving the correct schema
     based on the semantic_id provided by the user
+
+    :raises InvalidSemanticIdError: The semantic id does not follow the expected structure.
+    :raises SchemaNotFoundError: The schema could not be retrieved, or is not valid JSON.
+        Both are also ``requests.HTTPError``, as before.
+    :return: The schema found. It still supports ``result["schema"]``-style access.
     """
 
     split_string = semantic_id.split(':')
 
     if len(split_string) < 4:
-        raise HTTPError(f"422 Client Error: The semanticID provided does not follow the correct structure. subprotocolBody: {semantic_id}")
+        logger.warning("The semantic id '%s' does not follow the expected structure", semantic_id,
+                       extra=log_extra(schema_urn=semantic_id, operation="validate.schema_finder"))
+        raise InvalidSemanticIdError(f"422 Client Error: The semanticID provided does not follow the correct structure. subprotocolBody: {semantic_id}")
 
     loc_elements = split_string[3].split('#')
     schema_link = link_core + split_string[2] + '/' + loc_elements[0] + '/gen/' + loc_elements[1] + '-schema.json'
 
     # Now we can use the link to pull in the correct schema.
-    response = get(schema_link)
+    logger.debug("Retrieving the schema of '%s' from %s", semantic_id, safe_url(schema_link),
+                 extra=log_extra(schema_urn=semantic_id, url=schema_link, operation="validate.schema_finder"))
+    started = time.perf_counter()
+    try:
+        response = get(schema_link)
+    except Exception:
+        logger.exception("The schema of '%s' could not be requested from %s", semantic_id, safe_url(schema_link),
+                         extra=log_extra(schema_urn=semantic_id, url=schema_link, operation="validate.schema_finder"))
+        raise
 
+    elapsed_ms = round((time.perf_counter() - started) * 1000)
     if response.status_code != 200:
-        raise HTTPError(f"422 Client Error: Failed to obtain the required schema. schema link: {schema_link}")
+        logger.error("The schema of '%s' was not found at %s (status %s)", semantic_id, safe_url(schema_link), response.status_code,
+                     extra=log_extra(schema_urn=semantic_id, url=schema_link, status_code=http_status(response), elapsed_ms=elapsed_ms,
+                                     operation="validate.schema_finder"))
+        raise SchemaNotFoundError(f"422 Client Error: Failed to obtain the required schema. schema link: {schema_link}")
 
     try:
         schema = response.json()
-    except Exception:
-        raise HTTPError(f"422 Client Error: The schema obtained is not a valid json. schema link: {schema_link}")
+    except Exception as e:
+        logger.exception("The schema of '%s' obtained from %s is not valid JSON", semantic_id, safe_url(schema_link),
+                         extra=log_extra(schema_urn=semantic_id, url=schema_link, status_code=http_status(response),
+                                         operation="validate.schema_finder"))
+        raise SchemaNotFoundError(f"422 Client Error: The schema obtained is not a valid json. schema link: {schema_link}") from e
 
-    return {'status': 'ok',
-            'message': 'Submodel validation schema retrieved successfully',
-            'schema': schema}
+    logger.debug("The schema of '%s' was retrieved in %d ms", semantic_id, elapsed_ms,
+                 extra=log_extra(schema_urn=semantic_id, url=schema_link, status_code=http_status(response), elapsed_ms=elapsed_ms,
+                                 operation="validate.schema_finder"))
+    return SchemaLookupResult(schema=schema, link=schema_link)
 
 @staticmethod
-def json_validator(schema, json_to_validate, validation_type = 'jsonschema'):
+def json_validator(schema, json_to_validate, validation_type = 'jsonschema', raise_on_error: bool = True) -> ValidationResult:
     """
     Validates a JSON object against a given schema.
 
     This function uses the specified validation type to check whether a JSON object
     conforms to a given schema. Currently, only 'jsonschema' validation is supported.
-    Validation errors are recorded with details about the specific violations.
+    Violations are reported as structured ``ValidationIssue`` records.
 
     :param schema: The JSON schema object to validate against.
     :param json_to_validate: The JSON object to be validated.
     :param validation_type: The type of validation to perform. Default is 'jsonschema'.
-    :raises HTTPError: Raised if validation errors are found.
-    :return: A dictionary indicating the status and message if validation passes successfully.
+    :param raise_on_error: When ``True`` (default) a violation raises, as before. When ``False``
+        the violations are returned in the result instead.
+    :raises SubmodelValidationError: Raised if violations are found and ``raise_on_error`` is set.
+        Also a ``requests.HTTPError``, as before; the violations are in its ``issues``.
+    :return: The result of the validation. It still supports ``result["status"]``-style access.
     """
 
-    error_records = []
+    issues: list[ValidationIssue] = []
 
     if validation_type == 'jsonschema':
         validator = jsonschema.Draft7Validator(schema)
 
         for error in validator.iter_errors(json_to_validate):
-            error_records.append({
-                "path": ".".join(str(p) for p in error.path) if error.path else "root",
-                "message": error.message,
-                "validator": error.validator,
-                "expected": error.schema.get("type", "N/A"),  
-                "invalid_value": error.instance  
-            })
+            issues.append(ValidationIssue(
+                path=".".join(str(p) for p in error.path) if error.path else "root",
+                message=error.message,
+                validator=error.validator,
+                expected=error.schema.get("type", "N/A"),
+                invalid_value=error.instance,
+            ))
+    else:
+        # Nothing is checked for any other type, and the document then passes: that deserves to be seen
+        logger.warning("Unsupported validation type '%s': the document was NOT validated", validation_type,
+                       extra=log_extra(operation="validate.json_validator"))
 
-        if error_records:
-            raise HTTPError(f"422 Client Error: Validation error - {len(error_records)} validation errors found: {error_records}")
+    if issues:
+        logger.debug("The JSON document has %d validation issue(s)", len(issues))
+        # Only where the violation is and which rule it breaks: the messages and values are submodel data
+        if logger.isEnabledFor(logging.DEBUG):
+            for issue in issues[:MAX_LOGGED_ISSUES]:
+                logger.debug("Validation issue at '%s' (%s)", issue.path, issue.validator, extra=log_extra(operation="validate.json_validator"))
+            if len(issues) > MAX_LOGGED_ISSUES:
+                logger.debug("... and %d more validation issue(s)", len(issues) - MAX_LOGGED_ISSUES)
+        if raise_on_error:
+            raise SubmodelValidationError(
+                f"422 Client Error: Validation error - {len(issues)} validation errors found: {[i.as_dict() for i in issues]}",
+                issues=issues,
+            )
+        logger.debug("The validation issues are returned in the result, as raise_on_error is off")
+        return ValidationResult(
+            valid=False,
+            issues=tuple(issues),
+            status="error",
+            message=f"Validation error - {len(issues)} validation errors found",
+        )
 
-    return {"status": "ok",
-            "message": "Congratulations, your JSON file passed the validation test"}
+    if validation_type == 'jsonschema':
+        logger.debug("The JSON document is valid")
+    return ValidationResult(valid=True)
