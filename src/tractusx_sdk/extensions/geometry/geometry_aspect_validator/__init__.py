@@ -20,7 +20,12 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from .validateGeometry import GeometryValidator, ValidationLevel
+from .validateGeometry import (
+    GeometryValidator,
+    GeometryValidationReport,
+    SceneTreeNode,
+    ValidationLevel,
+)
 from .schemaValidator import SchemaValidator
 
 # Package-level variables

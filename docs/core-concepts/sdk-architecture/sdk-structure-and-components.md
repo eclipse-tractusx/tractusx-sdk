@@ -2,8 +2,8 @@
 
 Eclipse Tractus-X - Software Development KIT
 
-Copyright (c) 2025 LKS Next
-Copyright (c) 2025 Contributors to the Eclipse Foundation
+Copyright (c) 2025,2026 LKS Next
+Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -153,8 +153,7 @@ connector_service = ServiceFactory.get_connector_consumer_service(
     dataspace_version="jupiter",
     base_url="https://connector.example.com",
     dma_path="/management",
-    headers=headers,
-    logger=logger
+    headers=headers
 )
 ```
 
@@ -247,7 +246,7 @@ graph TD
     
      **Start Simple**: Begin with basic connector operations before adding complexity  
      **Reuse Services**: Create service instances once and reuse them  
-     **Enable Logging**: Use verbose mode during development for better debugging  
+     **Enable Logging**: Configure the standard `logging` module and set the `tractusx_sdk` logger to `DEBUG` during development for better debugging  
      **Test Incrementally**: Test each component separately before integration
 
 ## NOTICE

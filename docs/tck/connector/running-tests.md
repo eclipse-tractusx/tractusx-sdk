@@ -1,6 +1,7 @@
 <!--
 Eclipse Tractus-X - Tractus-X SDK
 
+Copyright (c) 2026 LKS Next
 Copyright (c) 2026 Catena-X Automotive Network e.V.
 Copyright (c) 2026 Contributors to the Eclipse Foundation
 
@@ -121,7 +122,7 @@ These flags override individual values **after** the YAML has been loaded:
 
 **`--no-debug`** — Disable DEBUG-level logging (debug is **enabled by default**)
 
-- Default behaviour shows verbose HTTP request/response logs and SDK internals
+- Default behaviour shows the HTTP requests the SDK sends, the request/response bodies and the SDK internals (the SDK logs these at `DEBUG`)
 - Use `--no-debug` to see only INFO-level messages
 
 **`--no-cleanup`** — Skip resource cleanup after the test (cleanup is **enabled by default**)

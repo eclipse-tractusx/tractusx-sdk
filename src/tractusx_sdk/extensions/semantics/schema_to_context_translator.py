@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -31,8 +32,12 @@ import hashlib
 import logging
 from typing import Dict, List, Optional, Tuple, Any
 from tractusx_sdk.dataspace.tools import op
-from tractusx_sdk.dataspace.tools.validate_submodels import submodel_schema_finder
+from tractusx_sdk.dataspace.tools.validate_submodels import SchemaLookupResult, submodel_schema_finder
+from tractusx_sdk.exceptions import InvalidSemanticIdError, SchemaNotFoundError, SchemaTranslationError
 import copy
+
+logger = logging.getLogger(__name__)
+
 
 class SammSchemaContextTranslator:
     """
@@ -52,8 +57,6 @@ class SammSchemaContextTranslator:
         actualPathSep (str): Actual path separator for tracking references ("/-/")
         refPathSep (str): Reference path separator ("/")
         propertiesKey (str): Key for object properties ("properties")
-        logger (Optional[logging.Logger]): Logger instance for debugging
-        verbose (bool): Enable verbose logging
         itemKey (str): Key for array items ("items")
         schemaPrefix (str): Prefix for schema URIs ("schema")
         aspectPrefix (str): Prefix for aspect URIs ("aspect")
@@ -65,14 +68,12 @@ class SammSchemaContextTranslator:
         contextTemplate (Dict[str, Any]): Template for context objects
     """
     
-    def __init__(self, logger: Optional[logging.Logger] = None, verbose: bool = False) -> None:
+    def __init__(self) -> None:
         """
         Initialize the SAMM Schema Context Translator.
-        
-        Args:
-            logger (Optional[logging.Logger]): Logger instance for debugging and error reporting.
-                                             If None, no logging will be performed.
-            verbose (bool): Enable verbose logging output. Defaults to False.
+
+        Diagnostics are emitted through the standard ``logging`` module, under the
+        ``tractusx_sdk.extensions.semantics`` logger. Configure them in the application.
         
         Returns:
             None
@@ -84,8 +85,6 @@ class SammSchemaContextTranslator:
         self.actualPathSep = "/-/"
         self.refPathSep = "/"
         self.propertiesKey = "properties"
-        self.logger = logger
-        self.verbose = verbose
         self.itemKey = "items"
         self.schemaPrefix = "schema"
         self.aspectPrefix = "aspect"
@@ -132,26 +131,24 @@ class SammSchemaContextTranslator:
             ...     print("Schema fetched successfully")
         """
         try:
-            if self.verbose and self.logger:
-                self.logger.info(f"Fetching schema for semantic ID: {semantic_id}")
+            logger.info("Fetching schema for semantic ID: %s", semantic_id)
             
-            # Use the existing submodel_schema_finder from the SDK
-            result = submodel_schema_finder(semantic_id, link_core=link_core)
-            
-            if result['status'] == 'ok':
-                schema_dict = result['schema']
-                if self.verbose and self.logger:
-                    self.logger.info(f"Successfully fetched schema: {result['message']}")
-                return schema_dict
-            else:
-                if self.logger:
-                    self.logger.error(f"Failed to fetch schema: {result.get('message', 'Unknown error')}")
-                return None
+            result = self._find_schema(semantic_id, link_core=link_core)
+            logger.info("Successfully fetched schema: %s", result.message)
+            return result.schema
                 
         except Exception as e:
-            if self.logger:
-                self.logger.error(f"Error fetching schema for {semantic_id}: {e}")
+            logger.error("Error fetching schema for %s: %s", semantic_id, e)
             return None
+
+    def _find_schema(self, semantic_id: str, link_core: str) -> SchemaLookupResult:
+        """
+        Look the schema of a semantic ID up with the SDK's submodel schema finder.
+
+        Unlike :meth:`fetch_schema_from_semantic_id` it does not hide failures: they
+        propagate as the errors the finder raised.
+        """
+        return submodel_schema_finder(semantic_id, link_core=link_core)
 
     def _prepare_schema_and_context(self, semantic_id: str, aspect_prefix: str, schema: Optional[Dict[str, Any]] = None, link_core: str = 'https://raw.githubusercontent.com/eclipse-tractusx/sldt-semantic-models/main/') -> Tuple[Dict[str, Any], str, Dict[str, Any], Dict[str, Any]]:
         """
@@ -185,16 +182,16 @@ class SammSchemaContextTranslator:
         """
         # If schema is None, try to fetch it using the semantic ID
         if schema is None:
-            if self.verbose and self.logger:
-                self.logger.info(f"Schema not provided, attempting to fetch from semantic ID: {semantic_id}")
-            schema = self.fetch_schema_from_semantic_id(semantic_id, link_core=link_core)
-            if schema is None:
-                raise Exception(f"Could not fetch schema for semantic ID: {semantic_id}")
+            logger.info("Schema not provided, attempting to fetch from semantic ID: %s", semantic_id)
+            try:
+                schema = self._find_schema(semantic_id, link_core=link_core).schema
+            except Exception as e:
+                raise SchemaNotFoundError(f"Could not fetch schema for semantic ID: {semantic_id}") from e
         
         self.baseSchema = copy.copy(schema)
         semantic_parts = semantic_id.split(self.rootRef)  
         if((len(semantic_parts) < 2) or (semantic_parts[1] == '')):
-            raise Exception("Invalid semantic id, missing the model reference!")
+            raise InvalidSemanticIdError("Invalid semantic id, missing the model reference!")
         
         aspect_name = semantic_parts[1]
         
@@ -207,7 +204,7 @@ class SammSchemaContextTranslator:
         jsonld_context = self.create_node(property=schema)
         
         if jsonld_context is None:
-            raise Exception("It was not possible to generated the json-ld!")
+            raise SchemaTranslationError("It was not possible to generated the json-ld!")
         
         # Start with the basic JSON-LD structure
         response_context = copy.copy(self.initialJsonLd)
@@ -291,8 +288,8 @@ class SammSchemaContextTranslator:
             return {
                 "@context": response_context
             }
-        except:
-            raise Exception("It was not possible to create flattened jsonld schema")
+        except Exception as e:
+            raise SchemaTranslationError("It was not possible to create flattened jsonld schema") from e
 
     def schema_to_jsonld_nested(self, semantic_id: str, schema: Optional[Dict[str, Any]] = None, link_core: str = 'https://raw.githubusercontent.com/eclipse-tractusx/sldt-semantic-models/main/',  aspect_prefix:str = "cx") -> Dict[str, Any]:
         """
@@ -361,8 +358,8 @@ class SammSchemaContextTranslator:
             return {
                 "@context": response_context
             }
-        except:
-            raise Exception("It was not possible to create jsonld schema")
+        except Exception as e:
+            raise SchemaTranslationError("It was not possible to create jsonld schema") from e
     
 
     def expand_node(self, ref: str, actualref: str, key: Optional[str] = None) -> Optional[Dict[str, Any]]:
@@ -400,9 +397,8 @@ class SammSchemaContextTranslator:
 
             if(expandedNode is None): return None
             return self.create_node(property=expandedNode, actualref=newRef, key=key)
-        except:
-            
-            raise Exception("It was not possible to expand the node")
+        except Exception as e:
+            raise SchemaTranslationError("It was not possible to expand the node") from e
 
     def create_node(self, property: Dict[str, Any], actualref: str = "", key: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
@@ -457,9 +453,8 @@ class SammSchemaContextTranslator:
                 return self.create_array_node(property=property, node=node, actualref=actualref)
             
             return self.create_value_node(property=property, node=node)
-        except:
-            
-            raise Exception("It was not possible to create the node")
+        except Exception as e:
+            raise SchemaTranslationError("It was not possible to create the node") from e
 
     def create_value_node(self, property: Dict[str, Any], node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
@@ -493,9 +488,8 @@ class SammSchemaContextTranslator:
             
             node["@type"] = self.schemaPrefix+":"+property["type"]
             return node
-        except:
-            
-            raise Exception("It was not possible to create value node")
+        except Exception as e:
+            raise SchemaTranslationError("It was not possible to create value node") from e
     
     
     def create_object_node(self, property: Dict[str, Any], node: Dict[str, Any], actualref: str) -> Optional[Dict[str, Any]]:
@@ -548,9 +542,8 @@ class SammSchemaContextTranslator:
 
             node[self.contextPrefix] = self.create_single_properties_context(properties=properties, actualref=actualref)
             return node
-        except:
-            
-            raise Exception("It was not possible to create object node")
+        except Exception as e:
+            raise SchemaTranslationError("It was not possible to create object node") from e
 
     def create_array_node(self, property: Dict[str, Any], node: Dict[str, Any], actualref: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
@@ -604,9 +597,8 @@ class SammSchemaContextTranslator:
 
             node[self.contextPrefix] = self.create_item_context(item=item, actualref=actualref)
             return node
-        except:
-            
-            raise Exception("It was not possible to create the array node")
+        except Exception as e:
+            raise SchemaTranslationError("It was not possible to create the array node") from e
 
 
     def filter_key(self, key: str) -> str:
@@ -708,9 +700,8 @@ class SammSchemaContextTranslator:
                     newContext["@samm-urn"] = property["x-samm-aspect-model-urn"]
             
             return newContext
-        except:
-            
-            raise Exception("It was not possible to create multiple properties context")
+        except Exception as e:
+            raise SchemaTranslationError("It was not possible to create multiple properties context") from e
 
     def create_single_properties_context(self, properties: Dict[str, Any], actualref: str) -> Optional[Dict[str, Any]]:
         """
@@ -776,9 +767,8 @@ class SammSchemaContextTranslator:
 
             ## Add context properties to the node context
             return newContext
-        except:
-            
-            raise Exception("It was not possible to create properties context")
+        except Exception as e:
+            raise SchemaTranslationError("It was not possible to create properties context") from e
         
     def create_item_context(self, item: Dict[str, Any], actualref: str) -> Optional[Dict[str, Any]]:
         """
@@ -844,9 +834,8 @@ class SammSchemaContextTranslator:
                     newContext["@context"]["@samm-urn"] = item["x-samm-aspect-model-urn"]
 
             return newContext
-        except:
-            
-            raise Exception("It was not possible to create the item context")
+        except Exception as e:
+            raise SchemaTranslationError("It was not possible to create the item context") from e
         
     def create_node_property(self, key: str, node: Dict[str, Any], actualref: str) -> Optional[Dict[str, Any]]:
         """
@@ -916,9 +905,8 @@ class SammSchemaContextTranslator:
                     nodeProperty["@context"]["@samm-urn"] = node["x-samm-aspect-model-urn"]
 
             return nodeProperty
-        except:
-            
-            raise Exception("It was not possible to create node property")
+        except Exception as e:
+            raise SchemaTranslationError("It was not possible to create node property") from e
 
 
     def create_simple_node(self, property: Dict[str, Any], key: Optional[str] = None) -> Optional[Dict[str, Any]]:
@@ -992,9 +980,8 @@ class SammSchemaContextTranslator:
                     newNode["@context"]["@samm-urn"] = property["x-samm-aspect-model-urn"]
 
             return newNode
-        except:
-            
-            raise Exception("It was not possible to create the simple node")
+        except Exception as e:
+            raise SchemaTranslationError("It was not possible to create the simple node") from e
 
     def get_schema_ref(self, ref: str, actualref: str) -> Optional[Dict[str, Any]]:
         """
@@ -1047,8 +1034,7 @@ class SammSchemaContextTranslator:
                 return op.get_attribute(self.baseSchema, attr_path=path, path_sep=self.refPathSep, default_value=None)
             
             if(self.depth >= self.recursionDepth):
-                if(self.verbose and self.logger is not None):
-                    self.logger.warning(f"[WARNING] Infinite recursion detected in the following path: ref[{ref}] and acumulated ref[{actualref}]!")
+                logger.warning("[WARNING] Infinite recursion detected in the following path: ref[%s] and acumulated ref[%s]!", ref, actualref)
                 self.depth=0
                 return None
             
@@ -1057,6 +1043,5 @@ class SammSchemaContextTranslator:
             path = ref.removeprefix(self.path_sep) 
 
             return op.get_attribute(self.baseSchema, attr_path=path, path_sep=self.refPathSep, default_value=None)
-        except:
-            
-            raise Exception("It was not possible to get schema reference")
+        except Exception as e:
+            raise SchemaTranslationError("It was not possible to get schema reference") from e

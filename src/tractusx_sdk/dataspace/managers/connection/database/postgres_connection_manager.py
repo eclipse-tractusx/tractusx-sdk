@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -22,6 +23,7 @@
 ## Code created partially using a LLM (GPT 4o) and reviewed by a human committer
 
 from sqlmodel import Session, select
+from tractusx_sdk.exceptions import ConnectionManagerError
 from ..base_connection_manager import BaseConnectionManager
 from ....models.connection.database.edr_base import EDRBase
 from sqlalchemy.engine import Engine as E
@@ -29,8 +31,10 @@ from sqlalchemy.orm import Session as S
 from ....constants import JSONLDKeys
 import logging
 
+logger = logging.getLogger(__name__)
+
 class PostgresConnectionManager(BaseConnectionManager):
-    def __init__(self, engine: E | S, provider_id_key: str = "providerId", table_name: str = "edr_connections", logger:logging.Logger=None, verbose: bool = False):
+    def __init__(self, engine: E | S, provider_id_key: str = "providerId", table_name: str = "edr_connections"):
         """
         Initialize the PostgresConnectionManager.
 
@@ -38,15 +42,11 @@ class PostgresConnectionManager(BaseConnectionManager):
             engine (Engine | Session): SQLAlchemy engine or session to interact with the database.
             provider_id_key (str): The key used to identify the provider ID in the connection data.
             table_name (str): The name of the table to store EDR connections.
-            logger (logging.Logger, optional): Logger instance for outputting messages.
-            verbose (bool): Whether to output verbose log messages.
         """
         # Store the provided engine and configuration details
         self.engine = engine
         self.provider_id_key = provider_id_key
         self.table_name = table_name
-        self.logger = logger
-        self.verbose = verbose
 
         # Define a dynamic SQLModel class tied to the specified table name for storing EDR connections
         class DynamicEDRConnection(EDRBase, table=True):
@@ -74,7 +74,7 @@ class PostgresConnectionManager(BaseConnectionManager):
         # Extract transfer process ID from the EDR entry and validate it exists
         transfer_process_id: str = connection_entry.get(JSONLDKeys.AT_ID, None)
         if not transfer_process_id:
-            raise Exception("[Postgres Connection Manager] The transfer id key was not found or is empty! Not able to do the contract negotiation!")
+            raise ConnectionManagerError("[Postgres Connection Manager] The transfer id key was not found or is empty! Not able to do the contract negotiation!")
 
         # Remove metadata fields that are not needed for storage
         saved_edr = connection_entry.copy()
@@ -97,8 +97,7 @@ class PostgresConnectionManager(BaseConnectionManager):
             if not session.get(self.EDRConnection, transfer_process_id):
                 session.add(new_entry)
                 session.commit()
-                if self.logger and self.verbose:
-                    self.logger.info("[Postgres Connection Manager] A new EDR entry was saved in the database.")
+                logger.debug("[Postgres Connection Manager] A new EDR entry was saved in the database.")
         return transfer_process_id
 
     def get_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
@@ -172,17 +171,14 @@ class PostgresConnectionManager(BaseConnectionManager):
             self.EDRConnection.policy_checksum == policy_checksum
         )
         # If found, delete the connection and commit the transaction
-        # Log the action if verbose logging is enabled
         # Return True if deleted, False if not found
         with Session(self.engine) as session:
             result = session.exec(stmt).first()
             if result:
                 session.delete(result)
                 session.commit()
-                if self.logger and self.verbose:
-                    self.logger.info(f"[Postgres Connection Manager] Deleted EDR entry for policy checksum '{policy_checksum}'.")
+                logger.debug("[Postgres Connection Manager] Deleted EDR entry for policy checksum '%s'.", policy_checksum)
                 return True
             else:
-                if self.logger and self.verbose:
-                    self.logger.info(f"[Postgres Connection Manager] No EDR found to delete for the provided keys.")
+                logger.debug("[Postgres Connection Manager] No EDR found to delete for the provided keys.")
                 return False

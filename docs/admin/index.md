@@ -31,7 +31,8 @@ This guide covers everything an operator needs to know about the SDK's runtime b
 
 | Section | Description |
 |---------|-------------|
-| [Configuration](configuration.md) | All configurable parameters: `ServiceFactory`, connection managers, authentication, logging |
+| [Configuration](configuration.md) | All configurable parameters: `ServiceFactory`, connection managers, authentication |
+| [Logging and Error Handling](logging.md) | How the SDK logs, how to configure it from your application, log levels, and how errors are reported |
 | [Production Deployment](production-deployment.md) | Production checklist, connection manager selection, multi-process scaling |
 | [Security](security.md) | Credential management, OAuth2 hardening, HTTPS enforcement |
 | [Health Checks](health-checks.md) | Liveness and readiness endpoints using the SDK's observability controller |
@@ -44,6 +45,7 @@ This guide covers everything an operator needs to know about the SDK's runtime b
 | Connection state | Use `PostgresConnectionManager` for multi-process or production deployments |
 | Authentication | Use `OAuth2Manager` with Keycloak in production; never use `AuthManager` (API key) in production |
 | Secrets | Always inject credentials via environment variables — never hardcode them |
+| Logging | The SDK is silent until your application configures `logging`; keep `tractusx_sdk` at `INFO` or `WARNING` in production, never `DEBUG` |
 | Protocol version | Target `saturn` for new deployments; maintain `jupiter` only for legacy EDC compatibility |
 | Documentation updates | Keep the admin guide up-to-date with every release that changes configuration or operational behavior |
 

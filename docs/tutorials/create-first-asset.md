@@ -2,9 +2,9 @@
 
 Eclipse Tractus-X - Software Development KIT
 
-Copyright (c) 2025 LKS Next
+Copyright (c) 2025,2026 LKS Next
 Copyright (c) 2025 Mondragon Unibertsitatea
-Copyright (c) 2025 Contributors to the Eclipse Foundation
+Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -61,10 +61,9 @@ consumer_connector_headers = {
     "Content-Type": "application/json"
 }
 
-# Step 3: Initialize logger
-logger = logging.getLogger(__name__)
-
-
+# Step 3: Configure logging. The SDK logs through the standard logging module
+# and stays silent until you set it up (use logging.DEBUG for more detail)
+logging.basicConfig(level=logging.INFO)
 
 # Step 4: Create connector service using ServiceFactory
 provider_connector_service: BaseConnectorProviderService = ServiceFactory.get_connector_provider_service(
@@ -72,8 +71,6 @@ provider_connector_service: BaseConnectorProviderService = ServiceFactory.get_co
     base_url=consumer_connector_controlplane_hostname,
     dma_path=consumer_connector_controlplane_management_api,
     headers=consumer_connector_headers,
-    logger=logger,
-    verbose=True
 )
 
 # Step 5: Test the connection
@@ -148,10 +145,9 @@ consumer_connector_headers = {
     "Content-Type": "application/json"
 }
 
-# Step 3: Initialize logger
-logger = logging.getLogger(__name__)
-
-
+# Step 3: Configure logging. The SDK logs through the standard logging module
+# and stays silent until you set it up (use logging.DEBUG for more detail)
+logging.basicConfig(level=logging.INFO)
 
 # Step 4: Create connector service using ServiceFactory
 provider_connector_service: BaseConnectorProviderService = ServiceFactory.get_connector_provider_service(
@@ -159,8 +155,6 @@ provider_connector_service: BaseConnectorProviderService = ServiceFactory.get_co
     base_url=consumer_connector_controlplane_hostname,
     dma_path=consumer_connector_controlplane_management_api,
     headers=consumer_connector_headers,
-    logger=logger,
-    verbose=True
 )
 
 # Step 5: Test the connection
@@ -258,10 +252,9 @@ consumer_connector_headers = {
     "Content-Type": "application/json"
 }
 
-# Step 3: Initialize logger
-logger = logging.getLogger(__name__)
-
-
+# Step 3: Configure logging. The SDK logs through the standard logging module
+# and stays silent until you set it up (use logging.DEBUG for more detail)
+logging.basicConfig(level=logging.INFO)
 
 # Step 4: Create connector service using ServiceFactory
 provider_connector_service: BaseConnectorProviderService = ServiceFactory.get_connector_provider_service(
@@ -269,8 +262,6 @@ provider_connector_service: BaseConnectorProviderService = ServiceFactory.get_co
     base_url=consumer_connector_controlplane_hostname,
     dma_path=consumer_connector_controlplane_management_api,
     headers=consumer_connector_headers,
-    logger=logger,
-    verbose=True
 )
 
 # Step 5: Test the connection

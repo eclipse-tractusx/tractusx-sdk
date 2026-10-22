@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2025 Catena-X Automotive Network e.V.
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
@@ -26,6 +27,7 @@ from ....tools import op, HttpTools, DspTools
 from ..base_connector_consumer import BaseConnectorConsumerService
 from ....managers.connection.base_connection_manager import BaseConnectionManager
 import logging
+from tractusx_sdk.exceptions import CatalogError
 from ....models.connector.model_factory import ModelFactory, DataspaceVersionMapping
 from ....adapters.connector.adapter_factory import AdapterFactory
 from ....controllers.connector.base_dma_controller import BaseDmaController
@@ -33,6 +35,9 @@ from ....controllers.connector.controller_factory import ControllerType, Control
 from ....models.connector.saturn.catalog_model import CatalogModel
 import hashlib
 from requests import Response
+
+logger = logging.getLogger(__name__)
+
 class ConnectorConsumerService(BaseConnectorConsumerService):
     
     EDC_NAMESPACE= "https://w3id.org/edc/v0.0.1/ns/"
@@ -46,7 +51,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     ERROR_NO_DATAPLANE_OR_TOKEN: str = "[Connector Service]: No dataplane URL or access_token was able to be retrieved!"
     APPLICATION_JSON_CONTENT_TYPE: str = "application/json"
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
-                 connection_manager: BaseConnectionManager = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None,
+                 connection_manager: BaseConnectionManager = None,
                  verify_ssl: bool = True, trace: bool = False):
         """
         :param trace: Flag enabling the tracing of the requests sent to (and the
@@ -55,9 +60,6 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             and `set_tracer()` shares it with other services
         """
         # Set attributes before accessing them
-        self.verbose = verbose
-        self.debug = debug
-        self.logger = logger
         self.verify_ssl = verify_ssl
         
         # Validate dataspace_version is saturn
@@ -65,9 +67,6 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             raise ValueError(f"Saturn ConnectorConsumerService only supports dataspace_version='saturn', got '{dataspace_version}'")
         
         self.dataspace_version = dataspace_version
-        # Backwards compatibility: if verbose is True and no logger provided, use default logger
-        if self.verbose and self.logger is None:
-            self.logger = logging.getLogger(__name__)
 
         self.dma_adapter = AdapterFactory.get_dma_adapter(
             dataspace_version=self.dataspace_version,
@@ -95,9 +94,6 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             dma_path=dma_path,
             headers=headers,
             connection_manager=connection_manager,
-            verbose=verbose,
-            debug=debug,
-            logger=logger,
             trace=trace
         )
         
@@ -113,25 +109,22 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         Returns:
         tuple[str, str, str]: counter_party_address, counter_party_id, protocol
         """
-        if self.logger:
-            self.logger.debug(
-                "[_resolve_counter_party_info] Inputs: bpnl=%s, counter_party_id=%s, counter_party_address=%s, protocol=%s",
-                bpnl, counter_party_id, counter_party_address, protocol
-            )
+        logger.debug(
+            "[_resolve_counter_party_info] Inputs: bpnl=%s, counter_party_id=%s, counter_party_address=%s, protocol=%s",
+            bpnl, counter_party_id, counter_party_address, protocol
+        )
         if bpnl is not None:
             result = self.get_discovery_info(bpnl=bpnl, counter_party_address=counter_party_address, namespace=namespace, verify=verify)
-            if self.logger:
-                self.logger.debug(
-                    "[_resolve_counter_party_info] Resolved via discovery: address=%s, id=%s, protocol=%s",
-                    result[0], result[1], result[2]
-                )
+            logger.debug(
+                "[_resolve_counter_party_info] Resolved via discovery: address=%s, id=%s, protocol=%s",
+                result[0], result[1], result[2]
+            )
             return result
         else:
-            if self.logger:
-                self.logger.debug(
-                    "[_resolve_counter_party_info] Using provided values: address=%s, id=%s, protocol=%s",
-                    counter_party_address, counter_party_id, protocol
-                )
+            logger.debug(
+                "[_resolve_counter_party_info] Using provided values: address=%s, id=%s, protocol=%s",
+                counter_party_address, counter_party_id, protocol
+            )
             # Use provided values and protocol
             return counter_party_address, counter_party_id, protocol
     
@@ -201,12 +194,11 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             bpnl=bpnl, protocol=protocol, namespace=namespace, verify=verify
         )
 
-        if self.logger:
-            self.logger.debug(
-                "[_get_catalog_internal] Resolved: address=%s, id=%s, protocol=%s, filter=%s",
-                resolved_address, resolved_id, resolved_protocol,
-                filter_expression if filter_expression else "(none)"
-            )
+        logger.debug(
+            "[_get_catalog_internal] Resolved: address=%s, id=%s, protocol=%s, filter=%s",
+            resolved_address, resolved_id, resolved_protocol,
+            filter_expression if filter_expression else "(none)"
+        )
         
         if filter_expression:
             catalog_request = self.get_catalog_request_with_filter(
@@ -219,8 +211,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 protocol=resolved_protocol, context=context
             )
 
-        if self.logger:
-            self.logger.debug(
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
                 "[_get_catalog_internal] Sending catalog request payload: %s",
                 catalog_request.to_data() if hasattr(catalog_request, 'to_data') else catalog_request
             )
@@ -280,8 +272,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                                                  protocol=protocol,
                                                                                  context=context)
         
-        if self.logger:
-            self.logger.debug(
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
                 "[start_edr_negotiation] Request payload: %s",
                 request.to_data() if hasattr(request, 'to_data') else request
             )
@@ -312,20 +304,19 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         Returns:
         list: A single-element list containing the auto-selected policy.
         """
-        if self.logger:
-            self.logger.warning(
-                "\n%s\n"
-                "  ATTENTION! — policies=None DETECTED\n"
-                "%s\n"
-                "  [Connector Service]: [%s]\n"
-                "  ANY policy offered by the provider will be accepted automatically.\n"
-                "  This bypasses all usage-policy enforcement.\n"
-                "\n"
-                "  ▶  RECOMMENDED FOR TESTING / DEVELOPMENT ONLY.\n"
-                "  ▶  DO NOT USE IN PRODUCTION.\n"
-                "     Always pass an explicit allow-list of accepted policies.\n"
-                "%s",
-                "=" * 72, "=" * 72, counter_party_address, "=" * 72)
+        logger.warning(
+            "\n%s\n"
+            "  ATTENTION! — policies=None DETECTED\n"
+            "%s\n"
+            "  [Connector Service]: [%s]\n"
+            "  ANY policy offered by the provider will be accepted automatically.\n"
+            "  This bypasses all usage-policy enforcement.\n"
+            "\n"
+            "  ▶  RECOMMENDED FOR TESTING / DEVELOPMENT ONLY.\n"
+            "  ▶  DO NOT USE IN PRODUCTION.\n"
+            "     Always pass an explicit allow-list of accepted policies.\n"
+            "%s",
+            "=" * 72, "=" * 72, counter_party_address, "=" * 72)
 
         catalog_response = self.get_catalog_with_filter(
             counter_party_id=counter_party_id,
@@ -335,24 +326,23 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             filter_expression=filter_expression
         )
         if catalog_response is None:
-            raise RuntimeError(
+            raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] Could not retrieve the catalog to discover available policies!")
         try:
             valid_assets_policies = DspTools.filter_assets_and_policies(
                 catalog=catalog_response, allowed_policies=None)
         except Exception as e:
-            raise RuntimeError(
-                f"[Connector Service]: [{counter_party_address}] No policy found in catalog: [{str(e)}]")
+            raise CatalogError(
+                f"[Connector Service]: [{counter_party_address}] No policy found in catalog: [{str(e)}]") from e
         if not valid_assets_policies:
-            raise RuntimeError(
+            raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] No policy found in catalog!")
         ## Use the first available policy; strip @id/@type for a consistent cache key.
         _, raw_policy = valid_assets_policies[0]
         policies = [{k: v for k, v in raw_policy.items() if k not in ['@id', '@type']}]
-        if self.logger:
-            self.logger.info(
-                "[Connector Service]: [%s]: policies=None → auto-selected policy from catalog: %s",
-                counter_party_address, policies)
+        logger.info(
+            "[Connector Service]: [%s]: policies=None → auto-selected policy from catalog: %s",
+            counter_party_address, policies)
         return policies
 
     def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
@@ -412,16 +402,14 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         
         ## If is there return the cached one, if the selection is the same the transfer id can be reused!
         if (transfer_process_id is not None):
-            if self.logger:
-                self.logger.debug(
-                    "[Connector Service]: [%s]: EDR transfer_id=[%s] found in the cache for counter_party_id=[%s], filter=[%s] and selected policies",
-                    counter_party_address, transfer_process_id, counter_party_id, filter_expression)
+            logger.debug(
+                "[Connector Service]: [%s]: EDR transfer_id=[%s] found in the cache for counter_party_id=[%s], filter=[%s] and selected policies",
+                counter_party_address, transfer_process_id, counter_party_id, filter_expression)
             return transfer_process_id
 
-        if self.logger:
-            self.logger.info(
-                "[Connector Service]: The EDR was not found in the cache for counter_party_address=[%s], counter_party_id=[%s], filter=[%s] and selected policies, starting new contract negotiation!",
-                counter_party_address, counter_party_id, filter_expression)
+        logger.info(
+            "[Connector Service]: The EDR was not found in the cache for counter_party_address=[%s], counter_party_id=[%s], filter=[%s] and selected policies, starting new contract negotiation!",
+            counter_party_address, counter_party_id, filter_expression)
 
         ## If not the contract negotiation MUST be done!
         edr_entry: dict = self.negotiate_and_transfer(counter_party_id=counter_party_id,
@@ -442,8 +430,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                                       query_checksum=filter_expression_checksum,
                                                                       policy_checksum=current_policies_checksum,
                                                                       connection_entry=edr_entry)
-        if self.logger:
-            self.logger.info("[Connector Service]: The EDR Entry was found! Transfer Process ID: [%s]", transfer_process_id)
+        logger.info("[Connector Service]: The EDR Entry was found! Transfer Process ID: [%s]", transfer_process_id)
 
         return transfer_process_id
         
@@ -478,8 +465,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         tuple[str, str, str]: A tuple containing the counter party address, counter party ID, and protocol.
         """
         discovery_info = self.discover_connector_protocol(bpnl=bpnl, counter_party_address=counter_party_address, verify=verify)
-        if self.logger:
-            self.logger.debug("[get_discovery_info] Raw discovery response: %s", discovery_info)
+        logger.debug("[get_discovery_info] Raw discovery response: %s", discovery_info)
 
         def _get(key: str):
             namespaced = f"{namespace}{key}"
@@ -595,8 +581,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 )
                 catalogs[counter_party_address] = self.get_catalog(request=catalog_request, timeout=timeout)
             except Exception as e:
-                if self.logger:
-                    self.logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", counter_party_address, e)
+                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", counter_party_address, e)
                 catalogs[counter_party_address] = {"error": str(e)}
 
         for edc_url in edcs:
@@ -626,8 +611,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                              filter_expression=filter_expression, timeout=timeout,
                                                              context=context, namespace=namespace)
             except Exception as e:
-                if self.logger:
-                    self.logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
+                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
                 catalogs[edc_url] = {"error": str(e)}
         return catalogs
 
@@ -745,8 +729,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                              filter_expression=filter_expression, timeout=timeout,
                                                              context=context, namespace=namespace)
             except Exception as e:
-                if self.logger:
-                    self.logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
+                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
                 catalogs[edc_url] = {"error": str(e)}
 
         for edc_url in edcs:
