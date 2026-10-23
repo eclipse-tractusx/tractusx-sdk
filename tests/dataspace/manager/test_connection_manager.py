@@ -309,6 +309,16 @@ class TestPostgresMemoryConnectionManagerClearByParty(unittest.TestCase):
 
         self.assertEqual(removed, 1)
 
+    def test_delete_connection_returns_false_when_connection_is_missing(self):
+        deleted = self.cm.delete_connection(
+            counter_party_id="BPNL000000000001",
+            counter_party_address="https://provider.example.com/api",
+            query_checksum="qchk",
+            policy_checksum="pchk",
+        )
+
+        self.assertFalse(deleted)
+
 
 if __name__ == "__main__":
     unittest.main()
