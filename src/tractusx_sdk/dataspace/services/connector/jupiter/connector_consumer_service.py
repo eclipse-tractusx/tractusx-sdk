@@ -97,7 +97,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         max_wait: int = 60,
         poll_interval: int = 1,
         verify: bool = False,
-        headers: dict = {},
+        headers: dict = None,
         timeout: int = None,
         params: dict = None,
         allow_redirects: bool = False,
