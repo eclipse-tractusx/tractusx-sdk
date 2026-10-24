@@ -128,6 +128,9 @@ class BaseConnectorProviderService(BaseService):
                 "dct": "http://purl.org/dc/terms/"
             }
 
+        if semantic_id is not None:
+            context = {**context, "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/"}
+
         data_address = {
             "@type": "DataAddress",
             "type": data_address_type,
@@ -206,7 +209,6 @@ class BaseConnectorProviderService(BaseService):
             _properties["cx-common:version"] = version
     
         if semantic_id is not None:
-            context["aas-semantics"] = "https://admin-shell.io/aas/3/0/HasSemantics/"
             _properties["aas-semantics:semanticId"] = {"@id": semantic_id}
             
         if properties is not None:
