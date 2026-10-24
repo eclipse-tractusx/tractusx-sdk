@@ -604,6 +604,19 @@ class TestSaturnConnectorConsumerService(TestCase):
             
             with self.assertRaises(ConnectionError):
                 self.service.discover_connector_protocol(bpnl=bpnl)
+
+    def test_discover_connector_protocol_missing_response(self):
+        """Test discover_connector_protocol when the HTTP client returns no response."""
+        bpnl = "BPNL000000000001"
+
+        with mock.patch.object(self.service, '_connector_discovery_controller') as mock_discovery, \
+             mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.ModelFactory') as mock_factory:
+
+            mock_discovery.get_discover.return_value = None
+            mock_factory.get_connector_discovery_model.return_value = mock.Mock()
+
+            with self.assertRaisesRegex(ConnectionError, "No response received"):
+                self.service.discover_connector_protocol(bpnl=bpnl)
     
     def test_get_discovery_info_variations(self):
         """Test get_discovery_info with different protocol and ID combinations."""
