@@ -295,8 +295,6 @@ class NotificationConsumerService(BaseService):
                 counter_party_address=provider_dsp_url,
                 filter_expression=filter_expression,
                 policies=policies,
-                max_retries=max_retries,
-                timeout=retry_timeout,
             )
             
             if self.verbose:
