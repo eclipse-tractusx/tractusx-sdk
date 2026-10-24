@@ -239,6 +239,32 @@ class TestNegotiateNotificationAccess:
         mock_connector_consumer.negotiate_and_transfer.assert_called_once()
         call_kwargs = mock_connector_consumer.negotiate_and_transfer.call_args[1]
         assert call_kwargs["policies"] == policies
+
+    def test_negotiate_notification_access_uses_supported_connector_arguments(self, mock_connector_consumer):
+        """Test negotiation only forwards arguments supported by the connector."""
+        filter_expression = {"operandLeft": "dct:type", "operator": "=", "operandRight": "event-api"}
+        mock_connector_consumer.get_filter_expression.return_value = filter_expression
+        mock_connector_consumer.negotiate_and_transfer.return_value = {"transferProcessId": "transfer-123"}
+
+        service = NotificationConsumerService(
+            connector_consumer=mock_connector_consumer,
+        )
+
+        service.negotiate_notification_access(
+            provider_bpn="BPNL000000000002",
+            provider_dsp_url="https://provider.com/dsp",
+            policies=[],
+            max_retries=3,
+            retry_timeout=42,
+            dct_type="event-api",
+        )
+
+        mock_connector_consumer.negotiate_and_transfer.assert_called_once_with(
+            counter_party_id="BPNL000000000002",
+            counter_party_address="https://provider.com/dsp",
+            filter_expression=[filter_expression],
+            policies=[],
+        )
     
     def test_negotiate_notification_access_error(self, mock_connector_consumer):
         """Test error handling during negotiation."""
