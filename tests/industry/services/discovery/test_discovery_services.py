@@ -66,6 +66,13 @@ def test_get_bpn_discovery_url_not_found(service, mock_discovery_finder):
         with pytest.raises(Exception, match="BPN Discovery endpoint not found"):
             service.get_bpn_discovery_url("manufacturerPartId")
 
+@pytest.mark.parametrize("discovery_url", [None, ""])
+def test_get_or_update_discovery_url_rejects_falsy_url(service, mock_discovery_finder, discovery_url):
+    """A falsy discovery URL without a cache entry raises a meaningful error."""
+    with mock.patch.object(service, "get_discovery_url", return_value=discovery_url):
+        with pytest.raises(ValueError, match="Discovery finder returned no URL"):
+            service._get_or_update_discovery_url("manufacturerPartId")
+
 @mock.patch("tractusx_sdk.dataspace.services.discovery.discovery_finder_service.HttpTools")
 @mock.patch("tractusx_sdk.industry.services.discovery.bpn_discovery_service.HttpTools")
 def test_search_bpns_success(mock_bpn_http, mock_finder_http, service):

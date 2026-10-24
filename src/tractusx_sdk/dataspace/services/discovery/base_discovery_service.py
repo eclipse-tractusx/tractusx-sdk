@@ -132,6 +132,10 @@ class BaseDiscoveryService(BaseService, ABC):
                         service_name = self.get_service_name()
                         self.logger.info(f"[{service_name}] Updated cache with new discovery URL for key '{discovery_key}': {url}")
                         self.logger.info(f"[{service_name}] Cache status: {cache_count} URL(s) cached, valid until {valid_until.strftime('%Y-%m-%d %H:%M:%S')}")
+                elif not entry:
+                    raise ValueError(
+                        f"[{self.get_service_name()}] Discovery finder returned no URL for key '{discovery_key}'"
+                    )
                     
             except Exception as e:
                 # If we have a cached entry, preserve it and continue using it
