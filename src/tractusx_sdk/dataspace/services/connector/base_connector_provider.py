@@ -29,6 +29,9 @@ from ...models.connector.model_factory import ModelFactory
 import logging
 
 
+_UNSET = object()
+
+
 class BaseConnectorProviderService(BaseService):
     _asset_controller: BaseDmaController
     _contract_definition_controller: BaseDmaController
@@ -102,7 +105,7 @@ class BaseConnectorProviderService(BaseService):
         dct_subject: str = None,
         version: str = "3.0",
         semantic_id: str = None,
-        proxy_params: dict = None,
+        proxy_params: dict | None | object = _UNSET,
         headers: dict = None,
         properties: dict = None,
         private_properties: dict = None,
@@ -114,7 +117,7 @@ class BaseConnectorProviderService(BaseService):
         if self.verbose:
             self.logger.info(f"Creating asset {asset_id} at {base_url}.")
 
-        if proxy_params is None:
+        if proxy_params is _UNSET:
             proxy_params = {
                 "proxyQueryParams": "false",
                 "proxyPath": "true",

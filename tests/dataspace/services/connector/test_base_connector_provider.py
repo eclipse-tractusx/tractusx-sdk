@@ -93,6 +93,32 @@ def test_create_asset_success(mock_get_asset_model, service):
 
 
 @patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_without_proxy_params_uses_defaults(mock_get_asset_model, service):
+    """Omitting proxy_params applies the default proxy configuration."""
+    mock_get_asset_model.return_value = {"mock": "asset"}
+    service._asset_controller.create.return_value = Mock(status_code=200, json=lambda: {"asset": "ok"})
+
+    service.create_asset(asset_id="123", base_url="http://test")
+
+    data_address = mock_get_asset_model.call_args.kwargs["data_address"]
+    assert data_address["proxyPath"] == "true"
+    assert data_address["proxyMethod"] == "true"
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_with_explicit_none_proxy_params_skips_defaults(mock_get_asset_model, service):
+    """Explicit proxy_params=None omits proxy configuration from the data address."""
+    mock_get_asset_model.return_value = {"mock": "asset"}
+    service._asset_controller.create.return_value = Mock(status_code=200, json=lambda: {"asset": "ok"})
+
+    service.create_asset(asset_id="123", base_url="http://test", proxy_params=None)
+
+    data_address = mock_get_asset_model.call_args.kwargs["data_address"]
+    assert "proxyPath" not in data_address
+    assert "proxyMethod" not in data_address
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
 def test_create_asset_failure_raises(mock_get_asset_model, service):
     mock_response = Mock(status_code=400, text="Bad Request")
     service._asset_controller.create.return_value = mock_response
