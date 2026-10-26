@@ -39,6 +39,13 @@ _DATASET_KEYS = (DSP2025_DATASET_KEY, DSP_DATASET_KEY)   # "dataset", "dcat:data
 _POLICY_KEYS  = (DSP2025_POLICY_KEY,  DSP_POLICY_KEY)    # "hasPolicy", "odrl:hasPolicy"
 
 
+class _UnsetAllowedPolicies:
+    pass
+
+
+_UNSET_ALLOWED_POLICIES = _UnsetAllowedPolicies()
+
+
 def _get_datasets(catalog: dict):
     """Return the ``dataset`` value from a catalog, trying DSP 2025-1 and legacy keys."""
     for key in _DATASET_KEYS:
@@ -490,7 +497,7 @@ class PolicyMismatchError(ValueError):
         ``None`` means no filtering was asked for and ``[]`` accepts nothing.
     """
 
-    def __init__(self, message: str, catalog: dict = None, allowed_policies: list = None) -> None:
+    def __init__(self, message: str, catalog: dict | None = None, allowed_policies: list | None = None) -> None:
         super().__init__(message)
         self.catalog = catalog
         self.allowed_policies = allowed_policies
@@ -504,7 +511,10 @@ class DspTools:
     """
     
     @staticmethod
-    def filter_assets_and_policies(catalog:dict, allowed_policies:list=None) -> list[tuple[str, dict]]:
+    def filter_assets_and_policies(
+        catalog: dict | None,
+        allowed_policies: list | None | _UnsetAllowedPolicies = _UNSET_ALLOWED_POLICIES,
+    ) -> list[tuple[str, dict]]:
         """
         Method to select a asset and policy from a DCAT Catalog.
 
@@ -514,6 +524,9 @@ class DspTools:
 
         if catalog is None:
             raise Exception("It was not possible to get the policy, because the catalog is empty!")
+
+        if allowed_policies is _UNSET_ALLOWED_POLICIES:
+            allowed_policies = []
         
         dataset:list|dict = _get_datasets(catalog)
         ### Asset Evaluation
@@ -569,12 +582,18 @@ class DspTools:
         return len(dataset) == 0
         
     @staticmethod
-    def get_dataset_policy(dataset:dict, allowed_policies:list=None) -> dict | None:
+    def get_dataset_policy(
+        dataset: dict,
+        allowed_policies: list | None | _UnsetAllowedPolicies = _UNSET_ALLOWED_POLICIES,
+    ) -> dict | None:
         """
         Gets a valid policy from an dataset.
 
         @returns: dict: the selected policy or None if no valid policy was found
         """
+        if allowed_policies is _UNSET_ALLOWED_POLICIES:
+            allowed_policies = []
+
         ### Policy Evaluation
         policies:dict|list = _get_policies(dataset)    
 
@@ -593,7 +612,7 @@ class DspTools:
         return None
     
     @staticmethod
-    def is_policy_valid(policy:dict, allowed_policies:list=None) -> bool:
+    def is_policy_valid(policy: dict, allowed_policies: list | None = None) -> bool:
         """
         Checks whether a catalog offer policy is acceptable.
 
