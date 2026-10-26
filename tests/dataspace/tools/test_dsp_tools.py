@@ -388,6 +388,11 @@ class TestDspToolsSaturnPolicyMatching:
         catalog_policy = SATURN_CATALOG["dataset"][0]["hasPolicy"][0]
         assert DspTools.is_policy_valid(policy=catalog_policy, allowed_policies=[]) is False
 
+    def test_filter_assets_default_policy_list_accepts_everything(self):
+        """Omitting the allow-list keeps the documented None semantics."""
+        result = DspTools.filter_assets_and_policies(catalog=SATURN_CATALOG)
+        assert len(result) == 1
+
     def test_filter_assets_empty_policies_raises(self):
         """
         An empty allowed list means no policy can match → ValueError expected.

@@ -504,7 +504,7 @@ class DspTools:
     """
     
     @staticmethod
-    def filter_assets_and_policies(catalog:dict, allowed_policies:list=[]) -> list[tuple[str, dict]]:
+    def filter_assets_and_policies(catalog:dict, allowed_policies:list=None) -> list[tuple[str, dict]]:
         """
         Method to select a asset and policy from a DCAT Catalog.
 
@@ -569,7 +569,7 @@ class DspTools:
         return len(dataset) == 0
         
     @staticmethod
-    def get_dataset_policy(dataset:dict, allowed_policies:list=[]) -> dict | None:
+    def get_dataset_policy(dataset:dict, allowed_policies:list=None) -> dict | None:
         """
         Gets a valid policy from an dataset.
 

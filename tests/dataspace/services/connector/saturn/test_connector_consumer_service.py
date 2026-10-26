@@ -535,6 +535,34 @@ class TestSaturnConnectorConsumerService(TestCase):
         
         self.assertEqual(result, cached_transfer_id)
         self.mock_connection_manager.get_connection_transfer_id.assert_called_once()
+
+    def test_get_transfer_id_without_policies_fails_closed(self):
+        """An omitted policy list must not accept a provider policy automatically."""
+        with self.assertRaises(ValueError):
+            self.service.get_transfer_id(
+                counter_party_id="BPNL000000000001",
+                counter_party_address="https://provider.example.com",
+                filter_expression=[{"key": "test"}],
+            )
+
+        self.mock_connection_manager.get_connection_transfer_id.assert_not_called()
+
+    def test_get_transfer_id_with_explicit_none_auto_selects_policy(self):
+        """An explicit None retains the opt-in catalog policy selection."""
+        self.mock_connection_manager.get_connection_transfer_id.return_value = "cached-transfer-123"
+
+        with mock.patch.object(self.service, '_resolve_policies_from_catalog') as mock_resolve:
+            mock_resolve.return_value = [{"permission": {"action": "use"}}]
+
+            result = self.service.get_transfer_id(
+                counter_party_id="BPNL000000000001",
+                counter_party_address="https://provider.example.com",
+                filter_expression=[{"key": "test"}],
+                policies=None,
+            )
+
+        self.assertEqual(result, "cached-transfer-123")
+        mock_resolve.assert_called_once()
     
     def test_get_transfer_id_new_negotiation(self):
         """Test get_transfer_id with new negotiation."""
@@ -605,36 +633,35 @@ class TestSaturnConnectorConsumerService(TestCase):
             with self.assertRaises(ConnectionError):
                 self.service.discover_connector_protocol(bpnl=bpnl)
     
-    def test_get_discovery_info_variations(self):
-        """Test get_discovery_info with different protocol and ID combinations."""
-        test_cases = [
-            {
-                "name": "legacy_bpnl",
-                "discovery_info": {
-                    "https://w3id.org/edc/v0.0.1/ns/counterPartyAddress": "https://provider.example.com",
-                    "https://w3id.org/edc/v0.0.1/ns/counterPartyId": "BPNL000000000001",
-                    "https://w3id.org/edc/v0.0.1/ns/protocol": "dataspace-protocol-http"
-                },
-                "expected": ("https://provider.example.com", "BPNL000000000001", "dataspace-protocol-http")
-            },
-            {
-                "name": "did_modern",
-                "discovery_info": {
-                    "https://w3id.org/edc/v0.0.1/ns/counterPartyAddress": "https://provider.example.com",
-                    "https://w3id.org/edc/v0.0.1/ns/counterPartyId": "did:web:connector-provider.example.com",
-                    "https://w3id.org/edc/v0.0.1/ns/protocol": "dataspace-protocol-https:2025-1"
-                },
-                "expected": ("https://provider.example.com", "did:web:connector-provider.example.com", "dataspace-protocol-https:2025-1")
-            }
-        ]
-        
-        for case in test_cases:
-            with self.subTest(case["name"]):
-                bpnl = "BPNL000000000001"
-                with mock.patch.object(self.service, 'discover_connector_protocol') as mock_discover:
-                    mock_discover.return_value = case["discovery_info"]
-                    result = self.service.get_discovery_info(bpnl=bpnl)
-                    self.assertEqual(result, case["expected"])
+    def _assert_get_discovery_info(self, discovery_info, expected):
+        with mock.patch.object(self.service, 'discover_connector_protocol') as mock_discover:
+            mock_discover.return_value = discovery_info
+            result = self.service.get_discovery_info(bpnl="BPNL000000000001")
+            self.assertEqual(result, expected)
+
+    def test_get_discovery_info_legacy_bpnl(self):
+        """Test get_discovery_info with a legacy BPNL response."""
+        discovery_info = {
+            "https://w3id.org/edc/v0.0.1/ns/counterPartyAddress": "https://provider.example.com",
+            "https://w3id.org/edc/v0.0.1/ns/counterPartyId": "BPNL000000000001",
+            "https://w3id.org/edc/v0.0.1/ns/protocol": "dataspace-protocol-http"
+        }
+        self._assert_get_discovery_info(
+            discovery_info,
+            ("https://provider.example.com", "BPNL000000000001", "dataspace-protocol-http")
+        )
+
+    def test_get_discovery_info_modern_did(self):
+        """Test get_discovery_info with a modern DID response."""
+        discovery_info = {
+            "https://w3id.org/edc/v0.0.1/ns/counterPartyAddress": "https://provider.example.com",
+            "https://w3id.org/edc/v0.0.1/ns/counterPartyId": "did:web:connector-provider.example.com",
+            "https://w3id.org/edc/v0.0.1/ns/protocol": "dataspace-protocol-https:2025-1"
+        }
+        self._assert_get_discovery_info(
+            discovery_info,
+            ("https://provider.example.com", "did:web:connector-provider.example.com", "dataspace-protocol-https:2025-1")
+        )
     
 
     
@@ -658,45 +685,40 @@ class TestSaturnConnectorConsumerService(TestCase):
                 verify=None
             )
     
-    def test_get_catalog_request_protocol_variations(self):
-        """Test get_catalog_request with different protocols."""
-        test_cases = [
-            {
-                "name": "dsp_2025",
-                "protocol": "dataspace-protocol-https:2025-1",
-                "counter_party_id": "did:web:connector-provider.example.com",
-                "expected_version": "saturn"
-            },
-            {
-                "name": "legacy_http",
-                "protocol": "dataspace-protocol-http",
-                "counter_party_id": "BPNL000000000001",
-                "expected_version": "jupiter"
-            }
-        ]
-        
-        for case in test_cases:
-            with self.subTest(case["name"]):
-                counter_party_address = "https://provider.example.com"
-                
-                with mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.ModelFactory') as mock_factory, \
-                     mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.DataspaceVersionMapping') as mock_mapping:
-                    
-                    mock_model = mock.Mock()
-                    mock_factory.get_catalog_model.return_value = mock_model
-                    mock_enum_value = mock.Mock()
-                    mock_enum_value.value = case["expected_version"]
-                    mock_mapping.from_protocol.return_value = mock_enum_value
-                    
-                    result = self.service.get_catalog_request(
-                        counter_party_id=case["counter_party_id"],
-                        counter_party_address=counter_party_address,
-                        protocol=case["protocol"]
-                    )
-                    
-                    self.assertEqual(result, mock_model)
-                    mock_factory.get_catalog_model.assert_called_once()
-                    mock_mapping.from_protocol.assert_called_once_with(case["protocol"])
+    def _assert_get_catalog_request_protocol(self, protocol, counter_party_id, expected_version):
+        with mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.ModelFactory') as mock_factory, \
+             mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.DataspaceVersionMapping') as mock_mapping:
+            mock_model = mock.Mock()
+            mock_factory.get_catalog_model.return_value = mock_model
+            mock_enum_value = mock.Mock()
+            mock_enum_value.value = expected_version
+            mock_mapping.from_protocol.return_value = mock_enum_value
+
+            result = self.service.get_catalog_request(
+                counter_party_id=counter_party_id,
+                counter_party_address="https://provider.example.com",
+                protocol=protocol
+            )
+
+            self.assertEqual(result, mock_model)
+            mock_factory.get_catalog_model.assert_called_once()
+            mock_mapping.from_protocol.assert_called_once_with(protocol)
+
+    def test_get_catalog_request_dsp_2025(self):
+        """Test get_catalog_request with DSP 2025-1."""
+        self._assert_get_catalog_request_protocol(
+            protocol="dataspace-protocol-https:2025-1",
+            counter_party_id="did:web:connector-provider.example.com",
+            expected_version="saturn"
+        )
+
+    def test_get_catalog_request_legacy_http(self):
+        """Test get_catalog_request with the legacy HTTP protocol."""
+        self._assert_get_catalog_request_protocol(
+            protocol="dataspace-protocol-http",
+            counter_party_id="BPNL000000000001",
+            expected_version="jupiter"
+        )
     
 
     
@@ -770,6 +792,7 @@ class TestSaturnConnectorConsumerService(TestCase):
             
             self.assertEqual(result, mock_response)
             mock_dsp.assert_called_once()
+            self.assertEqual(mock_dsp.call_args.kwargs["policies"], [])
             mock_execute.assert_called_once()
     
     def test_do_get_missing_dataplane_info(self):
@@ -879,140 +902,114 @@ class TestSaturnConnectorConsumerService(TestCase):
             mock_transfer.assert_called_once()
             mock_endpoint.assert_called_once_with(transfer_id=transfer_id)
     
-    def test_do_dsp_with_bpnl_protocol_variations(self):
-        """Test do_dsp_with_bpnl with different protocol and discovery results."""
-        test_cases = [
-            {
-                "name": "legacy_bpnl",
-                "discovery_result": ("https://discovered.provider.com", "BPNL000000000001", "dataspace-protocol-http"),
-                "expected_counter_party_id": "BPNL000000000001"
-            },
-            {
-                "name": "modern_did",
-                "discovery_result": ("https://discovered.provider.com", "did:web:connector-provider.example.com", "dataspace-protocol-https:2025-1"),
-                "expected_counter_party_id": "did:web:connector-provider.example.com"
-            }
-        ]
-        
-        for case in test_cases:
-            with self.subTest(case["name"]):
-                bpnl = "BPNL000000000001"
-                counter_party_address = "https://provider.example.com"
-                filter_expression = [{"key": "test"}]
-                policies = [{"@id": "policy-123"}]
-                expected_url = "https://dataplane.example.com"
-                expected_token = "access-token-123"
-                
-                with mock.patch.object(self.service, 'get_discovery_info') as mock_discovery, \
-                     mock.patch.object(self.service, 'do_dsp') as mock_dsp:
-                    
-                    mock_discovery.return_value = case["discovery_result"]
-                    mock_dsp.return_value = (expected_url, expected_token)
-                    
-                    result = self.service.do_dsp_with_bpnl(
-                        bpnl=bpnl,
-                        counter_party_address=counter_party_address,
-                        filter_expression=filter_expression,
-                        policies=policies
-                    )
-                    
-                    self.assertEqual(result, (expected_url, expected_token))
-                    mock_discovery.assert_called_once()
-                    # Verify the correct counter party ID was used
-                    call_args = mock_dsp.call_args
-                    self.assertEqual(call_args[1]['counter_party_id'], case["expected_counter_party_id"])
+    def _assert_do_dsp_with_bpnl(self, discovery_result, expected_counter_party_id):
+        with mock.patch.object(self.service, 'get_discovery_info') as mock_discovery, \
+             mock.patch.object(self.service, 'do_dsp') as mock_dsp:
+            mock_discovery.return_value = discovery_result
+            mock_dsp.return_value = ("https://dataplane.example.com", "access-token-123")
+
+            result = self.service.do_dsp_with_bpnl(
+                bpnl="BPNL000000000001",
+                counter_party_address="https://provider.example.com",
+                filter_expression=[{"key": "test"}],
+                policies=[{"@id": "policy-123"}]
+            )
+
+            self.assertEqual(result, ("https://dataplane.example.com", "access-token-123"))
+            mock_discovery.assert_called_once()
+            self.assertEqual(mock_dsp.call_args[1]['counter_party_id'], expected_counter_party_id)
+
+    def test_do_dsp_with_bpnl_legacy_protocol(self):
+        """Test do_dsp_with_bpnl with a legacy BPNL discovery result."""
+        self._assert_do_dsp_with_bpnl(
+            ("https://discovered.provider.com", "BPNL000000000001", "dataspace-protocol-http"),
+            "BPNL000000000001"
+        )
+
+    def test_do_dsp_with_bpnl_modern_protocol(self):
+        """Test do_dsp_with_bpnl with a modern DID discovery result."""
+        self._assert_do_dsp_with_bpnl(
+            ("https://discovered.provider.com", "did:web:connector-provider.example.com", "dataspace-protocol-https:2025-1"),
+            "did:web:connector-provider.example.com"
+        )
 
 
-    def test_end_to_end_discovery_with_different_protocols(self):
-        """Test complete end-to-end flow with different protocol and ID combinations."""
-        test_cases = [
+    def _assert_end_to_end_discovery(self, discovery_response, expected_counter_party_id, expected_protocol):
+        mock_response = mock.Mock(spec=Response)
+        mock_response.status_code = 200
+        mock_response.json.return_value = discovery_response
+
+        with mock.patch.object(self.service, '_connector_discovery_controller') as mock_discovery, \
+             mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.ModelFactory') as mock_factory:
+            mock_discovery.get_discover.return_value = mock_response
+            mock_factory.get_connector_discovery_model.return_value = mock.Mock()
+
+            result = self.service.discover_connector_protocol(bpnl="BPNL000000000001")
+            self.assertEqual(result, discovery_response)
+
+            discovery_info = self.service.get_discovery_info(bpnl="BPNL000000000001")
+            self.assertEqual(discovery_info[0], "https://provider.example.com")
+            self.assertEqual(discovery_info[1], expected_counter_party_id)
+            self.assertEqual(discovery_info[2], expected_protocol)
+
+    def test_end_to_end_discovery_with_dsp_2025_did(self):
+        """Test complete discovery flow for DSP 2025-1 with a DID."""
+        self._assert_end_to_end_discovery(
             {
-                "name": "DSP 2025-1 with DID (required)",
-                "discovery_response": {
-                    "https://w3id.org/edc/v0.0.1/ns/counterPartyAddress": "https://provider.example.com",
-                    "https://w3id.org/edc/v0.0.1/ns/counterPartyId": "did:web:connector-provider.example.com",
-                    "https://w3id.org/edc/v0.0.1/ns/protocol": "dataspace-protocol-https:2025-1"
-                },
-                "expected_counter_party_id": "did:web:connector-provider.example.com",
-                "expected_protocol": "dataspace-protocol-https:2025-1"
+                "https://w3id.org/edc/v0.0.1/ns/counterPartyAddress": "https://provider.example.com",
+                "https://w3id.org/edc/v0.0.1/ns/counterPartyId": "did:web:connector-provider.example.com",
+                "https://w3id.org/edc/v0.0.1/ns/protocol": "dataspace-protocol-https:2025-1"
             },
+            "did:web:connector-provider.example.com",
+            "dataspace-protocol-https:2025-1"
+        )
+
+    def test_end_to_end_discovery_with_legacy_bpnl(self):
+        """Test complete discovery flow for the legacy protocol with a BPNL."""
+        self._assert_end_to_end_discovery(
             {
-                "name": "Legacy protocol with BPNL",
-                "discovery_response": {
-                    "https://w3id.org/edc/v0.0.1/ns/counterPartyAddress": "https://provider.example.com",
-                    "https://w3id.org/edc/v0.0.1/ns/counterPartyId": "BPNL000000000001",
-                    "https://w3id.org/edc/v0.0.1/ns/protocol": "dataspace-protocol-http"
-                },
-                "expected_counter_party_id": "BPNL000000000001",
-                "expected_protocol": "dataspace-protocol-http"
-            }
-        ]
-        
-        for test_case in test_cases:
-            with self.subTest(test_case["name"]):
-                bpnl = "BPNL000000000001"
-                
-                # Mock discovery response
-                mock_response = mock.Mock(spec=Response)
-                mock_response.status_code = 200
-                mock_response.json.return_value = test_case["discovery_response"]
-                
-                with mock.patch.object(self.service, '_connector_discovery_controller') as mock_discovery, \
-                     mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.ModelFactory') as mock_factory:
-                    
-                    mock_discovery.get_discover.return_value = mock_response
-                    mock_factory.get_connector_discovery_model.return_value = mock.Mock()
-                    
-                    # Test discovery
-                    result = self.service.discover_connector_protocol(bpnl=bpnl)
-                    self.assertEqual(result, test_case["discovery_response"])
-                    
-                    # Test parsed discovery info
-                    discovery_info = self.service.get_discovery_info(bpnl=bpnl)
-                    self.assertEqual(discovery_info[0], "https://provider.example.com")
-                    self.assertEqual(discovery_info[1], test_case["expected_counter_party_id"])
-                    self.assertEqual(discovery_info[2], test_case["expected_protocol"])
-    
-    def test_protocol_version_mapping_consistency(self):
-        """Test that protocol version mapping is consistent across different methods."""
-        test_cases = [
-            {
-                "protocol": "dataspace-protocol-https:2025-1",
-                "counter_party_id": "did:web:connector-provider.example.com",  # DSP 2025-1 requires DID
-                "expected_version": "saturn"
+                "https://w3id.org/edc/v0.0.1/ns/counterPartyAddress": "https://provider.example.com",
+                "https://w3id.org/edc/v0.0.1/ns/counterPartyId": "BPNL000000000001",
+                "https://w3id.org/edc/v0.0.1/ns/protocol": "dataspace-protocol-http"
             },
-            {
-                "protocol": "dataspace-protocol-http",
-                "counter_party_id": "BPNL000000000001",  # Legacy protocol uses BPNL
-                "expected_version": "jupiter"
-            }
-        ]
-        
-        for test_case in test_cases:
-            with self.subTest(protocol=test_case["protocol"]):
-                counter_party_address = "https://provider.example.com"
-                
-                with mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.ModelFactory') as mock_factory, \
-                     mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.DataspaceVersionMapping') as mock_mapping:
-                    
-                    mock_model = mock.Mock()
-                    mock_factory.get_catalog_model.return_value = mock_model
-                    mock_enum_value = mock.Mock()
-                    mock_enum_value.value = test_case["expected_version"]
-                    mock_mapping.from_protocol.return_value = mock_enum_value
-                    
-                    # Test catalog request creation
-                    result = self.service.get_catalog_request(
-                        counter_party_id=test_case["counter_party_id"],
-                        counter_party_address=counter_party_address,
-                        protocol=test_case["protocol"]
-                    )
-                    
-                    self.assertEqual(result, mock_model)
-                    mock_mapping.from_protocol.assert_called_with(test_case["protocol"])
-                    
-                    # Verify that the correct dataspace version is being used
-                    self.assertEqual(mock_enum_value.value, test_case["expected_version"])
+            "BPNL000000000001",
+            "dataspace-protocol-http"
+        )
+
+    def _assert_protocol_version_mapping(self, protocol, counter_party_id, expected_version):
+        with mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.ModelFactory') as mock_factory, \
+             mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.DataspaceVersionMapping') as mock_mapping:
+            mock_model = mock.Mock()
+            mock_factory.get_catalog_model.return_value = mock_model
+            mock_enum_value = mock.Mock()
+            mock_enum_value.value = expected_version
+            mock_mapping.from_protocol.return_value = mock_enum_value
+
+            result = self.service.get_catalog_request(
+                counter_party_id=counter_party_id,
+                counter_party_address="https://provider.example.com",
+                protocol=protocol
+            )
+
+            self.assertEqual(result, mock_model)
+            mock_mapping.from_protocol.assert_called_with(protocol)
+            self.assertEqual(mock_enum_value.value, expected_version)
+
+    def test_protocol_version_mapping_dsp_2025_did(self):
+        """Test protocol mapping for DSP 2025-1 with a DID."""
+        self._assert_protocol_version_mapping(
+            "dataspace-protocol-https:2025-1",
+            "did:web:connector-provider.example.com",
+            "saturn"
+        )
+
+    def test_protocol_version_mapping_legacy_bpnl(self):
+        """Test protocol mapping for the legacy protocol with a BPNL."""
+        self._assert_protocol_version_mapping(
+            "dataspace-protocol-http",
+            "BPNL000000000001",
+            "jupiter"
+        )
     
 
 
