@@ -23,6 +23,7 @@
 from unittest import mock, TestCase, main
 import logging
 from requests import Response
+from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service import ConnectorConsumerService
 from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
@@ -615,8 +616,27 @@ class TestSaturnConnectorConsumerService(TestCase):
             mock_discovery.get_discover.return_value = None
             mock_factory.get_connector_discovery_model.return_value = mock.Mock()
 
-            with self.assertRaisesRegex(ConnectionError, "No response received"):
+            with self.assertRaisesRegex(
+                ConnectionError,
+                "It was not possible to perform connector discovery with the EDC provider! No response received"
+            ):
                 self.service.discover_connector_protocol(bpnl=bpnl)
+
+    def test_discover_connector_protocol_propagates_transport_error(self):
+        """Test discover_connector_protocol does not translate request failures."""
+        bpnl = "BPNL000000000001"
+        transport_error = RequestsConnectionError("connection failed")
+
+        with mock.patch.object(self.service, '_connector_discovery_controller') as mock_discovery, \
+             mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.ModelFactory') as mock_factory:
+
+            mock_discovery.get_discover.side_effect = transport_error
+            mock_factory.get_connector_discovery_model.return_value = mock.Mock()
+
+            with self.assertRaises(RequestsConnectionError) as raised:
+                self.service.discover_connector_protocol(bpnl=bpnl)
+
+            self.assertIs(raised.exception, transport_error)
     
     def test_get_discovery_info_variations(self):
         """Test get_discovery_info with different protocol and ID combinations."""

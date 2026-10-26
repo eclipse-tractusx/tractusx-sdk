@@ -459,10 +459,10 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         )
         if response is None:
             raise ConnectionError(
-                "[Connector Service]: It was not possible to get the catalog from the EDC provider! No response received")
+                "[Connector Service]: It was not possible to perform connector discovery with the EDC provider! No response received")
         if response.status_code != 200:
             raise ConnectionError(
-                f"[Connector Service]: It was not possible to get the catalog from the EDC provider! Response code: [{response.status_code}]")
+                f"[Connector Service]: It was not possible to perform connector discovery with the EDC provider! Response code: [{response.status_code}]")
         return response.json()
 
 
