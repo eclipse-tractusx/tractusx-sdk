@@ -15,7 +15,7 @@ pypi/pypi/-/backrefs/6.2, MIT AND LicenseRef-scancode-unicode, approved, #26729
 pypi/pypi/-/boto3/1.43.19, Apache-2.0, approved, #28687
 pypi/pypi/-/botocore/1.43.19, Apache-2.0, approved, #28690
 pypi/pypi/-/build/1.4.0, MIT, approved, #26761
-pypi/pypi/-/certifi/2026.2.25, MPL-2.0, approved, #26758
+pypi/pypi/-/certifi/2026.10.23, MPL-2.0, approved, #32561
 pypi/pypi/-/cffi/2.0.0, MIT-0 AND MIT, approved, #25733
 pypi/pypi/-/charset-normalizer/3.4.5, MIT AND (LGPL-2.1-only AND MIT) AND LGPL-2.1-only AND CC-BY-SA-3.0, approved, #19391
 pypi/pypi/-/click/8.1.8, BSD-2-Clause AND BSD-3-Clause, approved, clearlydefined
