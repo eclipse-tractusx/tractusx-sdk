@@ -431,6 +431,28 @@ def test_cache_safety_mechanism_with_existing_cache(mock_http, service, mock_oau
     assert "manufacturerPartId" in service.discovery_cache
     assert service.discovery_cache["manufacturerPartId"]["url"] == "https://cached-bpn.example.com/api/v1.0/administration/connectors/bpnDiscovery"
 
+@pytest.mark.parametrize("discovery_url", [None, ""])
+def test_cache_safety_mechanism_with_falsy_refresh_url(service, discovery_url):
+    """Test that an expired cache entry is preserved when refresh returns no URL."""
+    cached_url = "https://cached-bpn.example.com/api/v1.0/administration/connectors/bpnDiscovery"
+    service.discovery_cache = {
+        "manufacturerPartId": {
+            "url": cached_url,
+            "timestamp": time.time() - 20
+        }
+    }
+    original_cache = {key: entry.copy() for key, entry in service.discovery_cache.items()}
+
+    with mock.patch.object(service, "get_discovery_url", return_value=discovery_url) as mock_get_url:
+        result = service._get_or_update_discovery_url()
+
+    assert result == cached_url
+    assert service.discovery_cache == original_cache
+    mock_get_url.assert_called_once_with(
+        discovery_finder_service=service.discovery_finder_service,
+        discovery_key="manufacturerPartId"
+    )
+
 @mock.patch("tractusx_sdk.dataspace.services.discovery.discovery_finder_service.HttpTools")
 def test_cache_safety_mechanism_no_existing_cache(mock_http, service):
     """Test safety mechanism when refresh fails and no cached URL exists."""
