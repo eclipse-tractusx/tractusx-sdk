@@ -1,7 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2026 LKS NEXT
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
@@ -33,6 +33,7 @@ negotiate contracts, obtain EDR tokens, and send notifications through the datas
 import logging
 from typing import Any, Dict, List, Optional
 
+from tractusx_sdk._logging_fields import log_extra, safe_url
 from tractusx_sdk.dataspace.services.connector.base_connector_consumer import BaseConnectorConsumerService
 from tractusx_sdk.dataspace.tools import HttpTools
 from tractusx_sdk.dataspace.services.service import BaseService
@@ -44,6 +45,8 @@ from .exceptions import (
     NotificationError,
     NotificationValidationError,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class NotificationConsumerService(BaseService):
@@ -62,22 +65,16 @@ class NotificationConsumerService(BaseService):
     
     Attributes:
         _connector_consumer: BaseConnectorConsumerService for EDC operations
-        verbose: Enable verbose logging
-        logger: Logger instance for this service
     """
     
     # DCT type for notification assets
     DIGITAL_TWIN_EVENT_API_TYPE = DIGITAL_TWIN_EVENT_API_TYPE
     
     _connector_consumer: Optional[BaseConnectorConsumerService]
-    verbose: bool
-    logger: logging.Logger
     
     def __init__(
         self,
         connector_consumer: Optional[BaseConnectorConsumerService] = None,
-        verbose: bool = True,
-        logger: Optional[logging.Logger] = None,
         trace: bool = False,
     ):
         """
@@ -85,20 +82,18 @@ class NotificationConsumerService(BaseService):
         
         Args:
             connector_consumer: BaseConnectorConsumerService for EDC operations
-            verbose: Enable verbose logging (default: True)
-            logger: Optional custom logger instance
             trace: Enable the tracing of the requests sent to (and the responses
                 received from) the connector and the notification endpoint
                 (default: False). The trace is shared with the connector consumer
                 service, is available through `get_trace()` and `get_trace_json()`,
                 and `set_tracer()` shares it with other services.
         """
-        self.verbose = verbose
-        self.logger = logger or logging.getLogger(__name__)
         self._connector_consumer = connector_consumer
 
         # Configured last: the trace is shared with the connector consumer service
         self._init_tracing(trace=trace)
+        logger.debug("NotificationConsumerService created (connector consumer: %s)",
+                     type(connector_consumer).__name__ if connector_consumer is not None else "none")
     
     @property
     def connector_consumer(self) -> Optional[BaseConnectorConsumerService]:
@@ -116,6 +111,8 @@ class NotificationConsumerService(BaseService):
             NotificationError: If connector consumer is not configured
         """
         if self._connector_consumer is None:
+            logger.error("The notification service has no connector consumer: initialise it with a connector_consumer",
+                         extra=log_extra(operation="notification.ensure_consumer"))
             raise NotificationError(
                 "Connector consumer is required for this operation. "
                 "Initialize the service with a connector_consumer parameter."
@@ -149,11 +146,11 @@ class NotificationConsumerService(BaseService):
         """
         connector = self._ensure_connector_consumer()
         
-        if self.verbose:
-            self.logger.info(
-                f"Discovering notification assets from provider {provider_bpn} "
-                f"at {provider_dsp_url}"
-            )
+        logger.info(
+            "Discovering notification assets from provider %s at %s",
+            provider_bpn, safe_url(provider_dsp_url),
+            extra=log_extra(bpn=provider_bpn, counter_party_address=provider_dsp_url, operation="notification.discover_assets")
+        )
         
         try:
             catalog = connector.get_catalog_by_dct_type(
@@ -167,19 +164,21 @@ class NotificationConsumerService(BaseService):
             # Extract datasets from catalog (supports both Saturn and Jupiter keys)
             datasets = _get_datasets(catalog)
             if datasets is None:
+                logger.debug("The catalog of provider %s has no dataset", provider_bpn,
+                             extra=log_extra(bpn=provider_bpn, operation="notification.discover_assets"))
                 datasets = []
             elif isinstance(datasets, dict):
                 datasets = [datasets]
             
-            if self.verbose:
-                self.logger.info(
-                    f"Found {len(datasets)} DigitalTwinEventAPI asset(s) in catalog"
-                )
+            logger.info("Found %d DigitalTwinEventAPI asset(s) in catalog", len(datasets),
+                        extra=log_extra(bpn=provider_bpn, operation="notification.discover_assets"))
             
             return datasets
             
         except Exception as e:
-            self.logger.error(f"Failed to discover notification assets: {e}")
+            logger.exception("Failed to discover the notification assets of provider %s: %s", provider_bpn, e,
+                             extra=log_extra(bpn=provider_bpn, counter_party_address=provider_dsp_url,
+                                             operation="notification.discover_assets"))
             raise NotificationError(f"Failed to discover notification assets: {e}")
     
     def discover_notification_assets_with_bpnl(
@@ -209,11 +208,8 @@ class NotificationConsumerService(BaseService):
         """
         connector = self._ensure_connector_consumer()
         
-        if self.verbose:
-            self.logger.info(
-                f"Discovering notification assets via BPNL {bpnl} "
-                f"at {counter_party_address}"
-            )
+        logger.info("Discovering notification assets via BPNL %s at %s", bpnl, safe_url(counter_party_address),
+                    extra=log_extra(bpn=bpnl, counter_party_address=counter_party_address, operation="notification.discover_assets_bpnl"))
         
         try:
             catalog = connector.get_catalog_by_dct_type_with_bpnl(
@@ -227,19 +223,21 @@ class NotificationConsumerService(BaseService):
             # Extract datasets from catalog (supports both Saturn and Jupiter keys)
             datasets = _get_datasets(catalog)
             if datasets is None:
+                logger.debug("The catalog of BPNL %s has no dataset", bpnl,
+                             extra=log_extra(bpn=bpnl, operation="notification.discover_assets_bpnl"))
                 datasets = []
             elif isinstance(datasets, dict):
                 datasets = [datasets]
             
-            if self.verbose:
-                self.logger.info(
-                    f"Found {len(datasets)} DigitalTwinEventAPI asset(s) in catalog"
-                )
+            logger.info("Found %d DigitalTwinEventAPI asset(s) in catalog", len(datasets),
+                        extra=log_extra(bpn=bpnl, operation="notification.discover_assets_bpnl"))
             
             return datasets
             
         except Exception as e:
-            self.logger.error(f"Failed to discover notification assets: {e}")
+            logger.exception("Failed to discover the notification assets of BPNL %s: %s", bpnl, e,
+                             extra=log_extra(bpn=bpnl, counter_party_address=counter_party_address,
+                                             operation="notification.discover_assets_bpnl"))
             raise NotificationError(f"Failed to discover notification assets: {e}")
     
     def negotiate_notification_access(
@@ -276,10 +274,8 @@ class NotificationConsumerService(BaseService):
         """
         connector = self._ensure_connector_consumer()
         
-        if self.verbose:
-            self.logger.info(
-                f"Negotiating notification access with provider {provider_bpn}"
-            )
+        logger.info("Negotiating notification access with provider %s", provider_bpn,
+                    extra=log_extra(bpn=provider_bpn, counter_party_address=provider_dsp_url, operation="notification.negotiate_access"))
         
         try:
             filter_expression = [
@@ -299,17 +295,19 @@ class NotificationConsumerService(BaseService):
                 timeout=retry_timeout,
             )
             
-            if self.verbose:
-                transfer_id = edr_entry.get("transferProcessId", "unknown")
-                self.logger.info(
-                    f"Successfully negotiated notification access. "
-                    f"Transfer ID: {transfer_id}"
-                )
+            transfer_id = edr_entry.get("transferProcessId", "unknown")
+            logger.info(
+                "Successfully negotiated notification access. Transfer ID: %s",
+                transfer_id,
+                extra=log_extra(bpn=provider_bpn, transfer_id=transfer_id, operation="notification.negotiate_access")
+            )
             
             return edr_entry
             
         except Exception as e:
-            self.logger.error(f"Failed to negotiate notification access: {e}")
+            logger.exception("Failed to negotiate notification access with provider %s: %s", provider_bpn, e,
+                             extra=log_extra(bpn=provider_bpn, counter_party_address=provider_dsp_url,
+                                             operation="notification.negotiate_access"))
             raise NotificationError(f"Failed to negotiate notification access: {e}")
     
     def negotiate_notification_access_with_bpnl(
@@ -339,10 +337,8 @@ class NotificationConsumerService(BaseService):
         """
         connector = self._ensure_connector_consumer()
         
-        if self.verbose:
-            self.logger.info(
-                f"Negotiating notification access via BPNL {bpnl}"
-            )
+        logger.info("Negotiating notification access via BPNL %s", bpnl,
+                    extra=log_extra(bpn=bpnl, counter_party_address=counter_party_address, operation="notification.negotiate_access_bpnl"))
         
         try:
             filter_expression = [
@@ -360,13 +356,15 @@ class NotificationConsumerService(BaseService):
                 policies=policies,
             )
             
-            if self.verbose:
-                self.logger.info(f"Obtained notification endpoint via BPNL: {endpoint}")
+            logger.info("Obtained notification endpoint via BPNL: %s", safe_url(endpoint),
+                        extra=log_extra(bpn=bpnl, url=endpoint, operation="notification.negotiate_access_bpnl"))
             
             return endpoint, token
             
         except Exception as e:
-            self.logger.error(f"Failed to negotiate notification access via BPNL: {e}")
+            logger.exception("Failed to negotiate notification access via BPNL %s: %s", bpnl, e,
+                             extra=log_extra(bpn=bpnl, counter_party_address=counter_party_address,
+                                             operation="notification.negotiate_access_bpnl"))
             raise NotificationError(f"Failed to negotiate notification access via BPNL: {e}")
     
     def get_notification_endpoint(
@@ -396,10 +394,8 @@ class NotificationConsumerService(BaseService):
         """
         connector = self._ensure_connector_consumer()
         
-        if self.verbose:
-            self.logger.info(
-                f"Getting notification endpoint from provider {provider_bpn}"
-            )
+        logger.info("Getting notification endpoint from provider %s", provider_bpn,
+                    extra=log_extra(bpn=provider_bpn, counter_party_address=provider_dsp_url, operation="notification.get_endpoint"))
         
         try:
             endpoint, token = connector.do_dsp_by_dct_type(
@@ -410,13 +406,15 @@ class NotificationConsumerService(BaseService):
                 policies=policies,
             )
             
-            if self.verbose:
-                self.logger.info(f"Obtained notification endpoint: {endpoint}")
+            logger.info("Obtained notification endpoint: %s", safe_url(endpoint),
+                        extra=log_extra(bpn=provider_bpn, url=endpoint, operation="notification.get_endpoint"))
             
             return endpoint, token
             
         except Exception as e:
-            self.logger.error(f"Failed to get notification endpoint: {e}")
+            logger.exception("Failed to get the notification endpoint of provider %s: %s", provider_bpn, e,
+                             extra=log_extra(bpn=provider_bpn, counter_party_address=provider_dsp_url,
+                                             operation="notification.get_endpoint"))
             raise NotificationError(f"Failed to get notification endpoint: {e}")
     
     def get_notification_endpoint_with_bpnl(
@@ -446,10 +444,8 @@ class NotificationConsumerService(BaseService):
         """
         connector = self._ensure_connector_consumer()
         
-        if self.verbose:
-            self.logger.info(
-                f"Getting notification endpoint via BPNL {bpnl}"
-            )
+        logger.info("Getting notification endpoint via BPNL %s", bpnl,
+                    extra=log_extra(bpn=bpnl, counter_party_address=counter_party_address, operation="notification.get_endpoint_bpnl"))
         
         try:
             filter_expression = [
@@ -467,13 +463,15 @@ class NotificationConsumerService(BaseService):
                 policies=policies,
             )
             
-            if self.verbose:
-                self.logger.info(f"Obtained notification endpoint via BPNL: {endpoint}")
+            logger.info("Obtained notification endpoint via BPNL: %s", safe_url(endpoint),
+                        extra=log_extra(bpn=bpnl, url=endpoint, operation="notification.get_endpoint_bpnl"))
             
             return endpoint, token
             
         except Exception as e:
-            self.logger.error(f"Failed to get notification endpoint via BPNL: {e}")
+            logger.exception("Failed to get the notification endpoint via BPNL %s: %s", bpnl, e,
+                             extra=log_extra(bpn=bpnl, counter_party_address=counter_party_address,
+                                             operation="notification.get_endpoint_bpnl"))
             raise NotificationError(f"Failed to get notification endpoint via BPNL: {e}")
     
     def send_notification(
@@ -514,11 +512,12 @@ class NotificationConsumerService(BaseService):
         
         self._ensure_connector_consumer()
         
-        if self.verbose:
-            self.logger.info(
-                f"Sending notification {notification.header.message_id} "
-                f"to provider {provider_bpn} via DSP"
-            )
+        logger.info(
+            "Sending notification %s to provider %s via DSP",
+            notification.header.message_id, provider_bpn,
+            extra=log_extra(message_id=str(notification.header.message_id), bpn=provider_bpn, counter_party_address=provider_dsp_url,
+                            operation="notification.send")
+        )
         
         try:
             # Get endpoint and token through DSP
@@ -540,7 +539,9 @@ class NotificationConsumerService(BaseService):
         except NotificationError:
             raise
         except Exception as e:
-            self.logger.error(f"Failed to send notification: {e}")
+            logger.exception("Failed to send notification %s to provider %s: %s", notification.header.message_id, provider_bpn, e,
+                             extra=log_extra(message_id=str(notification.header.message_id), bpn=provider_bpn,
+                                             counter_party_address=provider_dsp_url, operation="notification.send"))
             raise NotificationError(f"Failed to send notification: {e}")
     
     def send_notification_with_bpnl(
@@ -580,11 +581,12 @@ class NotificationConsumerService(BaseService):
         
         self._ensure_connector_consumer()
         
-        if self.verbose:
-            self.logger.info(
-                f"Sending notification {notification.header.message_id} "
-                f"to BPNL {bpnl} via DSP"
-            )
+        logger.info(
+            "Sending notification %s to BPNL %s via DSP",
+            notification.header.message_id, bpnl,
+            extra=log_extra(message_id=str(notification.header.message_id), bpn=bpnl, counter_party_address=counter_party_address,
+                            operation="notification.send_bpnl")
+        )
         
         try:
             # Get endpoint and token through DSP with BPNL discovery
@@ -606,7 +608,9 @@ class NotificationConsumerService(BaseService):
         except NotificationError:
             raise
         except Exception as e:
-            self.logger.error(f"Failed to send notification via BPNL: {e}")
+            logger.exception("Failed to send notification %s to BPNL %s: %s", notification.header.message_id, bpnl, e,
+                             extra=log_extra(message_id=str(notification.header.message_id), bpn=bpnl,
+                                             counter_party_address=counter_party_address, operation="notification.send_bpnl"))
             raise NotificationError(f"Failed to send notification via BPNL: {e}")
     
     def send_notification_to_endpoint(
@@ -644,11 +648,11 @@ class NotificationConsumerService(BaseService):
         
         connector = self._ensure_connector_consumer()
         
-        if self.verbose:
-            self.logger.info(
-                f"Sending notification {notification.header.message_id} "
-                f"to endpoint {endpoint_url}"
-            )
+        logger.info(
+            "Sending notification %s to endpoint %s",
+            notification.header.message_id, safe_url(endpoint_url),
+            extra=log_extra(message_id=str(notification.header.message_id), url=endpoint_url, operation="notification.send_to_endpoint")
+        )
         
         try:
             # Build full URL with optional path
@@ -674,33 +678,40 @@ class NotificationConsumerService(BaseService):
             )
             
             if response.status_code not in (200, 201, 202, 204):
-                self.logger.error(
-                    f"Failed to send notification: {response.status_code} - {response.text}"
+                # The answer of the receiver, cut so that a large error page does not flood the log
+                logger.error(
+                    "Failed to send notification %s: %s - %s", notification.header.message_id, response.status_code, str(response.text)[:500],
+                    extra=log_extra(message_id=str(notification.header.message_id), url=full_url, status_code=response.status_code,
+                                    operation="notification.send_to_endpoint")
                 )
                 raise NotificationError(
                     f"Failed to send notification {notification.header.message_id}. "
                     f"Status code: {response.status_code}"
                 )
             
-            if self.verbose:
-                self.logger.info(
-                    f"Successfully sent notification {notification.header.message_id}"
-                )
+            logger.info("Successfully sent notification %s", notification.header.message_id,
+                        extra=log_extra(message_id=str(notification.header.message_id), url=full_url, status_code=response.status_code,
+                                        operation="notification.send_to_endpoint"))
             
             # Handle empty or non-JSON responses gracefully
             if not response.text or not response.text.strip():
+                logger.debug("The receiver answered notification %s without a body, returning the sent status", notification.header.message_id)
                 return {"status": "sent", "message_id": notification.header.message_id}
             
             try:
                 return response.json()
             except Exception:
                 # Response is not JSON, return status info
+                logger.debug("The receiver answered notification %s with a body that is not JSON, returning the sent status",
+                             notification.header.message_id)
                 return {"status": "sent", "message_id": notification.header.message_id}
             
         except NotificationError:
             raise
         except Exception as e:
-            self.logger.error(f"Failed to send notification: {e}")
+            logger.exception("Failed to send notification %s to endpoint %s: %s", notification.header.message_id, safe_url(endpoint_url), e,
+                             extra=log_extra(message_id=str(notification.header.message_id), url=endpoint_url,
+                                             operation="notification.send_to_endpoint"))
             raise NotificationError(f"Failed to send notification: {e}")
     
     def send_to_multiple_providers(
@@ -741,12 +752,16 @@ class NotificationConsumerService(BaseService):
             ```
         """
         results: Dict[str, Dict[str, Any]] = {}
+        logger.debug("Sending notification %s to %d provider(s)", notification.header.message_id, len(providers),
+                     extra=log_extra(message_id=str(notification.header.message_id), operation="notification.send_to_many"))
         
         for provider in providers:
             provider_bpn = provider.get("bpn")
             provider_dsp_url = provider.get("dsp_url")
             
             if not provider_bpn or not provider_dsp_url:
+                logger.warning("A provider was skipped: its configuration lacks 'bpn' or 'dsp_url'",
+                               extra=log_extra(bpn=provider_bpn, operation="notification.send_to_many"))
                 results[provider_bpn or "unknown"] = {
                     "success": False,
                     "error": "Missing 'bpn' or 'dsp_url' in provider configuration",
@@ -770,14 +785,23 @@ class NotificationConsumerService(BaseService):
                 }
                 
             except Exception as e:
+                # The failure is kept in the result, so the caller is not told through an exception: say it here
+                logger.warning("Sending notification %s to provider %s failed: %s", notification.header.message_id, provider_bpn, e,
+                               extra=log_extra(message_id=str(notification.header.message_id), bpn=provider_bpn,
+                                               counter_party_address=provider_dsp_url, operation="notification.send_to_many"))
                 results[provider_bpn] = {
                     "success": False,
                     "error": str(e),
                 }
                 
                 if stop_on_error:
+                    logger.warning("Stopping at provider %s: stop_on_error is set, the remaining providers are skipped", provider_bpn,
+                                   extra=log_extra(bpn=provider_bpn, operation="notification.send_to_many"))
                     break
         
+        succeeded = sum(1 for result in results.values() if result.get("success"))
+        logger.info("Notification %s was sent to %d of %d provider(s)", notification.header.message_id, succeeded, len(providers),
+                    extra=log_extra(message_id=str(notification.header.message_id), operation="notification.send_to_many"))
         return results
     
     def _validate_notification(self, notification: Notification) -> None:
@@ -805,6 +829,8 @@ class NotificationConsumerService(BaseService):
             errors.append("sender_bpn and receiver_bpn cannot be the same")
         
         if errors:
+            logger.warning("Notification %s is invalid: %s", notification.header.message_id, "; ".join(errors),
+                           extra=log_extra(message_id=str(notification.header.message_id), operation="notification.validate"))
             raise NotificationValidationError(
                 f"Notification validation failed: {'; '.join(errors)}"
             )
@@ -831,16 +857,6 @@ class NotificationConsumerService(BaseService):
         ) -> "NotificationConsumerService._Builder":
             """Set the connector consumer service for EDC operations."""
             self._data["connector_consumer"] = connector_consumer
-            return self
-        
-        def verbose(self, verbose: bool) -> "NotificationConsumerService._Builder":
-            """Enable or disable verbose logging."""
-            self._data["verbose"] = verbose
-            return self
-        
-        def logger(self, logger: logging.Logger) -> "NotificationConsumerService._Builder":
-            """Set a custom logger."""
-            self._data["logger"] = logger
             return self
         
         def data(self, data: Dict[str, Any]) -> "NotificationConsumerService._Builder":

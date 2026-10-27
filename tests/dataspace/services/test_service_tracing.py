@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
@@ -49,7 +50,6 @@ def connector_service(**kwargs):
         base_url="https://connector.example.com",
         dma_path="/management",
         headers={"X-Api-Key": "secret"},
-        verbose=False,
         **kwargs
     )
 
@@ -91,7 +91,6 @@ class TestConnectorServiceTracing(unittest.TestCase):
             dataspace_version="jupiter",
             base_url="https://connector.example.com",
             dma_path="/management",
-            verbose=False,
             trace=True,
         )
 
@@ -119,7 +118,6 @@ class TestConnectorServiceTracing(unittest.TestCase):
             dataspace_version="jupiter",
             base_url="https://connector.example.com",
             dma_path="/management",
-            verbose=False,
         )
 
         service.provider.assets.get_all()
@@ -191,7 +189,6 @@ class TestTracerPropagation(unittest.TestCase):
             dataspace_version="saturn",
             base_url="https://connector.example.com",
             dma_path="/management",
-            verbose=False,
             trace=True,
         )
 
@@ -207,7 +204,6 @@ class TestTracerPropagation(unittest.TestCase):
             dataspace_version="saturn",
             base_url="https://connector.example.com",
             dma_path="/management",
-            verbose=False,
         )
 
         service.set_tracer(tracer)
@@ -233,7 +229,6 @@ class TestDataplaneTracing(unittest.TestCase):
             dataspace_version="jupiter",
             base_url="https://connector.example.com",
             dma_path="/management",
-            verbose=False,
             trace=True,
         )
 

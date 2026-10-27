@@ -2,8 +2,8 @@
 
 Eclipse Tractus-X - Software Development KIT
 
-Copyright (c) 2025 LKS Next
-Copyright (c) 2025 Contributors to the Eclipse Foundation
+Copyright (c) 2025,2026 LKS Next
+Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -54,7 +54,7 @@ Below, you'll find a comparison of the available connection managers, followed b
 
 | Manager Name                  | Attributes                                                                                  | Methods                                                                                                    |
 |-------------------------------|---------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| `MemoryConnectionManager`     | `open_connections`, `provider_id_key`, `edrs_key`, `logger`, `verbose`, `_lock`             | `add_connection()`, `get_connection()`, `get_connection_transfer_id()`, `delete_connection()`, `clear_connections_by_party()`               |
+| `MemoryConnectionManager`     | `open_connections`, `provider_id_key`, `edrs_key`, `_lock`                                   | `add_connection()`, `get_connection()`, `get_connection_transfer_id()`, `delete_connection()`, `clear_connections_by_party()`               |
 | `FileSystemConnectionManager` | `file_path`, `persist_interval`, `lock`, `_stop_event`, `_last_loaded_hash`, `open_connections` | `add_connection()`, `get_connection()`, `get_connection_transfer_id()`, `delete_connection()`               |
 | `PostgresConnectionManager`   | `engine`, `table_name`                                                                      | `add_connection()`, `get_connection()`, `get_connection_transfer_id()`, `delete_connection()`, `clear_connections_by_party()` |
 
@@ -66,7 +66,7 @@ from tractusx_sdk.dataspace.managers.connection.file_system import FileSystemCon
 from tractusx_sdk.dataspace.managers.connection.postgres import PostgresConnectionManager
 
 # In-memory connection manager for connector operations
-connection_manager = MemoryConnectionManager(verbose=True)
+connection_manager = MemoryConnectionManager()
 
 # File-based connection manager
 fs_connection_manager = FileSystemConnectionManager(file_path="/tmp/edr_connections.json", persist_interval=60)
@@ -119,8 +119,6 @@ removed = connection_manager.clear_connections_by_party(did)
 | `open_connections`     | `dict`    | In-memory cache of EDR connections               |
 | `provider_id_key`      | `str`     | Key for provider ID in connection data           |
 | `edrs_key`             | `str`     | Key for EDR count in open_connections            |
-| `logger`               | `Logger`  | Optional logger for debug/info output            |
-| `verbose`              | `bool`    | Enables verbose logging                          |
 | `_lock`                | `RLock`   | Thread lock for concurrency                      |
 
 ### FileSystemConnectionManager

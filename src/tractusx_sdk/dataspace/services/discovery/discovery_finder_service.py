@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,11 +21,18 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+import logging
+
 from requests import Response
+
+from tractusx_sdk._logging_fields import http_status, log_extra, safe_url
+from tractusx_sdk.exceptions import DiscoveryEndpointNotFoundError, DiscoveryError
 
 from ...tools.http_tools import HttpTools
 from ..service import BaseService
 from ...managers import OAuth2Manager
+
+logger = logging.getLogger(__name__)
 
 class DiscoveryFinderService(BaseService):
     
@@ -66,6 +74,8 @@ class DiscoveryFinderService(BaseService):
 
         ## Check if IAM is connected
         if(not self.oauth.connected):
+            logger.error("[Discovery Finder Service] The authentication service is not connected",
+                         extra=log_extra(url=self.url, operation="discovery.find_urls"))
             raise ConnectionError("[EDC Discovery Service] The authentication service is not connected! Please execute the oauth.connect() method")
         
         ## Setup headers and body
@@ -74,15 +84,25 @@ class DiscoveryFinderService(BaseService):
             self.types_key: keys
         }
 
+        logger.debug("[Discovery Finder Service] Looking up the discovery URLs of %s at %s", keys, safe_url(self.url),
+                     extra=log_extra(url=self.url, operation="discovery.find_urls"))
         response:Response = HttpTools.do_post(url=self.url, headers=headers, json=body, **self._trace_kwargs())
         ## In case the response code is not successfull or the response is null
         if(response is None or response.status_code != 200):
-            raise Exception("[EDC Discovery Service] It was not possible to get the discovery service because the response was not successful!")
+            logger.error("[Discovery Finder Service] The discovery finder did not answer successfully (status %s)",
+                         getattr(response, "status_code", None),
+                         extra=log_extra(url=self.url, status_code=http_status(response), operation="discovery.find_urls"))
+            raise DiscoveryError("[EDC Discovery Service] It was not possible to get the discovery service because the response was not successful!")
         
         data = response.json()
 
         if(not(self.endpoints_key in data) or len(data[self.endpoints_key]) == 0):
-            raise Exception("[EDC Discovery Service] No endpoints were found in the discovery service for this keys!")
+            logger.error("[Discovery Finder Service] The discovery finder returned no endpoints for %s", keys,
+                         extra=log_extra(url=self.url, operation="discovery.find_urls"))
+            raise DiscoveryEndpointNotFoundError("[EDC Discovery Service] No endpoints were found in the discovery service for this keys!")
 
         # Map to every key the endpoint address
-        return dict(map(lambda x: (x[self.return_type_key], x[self.endpoint_address_key]), data[self.endpoints_key]))
+        endpoints = dict(map(lambda x: (x[self.return_type_key], x[self.endpoint_address_key]), data[self.endpoints_key]))
+        logger.debug("[Discovery Finder Service] Found %d discovery endpoint(s): %s", len(endpoints), list(endpoints),
+                     extra=log_extra(url=self.url, operation="discovery.find_urls"))
+        return endpoints
