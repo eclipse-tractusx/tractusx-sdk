@@ -265,14 +265,36 @@ class TestNegotiateNotificationAccess:
             filter_expression=[filter_expression],
             policies=[],
         )
+    def test_negotiate_notification_access_uses_supported_connector_arguments_without_deprecated_params(self, mock_connector_consumer):
+            """Test negotiation only forwards arguments supported by the connector."""
+            filter_expression = {"operandLeft": "dct:type", "operator": "=", "operandRight": "event-api"}
+            mock_connector_consumer.get_filter_expression.return_value = filter_expression
+            mock_connector_consumer.negotiate_and_transfer.return_value = {"transferProcessId": "transfer-123"}
     
+            service = NotificationConsumerService(
+                connector_consumer=mock_connector_consumer,
+            )
+    
+            service.negotiate_notification_access(
+                provider_bpn="BPNL000000000002",
+                provider_dsp_url="https://provider.com/dsp",
+                policies=[],
+                dct_type="event-api",
+            )
+    
+            mock_connector_consumer.negotiate_and_transfer.assert_called_once_with(
+                counter_party_id="BPNL000000000002",
+                counter_party_address="https://provider.com/dsp",
+                filter_expression=[filter_expression],
+                policies=[],
+            )
     def test_negotiate_notification_access_error(self, mock_connector_consumer):
         """Test error handling during negotiation."""
         mock_connector_consumer.get_filter_expression.return_value = {}
         mock_connector_consumer.negotiate_and_transfer.side_effect = Exception("Negotiation failed")
         
         service = NotificationConsumerService(
-            connector_consumer=mock_connector_consumer,
+            connector_consumer=mock_connector_consumer
         )
         
         with pytest.raises(NotificationError) as exc_info:
