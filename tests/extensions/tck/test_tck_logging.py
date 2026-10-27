@@ -100,6 +100,16 @@ class TestSetupAndFinalize:
         logging.getLogger("host").warning("still delivered")
         assert [r.getMessage() for r in host_logging.records if r.name == "host"] == ["still delivered"]
 
+    def test_finalize_restores_the_root_logger_level(self, host_logging, tmp_path):
+        root = logging.getLogger()
+        root.setLevel(logging.WARNING)
+        logger, log_file = helpers.setup_tck_logging("case", str(tmp_path))
+        helpers.enable_debug_logging(logger)
+
+        helpers.finalize_log(log_file, "PASS")
+
+        assert root.level == logging.WARNING
+
     def test_the_log_file_is_renamed_with_the_result(self, host_logging, tmp_path):
         logger, log_file = helpers.setup_tck_logging("case", str(tmp_path))
         logger.info("a line")

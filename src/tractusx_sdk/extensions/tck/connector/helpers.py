@@ -119,6 +119,7 @@ DEFAULT_ASSET_CONFIG = {
 
 
 _tck_handlers: list[logging.Handler] = []
+_tck_original_root_level: Optional[int] = None
 
 
 def setup_tck_logging(
@@ -158,6 +159,10 @@ def setup_tck_logging(
     console_handler.setFormatter(logging.Formatter(log_format))
 
     root = logging.getLogger()
+    global _tck_original_root_level
+    if not _tck_handlers:
+        _tck_original_root_level = root.level
+
     for handler in (console_handler, file_handler):
         root.addHandler(handler)
         _tck_handlers.append(handler)
@@ -170,12 +175,17 @@ def setup_tck_logging(
 
 def finalize_log(log_file: str, result: str):
     """Flush and close the handlers of :func:`setup_tck_logging`, then rename the log file with PASS or FAIL result."""
+    global _tck_original_root_level
     root = logging.getLogger()
     for handler in _tck_handlers[:]:
         handler.flush()
         handler.close()
         root.removeHandler(handler)
         _tck_handlers.remove(handler)
+    if not _tck_handlers and _tck_original_root_level is not None:
+        root.setLevel(_tck_original_root_level)
+        _tck_original_root_level = None
+
     final_log = log_file.replace(".log", f"_{result}.log")
     os.rename(log_file, final_log)
     sys.stdout.write(f"Log saved as: {final_log}\n")

@@ -126,6 +126,9 @@ def submodel_schema_finder(
         raise InvalidSemanticIdError(f"422 Client Error: The semanticID provided does not follow the correct structure. subprotocolBody: {semantic_id}")
 
     loc_elements = split_string[3].split('#')
+    if len(loc_elements) != 2 or not all(loc_elements):
+        raise InvalidSemanticIdError(f"422 Client Error: The semanticID provided does not follow the correct structure. subprotocolBody: {semantic_id}")
+
     schema_link = link_core + split_string[2] + '/' + loc_elements[0] + '/gen/' + loc_elements[1] + '-schema.json'
 
     # Now we can use the link to pull in the correct schema.
