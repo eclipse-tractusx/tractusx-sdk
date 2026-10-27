@@ -576,7 +576,10 @@ class DspTools:
         @returns: dict: the selected policy or None if no valid policy was found
         """
         ### Policy Evaluation
-        policies:dict|list = _get_policies(dataset)    
+        policies: dict | list | None = _get_policies(dataset)
+
+        if policies is None:
+            return None
 
         ## One Policy
         if isinstance(policies, dict):
