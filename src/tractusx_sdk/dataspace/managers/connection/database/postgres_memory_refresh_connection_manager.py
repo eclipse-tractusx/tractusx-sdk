@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -28,12 +29,14 @@ import threading
 import time
 import logging
 
+logger = logging.getLogger(__name__)
+
 class PostgresMemoryRefreshConnectionManager(PostgresMemoryConnectionManager):
     """
     Manages EDR connections using an in-memory cache synchronized with a Postgres database.
     Periodically persists changes and reloads updates from the database to ensure consistency.
     """
-    def __init__(self, engine: E | S, persist_interval: int = 5, provider_id_key: str = "providerId", table_name: str = "edr_connections", edrs_key: str = "edrs", logger:logging.Logger=None, verbose: bool = False):
+    def __init__(self, engine: E | S, persist_interval: int = 5, provider_id_key: str = "providerId", table_name: str = "edr_connections", edrs_key: str = "edrs"):
         """
         Initialize the connection manager with persistence and reload functionality.
 
@@ -43,10 +46,8 @@ class PostgresMemoryRefreshConnectionManager(PostgresMemoryConnectionManager):
             provider_id_key (str): Key to identify provider ID.
             table_name (str): Table name for EDR connections.
             edrs_key (str): Key used for storing EDR counts.
-            logger (Logger, optional): Logger instance for debug output.
-            verbose (bool): Enable verbose logging.
         """
-        super().__init__(engine=engine, provider_id_key=provider_id_key, edrs_key=edrs_key, logger=logger, verbose=verbose)
+        super().__init__(engine=engine, provider_id_key=provider_id_key, edrs_key=edrs_key)
         self.persist_interval = persist_interval
         self._stop_event = threading.Event()
         self._start_background_tasks()
@@ -55,6 +56,7 @@ class PostgresMemoryRefreshConnectionManager(PostgresMemoryConnectionManager):
         """
         Start the background thread for periodic persistence and reloading from DB.
         """
+        logger.debug("[PostgresMemoryRefreshConnectionManager] Starting the background persistence every %s seconds.", self.persist_interval)
         threading.Thread(target=self._persistence_loop, daemon=True).start()
 
     def _persistence_loop(self):

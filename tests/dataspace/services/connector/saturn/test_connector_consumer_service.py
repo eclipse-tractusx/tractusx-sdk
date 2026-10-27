@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -26,6 +27,7 @@ from requests import Response
 
 from tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service import ConnectorConsumerService
 from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
+from tractusx_sdk.exceptions import NegotiationError, TractusXSDKError, TransferError
 
 
 class TestSaturnConnectorConsumerService(TestCase):
@@ -58,8 +60,7 @@ class TestSaturnConnectorConsumerService(TestCase):
                 base_url=self.base_url,
                 dma_path=self.dma_path,
                 headers=self.headers,
-                connection_manager=self.mock_connection_manager,
-                verbose=True
+                connection_manager=self.mock_connection_manager
             )
     
     def test_initialization(self):
@@ -71,8 +72,8 @@ class TestSaturnConnectorConsumerService(TestCase):
         self.assertIsNotNone(self.service.connection_manager)
         self.assertIsNotNone(self.service.connector_discovery)
     
-    def test_initialization_with_logger(self):
-        """Test service initialization with custom logger."""
+    def test_initialization_rejects_the_removed_logger_argument(self):
+        """Logging goes through the module logger: there is no logger to inject."""
         custom_logger = logging.getLogger("test_logger")
         
         with mock.patch('tractusx_sdk.dataspace.adapters.connector.adapter_factory.AdapterFactory') as mock_adapter_factory, \
@@ -92,11 +93,18 @@ class TestSaturnConnectorConsumerService(TestCase):
                 dataspace_version=self.dataspace_version,
                 base_url=self.base_url,
                 dma_path=self.dma_path,
-                headers=self.headers,
-                logger=custom_logger
+                headers=self.headers
             )
             
-            self.assertEqual(service.logger, custom_logger)
+            self.assertFalse(hasattr(service, "logger"))
+            removed = {"logger": custom_logger}
+            with self.assertRaises(TypeError):
+                ConnectorConsumerService(
+                    dataspace_version=self.dataspace_version,
+                    base_url=self.base_url,
+                    dma_path=self.dma_path,
+                    **removed
+                )
     
     def test_connector_discovery_property(self):
         """Test connector discovery property returns the correct controller."""
@@ -1284,6 +1292,9 @@ class TestSaturnConnectorConsumerService(TestCase):
                     )
 
         self.assertIn("provider refused the transfer", str(ctx.exception))
+        # a RuntimeError as before, and now one the caller can tell apart
+        self.assertIsInstance(ctx.exception, TransferError)
+        self.assertIsInstance(ctx.exception, TractusXSDKError)
 
     def test_wait_for_transfer_process_times_out_with_last_state(self):
         """A transfer stuck in a non ready state times out reporting the state it was left in."""
@@ -1317,8 +1328,21 @@ class TestSaturnConnectorConsumerService(TestCase):
         response.json.return_value = {"state": "FINALIZED"}
         self.service.contract_negotiations.get_by_id.return_value = response
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as ctx:
             self.service._get_agreement_id(negotiation_id="negotiation-123")
+        self.assertIsInstance(ctx.exception, NegotiationError)
+
+    def test_a_terminated_negotiation_raises_a_negotiation_error(self):
+        state = mock.Mock(spec=Response)
+        state.status_code = 200
+        state.json.return_value = {"state": "TERMINATED"}
+        self.service.contract_negotiations.get_state_by_id.return_value = state
+
+        with self.assertRaises(RuntimeError) as ctx:
+            self.service._check_single_negotiation_state("negotiation-123", "https://provider.example.com", None)
+
+        self.assertIsInstance(ctx.exception, NegotiationError)
+        self.assertIn("TERMINATED", str(ctx.exception))
 
     def test_get_transfer_process_probes_filter_keys(self):
         """A filter key the connector rejects is skipped and the next candidate is used."""

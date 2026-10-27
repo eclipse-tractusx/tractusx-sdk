@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -29,6 +30,7 @@
 # Set log levels
 from shutil import copyfile, move
 import shutil
+import logging
 import os
 import sys
 import json
@@ -36,6 +38,8 @@ import time
 import io
 
 from datetime import datetime, timezone, timedelta
+
+logger = logging.getLogger(__name__)
 
 """
 Class that defines operations in files, directories, clases, ...
@@ -137,6 +141,7 @@ class op:
             shutil.rmtree(dir_name)
             return True
         except Exception as e:
+            logger.debug("Could not delete the directory '%s': %s", dir_name, e)
             return False
     
     """

@@ -56,7 +56,8 @@ def example_simple_validation():
         return
 
     validator.validate_file(EXAMPLE_DATA_DIR / "scene.json")
-    validator.print_results()
+    print(validator.render_report())
+    # The same findings are available as data: validator.report().errors, .warnings, .tree, ...
 
 
 def example_validation_with_children():
@@ -74,7 +75,7 @@ def example_validation_with_children():
     validator.build_catenax_id_map(EXAMPLE_DATA_DIR)
 
     validator.validate_file(EXAMPLE_DATA_DIR / "scene_with_child.json")
-    validator.print_results()
+    print(validator.render_report())
 
 
 def main():

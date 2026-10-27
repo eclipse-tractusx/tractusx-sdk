@@ -2,6 +2,7 @@
 
 Eclipse Tractus-X - Software Development KIT
 
+Copyright (c) 2026 LKS Next
 Copyright (c) 2026 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
@@ -63,7 +64,6 @@ connector = ConnectorConsumerService(
 # Create notification consumer service
 notification_consumer = NotificationConsumerService(
     connector_consumer=connector,
-    verbose=True,
 )
 ```
 
@@ -73,7 +73,6 @@ You can also use the **builder pattern**:
 notification_consumer = (
     NotificationConsumerService.builder()
     .connector_consumer(connector)
-    .verbose(True)
     .build()
 )
 ```
@@ -83,8 +82,9 @@ notification_consumer = (
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `connector_consumer` | `BaseConnectorConsumerService` | No | Connector consumer for EDC operations |
-| `verbose` | `bool` | No | Enable verbose logging (default: `True`) |
-| `logger` | `logging.Logger` | No | Custom logger instance |
+| `trace` | `bool` | No | Record the requests sent and responses received (default: `False`) |
+
+Logging is configured through the standard `logging` module, not through arguments. See [Logging and Error Handling](../../../admin/logging.md).
 
 ---
 
@@ -287,7 +287,6 @@ connector_provider = ConnectorProviderService(
 
 notification_service = NotificationService(
     connector_provider=connector_provider,
-    verbose=True,
 )
 ```
 
@@ -371,4 +370,5 @@ This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses
 - SPDX-License-Identifier: CC-BY-4.0
 - SPDX-FileCopyrightText: 2025, 2026 Contributors to the Eclipse Foundation
 - SPDX-FileCopyrightText: 2025, 2026 Catena-X Automotive Network e.V.
+- SPDX-FileCopyrightText: 2026 LKS Next
 - Source URL: [https://github.com/eclipse-tractusx/tractusx-sdk](https://github.com/eclipse-tractusx/tractusx-sdk)

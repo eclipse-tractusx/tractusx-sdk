@@ -98,8 +98,6 @@ def main():
             "x-api-key": connector_api_key,
             "Content-Type": NOTIFICATION_ASSET_CONTENT_TYPE,
         },
-        verbose=True,
-        logger=logger,
     )
     
     # ==========================================================================
@@ -110,8 +108,6 @@ def main():
     
     notification_service = NotificationConsumerService(
         connector_consumer=connector_consumer,
-        verbose=True,
-        logger=logger,
     )
     
     # ==========================================================================
@@ -230,12 +226,10 @@ def send_with_manual_endpoint():
             "x-api-key": connector_api_key,
             "Content-Type": NOTIFICATION_ASSET_CONTENT_TYPE,
         },
-        verbose=True,
     )
     
     notification_service = NotificationConsumerService(
         connector_consumer=connector_consumer,
-        verbose=True,
     )
     
     # Step 1: Get the endpoint and token (can be cached)
@@ -291,12 +285,10 @@ def discover_and_inspect():
             "x-api-key": connector_api_key,
             "Content-Type": NOTIFICATION_ASSET_CONTENT_TYPE,
         },
-        verbose=True,
     )
     
     notification_service = NotificationConsumerService(
         connector_consumer=connector_consumer,
-        verbose=True,
     )
     
     # Discover available notification assets

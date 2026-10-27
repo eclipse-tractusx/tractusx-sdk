@@ -4,7 +4,7 @@
 # Copyright (c) 2026 DRÄXLMAIER Group
 # (represented by Lisa Dräxlmaier GmbH)
 # Copyright (c) 2026 LKS Next
-# Copyright (c) 2026 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -24,12 +24,15 @@
 #################################################################################
 
 from typing import Dict, Any, Mapping, Optional
+import logging
 from uuid import UUID
 from urllib.parse import quote
 import httpx
 
 from tractusx_sdk.dataspace.tools.tracing import TraceableMixin, Tracer, trace_call
 from tractusx_sdk.industry.adapters import SubmodelAdapter
+
+logger = logging.getLogger(__name__)
 
 class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
     """
@@ -243,6 +246,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
             try:
                 return response.json()
             except Exception:
+                logger.debug("HTTP %s answered %s with a body that is not valid JSON, returning no data", operation, status, exc_info=True)
                 return None
         
         # Error cases

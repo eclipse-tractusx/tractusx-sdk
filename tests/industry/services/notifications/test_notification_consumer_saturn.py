@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
@@ -56,7 +57,6 @@ def service(mock_connector):
     """Create a NotificationConsumerService with the mock connector."""
     return NotificationConsumerService(
         connector_consumer=mock_connector,
-        verbose=False,
     )
 
 

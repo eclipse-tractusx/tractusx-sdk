@@ -3,8 +3,8 @@
 Eclipse Tractus-X - Software Development KIT
 
 Copyright (c) 2026 Mondragon Unibertsitatea
-Copyright (c) 2025 LKS Next
-Copyright (c) 2025 Contributors to the Eclipse Foundation
+Copyright (c) 2025,2026 LKS Next
+Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -74,8 +74,7 @@ bpn_discovery = BpnDiscoveryService(
     oauth=auth_manager,
     discovery_finder_service=discovery_finder,
     cache_timeout_seconds=43200,  # 12 hours
-    base_path="/api/v1.0/administration/connectors/bpnDiscovery",
-    verbose=True
+    base_path="/api/v1.0/administration/connectors/bpnDiscovery"
 )
 ```
 
@@ -88,8 +87,6 @@ bpn_discovery = BpnDiscoveryService(
 | `cache_timeout_seconds`    | `int`                    | No       | Cache timeout in seconds (default: 43200 = 12 hours)             |
 | `session`                  | `requests.Session`       | No       | Custom HTTP session for connection reuse                         |
 | `base_path`                | `str`                    | No       | API base path (default: `/api/v1.0/administration/connectors/bpnDiscovery`) |
-| `verbose`                  | `bool`                   | No       | Enable verbose logging (default: False)                          |
-| `logger`                   | `logging.Logger`         | No       | Custom logger instance                                           |
 
 ## Core Operations
 

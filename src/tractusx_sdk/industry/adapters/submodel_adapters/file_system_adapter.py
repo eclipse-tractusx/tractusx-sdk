@@ -1,9 +1,10 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 DRÄXLMAIER Group
 # (represented by Lisa Dräxlmaier GmbH)
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -23,10 +24,13 @@
 #################################################################################
 
 from .. import SubmodelAdapter
+import logging
 import os
 from pathlib import Path
 from tractusx_sdk.dataspace.tools import op
 from typing import Any, List, Mapping
+
+logger = logging.getLogger(__name__)
 
 class FileSystemAdapter(SubmodelAdapter):
 
@@ -67,7 +71,7 @@ class FileSystemAdapter(SubmodelAdapter):
 
         if not isinstance(self.path_pattern, str) or not self.path_pattern.strip():
             raise ValueError("path_pattern must be a non-empty string")
-        print("FileSystem initilized")
+        logger.debug("FileSystem submodel adapter initialized at '%s' with path pattern '%s'", self.root_path, self.path_pattern)
 
     @classmethod
     def builder(cls):

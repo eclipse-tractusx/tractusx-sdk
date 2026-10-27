@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,12 +21,15 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 import logging
-from typing import Optional
+
+from tractusx_sdk.exceptions import DiscoveryEndpointNotFoundError, DiscoveryError
 
 from ...tools.http_tools import HttpTools
 from ...managers import OAuth2Manager
 from .base_discovery_service import BaseDiscoveryService
 from .discovery_finder_service import DiscoveryFinderService
+
+logger = logging.getLogger(__name__)
 
 class ConnectorDiscoveryService(BaseDiscoveryService):
     
@@ -33,7 +37,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
     oauth:OAuth2Manager
     
     def __init__(self, oauth:OAuth2Manager, discovery_finder_service:DiscoveryFinderService, connector_discovery_key:str="bpn", 
-                 cache_timeout_seconds:int = 60 * 60 * 12, verbose:bool=False, logger:Optional[logging.Logger]=None,
+                 cache_timeout_seconds:int = 60 * 60 * 12,
                  trace: bool = False):
         """
         Initialize the Connector Discovery Service with caching functionality.
@@ -42,8 +46,6 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
             discovery_finder_service (DiscoveryFinderService): Discovery finder service instance for finding discovery URLs.
             connector_discovery_key (str): Key for connector discovery (default: "bpn").
             cache_timeout_seconds (int): Cache timeout in seconds (default: 12 hours).
-            verbose (bool): Enable verbose logging (default: False).
-            logger (Optional[logging.Logger]): Logger instance for logging (default: None).
             trace (bool): Enable the tracing of the requests/responses (default: False).
         """
         self.oauth=oauth
@@ -51,8 +53,6 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
             oauth=oauth,
             discovery_finder_service=discovery_finder_service,
             cache_timeout_seconds=cache_timeout_seconds,
-            verbose=verbose,
-            logger=logger,
             trace=trace
         )
         self.connector_discovery_key = connector_discovery_key
@@ -77,7 +77,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         """
         endpoints = discovery_finder_service.find_discovery_urls(keys=[discovery_key])
         if(discovery_key not in endpoints):
-          raise Exception("[Connector Discovery Service] Connector Discovery endpoint not found!")
+          raise DiscoveryEndpointNotFoundError("[Connector Discovery Service] Connector Discovery endpoint not found!")
         
         return endpoints[discovery_key]
 
@@ -145,7 +145,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
 
         response = HttpTools.do_post(url=discovery_url, headers=headers, json=body, **self._trace_kwargs())
         if(response is None or response.status_code != 200):
-            raise Exception("[Connector Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
+            raise DiscoveryError("[Connector Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
         
         json_response:dict = response.json()
 
@@ -154,4 +154,5 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
             if item.get(bpn_key) == bpn:
                 return item.get(connector_endpoint_key, [])
         # If the BPN is not found, return None or an empty list
+        logger.debug("[Connector Discovery Service] No connector endpoints were found for BPN '%s'.", bpn)
         return None

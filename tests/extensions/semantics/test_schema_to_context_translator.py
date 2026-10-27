@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -26,6 +27,7 @@ import pytest
 import logging
 from unittest.mock import Mock, patch
 from tractusx_sdk.extensions.semantics.schema_to_context_translator import SammSchemaContextTranslator
+from tractusx_sdk.exceptions import InvalidSemanticIdError
 
 
 @pytest.fixture
@@ -36,9 +38,8 @@ def translator():
 
 @pytest.fixture
 def translator_with_logger():
-    """Create a translator instance with a logger for verbose testing."""
-    logger = Mock(spec=logging.Logger)
-    return SammSchemaContextTranslator(logger=logger, verbose=True)
+    """Kept as a name for the tests that exercise logging: the translator logs through its module logger."""
+    return SammSchemaContextTranslator()
 
 
 @pytest.fixture
@@ -134,8 +135,8 @@ class TestSammSchemaContextTranslatorInit:
         assert translator.actualPathSep == "/-/"
         assert translator.refPathSep == "/"
         assert translator.propertiesKey == "properties"
-        assert translator.logger is None
-        assert translator.verbose is False
+        assert not hasattr(translator, "logger")
+        assert not hasattr(translator, "verbose")
         assert translator.itemKey == "items"
         assert translator.schemaPrefix == "schema"
         assert translator.aspectPrefix == "aspect"
@@ -143,13 +144,15 @@ class TestSammSchemaContextTranslatorInit:
         assert translator.recursionDepth == 2
         assert translator.depth == 0
 
-    def test_init_with_logger_and_verbose(self):
-        """Test initialization with logger and verbose mode."""
-        logger = Mock(spec=logging.Logger)
-        translator = SammSchemaContextTranslator(logger=logger, verbose=True)
-        
-        assert translator.logger == logger
-        assert translator.verbose is True
+    @pytest.mark.parametrize("removed", [{"logger": Mock(spec=logging.Logger)}, {"verbose": True}, {"debug": True}])
+    def test_init_rejects_the_removed_logger_and_verbose_arguments(self, removed):
+        """The translator logs through its module logger; there is nothing to pass any more."""
+        with pytest.raises(TypeError):
+            SammSchemaContextTranslator(**removed)
+
+        translator = SammSchemaContextTranslator()
+        assert not hasattr(translator, "logger")
+        assert not hasattr(translator, "verbose")
 
     def test_initial_jsonld_structure(self, translator):
         """Test the initial JSON-LD structure."""
@@ -204,19 +207,13 @@ class TestSchemaToJsonLD:
         assert "Custom" in context
         assert context["Custom"]["@id"] == "cx:Custom"
 
-    def test_schema_to_jsonld_invalid_semantic_id(self, translator):
-        """Test with invalid semantic ID."""
-        invalid_ids = [
-            "invalid_semantic_id",
-            "urn:samm:example:1.0.0",
-            "urn:samm:example:1.0.0#",
-            ""
-        ]
-        schema = {"type": "string"}
-        
-        for invalid_id in invalid_ids:
-            with pytest.raises(Exception, match="It was not possible to create flattened jsonld schema"):
-                translator.schema_to_jsonld(invalid_id, schema)
+    @pytest.mark.parametrize("method_name", ["schema_to_jsonld", "schema_to_jsonld_nested"])
+    @pytest.mark.parametrize("schema", [None, {"type": "string"}])
+    def test_invalid_semantic_id_propagates_its_typed_error(self, translator, method_name, schema):
+        method = getattr(translator, method_name)
+
+        with pytest.raises(InvalidSemanticIdError):
+            method("urn:samm:example:1.0.0", schema)
 
     def test_schema_to_jsonld_with_description(self, translator):
         """Test schema with description (flattened context)."""
@@ -659,7 +656,7 @@ class TestGetSchemaRef:
         assert result is None
 
     @patch('tractusx_sdk.extensions.semantics.schema_to_context_translator.op.get_attribute')
-    def test_get_schema_ref_recursion_detection(self, mock_get_attribute, translator_with_logger):
+    def test_get_schema_ref_recursion_detection(self, mock_get_attribute, translator_with_logger, caplog):
         """Test recursion detection in get_schema_ref."""
         import hashlib
         
@@ -678,11 +675,13 @@ class TestGetSchemaRef:
         # Set depth to exceed limit
         translator_with_logger.depth = translator_with_logger.recursionDepth  # Should trigger limit
         
-        result2 = translator_with_logger.get_schema_ref(ref, actualref_with_hash)
+        with caplog.at_level(logging.WARNING, logger="tractusx_sdk.extensions.semantics.schema_to_context_translator"):
+            result2 = translator_with_logger.get_schema_ref(ref, actualref_with_hash)
         assert result2 is None
         
         # Check that warning was logged
-        translator_with_logger.logger.warning.assert_called()
+        assert "Infinite recursion detected" in caplog.text
+        assert ref in caplog.text
 
 
 class TestExpandNode:
