@@ -121,11 +121,9 @@ class TestTranslatorErrors:
     def translator(self):
         return SammSchemaContextTranslator()
 
-    def test_invalid_semantic_id_keeps_the_cause(self, translator):
-        with pytest.raises(SchemaTranslationError, match="create flattened jsonld schema") as raised:
+    def test_invalid_semantic_id_propagates_its_typed_error(self, translator):
+        with pytest.raises(InvalidSemanticIdError):
             translator.schema_to_jsonld("invalid_semantic_id", {"type": "string"})
-        assert isinstance(raised.value.__cause__, InvalidSemanticIdError)
-        assert isinstance(raised.value, TractusXSDKError)
 
     def test_a_missing_schema_keeps_the_cause_of_the_failed_lookup(self, translator):
         lookup_failure = ConnectionError("no network")

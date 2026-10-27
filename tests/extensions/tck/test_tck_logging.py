@@ -110,6 +110,18 @@ class TestSetupAndFinalize:
 
         assert root.level == logging.WARNING
 
+    def test_finalize_restores_the_level_for_each_logging_session(self, host_logging, tmp_path):
+        root = logging.getLogger()
+        for test_case_name, original_level in (
+            ("first_case", logging.WARNING),
+            ("second_case", logging.ERROR),
+        ):
+            root.setLevel(original_level)
+            _, log_file = helpers.setup_tck_logging(test_case_name, str(tmp_path))
+            helpers.finalize_log(log_file, "PASS")
+
+            assert root.level == original_level
+
     def test_the_log_file_is_renamed_with_the_result(self, host_logging, tmp_path):
         logger, log_file = helpers.setup_tck_logging("case", str(tmp_path))
         logger.info("a line")

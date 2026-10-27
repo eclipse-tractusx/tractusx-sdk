@@ -175,7 +175,6 @@ def setup_tck_logging(
 
 def finalize_log(log_file: str, result: str):
     """Flush and close the handlers of :func:`setup_tck_logging`, then rename the log file with PASS or FAIL result."""
-    global _tck_original_root_level
     root = logging.getLogger()
     for handler in _tck_handlers[:]:
         handler.flush()
@@ -184,7 +183,6 @@ def finalize_log(log_file: str, result: str):
         _tck_handlers.remove(handler)
     if not _tck_handlers and _tck_original_root_level is not None:
         root.setLevel(_tck_original_root_level)
-        _tck_original_root_level = None
 
     final_log = log_file.replace(".log", f"_{result}.log")
     os.rename(log_file, final_log)

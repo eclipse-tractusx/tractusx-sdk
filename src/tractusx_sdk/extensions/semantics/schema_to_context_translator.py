@@ -138,7 +138,7 @@ class SammSchemaContextTranslator:
             return result.schema
                 
         except Exception as e:
-            logger.error("Error fetching schema for %s: %s", semantic_id, e)
+            logger.exception("Error fetching schema for %s: %s", semantic_id, e)
             return None
 
     def _find_schema(self, semantic_id: str, link_core: str) -> SchemaLookupResult:
@@ -185,6 +185,8 @@ class SammSchemaContextTranslator:
             logger.info("Schema not provided, attempting to fetch from semantic ID: %s", semantic_id)
             try:
                 schema = self._find_schema(semantic_id, link_core=link_core).schema
+            except InvalidSemanticIdError:
+                raise
             except Exception as e:
                 raise SchemaNotFoundError(f"Could not fetch schema for semantic ID: {semantic_id}") from e
         
@@ -288,6 +290,8 @@ class SammSchemaContextTranslator:
             return {
                 "@context": response_context
             }
+        except InvalidSemanticIdError:
+            raise
         except Exception as e:
             raise SchemaTranslationError("It was not possible to create flattened jsonld schema") from e
 
@@ -358,6 +362,8 @@ class SammSchemaContextTranslator:
             return {
                 "@context": response_context
             }
+        except InvalidSemanticIdError:
+            raise
         except Exception as e:
             raise SchemaTranslationError("It was not possible to create jsonld schema") from e
     
