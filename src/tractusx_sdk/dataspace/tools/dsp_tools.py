@@ -683,8 +683,11 @@ class DspTools:
 
         @returns: dict: the selected policy or None if no valid policy was found
         """
-        policy, _ = DspTools._select_policy(dataset=dataset, allowed_policies=allowed_policies)
-        return policy
+        ### Policy Evaluation
+        policies: dict | list | None = _get_policies(dataset)
+
+        if policies is None:
+            return None
 
     @staticmethod
     def _select_policy(dataset:dict, allowed_policies:list) -> tuple[dict | None, list[PolicyEvaluation]]:
@@ -694,11 +697,14 @@ class DspTools:
         @returns: The selected policy (``None`` if there is none) and the evaluation of
             every policy that was rejected on the way, tagged with the dataset's id.
         """
-        policies:dict|list = _get_policies(dataset)
+        policies: dict | list | None = _get_policies(dataset)
         asset_id = dataset.get("@id")
         rejections:list[PolicyEvaluation] = []
         logger.debug("Evaluating the policies of dataset '%s' (%s).", asset_id or "<unknown>", _allow_list_summary(allowed_policies),
                      extra=log_extra(asset_id=asset_id))
+
+        if policies is None:
+            return None, rejections
 
         ## One Policy is a dict, more than one is a list
         for policy in ([policies] if isinstance(policies, dict) else policies):
