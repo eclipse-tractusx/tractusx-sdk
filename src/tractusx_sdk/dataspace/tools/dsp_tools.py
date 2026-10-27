@@ -654,8 +654,11 @@ class DspTools:
 
         @returns: dict: the selected policy or None if no valid policy was found
         """
-        policy, _ = DspTools._select_policy(dataset=dataset, allowed_policies=allowed_policies)
-        return policy
+        ### Policy Evaluation
+        policies: dict | list | None = _get_policies(dataset)
+
+        if policies is None:
+            return None
 
     @staticmethod
     def _select_policy(dataset:dict, allowed_policies:list) -> tuple[dict | None, list[PolicyEvaluation]]:

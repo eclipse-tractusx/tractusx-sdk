@@ -1882,6 +1882,31 @@ class TestDspToolsCatalogEdgeCases:
         assert len(result) == 1
         assert result[0][0] == "ichub:asset:dtr:9foUM7pmSTrr5LZnx0NqiQ"
 
+    def test_filter_assets_dataset_without_policy_raises_policy_mismatch(self):
+        """A dataset without ``hasPolicy`` is rejected without a TypeError."""
+        catalog = {"dcat:dataset": {"@id": "asset-1"}}
+
+        with pytest.raises(PolicyMismatchError, match="No valid asset and policy"):
+            DspTools.filter_assets_and_policies(catalog=catalog, allowed_policies=None)
+
+    def test_filter_assets_skips_dataset_without_policy(self):
+        """Datasets without ``hasPolicy`` do not abort the whole catalog scan."""
+        catalog = {
+            "dataset": [
+                {"@id": "asset-without-policy"},
+                copy.deepcopy(SATURN_CATALOG["dataset"][0]),
+            ]
+        }
+
+        result = DspTools.filter_assets_and_policies(
+            catalog=catalog,
+            allowed_policies=ALLOWED_POLICIES,
+        )
+
+        assert [asset_id for asset_id, _ in result] == [
+            "ichub:asset:dtr:9foUM7pmSTrr5LZnx0NqiQ"
+        ]
+
     # ── Empty / missing catalog tests (provider has not shared any asset) ─────
 
     def test_filter_assets_none_catalog_raises(self):
