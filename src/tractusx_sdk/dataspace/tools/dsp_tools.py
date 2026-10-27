@@ -668,9 +668,12 @@ class DspTools:
         @returns: The selected policy (``None`` if there is none) and the evaluation of
             every policy that was rejected on the way, tagged with the dataset's id.
         """
-        policies:dict|list = _get_policies(dataset)
+        policies: dict | list | None = _get_policies(dataset)
         asset_id = dataset.get("@id")
         rejections:list[PolicyEvaluation] = []
+
+        if policies is None:
+            return None, rejections
 
         ## One Policy is a dict, more than one is a list
         for policy in ([policies] if isinstance(policies, dict) else policies):

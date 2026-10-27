@@ -1907,6 +1907,23 @@ class TestDspToolsCatalogEdgeCases:
             "ichub:asset:dtr:9foUM7pmSTrr5LZnx0NqiQ"
         ]
 
+    def test_filter_assets_all_datasets_without_policy_raises_policy_mismatch(self):
+        catalog = {
+            "dataset": [
+                {"@id": "asset-1"},
+                {"@id": "asset-2"},
+            ]
+        }
+
+        with pytest.raises(PolicyMismatchError, match="No valid policy was found for any item") as raised:
+            DspTools.filter_assets_and_policies(
+                catalog=catalog,
+                allowed_policies=ALLOWED_POLICIES,
+            )
+
+        assert raised.value.catalog is catalog
+        assert not raised.value.evaluations
+
     # ── Empty / missing catalog tests (provider has not shared any asset) ─────
 
     def test_filter_assets_none_catalog_raises(self):
