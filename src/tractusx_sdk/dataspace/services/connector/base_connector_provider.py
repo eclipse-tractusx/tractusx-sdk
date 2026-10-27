@@ -112,7 +112,7 @@ class BaseConnectorProviderService(BaseService):
         properties: dict = None,
         private_properties: dict = None,
         oauth2_config: dict = None,
-        context: dict = None,
+        context: dict | list | str | None = None,
         data_address_type: str = "HttpData",
         **kwargs
     ):
@@ -129,7 +129,15 @@ class BaseConnectorProviderService(BaseService):
             }
 
         if semantic_id is not None:
-            context = {**context, "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/"}
+            semantic_context = {
+                "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/"
+            }
+            if isinstance(context, dict):
+                context = {**context, **semantic_context}
+            elif isinstance(context, list):
+                context = [*context, semantic_context]
+            elif isinstance(context, str):
+                context = [context, semantic_context]
 
         data_address = {
             "@type": "DataAddress",

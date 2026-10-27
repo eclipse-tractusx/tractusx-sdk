@@ -303,6 +303,44 @@ def test_create_asset_with_semantic_id_copies_context(mock_get_asset_model, serv
     assert context == {"custom": "https://example.com/custom#"}
 
 
+@pytest.mark.parametrize(
+    ("context", "expected_context"),
+    [
+        (
+            ["https://example.com/custom-context"],
+            [
+                "https://example.com/custom-context",
+                {"aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/"},
+            ],
+        ),
+        (
+            "https://example.com/custom-context",
+            [
+                "https://example.com/custom-context",
+                {"aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/"},
+            ],
+        ),
+    ],
+)
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_with_semantic_id_preserves_list_and_string_context(
+    mock_get_asset_model, service, context, expected_context
+):
+    service._asset_controller.create.return_value = Mock(status_code=200, json=lambda: {"asset": "ok"})
+    mock_get_asset_model.return_value = {"mock": "asset"}
+
+    service.create_asset(
+        asset_id="123",
+        base_url="http://test",
+        semantic_id="urn:samm:io.catenax.example:1.0.0#Example",
+        context=context,
+    )
+
+    assert mock_get_asset_model.call_args.kwargs["context"] == expected_context
+    if isinstance(context, list):
+        assert context == ["https://example.com/custom-context"]
+
+
 @patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
 def test_create_asset_without_semantic_id_uses_default_context(mock_get_asset_model, service):
     service._asset_controller.create.return_value = Mock(status_code=200, json=lambda: {"asset": "ok"})
