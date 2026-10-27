@@ -30,7 +30,7 @@ pypi/pypi/-/fastapi-cache2/0.2.2, Apache-2.0, approved, clearlydefined
 pypi/pypi/-/fastapi-cli/0.0.7, MIT, approved, clearlydefined
 pypi/pypi/-/fastapi-keycloak-middleware/1.6.0, MIT, approved, #26766
 pypi/pypi/-/fastapi/0.143.2, MIT AND Apache-2.0, approved, #32473
-pypi/pypi/-/filelock/3.25.2, MIT, approved, clearlydefined
+pypi/pypi/-/filelock/4.2.1, MIT, approved, #32750
 pypi/pypi/-/ghp-import/2.1.0, Apache-2.0, approved, clearlydefined
 pypi/pypi/-/greenlet/3.3.2, MIT AND PSF-2.0, approved, #26712
 pypi/pypi/-/griffelib/2.0.0, ISC, approved, #26760
