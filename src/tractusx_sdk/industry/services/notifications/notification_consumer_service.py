@@ -31,6 +31,7 @@ negotiate contracts, obtain EDR tokens, and send notifications through the datas
 """
 
 import logging
+import warnings
 from typing import Any, Dict, List, Optional
 
 from tractusx_sdk.dataspace.services.connector.base_connector_consumer import BaseConnectorConsumerService
@@ -264,8 +265,8 @@ class NotificationConsumerService(BaseService):
             provider_bpn: Business Partner Number of the provider
             provider_dsp_url: DSP endpoint URL of the provider connector
             policies: Optional list of allowed policies for negotiation
-            max_retries: Maximum retries for EDR entry (default: 6)
-            retry_timeout: Timeout between retries in seconds (default: 10)
+            max_retries: Maximum retries for EDR entry (default: 6), now deprecated and ignored
+            retry_timeout: Timeout between retries in seconds (default: 10), now deprecated and ignored
             dct_type: DCT type to filter by (default: DigitalTwinEventAPI)
             
         Returns:
@@ -274,6 +275,11 @@ class NotificationConsumerService(BaseService):
         Raises:
             NotificationError: If negotiation fails
         """
+        warnings.warn(
+                   "The 'max_retries' and 'retry_timeout' parameters are deprecated and are now ignored.",
+                   DeprecationWarning,
+                   stacklevel=2
+               ) 
         connector = self._ensure_connector_consumer()
         
         if self.verbose:
@@ -295,8 +301,6 @@ class NotificationConsumerService(BaseService):
                 counter_party_address=provider_dsp_url,
                 filter_expression=filter_expression,
                 policies=policies,
-                max_retries=max_retries,
-                timeout=retry_timeout,
             )
             
             if self.verbose:
