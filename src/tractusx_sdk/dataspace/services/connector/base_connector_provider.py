@@ -112,7 +112,7 @@ class BaseConnectorProviderService(BaseService):
         properties: dict = None,
         private_properties: dict = None,
         oauth2_config: dict = None,
-        context: dict = None,
+        context: dict | list | str | None = None,
         data_address_type: str = "HttpData",
         **kwargs
     ):
@@ -127,6 +127,17 @@ class BaseConnectorProviderService(BaseService):
                 "cx-taxo": "https://w3id.org/catenax/taxonomy#",
                 "dct": "http://purl.org/dc/terms/"
             }
+
+        if semantic_id is not None:
+            semantic_context = {
+                "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/"
+            }
+            if isinstance(context, dict):
+                context = {**context, **semantic_context}
+            elif isinstance(context, list):
+                context = [*context, semantic_context]
+            elif isinstance(context, str):
+                context = [context, semantic_context]
 
         data_address = {
             "@type": "DataAddress",
@@ -206,7 +217,6 @@ class BaseConnectorProviderService(BaseService):
             _properties["cx-common:version"] = version
     
         if semantic_id is not None:
-            context["aas-semantics"] = "https://admin-shell.io/aas/3/0/HasSemantics/"
             _properties["aas-semantics:semanticId"] = {"@id": semantic_id}
             
         if properties is not None:
