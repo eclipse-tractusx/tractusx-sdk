@@ -108,6 +108,8 @@ class LocalCache(CacheProvider):
         try:
             await backend.clear(key=key)
         except KeyError:
+            # InMemoryBackend.clear() raises KeyError when the key is not
+            # in the cache. Deleting a missing key is a no-op, so ignore it.
             pass
 
 
