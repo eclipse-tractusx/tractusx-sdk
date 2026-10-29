@@ -68,6 +68,7 @@ mypy = "^2.4.1"
 types-requests = "^2.32.0"
 types-pyyaml = "^6.0.12"
 types-jsonschema = "^4.23.0"
+ruff = "^0.17.3"
 
 
 [tool.poetry.group.docs.dependencies]
@@ -146,3 +147,19 @@ module = [
     "tractusx_sdk.industry.services.notifications.notification_service",
 ]
 ignore_errors = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+# Legacy baseline: violations without a safe auto-fix. Only remove entries, never add.
+"src/tractusx_sdk/extensions/semantics/schema_to_context_translator.py" = ["E701", "E722"]
+"src/tractusx_sdk/extensions/tck/connector/runners.py" = ["E731"]
+"tests/dataspace/tools/test_operators.py" = ["E712"]
+"tests/dataspace/tools/test_utils.py" = ["E712"]

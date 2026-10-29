@@ -22,7 +22,7 @@
 #################################################################################
 
 from ....models.connector.saturn import ContractNegotiationModel
-from ....tools import op, HttpTools, DspTools
+from ....tools import HttpTools, DspTools
 from ..base_connector_consumer import BaseConnectorConsumerService
 from ....managers.connection.base_connection_manager import BaseConnectionManager
 import logging

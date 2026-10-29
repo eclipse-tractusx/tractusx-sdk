@@ -190,7 +190,7 @@ class GeometryValidator:
                 for info in self.schema_validator.infos:
                     print(f'  [INFO] {info}')
         
-        print(f'\n=== SUMMARY ===')
+        print('\n=== SUMMARY ===')
         print(f'  Errors: {len(self.schema_validator.errors)}')
         print(f'  Warnings: {len(self.schema_validator.warnings)}')
         print(f'  Infos: {len(self.schema_validator.infos)}')

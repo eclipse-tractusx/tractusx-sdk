@@ -60,10 +60,10 @@ def main():
 
     except Exception as e:
         print(f"Error: {e}"
-        + f" Make sure the semantic ID is valid and the schema is available"
-        + f"   Try other Tractus-X semantic IDs like:"
-        + f"   - urn:samm:io.catenax.pcf:7.0.0#Pcf"
-        + f"   - urn:samm:io.catenax.battery.battery_pass:6.0.0#BatteryPass")
+        + " Make sure the semantic ID is valid and the schema is available"
+        + "   Try other Tractus-X semantic IDs like:"
+        + "   - urn:samm:io.catenax.pcf:7.0.0#Pcf"
+        + "   - urn:samm:io.catenax.battery.battery_pass:6.0.0#BatteryPass")
 
 
 if __name__ == "__main__":

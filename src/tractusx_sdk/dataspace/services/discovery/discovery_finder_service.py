@@ -81,7 +81,7 @@ class DiscoveryFinderService(BaseService):
         
         data = response.json()
 
-        if(not(self.endpoints_key in data) or len(data[self.endpoints_key]) == 0):
+        if(self.endpoints_key not in data or len(data[self.endpoints_key]) == 0):
             raise Exception("[EDC Discovery Service] No endpoints were found in the discovery service for this keys!")
 
         # Map to every key the endpoint address
