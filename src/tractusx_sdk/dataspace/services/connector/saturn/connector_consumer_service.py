@@ -32,14 +32,11 @@ from ....controllers.connector.base_dma_controller import BaseDmaController
 from ....controllers.connector.controller_factory import ControllerType, ControllerFactory
 from ....models.connector.saturn.catalog_model import CatalogModel
 import hashlib
+from typing import Any
 from requests import Response
 
 
-class _DefaultPolicies:
-    pass
-
-
-_DEFAULT_POLICIES = _DefaultPolicies()
+_DEFAULT_POLICIES: Any = object()
 
 
 class ConnectorConsumerService(BaseConnectorConsumerService):
@@ -365,7 +362,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return policies
 
     def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
-                        policies: list | None | _DefaultPolicies = _DEFAULT_POLICIES,
+                        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
                         max_wait: int = 60, poll_interval: int = 1,
                         protocol: str = DSP_2025, catalog_context: dict = DEFAULT_CONTEXT,
                         negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> str:
@@ -774,7 +771,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return catalogs
     
     def do_dsp_with_bpnl(self, bpnl: str, counter_party_address: str = None, filter_expression: list[dict] = None,
-                        policies: list | None | _DefaultPolicies = _DEFAULT_POLICIES,
+                        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
                         max_wait: int = 60, poll_interval: int = 1,
                         namespace: str = EDC_NAMESPACE,
                         catalog_context: dict = DEFAULT_CONTEXT,
@@ -808,7 +805,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_id: str,
         counter_party_address: str,
         filter_expression: list[dict],
-        policies: list | None | _DefaultPolicies = _DEFAULT_POLICIES,
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -852,7 +849,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        policies: list | None | _DefaultPolicies = _DEFAULT_POLICIES,
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -925,7 +922,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        policies: list | None | _DefaultPolicies = _DEFAULT_POLICIES,
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -994,7 +991,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list | None | _DefaultPolicies = _DEFAULT_POLICIES,
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -1064,7 +1061,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list | None | _DefaultPolicies = _DEFAULT_POLICIES,
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -1137,7 +1134,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list | None | _DefaultPolicies = _DEFAULT_POLICIES,
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -1205,7 +1202,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         bpnl: str,
         counter_party_address: str,
         dct_type: str,
-        policies: list | None | _DefaultPolicies = _DEFAULT_POLICIES,
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
         operator="=",
         session=None,
@@ -1261,7 +1258,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         dct_type: str,
         json=None,
         data=None,
-        policies: list | None | _DefaultPolicies = _DEFAULT_POLICIES,
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
         operator="=",
         session=None,
@@ -1322,7 +1319,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list | None | _DefaultPolicies = _DEFAULT_POLICIES,
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,

@@ -26,6 +26,7 @@
 
 import json
 import logging
+from typing import Any
 
 from ..constants import (
     DSP_DATASET_KEY, DSP_POLICY_KEY,
@@ -39,11 +40,7 @@ _DATASET_KEYS = (DSP2025_DATASET_KEY, DSP_DATASET_KEY)   # "dataset", "dcat:data
 _POLICY_KEYS  = (DSP2025_POLICY_KEY,  DSP_POLICY_KEY)    # "hasPolicy", "odrl:hasPolicy"
 
 
-class _UnsetAllowedPolicies:
-    pass
-
-
-_UNSET_ALLOWED_POLICIES = _UnsetAllowedPolicies()
+_UNSET_ALLOWED_POLICIES: Any = object()
 
 
 def _get_datasets(catalog: dict):
@@ -513,7 +510,7 @@ class DspTools:
     @staticmethod
     def filter_assets_and_policies(
         catalog: dict | None,
-        allowed_policies: list | None | _UnsetAllowedPolicies = _UNSET_ALLOWED_POLICIES,
+        allowed_policies: list[dict[str, Any]] | None = _UNSET_ALLOWED_POLICIES,
     ) -> list[tuple[str, dict]]:
         """
         Method to select a asset and policy from a DCAT Catalog.
@@ -584,7 +581,7 @@ class DspTools:
     @staticmethod
     def get_dataset_policy(
         dataset: dict,
-        allowed_policies: list | None | _UnsetAllowedPolicies = _UNSET_ALLOWED_POLICIES,
+        allowed_policies: list[dict[str, Any]] | None = _UNSET_ALLOWED_POLICIES,
     ) -> dict | None:
         """
         Gets a valid policy from an dataset.
