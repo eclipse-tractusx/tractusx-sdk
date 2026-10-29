@@ -388,6 +388,26 @@ class TestDspToolsSaturnPolicyMatching:
         catalog_policy = SATURN_CATALOG["dataset"][0]["hasPolicy"][0]
         assert DspTools.is_policy_valid(policy=catalog_policy, allowed_policies=[]) is False
 
+    def test_filter_assets_default_policy_list_rejects_everything(self):
+        """Omitting the allow-list preserves the fail-closed default."""
+        with pytest.raises(ValueError, match="No valid"):
+            DspTools.filter_assets_and_policies(catalog=SATURN_CATALOG)
+
+    def test_filter_assets_explicit_none_accepts_everything(self):
+        """Passing None explicitly disables policy filtering."""
+        result = DspTools.filter_assets_and_policies(
+            catalog=SATURN_CATALOG,
+            allowed_policies=None,
+        )
+        assert len(result) == 1
+
+    def test_get_dataset_policy_default_rejects_and_explicit_none_accepts(self):
+        """The direct policy lookup distinguishes omission from explicit None."""
+        dataset = SATURN_CATALOG["dataset"][0]
+
+        assert DspTools.get_dataset_policy(dataset=dataset) is None
+        assert DspTools.get_dataset_policy(dataset=dataset, allowed_policies=None) is not None
+
     def test_filter_assets_empty_policies_raises(self):
         """
         An empty allowed list means no policy can match → ValueError expected.

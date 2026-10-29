@@ -87,6 +87,11 @@ class TestAuthManager(unittest.TestCase):
         expected = {"X-Api-Key": "test_key"}
         self.assertEqual(result, expected)
 
+    def test_add_auth_header_with_explicit_none(self):
+        """Test add_auth_header accepts None without a shared mutable default."""
+        result = self.auth_manager.add_auth_header(None)
+        self.assertEqual(result, {"X-Api-Key": "test_key"})
+
     def test_add_auth_header_raises_when_auth_disabled(self):
         """Test add_auth_header raises RuntimeError when auth is disabled."""
         self.auth_manager.auth_enabled = False

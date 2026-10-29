@@ -32,7 +32,13 @@ from ....controllers.connector.base_dma_controller import BaseDmaController
 from ....controllers.connector.controller_factory import ControllerType, ControllerFactory
 from ....models.connector.saturn.catalog_model import CatalogModel
 import hashlib
+from typing import Any
 from requests import Response
+
+
+_DEFAULT_POLICIES: Any = object()
+
+
 class ConnectorConsumerService(BaseConnectorConsumerService):
     
     EDC_NAMESPACE= "https://w3id.org/edc/v0.0.1/ns/"
@@ -356,7 +362,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return policies
 
     def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
-                        policies: list = [], max_wait: int = 60, poll_interval: int = 1,
+                        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
+                        max_wait: int = 60, poll_interval: int = 1,
                         protocol: str = DSP_2025, catalog_context: dict = DEFAULT_CONTEXT,
                         negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> str:
 
@@ -370,7 +377,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
             policy body without ``@id`` / ``@type``). Pass ``None`` to auto-select the first
             available policy from the provider's catalog (test-only; avoid in production).
-            An empty list ``[]`` raises a ``ValueError`` immediately. Defaults to ``[]``.
+            An empty list ``[]`` raises a ``ValueError`` immediately. When omitted,
+            the value defaults to a new empty list.
         max_wait (int, optional): Maximum seconds to wait for negotiation / EDR. Defaults to 60.
         poll_interval (int, optional): Seconds between status-poll attempts. Defaults to 1.
         protocol (str, optional): DSP protocol version. Defaults to DSP_2025.
@@ -383,6 +391,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         Raises:
         Exception: If the EDR entry is not found or the transfer ID is not available.
         """
+
+        if policies is _DEFAULT_POLICIES:
+            policies = []
 
         ## Fail immediately if policies is an empty list — means no policy has been selected.
         if policies is not None and len(policies) == 0:
@@ -760,7 +771,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return catalogs
     
     def do_dsp_with_bpnl(self, bpnl: str, counter_party_address: str = None, filter_expression: list[dict] = None,
-                        policies: list = [],
+                        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
                         max_wait: int = 60, poll_interval: int = 1,
                         namespace: str = EDC_NAMESPACE,
                         catalog_context: dict = DEFAULT_CONTEXT,
@@ -794,7 +805,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_id: str,
         counter_party_address: str,
         filter_expression: list[dict],
-        policies: list,
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -838,7 +849,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        policies: list = [],
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -872,6 +883,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         Returns:
         Response: The HTTP response from the GET request. If the request fails, an Exception is raised.
         """
+        if policies is _DEFAULT_POLICIES:
+            policies = []
+
         ## Extract request kwargs
         protocol = kwargs.pop("protocol", self.DSP_2025)
         verify = kwargs.pop("verify", False)
@@ -908,7 +922,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        policies: list = [],
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -977,7 +991,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list = [],
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -1047,7 +1061,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list = [],
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -1120,7 +1134,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list = [],
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -1188,7 +1202,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         bpnl: str,
         counter_party_address: str,
         dct_type: str,
-        policies: list = None,
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
         operator="=",
         session=None,
@@ -1244,7 +1258,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         dct_type: str,
         json=None,
         data=None,
-        policies: list = None,
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
         operator="=",
         session=None,
@@ -1305,7 +1319,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list = [],
+        policies: list[dict[str, Any]] | None = _DEFAULT_POLICIES,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
