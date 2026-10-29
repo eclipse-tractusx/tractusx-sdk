@@ -63,6 +63,12 @@ pytest-asyncio = "^0.15.1"
 requests-mock = "^1.12.1"
 moto = "^5.0.0"
 
+[tool.poetry.group.quality.dependencies]
+mypy = "^2.4.1"
+types-requests = "^2.32.0"
+types-pyyaml = "^6.0.12"
+types-jsonschema = "^4.23.0"
+
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "^1.6.1"
@@ -75,3 +81,68 @@ mike = "^2.1.3"
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src"]
+mypy_path = "src"
+explicit_package_bases = true
+namespace_packages = true
+check_untyped_defs = true
+show_error_codes = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+# Third-party packages without type stubs or a py.typed marker
+module = ["boto3.*", "botocore.*", "keycloak.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Legacy baseline: modules with known type errors, silenced so CI only catches regressions.
+# Entries must only ever be removed (fix the module, then delete it here); never add new ones.
+module = [
+    "tractusx_sdk.dataspace.adapters.adapter",
+    "tractusx_sdk.dataspace.adapters.connector.adapter_factory",
+    "tractusx_sdk.dataspace.adapters.connector.base_dma_adapter",
+    "tractusx_sdk.dataspace.controllers.connector.base_dma_controller",
+    "tractusx_sdk.dataspace.controllers.connector.jupiter.dma_controller",
+    "tractusx_sdk.dataspace.controllers.connector.saturn.dma_controller",
+    "tractusx_sdk.dataspace.controllers.connector.utils.mixins.base_mixins",
+    "tractusx_sdk.dataspace.managers.connection.database.postgres_connection_manager",
+    "tractusx_sdk.dataspace.managers.connection.database.postgres_memory_connection_manager",
+    "tractusx_sdk.dataspace.managers.connection.database.postgres_memory_refresh_connection_manager",
+    "tractusx_sdk.dataspace.managers.connection.memory.memory_connection_manager",
+    "tractusx_sdk.dataspace.managers.oauth2_manager",
+    "tractusx_sdk.dataspace.models.connector.model_factory",
+    "tractusx_sdk.dataspace.services.connector.base_connector_consumer",
+    "tractusx_sdk.dataspace.services.connector.base_connector_provider",
+    "tractusx_sdk.dataspace.services.connector.base_connector_service",
+    "tractusx_sdk.dataspace.services.connector.jupiter.connector_consumer_service",
+    "tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service",
+    "tractusx_sdk.dataspace.services.connector.service_factory",
+    "tractusx_sdk.dataspace.services.discovery.base_discovery_service",
+    "tractusx_sdk.dataspace.services.discovery.connector_discovery_service",
+    "tractusx_sdk.dataspace.services.service",
+    "tractusx_sdk.dataspace.tools.cache",
+    "tractusx_sdk.dataspace.tools.dsp_tools",
+    "tractusx_sdk.dataspace.tools.http_tools",
+    "tractusx_sdk.dataspace.tools.operators",
+    "tractusx_sdk.dataspace.tools.tracing",
+    "tractusx_sdk.dataspace.tools.validate_submodels",
+    "tractusx_sdk.extensions.geometry.geometry_aspect_validator.validateGeometry",
+    "tractusx_sdk.extensions.notification_api.services.notification_consumer_service",
+    "tractusx_sdk.extensions.notification_api.services.notification_service",
+    "tractusx_sdk.extensions.semantics.schema_to_context_translator",
+    "tractusx_sdk.extensions.tck.connector.runners",
+    "tractusx_sdk.industry.adapters.submodel_adapters.file_system_adapter",
+    "tractusx_sdk.industry.adapters.submodel_adapters.http_submodel_adapter",
+    "tractusx_sdk.industry.adapters.submodel_adapters.s3_adapter",
+    "tractusx_sdk.industry.models.aas.v3.base",
+    "tractusx_sdk.industry.services.aas_service",
+    "tractusx_sdk.industry.services.discovery.bpn_discovery_service",
+    "tractusx_sdk.industry.services.notifications.notification_consumer_service",
+    "tractusx_sdk.industry.services.notifications.notification_service",
+]
+ignore_errors = true
