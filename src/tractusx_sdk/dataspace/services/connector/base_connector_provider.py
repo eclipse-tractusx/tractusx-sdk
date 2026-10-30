@@ -102,12 +102,7 @@ class BaseConnectorProviderService(BaseService):
         dct_subject: str = None,
         version: str = "3.0",
         semantic_id: str = None,
-        proxy_params: dict = {
-            "proxyQueryParams": "false",
-            "proxyPath": "true",
-            "proxyMethod": "true",
-            "proxyBody": "false"
-        },
+        proxy_params: dict = None,
         headers: dict = None,
         properties: dict = None,
         private_properties: dict = None,
@@ -118,6 +113,14 @@ class BaseConnectorProviderService(BaseService):
     ):
         if self.verbose:
             self.logger.info(f"Creating asset {asset_id} at {base_url}.")
+
+        if proxy_params is None:
+            proxy_params = {
+                "proxyQueryParams": "false",
+                "proxyPath": "true",
+                "proxyMethod": "true",
+                "proxyBody": "false"
+            }
 
         # Use provided context or default
         if context is None:
@@ -265,9 +268,9 @@ class BaseConnectorProviderService(BaseService):
         self,
         policy_id: str,
         context: dict | list[dict] = None,
-        permissions: dict | list[dict] = [],
-        prohibitions: dict | list[dict] = [],
-        obligations: dict | list[dict] = [],
+        permissions: dict | list[dict] = None,
+        prohibitions: dict | list[dict] = None,
+        obligations: dict | list[dict] = None,
         **kwargs
     ) -> dict:
         if self.verbose:
