@@ -22,7 +22,6 @@
 
 import unittest
 import requests_mock
-from json import loads as jloads
 
 from tractusx_sdk.dataspace.adapters.adapter import Adapter
 

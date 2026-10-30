@@ -184,5 +184,5 @@ class PostgresConnectionManager(BaseConnectionManager):
                 return True
             else:
                 if self.logger and self.verbose:
-                    self.logger.info(f"[Postgres Connection Manager] No EDR found to delete for the provided keys.")
+                    self.logger.info("[Postgres Connection Manager] No EDR found to delete for the provided keys.")
                 return False

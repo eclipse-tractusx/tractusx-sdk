@@ -440,7 +440,7 @@ class SammSchemaContextTranslator:
         """
         try:
             ## Schema must be not none and type must be in the schema
-            if (property is None) or (not "type" in property): return None
+            if (property is None) or ("type" not in property): return None
             
             ## Start by creating a simple node
             node = self.create_simple_node(property=property, key=key)
@@ -489,7 +489,7 @@ class SammSchemaContextTranslator:
         """
         try:
             ## If type exists add definition to the node
-            if not ("type" in property): return None
+            if "type" not in property: return None
             
             node["@type"] = self.schemaPrefix+":"+property["type"]
             return node
@@ -590,7 +590,7 @@ class SammSchemaContextTranslator:
         """
         try:
             ## If array node has not the item key
-            if not (self.itemKey in property): return None
+            if self.itemKey not in property: return None
             
             item = property[self.itemKey]
             node["@container"] = "@list" 
@@ -599,7 +599,7 @@ class SammSchemaContextTranslator:
             if(isinstance(item, list)):
                 return node
 
-            if not (self.refKey in item):
+            if self.refKey not in item:
                 return self.create_value_node(property=item, node=node)
 
             node[self.contextPrefix] = self.create_item_context(item=item, actualref=actualref)
@@ -689,7 +689,7 @@ class SammSchemaContextTranslator:
                 if item_context is None:
                     continue
 
-                if not "@context" in item_context:
+                if "@context" not in item_context:
                     continue
                 
                 # Merge the properties from item_context into newContext
@@ -832,7 +832,7 @@ class SammSchemaContextTranslator:
             needs_context_update = ("description" in item) or ("x-samm-aspect-model-urn" in item)
             
             if needs_context_update:
-                if not ("@context" in newContext):
+                if "@context" not in newContext:
                     newContext["@context"] = dict()
 
                 ## Override the existing description of ref item
@@ -891,7 +891,7 @@ class SammSchemaContextTranslator:
             if(key is None) or (node is None): return None
 
             ## Ref property must exist in a property inside properties
-            if not (self.refKey in node): return None
+            if self.refKey not in node: return None
 
             ## Get reference from the base schema
             ref = node[self.refKey]
@@ -904,7 +904,7 @@ class SammSchemaContextTranslator:
             needs_context_update = ("description" in node) or ("x-samm-aspect-model-urn" in node)
             
             if needs_context_update:
-                if not ("@context" in nodeProperty):
+                if "@context" not in nodeProperty:
                     nodeProperty["@context"] = dict()
 
                 ## Override the existing description of ref property
@@ -966,7 +966,7 @@ class SammSchemaContextTranslator:
             newNode = dict()
 
             ## If the key is not none create a new node
-            if not (key is None):
+            if key is not None:
                 newNode["@id"] = self.aspectPrefix+":"+key
             
 
@@ -982,7 +982,7 @@ class SammSchemaContextTranslator:
                 needs_context = True
             
             if needs_context:
-                if not ("@context" in newNode):
+                if "@context" not in newNode:
                     newNode["@context"] = dict()
                 
                 if "description" in property:
@@ -1042,7 +1042,7 @@ class SammSchemaContextTranslator:
             
             # If the actual reference is already found means we are going in a loop
             ref_hash = hashlib.sha256(ref.encode()).hexdigest()
-            if not(ref_hash in actualref):     
+            if ref_hash not in actualref:     
                 path = ref.removeprefix(self.path_sep) 
                 return op.get_attribute(self.baseSchema, attr_path=path, path_sep=self.refPathSep, default_value=None)
             

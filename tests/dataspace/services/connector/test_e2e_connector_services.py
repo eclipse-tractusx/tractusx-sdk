@@ -223,7 +223,7 @@ class TestE2EConnectorServicesIntegration:
                 protocol="dataspace-protocol-http:2025-1"
             )
             
-            print(f"Catalog received from Provider")
+            print("Catalog received from Provider")
             assert catalog_response.status_code == 200
             
             catalog_data = catalog_response.json()
@@ -371,7 +371,7 @@ class TestE2EConnectorServicesIntegration:
             dataplane_url = edr_data.get("endpoint", edr_data.get("edc:endpoint"))
             access_token = edr_data.get("authorization", edr_data.get("edc:authorization"))
             
-            print(f"EDR received:")
+            print("EDR received:")
             print(f"  - Endpoint: {dataplane_url}")
             print(f"  - Token: {access_token[:20]}..." if access_token else "  - Token: None")
             

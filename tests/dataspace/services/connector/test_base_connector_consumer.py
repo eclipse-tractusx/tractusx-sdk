@@ -22,7 +22,6 @@
 
 import unittest
 
-from tractusx_sdk.dataspace.services.connector.service_factory import ServiceFactory
 from unittest import mock
 import tractusx_sdk.dataspace.services.connector.base_connector_consumer as bcc
 
