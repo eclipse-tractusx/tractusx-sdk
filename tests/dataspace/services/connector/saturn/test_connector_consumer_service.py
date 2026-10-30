@@ -623,7 +623,7 @@ class TestSaturnConnectorConsumerService(TestCase):
                 self.service.discover_connector_protocol(bpnl=bpnl)
 
     def test_discover_connector_protocol_propagates_transport_error(self):
-        """Test discover_connector_protocol does not translate request failures."""
+        """Test discover_connector_protocol translates request failures."""
         bpnl = "BPNL000000000001"
         transport_error = RequestsConnectionError("connection failed")
 
@@ -633,10 +633,13 @@ class TestSaturnConnectorConsumerService(TestCase):
             mock_discovery.get_discover.side_effect = transport_error
             mock_factory.get_connector_discovery_model.return_value = mock.Mock()
 
-            with self.assertRaises(RequestsConnectionError) as raised:
+            with self.assertRaisesRegex(
+                ConnectionError,
+                "It was not possible to perform connector discovery with the EDC provider! Network error: connection failed"
+            ) as raised:
                 self.service.discover_connector_protocol(bpnl=bpnl)
 
-            self.assertIs(raised.exception, transport_error)
+            self.assertIs(raised.exception.__cause__, transport_error)
     
     def test_get_discovery_info_variations(self):
         """Test get_discovery_info with different protocol and ID combinations."""
