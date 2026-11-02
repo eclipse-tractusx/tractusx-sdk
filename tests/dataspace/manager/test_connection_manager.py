@@ -320,12 +320,11 @@ class TestPostgresMemoryConnectionManagerClearByParty(unittest.TestCase):
         self.assertFalse(deleted)
     
     def test_delete_connection_returns_true_and_saves_when_connection_exists(self):
-        self._add_connection(
+        _add(
+            self.cm,
             counter_party_id="BPNL000000000001",
-            counter_party_address="https://provider.example.com/api",
-            query_checksum="qchk",
-            policy_checksum="pchk",
-            )
+            address="https://provider.example.com/api",
+        )
 
         with patch.object(self.cm, "_trigger_save") as mock_save:
             deleted = self.cm.delete_connection(
