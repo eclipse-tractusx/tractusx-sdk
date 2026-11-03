@@ -1172,7 +1172,7 @@ class BaseConnectorConsumerService(BaseService):
             f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] has failed! The EDR entry was not found after {max_wait}s!")
 
     def negotiate_and_transfer(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
-                              policies: Sequence[dict] | None = (), max_wait: int = 60, poll_interval: int = 1,
+                              policies: Sequence[dict] | None = None, max_wait: int = 60, poll_interval: int = 1,
                                protocol: str = None, catalog_context: dict = None, negotiation_context: dict = None) -> dict:
         """
         Performs the full DSP exchange: catalog lookup → contract negotiation → EDR entry retrieval.
@@ -1184,8 +1184,9 @@ class BaseConnectorConsumerService(BaseService):
         @param counter_party_id: The identifier of the counterparty (Business Partner Number [BPN]).
         @param counter_party_address: The URL of the EDC provider.
         @param filter_expression: Catalog filter conditions.
-        @param policies: Allow-list of accepted usage policies. Pass ``None`` to accept any policy
-            offered by the provider (test-only; avoid in production). Defaults to None.
+        @param policies: Allow-list of accepted usage policies. Defaults to an empty tuple, which
+            fails closed by accepting no policies. Pass ``None`` to auto-select any policy offered
+            by the provider (test-only; avoid in production).
         @param max_wait: Maximum seconds to wait for negotiation FINALIZED state and EDR entry. Defaults to 60.
         @param poll_interval: Seconds to wait between poll attempts. Defaults to 1.
         @param protocol: DSP protocol version to use. Pass ``None`` to use the subclass default. Defaults to None.
