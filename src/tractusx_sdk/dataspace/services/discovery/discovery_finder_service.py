@@ -67,11 +67,8 @@ class DiscoveryFinderService(BaseService):
             dict: Dictionary mapping discovery types to their endpoint URLs.
         """
 
-        ## Check if IAM is connected
-        if(not self.oauth.connected):
-            raise ConnectionError("[EDC Discovery Service] The authentication service is not connected! Please execute the oauth.connect() method")
-        
-        ## Setup headers and body
+        ## Setup headers and body. The authentication service connects on first use
+        ## and raises an AuthServiceUnavailableError (a ConnectionError) itself if it cannot reach the IAM.
         headers:dict = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})
         body:dict = {
             self.types_key: keys
