@@ -152,7 +152,8 @@ class SammSchemaContextTranslator:
             return result.schema
                 
         except Exception as e:
-            logger.exception("Error fetching schema for %s: %s", semantic_id, e)
+            logger.exception("Error fetching schema for %s: %s", semantic_id, e,
+                             extra=log_extra(schema_urn=semantic_id, operation="semantics.fetch"))
             return None
 
     def _find_schema(self, semantic_id: str, link_core: str) -> SchemaLookupResult:

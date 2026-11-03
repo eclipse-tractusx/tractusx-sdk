@@ -113,13 +113,14 @@ class LocalCache(CacheProvider):
         delete = getattr(backend, "delete", None)
         if callable(delete):
             await delete(key)
-            return
-        try:
-            await backend.clear(key=key)
-        except KeyError:
-            # InMemoryBackend.clear() raises KeyError when the key is not
-            # in the cache. Deleting a missing key is a no-op, so ignore it.
-            pass
+        else:
+            try:
+                await backend.clear(key=key)
+            except KeyError:
+                # InMemoryBackend.clear() raises KeyError when the key is not
+                # in the cache. Deleting a missing key is a no-op, so ignore it.
+                pass
+        logger.debug("Local cache entry deleted")
 
 
 def create_cache_provider() -> CacheProvider:

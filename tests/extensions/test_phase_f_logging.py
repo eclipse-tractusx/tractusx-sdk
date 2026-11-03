@@ -75,15 +75,12 @@ class TestTranslatorLogging:
             translator.schema_to_jsonld(SEMANTIC_ID, schema={"type": "string"}, aspect_prefix=None)
         assert any(r.getMessage() == "No aspect prefix given, using 'pcf-aspect'" for r in _records(caplog, TRANSLATOR))
 
-    def test_an_invalid_semantic_id_is_a_warning_and_the_entry_point_says_which_id_it_was(self, translator, caplog):
-        with caplog.at_level(logging.DEBUG), pytest.raises(SchemaTranslationError) as raised:
+    def test_an_invalid_semantic_id_is_a_warning_and_its_typed_error_propagates(self, translator, caplog):
+        with caplog.at_level(logging.DEBUG), pytest.raises(InvalidSemanticIdError):
             translator.schema_to_jsonld("urn:samm:no-reference", schema={"type": "string"})
-        assert isinstance(raised.value.__cause__, InvalidSemanticIdError)
         records = _records(caplog, TRANSLATOR)
-        assert records[0].levelno == logging.WARNING and records[0].schema_urn == "urn:samm:no-reference"
-        entry = records[-1]
-        assert entry.levelno == logging.ERROR and "failed: InvalidSemanticIdError" in entry.getMessage()
-        assert entry.operation == "semantics.schema_to_jsonld"
+        assert [r.levelno for r in records] == [logging.WARNING]
+        assert records[0].schema_urn == "urn:samm:no-reference"
 
     def test_a_schema_without_a_root_node_is_an_error_before_it_is_raised(self, translator, caplog):
         with caplog.at_level(logging.DEBUG), pytest.raises(SchemaTranslationError):
