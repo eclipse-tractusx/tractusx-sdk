@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,7 +22,9 @@
 #################################################################################
 
 import base64
+import logging
 
+logger = logging.getLogger(__name__)
 
 def encode_as_base64_url_safe(string: str) -> str:
     """
@@ -59,5 +62,10 @@ def decode_base64_url_safe(encoded_string: str) -> str:
         encoded_string += "=" * padding
     
     # Decode the string
-    decoded = base64.urlsafe_b64decode(encoded_string.encode("ascii")).decode("utf-8")
+    try:
+        decoded = base64.urlsafe_b64decode(encoded_string.encode("ascii")).decode("utf-8")
+    except Exception:
+        # Only the length is logged: the content of the string is not
+        logger.exception("A base64 string of %d characters could not be decoded", len(encoded_string))
+        raise
     return decoded

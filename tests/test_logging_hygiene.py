@@ -255,6 +255,95 @@ class TestSourceConventions:
         assert offenders == []
 
 
+class TestStructuredContext:
+    """The ``extra`` of a record only carries the documented fields, and no log call receives a secret."""
+
+    SECRET_NAME = re.compile(r"token|secret|password|passwd|authorization|api_?key|credential|cookie|headers$", re.IGNORECASE)
+
+    @staticmethod
+    def _extra_values(tree):
+        for call in _log_calls(tree):
+            for keyword in call.keywords:
+                if keyword.arg == "extra":
+                    yield call, keyword.value
+
+    def test_extra_is_always_built_with_log_extra(self):
+        """``log_extra`` knows the complete list of fields, rejects any other and sanitises the URLs."""
+        offenders = []
+        for path, tree in _modules():
+            for call, value in self._extra_values(tree):
+                is_helper = (isinstance(value, ast.Call) and isinstance(value.func, ast.Name)
+                             and value.func.id == "log_extra")
+                if not is_helper:
+                    offenders.append(f"{_rel(path)}:{call.lineno}")
+        assert offenders == []
+
+    def test_log_extra_only_receives_documented_fields(self):
+        from tractusx_sdk._logging_fields import EXTRA_FIELDS
+
+        offenders = []
+        for path, tree in _modules():
+            for call, value in self._extra_values(tree):
+                if isinstance(value, ast.Call):
+                    unknown = [k.arg for k in value.keywords if k.arg is None or k.arg not in EXTRA_FIELDS]
+                    if unknown:
+                        offenders.append(f"{_rel(path)}:{call.lineno}:{unknown}")
+        assert offenders == []
+
+    def test_log_calls_are_never_given_secrets(self):
+        """
+        Neither a value named after a secret (token, password, headers, ...) nor an ``Authorization`` key.
+        Only the size of such a value (``len(headers)``) is allowed.
+        """
+        offenders = []
+        for path, tree in _modules():
+            for call in _log_calls(tree):
+                for argument in call.args[1:]:
+                    measured = {
+                        id(inner) for node in ast.walk(argument)
+                        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "len"
+                        for inner in ast.walk(node)
+                    }
+                    for node in ast.walk(argument):
+                        if id(node) in measured:
+                            continue
+                        name = (node.id if isinstance(node, ast.Name) else node.attr if isinstance(node, ast.Attribute)
+                                else node.value if isinstance(node, ast.Constant) and isinstance(node.value, str) else None)
+                        if name and self.SECRET_NAME.search(name):
+                            offenders.append(f"{_rel(path)}:{call.lineno}:{name}")
+        assert offenders == []
+
+
+    def test_the_credential_modules_never_log_exception_text_nor_tracebacks(self):
+        """
+        The identity provider, the object store and the submodel service may echo request details in their errors: the
+        modules handling credentials log the exception TYPE (or the S3 error code) only, never its message
+        (``%s`` of the exception) nor a traceback (``exc_info``, ``exception()``).
+        """
+        credential_modules = {
+            "dataspace/managers/oauth2_manager.py", "dataspace/managers/auth_manager.py",
+            "industry/adapters/submodel_adapters/s3_adapter.py", "industry/adapters/submodel_adapters/http_submodel_adapter.py",
+        }
+        # What is allowed to read an exception: its type, or the error code of an S3 error
+        allowed_readers = {"type", "_error_code"}
+        offenders = []
+        for path, tree in _modules():
+            if _rel(path) not in credential_modules:
+                continue
+            handlers = {h.name for h in ast.walk(tree) if isinstance(h, ast.ExceptHandler) and h.name}
+            for call in _log_calls(tree):
+                if call.func.attr == "exception" or any(k.arg == "exc_info" for k in call.keywords):
+                    offenders.append(f"{_rel(path)}:{call.lineno}:traceback")
+                for argument in call.args[1:]:
+                    allowed = {id(n) for c in ast.walk(argument)
+                               if isinstance(c, ast.Call) and isinstance(c.func, ast.Name) and c.func.id in allowed_readers
+                               for n in ast.walk(c)}
+                    for node in ast.walk(argument):
+                        if isinstance(node, ast.Name) and node.id in handlers and id(node) not in allowed:
+                            offenders.append(f"{_rel(path)}:{call.lineno}:{node.id}")
+        assert offenders == []
+
+
 class TestDocumentationAndExamples:
     """What the documentation teaches must run: it never passes an argument the SDK removed."""
 
@@ -294,6 +383,24 @@ class TestDocumentationAndExamples:
                         if keyword.arg in FLAG_NAMES:
                             offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{node.lineno}:{keyword.arg}")
         assert offenders == []
+
+    def test_the_logging_guide_documents_every_structured_field_and_no_other(self):
+        """The ``extra`` fields of the guide and the ones the code accepts are the same list."""
+        from tractusx_sdk._logging_fields import EXTRA_FIELDS
+
+        guide = (REPO_ROOT / "docs" / "admin" / "logging.md").read_text(encoding="utf-8")
+        section = guide.split("## Structured context (`extra`)", 1)[1].split("## What is never logged", 1)[0]
+        table = section.split("```python", 1)[0]
+        documented = {name for cell in re.findall(r"^\| ((?:`[a-z_]+`(?:, )?)+) \|", table, re.MULTILINE)
+                      for name in re.findall(r"`([a-z_]+)`", cell)}
+        assert documented == set(EXTRA_FIELDS)
+
+    def test_the_formatter_example_of_the_guide_lists_the_same_fields(self):
+        from tractusx_sdk._logging_fields import EXTRA_FIELDS
+
+        guide = (REPO_ROOT / "docs" / "admin" / "logging.md").read_text(encoding="utf-8")
+        example = guide.split("SDK_FIELDS = (", 1)[1].split(")", 1)[0]
+        assert set(re.findall(r'"([a-z_]+)"', example)) == set(EXTRA_FIELDS)
 
     def test_the_logging_guide_exists_and_is_in_the_navigation(self):
         assert (REPO_ROOT / "docs/admin/logging.md").is_file()

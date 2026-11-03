@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,9 +21,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+import logging
 from abc import ABC, abstractmethod
 
+from tractusx_sdk._logging_fields import log_extra
+
 from ..tools.tracing import TraceableMixin
+
+logger = logging.getLogger(__name__)
 
 
 class BaseService(TraceableMixin, ABC):
@@ -119,4 +125,7 @@ class BaseService(TraceableMixin, ABC):
             """
             :return: an instance of the class inheriting the base service
             """
+            # Only the names of the settings are logged: they may include credentials (headers)
+            logger.debug("Building %s with the settings %s", self.cls.__name__, sorted(self._data),
+                         extra=log_extra(dataspace_version=self._data.get("dataspace_version"), operation="service.build"))
             return self.cls(**self._data)

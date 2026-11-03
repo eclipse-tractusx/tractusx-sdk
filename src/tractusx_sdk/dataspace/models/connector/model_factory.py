@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,12 +21,17 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+import logging
 from enum import Enum
 from importlib import import_module
 from os import listdir, path
 
+from tractusx_sdk._logging_fields import log_extra
+
 from .base_policy_model import BasePolicyModel
 from .base_queryspec_model import BaseQuerySpecModel
+
+logger = logging.getLogger(__name__)
 
 class DataspaceVersionMapping(Enum):
     DATASPACE_PROTOCOL_HTTP = "jupiter"
@@ -38,6 +44,9 @@ class DataspaceVersionMapping(Enum):
             "dataspace-protocol-http": cls.DATASPACE_PROTOCOL_HTTP,
             "dataspace-protocol-http:2025-1": cls.DATASPACE_PROTOCOL_HTTP_2025_1,
         }
+        if protocol not in mapping:
+            logger.debug("The protocol '%s' is unknown, defaulting to the dataspace version 'saturn'", protocol,
+                         extra=log_extra(dataspace_version="saturn", operation="model_factory.from_protocol"))
         return mapping.get(protocol, cls.DATASPACE_PROTOCOL_HTTP_2025_1)  # default to saturn
 
 class ModelType(Enum):
@@ -89,6 +98,9 @@ class ModelFactory:
 
         # Check if the requested version is supported for the given model type
         if dataspace_version not in ModelFactory.SUPPORTED_VERSIONS:
+            logger.error("Unsupported dataspace version %s for the %s model, supported versions: %s", dataspace_version, model_type.value,
+                         ModelFactory.SUPPORTED_VERSIONS,
+                         extra=log_extra(dataspace_version=dataspace_version, model=model_type.value, operation="model_factory.get_builder"))
             raise ValueError(f"Unsupported version {dataspace_version}")
 
         # Compute the model module path dynamically, depending on the connector version
@@ -102,14 +114,20 @@ class ModelFactory:
             # Dynamically import the model class
             module = import_module(module_name)
             model_class = getattr(module, model_class_name)
+            logger.debug("Resolved %s from %s", model_class_name, module_name,
+                         extra=log_extra(dataspace_version=dataspace_version, model=model_type.value, operation="model_factory.get_builder"))
 
             # Return a builder for the model class
             return model_class.builder()
         except AttributeError as attr_exception:
+            logger.exception("The model class %s was not found in %s", model_class_name, module_name,
+                             extra=log_extra(dataspace_version=dataspace_version, model=model_type.value, operation="model_factory.get_builder"))
             raise AttributeError(
                 f"Failed to import model class {model_class_name} for module {module_name}"
             ) from attr_exception
         except (ModuleNotFoundError, ImportError) as import_exception:
+            logger.exception("The model module %s could not be imported", module_name,
+                             extra=log_extra(dataspace_version=dataspace_version, model=model_type.value, operation="model_factory.get_builder"))
             raise ImportError(
                 f"Failed to import module {module_name}. Ensure that the required packages are installed and the PYTHONPATH is set correctly."
             ) from import_exception
@@ -458,6 +476,9 @@ class ModelFactory:
             **kwargs
     ):
         if(dataspace_version == "jupiter"):
+            logger.error("The connector discovery model does not exist for the dataspace version jupiter",
+                         extra=log_extra(dataspace_version=dataspace_version, model=ModelType.CONNECTOR_DISCOVERY.value,
+                                         operation="model_factory.get_connector_discovery_model"))
             raise NotImplementedError("Connector Discovery model is not available for Jupiter!")
         
         """

@@ -1,9 +1,9 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
+# Copyright (c) 2025,2026 LKS Next
 # Copyright (c) 2025 CGI Deutschland B.V. & Co. KG
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -29,8 +29,15 @@
 ## Source: https://github.com/eclipse-tractusx/digital-product-pass/blob/main/dpp-verification/simple-wallet/utilities/httpUtils.py
 ## Abstracted from the static method is_authorized
 
+import logging
+
 from fastapi import Request
 from .auth_manager_interface import AuthManagerInterface
+
+from tractusx_sdk._logging_fields import log_extra
+
+# Security: the configured API key and the key sent by the caller are never logged
+logger = logging.getLogger(__name__)
 
 class AuthManager(AuthManagerInterface):
     configured_api_key: str
@@ -41,24 +48,33 @@ class AuthManager(AuthManagerInterface):
         self.configured_api_key = configured_api_key
         self.api_key_header = api_key_header
         self.auth_enabled = auth_enabled
+        logger.debug("API key authentication %s", "enabled" if auth_enabled else "disabled")
     
     def is_authenticated(self, request: Request):
         
         if(not self.auth_enabled):
+            logger.debug("API key authentication is disabled, the request is accepted")
             return True
         
         api_key_from_header = request.headers.get(self.api_key_header, None)
         if(api_key_from_header is None):
+            logger.warning("Request rejected: the API key header is missing",
+                           extra=log_extra(operation="auth.is_authenticated"))
             return False
         
 
         if(api_key_from_header == self.configured_api_key):
+            logger.debug("Request authenticated with an API key", extra=log_extra(operation="auth.is_authenticated"))
             return True
         
+        logger.warning("Request rejected: the API key does not match the configured one",
+                       extra=log_extra(operation="auth.is_authenticated"))
         return False
     
     def add_auth_header(self, headers: dict={}) -> dict:
         if not self.auth_enabled:
+            logger.error("An auth header was requested but the authentication is not enabled")
             raise RuntimeError("Authentication is not enabled. Cannot get auth headers.")
         auth_header = {self.api_key_header: self.configured_api_key}
+        logger.debug("API key header added", extra=log_extra(operation="auth.add_auth_header"))
         return {**headers, **auth_header}

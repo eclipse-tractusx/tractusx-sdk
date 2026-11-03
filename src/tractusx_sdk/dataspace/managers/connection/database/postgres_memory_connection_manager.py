@@ -70,6 +70,7 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
 
         self.EDRConnection = DynamicEDRConnection
         DynamicEDRConnection.metadata.create_all(engine)
+        logger.debug("[PostgresMemoryConnectionManager] The EDR table '%s' is ready", table_name)
         self._load_from_db()
 
     def add_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum, connection_entry) -> str:
@@ -133,6 +134,7 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
         Skips if a save is already in progress.
         """
         if self._save_thread and self._save_thread.is_alive():
+            logger.debug("[PostgresMemoryConnectionManager] A save is already in progress, not starting another one")
             return
         self._save_thread = threading.Thread(target=self._save_to_db, daemon=True)
         self._save_thread.start()

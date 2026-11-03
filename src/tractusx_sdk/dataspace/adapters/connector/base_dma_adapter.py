@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,11 +21,15 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+import logging
+
 from requests.structures import CaseInsensitiveDict
 
 from ..adapter import Adapter
 from ...tools import HttpTools
 from ...tools.tracing import Tracer
+
+logger = logging.getLogger(__name__)
 
 
 class BaseDmaAdapter(Adapter):
@@ -64,7 +69,9 @@ class BaseDmaAdapter(Adapter):
         if kwargs.get("data") is not None:
             headers = CaseInsensitiveDict(self.session.headers)
             headers.update(kwargs.get("headers") or {})
-            headers.setdefault("Content-Type", "application/json")
+            if "Content-Type" not in headers:
+                logger.debug("The request has a body but no content type, defaulting to application/json")
+                headers["Content-Type"] = "application/json"
             kwargs["headers"] = headers
 
         return super().request(method, path, **kwargs)

@@ -26,6 +26,7 @@ from importlib import import_module
 from os import listdir, path
 import logging
 
+from tractusx_sdk._logging_fields import log_extra
 from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
 from tractusx_sdk.dataspace.tools.tracing import resolve_tracer
 
@@ -74,6 +75,9 @@ class ServiceFactory:
 
         # Check if the requested version is supported for the given service type
         if dataspace_version not in ServiceFactory.SUPPORTED_VERSIONS:
+            logger.error("Unsupported dataspace version %s for the %s service, supported versions: %s", dataspace_version,
+                         service_type.value, ServiceFactory.SUPPORTED_VERSIONS,
+                         extra=log_extra(dataspace_version=dataspace_version, model=service_type.value))
             raise ValueError(f"Unsupported version {dataspace_version}")
 
         # Compute the service module path dynamically, depending on the connector version
@@ -87,13 +91,20 @@ class ServiceFactory:
             # Dynamically import the service class
             module = import_module(module_name)
             service_class = getattr(module, service_class_name)
-            logger.debug("Resolved %s from %s", service_class_name, module_name)
+            logger.debug("Resolved %s from %s", service_class_name, module_name,
+                         extra=log_extra(dataspace_version=dataspace_version, model=service_type.value))
+            logger.info("Creating the %s service for dataspace version %s", service_type.value, dataspace_version,
+                        extra=log_extra(dataspace_version=dataspace_version, model=service_type.value))
             return service_class.builder()
         except AttributeError as attr_exception:
+            logger.exception("The service class %s was not found in %s", service_class_name, module_name,
+                             extra=log_extra(dataspace_version=dataspace_version, model=service_type.value))
             raise AttributeError(
                 f"Failed to import service class {service_class_name} for module {module_name}"
             ) from attr_exception
         except (ModuleNotFoundError, ImportError) as import_exception:
+            logger.exception("The service module %s could not be imported", module_name,
+                             extra=log_extra(dataspace_version=dataspace_version, model=service_type.value))
             raise ImportError(
                 f"Failed to import module {module_name}. Ensure that the required packages are installed and the PYTHONPATH is set correctly."
             ) from import_exception

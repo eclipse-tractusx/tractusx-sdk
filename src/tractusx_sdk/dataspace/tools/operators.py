@@ -101,9 +101,13 @@ class op:
                     - JSONDecodeError: if the file is not a valid JSON file
         """
         data=None
-        f = open(file_path,"r",encoding=encoding)
-        data = json.load(f)
-        f.close()
+        try:
+            with open(file_path,"r",encoding=encoding) as f:
+                data = json.load(f)
+        except (OSError, ValueError):
+            # The path and the error: the content of the file is not logged
+            logger.warning("The JSON file '%s' could not be read", file_path, exc_info=True)
+            raise
         
         return data  
 
@@ -126,7 +130,9 @@ class op:
         """
         if not op.path_exists(dir_name):
             os.makedirs(dir_name, permits)
+            logger.debug("Created the directory '%s'", dir_name)
             return True
+        logger.debug("The directory '%s' already exists, nothing to create", dir_name)
         return False
     
     
@@ -155,6 +161,7 @@ class op:
                          dst: Destination file path
                 Returns: Destination route after file copied
         """
+        logger.debug("Copying the file '%s' to '%s'", file_path, dst)
         return copyfile(file_path, dst)
 
     @ staticmethod
@@ -165,6 +172,7 @@ class op:
                          dst: Destination file path
                 Returns: Destination rout after file moved
         """
+        logger.debug("Moving the file '%s' to '%s'", file_path, dst)
         return move(file_path, dst)
 
     @ staticmethod
@@ -213,9 +221,11 @@ class op:
                 - PermissionError/IsADirectoryError: if the file cannot be deleted due to permissions or is a directory
         """
         if not op.path_exists(file_path):
+            logger.debug("The file '%s' does not exist, nothing to delete", file_path)
             return False
 
         os.remove(file_path)
+        logger.debug("Deleted the file '%s'", file_path)
         return True
     
     @staticmethod
@@ -273,6 +283,7 @@ class op:
                 - ValueError: if the open mode is not valid
         """
         if(data == "" or data is None):
+            logger.debug("There is no data to write to '%s', nothing was written", file_path)
             return False
 
         with open(file_path, open_mode, encoding=sys.stdout.encoding) as file:
@@ -304,16 +315,20 @@ class op:
         """
         tmp_ret=default_value
         if source_object is None:
+            logger.debug("There is no object to read the attribute '%s' from, using the default value", attr_path)
             return tmp_ret
     
         if path_sep is None or path_sep == "":
+            logger.debug("There is no path separator to read the attribute '%s', using the default value", attr_path)
             return tmp_ret
     
         tmp_parts=attr_path.split(path_sep)
         if tmp_parts is None or tmp_parts == [""]:
+            logger.debug("The attribute path is empty, using the default value")
             return tmp_ret
         for part in tmp_parts:
             if part not in source_object:
+                logger.debug("The attribute '%s' was not found (missing '%s'), using the default value", attr_path, part)
                 return tmp_ret
             source_object=source_object[part]
         tmp_ret=source_object
@@ -379,7 +394,10 @@ class op:
         Returns:
             dict or None: The first dictionary where the field matches the value, or None if not found.
         """
-        return next((x for x in array if x[field] == id), None)
+        found = next((x for x in array if x[field] == id), None)
+        if found is None:
+            logger.debug("No element has the value of the search in its '%s' field", field)
+        return found
 
     @staticmethod
     def extract_dict_values(array: list, key: str = "value") -> list:

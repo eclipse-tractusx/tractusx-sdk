@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,10 +21,17 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+import logging
+import time
+
 import requests
+
+from tractusx_sdk._logging_fields import http_status, log_extra, safe_url
 
 from ..tools import HttpTools
 from ..tools.tracing import TraceableMixin, Tracer, trace_call
+
+logger = logging.getLogger(__name__)
 
 
 class Adapter(TraceableMixin):
@@ -55,6 +63,13 @@ class Adapter(TraceableMixin):
 
         if headers:
             self.session.headers.update(headers)
+
+        # Only the number of default headers is logged: their values may be credentials
+        logger.debug(
+            "Adapter %s created for %s with %d default header(s)",
+            type(self).__name__, safe_url(base_url), len(headers or {}),
+            extra=log_extra(url=base_url, adapter_type=type(self).__name__),
+        )
 
         self._init_tracing(tracer=tracer)
 
@@ -116,6 +131,7 @@ class Adapter(TraceableMixin):
         Close the requests session
         """
 
+        logger.debug("Closing the session of adapter %s", type(self).__name__)
         self.session.close()
 
     def get(self, url: str, **kwargs):
@@ -178,24 +194,53 @@ class Adapter(TraceableMixin):
         """
 
         url = HttpTools.concat_into_url(self.base_url, path)
+        http_method = str(method).upper()
+        logged_url = safe_url(url)
 
         body = kwargs.get("json")
         if body is None:
             body = kwargs.get("data")
 
-        with trace_call(
-                method=method,
-                url=url,
-                tracer=self._tracer,
-                headers=kwargs.get("headers", self.session.headers),
-                params=kwargs.get("params"),
-                body=body
-        ) as call:
-            response = self.session.request(
-                method=method,
-                url=url,
-                **kwargs
+        # Headers, parameters and bodies are never logged: they carry credentials and business data
+        logger.debug(
+            "HTTP %s %s", http_method, logged_url,
+            extra=log_extra(http_method=http_method, url=url, adapter_type=type(self).__name__),
+        )
+        started = time.perf_counter()
+
+        try:
+            with trace_call(
+                    method=method,
+                    url=url,
+                    tracer=self._tracer,
+                    headers=kwargs.get("headers", self.session.headers),
+                    params=kwargs.get("params"),
+                    body=body
+            ) as call:
+                response = self.session.request(
+                    method=method,
+                    url=url,
+                    **kwargs
+                )
+                call.set_response(response)
+        except Exception:
+            elapsed_ms = (time.perf_counter() - started) * 1000
+            logger.exception(
+                "HTTP %s %s failed after %.0f ms", http_method, logged_url, elapsed_ms,
+                extra=log_extra(http_method=http_method, url=url, elapsed_ms=round(elapsed_ms)),
             )
-            call.set_response(response)
+            raise
+
+        elapsed_ms = (time.perf_counter() - started) * 1000
+        status = http_status(response)
+        # A client error (4xx) is an expected outcome for many callers, so only a server failure is a warning
+        level = logging.WARNING if status is not None and status >= 500 else logging.DEBUG
+        logger.log(
+            level, "HTTP %s %s -> %s in %.0f ms", http_method, logged_url, status, elapsed_ms,
+            extra=log_extra(
+                http_method=http_method, url=url, status_code=status, elapsed_ms=round(elapsed_ms),
+                adapter_type=type(self).__name__,
+            ),
+        )
 
         return response

@@ -24,9 +24,10 @@
 
 from ....models.connector.saturn import ContractNegotiationModel
 from ....tools import op, HttpTools, DspTools
-from ..base_connector_consumer import BaseConnectorConsumerService
+from ..base_connector_consumer import BaseConnectorConsumerService, policy_id_of
 from ....managers.connection.base_connection_manager import BaseConnectionManager
 import logging
+from tractusx_sdk._logging_fields import http_status, log_extra, safe_url
 from tractusx_sdk.exceptions import CatalogError
 from ....models.connector.model_factory import ModelFactory, DataspaceVersionMapping
 from ....adapters.connector.adapter_factory import AdapterFactory
@@ -64,6 +65,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         
         # Validate dataspace_version is saturn
         if dataspace_version != "saturn":
+            logger.error("The Saturn consumer service only supports dataspace version 'saturn', got '%s'", dataspace_version,
+                         extra=log_extra(dataspace_version=dataspace_version))
             raise ValueError(f"Saturn ConnectorConsumerService only supports dataspace_version='saturn', got '{dataspace_version}'")
         
         self.dataspace_version = dataspace_version
@@ -111,19 +114,20 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         """
         logger.debug(
             "[_resolve_counter_party_info] Inputs: bpnl=%s, counter_party_id=%s, counter_party_address=%s, protocol=%s",
-            bpnl, counter_party_id, counter_party_address, protocol
+            bpnl, counter_party_id, safe_url(counter_party_address), protocol
         )
         if bpnl is not None:
             result = self.get_discovery_info(bpnl=bpnl, counter_party_address=counter_party_address, namespace=namespace, verify=verify)
             logger.debug(
                 "[_resolve_counter_party_info] Resolved via discovery: address=%s, id=%s, protocol=%s",
-                result[0], result[1], result[2]
+                safe_url(result[0]), result[1], result[2],
+                extra=log_extra(bpn=bpnl, counter_party_id=result[1], counter_party_address=result[0])
             )
             return result
         else:
             logger.debug(
                 "[_resolve_counter_party_info] Using provided values: address=%s, id=%s, protocol=%s",
-                counter_party_address, counter_party_id, protocol
+                safe_url(counter_party_address), counter_party_id, protocol
             )
             # Use provided values and protocol
             return counter_party_address, counter_party_id, protocol
@@ -140,10 +144,16 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         # Validate that only allowed HTTP methods are used
         allowed_methods = {'GET', 'POST', 'PUT'}
         if method.upper() not in allowed_methods:
+            logger.error("The HTTP method '%s' is not supported for a dataplane request", method,
+                         extra=log_extra(http_method=method, operation="consumer.execute_http_request"))
             raise ValueError(f"HTTP method '{method}' is not supported. Only {', '.join(allowed_methods)} are allowed.")
         
         if headers is None:
             headers = {}
+        
+        # The headers (they carry the EDR authorization), parameters and body are never logged
+        logger.debug("[Connector Service] Dataplane %s %s (TLS verification: %s, session: %s)", method.upper(), safe_url(path), verify,
+                     session is not None, extra=log_extra(http_method=method.upper(), operation="consumer.execute_http_request"))
         
         url = dataplane_url + path
         dataplane_headers = self.get_data_plane_headers(access_token=access_token, content_type=content_type if method == 'POST' else None)
@@ -196,7 +206,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
         logger.debug(
             "[_get_catalog_internal] Resolved: address=%s, id=%s, protocol=%s, filter=%s",
-            resolved_address, resolved_id, resolved_protocol,
+            safe_url(resolved_address), resolved_id, resolved_protocol,
             filter_expression if filter_expression else "(none)"
         )
         
@@ -237,6 +247,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         """
         offer_id = policy.get("@id", None)
         if (offer_id is None):
+            logger.error("[Connector Service] The policy offered for asset [%s] has no offer id (@id)", target,
+                         extra=log_extra(asset_id=target, counter_party_id=counter_party_id,
+                                         operation="consumer.get_edr_negotiation_request"))
             raise ValueError("[Connector Service]: Policy offer id is not available!")
 
         return ModelFactory.get_contract_negotiation_model(
@@ -282,14 +295,29 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         response: Response = self.edrs.create(request)
         ## In case the response code is not successfull or the response is null
         if (response is None or response.status_code != 200):
+            logger.error("[Connector Service] The negotiation of asset [%s] with [%s] could not be started (status %s)", target,
+                         counter_party_id, getattr(response, "status_code", None),
+                         extra=log_extra(asset_id=target, counter_party_id=counter_party_id,
+                                         counter_party_address=counter_party_address, policy_id=policy_id_of(policy),
+                                         status_code=http_status(response), operation="consumer.start_edr_negotiation"))
             return None
 
         content: dict = response.json()
         ## Check if the id was returned in the response
         if ("@id" not in content):
+            logger.error("[Connector Service] The connector accepted the negotiation of asset [%s] but returned no negotiation id", target,
+                         extra=log_extra(asset_id=target, counter_party_id=counter_party_id,
+                                         counter_party_address=counter_party_address, policy_id=policy_id_of(policy),
+                                         operation="consumer.start_edr_negotiation"))
             return None
 
-        return content.get("@id", None)
+        negotiation_id = content.get("@id", None)
+        logger.info("[Connector Service] Contract negotiation [%s] started for asset [%s] with [%s]", negotiation_id, target,
+                    counter_party_id,
+                    extra=log_extra(negotiation_id=negotiation_id, asset_id=target, counter_party_id=counter_party_id,
+                                    counter_party_address=counter_party_address, policy_id=policy_id_of(policy),
+                                    operation="consumer.start_edr_negotiation"))
+        return negotiation_id
     
     def _resolve_policies_from_catalog(self, counter_party_id: str, counter_party_address: str,
                                         filter_expression: list[dict], protocol: str,
@@ -316,7 +344,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             "  ▶  DO NOT USE IN PRODUCTION.\n"
             "     Always pass an explicit allow-list of accepted policies.\n"
             "%s",
-            "=" * 72, "=" * 72, counter_party_address, "=" * 72)
+            "=" * 72, "=" * 72, safe_url(counter_party_address), "=" * 72,
+            extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                            operation="consumer.resolve_policies_from_catalog"))
 
         catalog_response = self.get_catalog_with_filter(
             counter_party_id=counter_party_id,
@@ -326,15 +356,26 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             filter_expression=filter_expression
         )
         if catalog_response is None:
+            logger.error("[Connector Service] The catalog of [%s] at %s is empty: no policy can be discovered", counter_party_id,
+                         safe_url(counter_party_address),
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         operation="consumer.resolve_policies_from_catalog"))
             raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] Could not retrieve the catalog to discover available policies!")
         try:
             valid_assets_policies = DspTools.filter_assets_and_policies(
                 catalog=catalog_response, allowed_policies=None)
         except Exception as e:
+            logger.exception("[Connector Service] No policy could be read from the catalog of [%s] at %s", counter_party_id,
+                             safe_url(counter_party_address),
+                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                             operation="consumer.resolve_policies_from_catalog"))
             raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] No policy found in catalog: [{str(e)}]") from e
         if not valid_assets_policies:
+            logger.error("[Connector Service] The catalog of [%s] at %s has no policy", counter_party_id, safe_url(counter_party_address),
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         operation="consumer.resolve_policies_from_catalog"))
             raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] No policy found in catalog!")
         ## Use the first available policy; strip @id/@type for a consistent cache key.
@@ -342,7 +383,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         policies = [{k: v for k, v in raw_policy.items() if k not in ['@id', '@type']}]
         logger.info(
             "[Connector Service]: [%s]: policies=None → auto-selected policy from catalog: %s",
-            counter_party_address, policies)
+            safe_url(counter_party_address), policies,
+            extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                            policy_id=policy_id_of(raw_policy), operation="consumer.resolve_policies_from_catalog"))
         return policies
 
     def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
@@ -376,6 +419,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
         ## Fail immediately if policies is an empty list — means no policy has been selected.
         if policies is not None and len(policies) == 0:
+            logger.error("[Connector Service] No accepted policy was given for [%s] at %s", counter_party_id, safe_url(counter_party_address),
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         operation="consumer.get_transfer_id"))
             raise ValueError(
                 "No policy has been selected! Provide a list of accepted policies, "
                 "or set policies=None to accept any policy offered by the provider. (Recommended for test-only, do not use in production!)"
@@ -404,12 +450,16 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         if (transfer_process_id is not None):
             logger.debug(
                 "[Connector Service]: [%s]: EDR transfer_id=[%s] found in the cache for counter_party_id=[%s], filter=[%s] and selected policies",
-                counter_party_address, transfer_process_id, counter_party_id, filter_expression)
+                safe_url(counter_party_address), transfer_process_id, counter_party_id, filter_expression,
+                extra=log_extra(transfer_id=transfer_process_id, counter_party_id=counter_party_id,
+                                counter_party_address=counter_party_address, operation="consumer.get_transfer_id"))
             return transfer_process_id
 
         logger.info(
             "[Connector Service]: The EDR was not found in the cache for counter_party_address=[%s], counter_party_id=[%s], filter=[%s] and selected policies, starting new contract negotiation!",
-            counter_party_address, counter_party_id, filter_expression)
+            safe_url(counter_party_address), counter_party_id, filter_expression,
+            extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                            operation="consumer.get_transfer_id"))
 
         ## If not the contract negotiation MUST be done!
         edr_entry: dict = self.negotiate_and_transfer(counter_party_id=counter_party_id,
@@ -423,6 +473,10 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
         ## Check if the edr entry is not none
         if (edr_entry is None):
+            logger.error("[Connector Service] No EDR entry was returned by the DSP exchange with [%s] at %s", counter_party_id,
+                         safe_url(counter_party_address),
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         operation="consumer.get_transfer_id"))
             raise RuntimeError("[Connector Service]: Failed to get edr entry! Response was none!")
 
         transfer_process_id = self.connection_manager.add_connection(counter_party_id=counter_party_id,
@@ -430,7 +484,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                                       query_checksum=filter_expression_checksum,
                                                                       policy_checksum=current_policies_checksum,
                                                                       connection_entry=edr_entry)
-        logger.info("[Connector Service]: The EDR Entry was found! Transfer Process ID: [%s]", transfer_process_id)
+        logger.info("[Connector Service]: The EDR Entry was found! Transfer Process ID: [%s]", transfer_process_id,
+                    extra=log_extra(transfer_id=transfer_process_id, counter_party_id=counter_party_id,
+                                    counter_party_address=counter_party_address, operation="consumer.get_transfer_id"))
 
         return transfer_process_id
         
@@ -438,6 +494,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
         if verify is None:
             verify = getattr(self, 'verify_ssl', True)
+        logger.debug("[Connector Service] Discovering the connector protocol of BPN [%s]", bpnl,
+                     extra=log_extra(bpn=bpnl, counter_party_address=counter_party_address, operation="consumer.discover_connector_protocol"))
         response: Response = self.connector_discovery.get_discover(
             ModelFactory.get_connector_discovery_model(dataspace_version=self.dataspace_version,
                                                        bpnl=bpnl,
@@ -445,6 +503,10 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             verify=verify
         )
         if response is None or response.status_code != 200:
+            logger.error("[Connector Service] The connector discovery of BPN [%s] was not successful (status %s)", bpnl,
+                         getattr(response, "status_code", None),
+                         extra=log_extra(bpn=bpnl, counter_party_address=counter_party_address, status_code=http_status(response),
+                                         operation="consumer.discover_connector_protocol"))
             raise ConnectionError(
                 f"[Connector Service]: It was not possible to get the catalog from the EDC provider! Response code: [{response.status_code}]")
         return response.json()
@@ -473,6 +535,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 return discovery_info[namespaced]
             if key in discovery_info:
                 return discovery_info[key]
+            logger.error("[Connector Service] The discovery response of BPN [%s] has no '%s'. Keys: %s", bpnl, key, list(discovery_info.keys()),
+                         extra=log_extra(bpn=bpnl, operation="consumer.get_discovery_info"))
             raise KeyError(f"Key '{key}' not found in discovery response (tried '{namespaced}' and '{key}'). Keys: {list(discovery_info.keys())}")
 
         counter_party_address = _get("counterPartyAddress")
@@ -581,7 +645,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 )
                 catalogs[counter_party_address] = self.get_catalog(request=catalog_request, timeout=timeout)
             except Exception as e:
-                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", counter_party_address, e)
+                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", safe_url(counter_party_address), e,
+                               extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                               operation="consumer.get_catalogs_with_filter"))
                 catalogs[counter_party_address] = {"error": str(e)}
 
         for edc_url in edcs:
@@ -611,7 +677,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                              filter_expression=filter_expression, timeout=timeout,
                                                              context=context, namespace=namespace)
             except Exception as e:
-                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
+                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", safe_url(edc_url), e,
+                               extra=log_extra(bpn=bpnl, counter_party_address=edc_url, operation="consumer.get_catalogs_with_filter_with_bpnl"))
                 catalogs[edc_url] = {"error": str(e)}
         return catalogs
 
@@ -729,7 +796,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                              filter_expression=filter_expression, timeout=timeout,
                                                              context=context, namespace=namespace)
             except Exception as e:
-                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", edc_url, e)
+                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", safe_url(edc_url), e,
+                               extra=log_extra(bpn=bpnl, counter_party_address=edc_url, operation="consumer.get_catalogs_with_filter_with_bpnl_parallel"))
                 catalogs[edc_url] = {"error": str(e)}
 
         for edc_url in edcs:

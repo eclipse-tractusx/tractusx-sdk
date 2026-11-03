@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 BMW AG
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
@@ -24,12 +25,15 @@
 """This file provides tools for caching.
 """
 
+import logging
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
 from fastapi import Request
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
+
+logger = logging.getLogger(__name__)
 
 CACHE_BACKEND = 'local'
 
@@ -83,14 +87,19 @@ class LocalCache(CacheProvider):
     def __init__(self):
         """Initialize the in-memory cache backend."""
         FastAPICache.init(InMemoryBackend())
+        logger.debug("Local in-memory cache initialised")
 
+    # The cache keys are not logged: callers are free to build them from sensitive data
     async def get(self, key: str):
         """See CacheProvider.get"""
-        return await FastAPICache.get_backend().get(key)
+        value = await FastAPICache.get_backend().get(key)
+        logger.debug("Local cache %s", "hit" if value is not None else "miss")
+        return value
 
     async def set(self, key: str, value, expire: int = None):
         """See CacheProvider.set"""
         await FastAPICache.get_backend().set(key, value, expire)
+        logger.debug("Local cache entry stored (expire=%s)", expire)
 
     async def delete(self, key: str):
         """
@@ -104,13 +113,14 @@ class LocalCache(CacheProvider):
         delete = getattr(backend, "delete", None)
         if callable(delete):
             await delete(key)
-            return
-        try:
-            await backend.clear(key=key)
-        except KeyError:
-            # InMemoryBackend.clear() raises KeyError when the key is not
-            # in the cache. Deleting a missing key is a no-op, so ignore it.
-            pass
+        else:
+            try:
+                await backend.clear(key=key)
+            except KeyError:
+                # InMemoryBackend.clear() raises KeyError when the key is not
+                # in the cache. Deleting a missing key is a no-op, so ignore it.
+                pass
+        logger.debug("Local cache entry deleted")
 
 
 def create_cache_provider() -> CacheProvider:
@@ -123,8 +133,10 @@ def create_cache_provider() -> CacheProvider:
     """
 
     if CACHE_BACKEND == 'local':
+        logger.debug("Creating the cache provider for backend %s", CACHE_BACKEND)
         return LocalCache()
 
+    logger.error("Unknown CACHE_BACKEND: %s", CACHE_BACKEND)
     raise ValueError(f'Unknown CACHE_BACKEND: {CACHE_BACKEND}')
 
 
@@ -137,4 +149,8 @@ def get_cache_provider(request: Request) -> CacheProvider:
         The cache provider instance stored in `app.state.cache_provider`.
     """
 
-    return request.app.state.cache_provider
+    try:
+        return request.app.state.cache_provider
+    except AttributeError:
+        logger.error("No cache provider is set in the application state (app.state.cache_provider)")
+        raise

@@ -27,6 +27,7 @@ Provides thread-safe methods for adding, retrieving, and deleting EDR connection
 """
 
 import copy
+from tractusx_sdk._logging_fields import log_extra, safe_url
 from tractusx_sdk.exceptions import ConnectionManagerError
 from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
 from tractusx_sdk.dataspace.constants import JSONLDKeys
@@ -53,6 +54,7 @@ class MemoryConnectionManager(BaseConnectionManager):
         self.edrs_key = edrs_key
         self.open_connections=dict()
         self._lock = threading.RLock()
+        logger.debug("[Memory Connection Manager] Initialised the in-memory EDR cache")
         
     def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry:dict) -> str | None:
         """
@@ -72,6 +74,9 @@ class MemoryConnectionManager(BaseConnectionManager):
         with self._lock:
             transfer_process_id: str = connection_entry.get(self.TRANSFER_ID_KEY, None)
             if transfer_process_id is None or transfer_process_id == "":
+                logger.error(
+                    "[Memory Connection Manager] The EDR entry for %s has no transfer id, it cannot be stored",
+                    counter_party_id, extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address))
                 raise ConnectionManagerError(
                     "[Memory Connection Manager] The transfer id key was not found or is empty! Not able to do the contract negotiation!")
             
@@ -91,7 +96,8 @@ class MemoryConnectionManager(BaseConnectionManager):
 
             cached_details = cached_oids[query_checksum]
             
-            if policy_checksum not in cached_details:
+            replacing = policy_checksum in cached_details
+            if not replacing:
                 cached_details[policy_checksum] = {}
 
             # Remove metadata fields and store the cleaned EDR.
@@ -106,9 +112,17 @@ class MemoryConnectionManager(BaseConnectionManager):
                 self.open_connections[self.edrs_key] = 0
 
             self.open_connections[self.edrs_key] += 1
+            if replacing:
+                logger.debug(
+                    "[Memory Connection Manager] An EDR entry for the same policy checksum already existed and was replaced",
+                    extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                    transfer_id=transfer_process_id))
+            # Only identifiers are logged: the EDR entry itself carries access credentials
             logger.debug(
                 "[Memory Connection Manager] A new EDR entry was saved in the memory cache! [%s] EDRs Available",
-                self.open_connections[self.edrs_key])
+                self.open_connections[self.edrs_key],
+                extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                transfer_id=transfer_process_id))
             return transfer_process_id
     
     def get_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
@@ -130,6 +144,16 @@ class MemoryConnectionManager(BaseConnectionManager):
             edc_data: dict = counterparty_data.get(counter_party_address, {})
             oid_data: dict = edc_data.get(query_checksum, {})
             cached_entry: dict = oid_data.get(policy_checksum, {})
+
+        if cached_entry:
+            logger.debug(
+                "[Memory Connection Manager] Cache hit for the EDR of %s at %s", counter_party_id, safe_url(counter_party_address),
+                extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                transfer_id=cached_entry.get(self.TRANSFER_ID_KEY)))
+        else:
+            logger.debug(
+                "[Memory Connection Manager] Cache miss for the EDR of %s at %s", counter_party_id, safe_url(counter_party_address),
+                extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address))
         
         return cached_entry
     
@@ -175,11 +199,15 @@ class MemoryConnectionManager(BaseConnectionManager):
                     del cached_details[policy_checksum]
                     if self.edrs_key in self.open_connections:
                         self.open_connections[self.edrs_key] -= 1
-                    logger.debug("[Memory Connection Manager] Deleted EDR entry for policy checksum '%s'.", policy_checksum)
+                    logger.debug("[Memory Connection Manager] Deleted EDR entry for policy checksum '%s'.", policy_checksum,
+                                 extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address))
                     return True
+                logger.debug("[Memory Connection Manager] No EDR found to delete for policy checksum '%s'.", policy_checksum,
+                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address))
                 return False
             except KeyError:
-                logger.debug("[Memory Connection Manager] No EDR found to delete for the provided keys.")
+                logger.debug("[Memory Connection Manager] No EDR found to delete for the provided keys.",
+                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address))
                 return False
 
     def clear_connections_by_party(self, counter_party_id_substring: str) -> int:
@@ -211,6 +239,11 @@ class MemoryConnectionManager(BaseConnectionManager):
             if removed > 0:
                 logger.info(
                     "[Memory Connection Manager] Cleared %d party cache entries matching substring '%s'.",
-                    removed, counter_party_id_substring
+                    removed, counter_party_id_substring,
+                    extra=log_extra(counter_party_id=counter_party_id_substring)
                 )
+            else:
+                logger.debug(
+                    "[Memory Connection Manager] No party cache entries match the substring '%s'.",
+                    counter_party_id_substring, extra=log_extra(counter_party_id=counter_party_id_substring))
             return removed
