@@ -29,10 +29,13 @@ Schema: https://github.com/eclipse-tractusx/sldt-semantic-models/blob/main/io.ca
 """
 
 import json
+import logging
 import requests
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from jsonschema import validate, ValidationError, SchemaError
+
+logger = logging.getLogger(__name__)
 
 
 class SchemaValidator:
@@ -46,16 +49,20 @@ class SchemaValidator:
         self.warnings: List[str] = []
         self.infos: List[str] = []
     
+    # The findings are kept as data (see GeometryValidationReport); the log only echoes them.
     def add_error(self, message: str):
         """Add an error message"""
+        logger.debug("Validation error: %s", message)
         self.errors.append(message)
     
     def add_warning(self, message: str):
         """Add a warning message"""
+        logger.debug("Validation warning: %s", message)
         self.warnings.append(message)
     
     def add_info(self, message: str):
         """Add an info message"""
+        logger.debug("Validation info: %s", message)
         self.infos.append(message)
     
     def load_schema_from_url(self) -> bool:

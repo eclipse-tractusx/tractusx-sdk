@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS NEXT
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,6 +21,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 ## Code created partially using a LLM and reviewed by a human committer
+
+import logging
 
 import pytest
 from unittest.mock import Mock, patch
@@ -53,29 +55,15 @@ def service(mock_dma_adapter, mock_controllers):
             svc = BaseConnectorProviderService(
                 dataspace_version="jupiter",
                 base_url="http://test",
-                dma_path="/dma",
-                verbose=True
+                dma_path="/dma"
             )
             yield svc
 
 
-@pytest.fixture
-def service_verbose_false(mock_dma_adapter, mock_controllers):
-    with patch("tractusx_sdk.dataspace.adapters.connector.AdapterFactory.get_dma_adapter", return_value=mock_dma_adapter):
-        with patch("tractusx_sdk.dataspace.controllers.connector.ControllerFactory.get_dma_controllers_for_version") as mock_get_controllers:
-            mock_get_controllers.return_value = mock_controllers
-            svc = BaseConnectorProviderService(
-                dataspace_version="jupiter",
-                base_url="http://test",
-                dma_path="/dma",
-                verbose=False
-            )
-            yield svc
-
-
-@pytest.fixture
-def mock_logger():
-    return Mock()
+@pytest.mark.parametrize("removed", [{"verbose": True}, {"debug": True}, {"logger": logging.getLogger("x")}])
+def test_the_removed_logging_arguments_are_rejected(removed):
+    with pytest.raises(TypeError):
+        BaseConnectorProviderService(dataspace_version="jupiter", base_url="http://test", dma_path="/dma", **removed)
 
 
 @patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
@@ -158,44 +146,63 @@ def test_create_policy_failure_raises(mock_get_policy_model, service):
         service.create_policy(policy_id="policy1")
 
 
-@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
-def test_create_asset_verbose_logging(mock_get_asset_model, mock_dma_adapter, mock_controllers):
-    logger = Mock()
-    service = BaseConnectorProviderService(
-        dataspace_version="jupiter",
-        base_url="http://test",
-        dma_path="/dma",
-        verbose=True,
-        logger=logger
-    )
-    service._asset_controller = Mock()
-    service._asset_controller.create.return_value = Mock(status_code=200, json=lambda: {"asset": "ok"})
-
-    mock_get_asset_model.return_value = {"mock": "asset"}
-
-    service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
-
-    assert logger.info.called
+PROVIDER_LOGGER = "tractusx_sdk.dataspace.services.connector.base_connector_provider"
 
 
 @patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
-def test_create_asset_no_verbose_logging(mock_get_asset_model, mock_dma_adapter, mock_controllers):
-    logger = Mock()
-    service = BaseConnectorProviderService(
-        dataspace_version="jupiter",
-        base_url="http://test",
-        dma_path="/dma",
-        verbose=False,
-        logger=logger
-    )
+def test_create_asset_logs_at_info_level(mock_get_asset_model, service, caplog):
     service._asset_controller = Mock()
     service._asset_controller.create.return_value = Mock(status_code=200, json=lambda: {"asset": "ok"})
-
     mock_get_asset_model.return_value = {"mock": "asset"}
 
-    service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
+    with caplog.at_level(logging.INFO, logger=PROVIDER_LOGGER):
+        service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
 
-    logger.info.assert_not_called()
+    assert "Creating asset 123 at http://test." in caplog.text
+    assert "Asset 123 created successfully." in caplog.text
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_is_silent_when_the_level_is_above_info(mock_get_asset_model, service, caplog):
+    service._asset_controller = Mock()
+    service._asset_controller.create.return_value = Mock(status_code=200, json=lambda: {"asset": "ok"})
+    mock_get_asset_model.return_value = {"mock": "asset"}
+
+    with caplog.at_level(logging.WARNING, logger=PROVIDER_LOGGER):
+        service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
+
+    assert caplog.text == ""
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_payload_is_logged_only_at_debug_level(mock_get_asset_model, service, caplog):
+    service._asset_controller = Mock()
+    service._asset_controller.create.return_value = Mock(status_code=200, json=lambda: {"asset": "ok"})
+    asset = Mock()
+    asset.to_data.return_value = {"payload": "visible"}
+    mock_get_asset_model.return_value = asset
+
+    with caplog.at_level(logging.INFO, logger=PROVIDER_LOGGER):
+        service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
+    assert "[ASSET REQUEST]" not in caplog.text
+    asset.to_data.assert_not_called()
+
+    caplog.clear()
+    with caplog.at_level(logging.DEBUG, logger=PROVIDER_LOGGER):
+        service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
+    assert "[ASSET REQUEST]: {'payload': 'visible'}" in caplog.text
+
+
+@patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")
+def test_create_asset_failure_is_logged_as_an_error(mock_get_asset_model, service, caplog):
+    service._asset_controller.create.return_value = Mock(status_code=400, text="Bad Request")
+    mock_get_asset_model.return_value = {"mock": "asset"}
+
+    with caplog.at_level(logging.ERROR, logger=PROVIDER_LOGGER):
+        with pytest.raises(ValueError, match="Failed to create asset"):
+            service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
+
+    assert "Failed to create asset 123: Bad Request" in caplog.text
 
 
 @patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")

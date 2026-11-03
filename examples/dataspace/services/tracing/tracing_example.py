@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
@@ -82,15 +83,13 @@ def report(title: str, payload: str = None):
 
 
 def trace_a_single_service():
-    """The `trace` flag, like `verbose`, records everything a service exchanges."""
+    """The `trace` flag records everything a service exchanges."""
 
     provider = ServiceFactory.get_connector_provider_service(
         dataspace_version="saturn",
         base_url=CONSUMER_CONNECTOR_URL,
         dma_path=CONNECTOR_DMA_PATH,
         headers={"X-Api-Key": CONNECTOR_API_KEY},
-        verbose=False,
-        logger=logger,
         trace=True,
     )
 
@@ -124,8 +123,6 @@ def trace_a_complete_flow():
         base_url=CONSUMER_CONNECTOR_URL,
         dma_path=CONNECTOR_DMA_PATH,
         headers={"X-Api-Key": CONNECTOR_API_KEY},
-        verbose=False,
-        logger=logger,
     )
 
     # Both services record into the same trace
@@ -160,8 +157,6 @@ def trace_without_bodies():
         base_url=CONSUMER_CONNECTOR_URL,
         dma_path=CONNECTOR_DMA_PATH,
         headers={"X-Api-Key": CONNECTOR_API_KEY},
-        verbose=False,
-        logger=logger,
     )
 
     # A tracer built by hand configures what is recorded
@@ -178,8 +173,6 @@ def trace_at_runtime():
         base_url=CONSUMER_CONNECTOR_URL,
         dma_path=CONNECTOR_DMA_PATH,
         headers={"X-Api-Key": CONNECTOR_API_KEY},
-        verbose=False,
-        logger=logger,
     )
 
     provider.enable_trace()
