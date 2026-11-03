@@ -26,6 +26,7 @@
 import hashlib
 import threading
 import logging
+from collections.abc import Sequence
 
 from requests import Response
 
@@ -299,7 +300,7 @@ class BaseConnectorConsumerService(BaseService):
         return catalog_request
 
     def get_edr_negotiation_request(self, counter_party_id: str, counter_party_address: str, target: str,
-                                    policy: dict, protocol: str = DSP_0_8, context: dict = ["https://w3id.org/tractusx/policy/v1.0.0","http://www.w3.org/ns/odrl.jsonld",{VOCAB_KEY: EDC_NAMESPACE}]) -> BaseContractNegotiationModel:
+                                    policy: dict, protocol: str = DSP_0_8, context: dict = None) -> BaseContractNegotiationModel:
         """
         Builds the EDR Negotiation Request.
 
@@ -316,6 +317,9 @@ class BaseConnectorConsumerService(BaseService):
         if (offer_id is None):
             raise ValueError("[Connector Service]: Policy offer id is not available!")
 
+        if context is None:
+            context = ["https://w3id.org/tractusx/policy/v1.0.0", "http://www.w3.org/ns/odrl.jsonld", {VOCAB_KEY: EDC_NAMESPACE}]
+
         return ModelFactory.get_contract_negotiation_model(
             dataspace_version=self.dataspace_version,  # version is to be included in the BaseService class  
             context=context,
@@ -329,7 +333,10 @@ class BaseConnectorConsumerService(BaseService):
 
         ## Simple catalog request without filter
 
-    def get_catalog_request(self, counter_party_id: str, counter_party_address: str, context={"edc": EDC_NAMESPACE,"odrl": "http://www.w3.org/ns/odrl/2/","dct": "https://purl.org/dc/terms/"}) -> BaseCatalogModel:
+    def get_catalog_request(self, counter_party_id: str, counter_party_address: str, context=None) -> BaseCatalogModel:
+        if context is None:
+            context = {"edc": EDC_NAMESPACE, "odrl": "http://www.w3.org/ns/odrl/2/", "dct": "https://purl.org/dc/terms/"}
+
         return ModelFactory.get_catalog_model(
             dataspace_version=self.dataspace_version,
             context=context,
@@ -693,7 +700,7 @@ class BaseConnectorConsumerService(BaseService):
                                                                 timeout=timeout, context=context)
 
     def do_dsp_with_bpnl(self, bpnl: str, counter_party_address: str, filter_expression: list[dict] = None,
-                         policies: list = None, max_wait: int = 60, poll_interval: int = 1,
+                         policies: Sequence[dict] | None = (), max_wait: int = 60, poll_interval: int = 1,
                          catalog_context: dict = DEFAULT_CONTEXT,
                          negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> tuple[str, str]:
         """
@@ -901,7 +908,7 @@ class BaseConnectorConsumerService(BaseService):
         return kwargs
 
     def _fetch_and_validate_catalog(self, counter_party_id: str, counter_party_address: str,
-                                     filter_expression: list[dict], policies: list = None,
+                                     filter_expression: list[dict], policies: Sequence[dict] | None = (),
                                      **catalog_kwargs) -> list:
         """
         Fetch catalog and validate that matching assets with acceptable policies exist.
@@ -1159,7 +1166,7 @@ class BaseConnectorConsumerService(BaseService):
             f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] has failed! The EDR entry was not found after {max_wait}s!")
 
     def negotiate_and_transfer(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
-                               policies: list = None, max_wait: int = 60, poll_interval: int = 1,
+                              policies: Sequence[dict] | None = None, max_wait: int = 60, poll_interval: int = 1,
                                protocol: str = None, catalog_context: dict = None, negotiation_context: dict = None) -> dict:
         """
         Performs the full DSP exchange: catalog lookup → contract negotiation → EDR entry retrieval.
@@ -1171,8 +1178,9 @@ class BaseConnectorConsumerService(BaseService):
         @param counter_party_id: The identifier of the counterparty (Business Partner Number [BPN]).
         @param counter_party_address: The URL of the EDC provider.
         @param filter_expression: Catalog filter conditions.
-        @param policies: Allow-list of accepted usage policies. Pass ``None`` to accept any policy
-            offered by the provider (test-only; avoid in production). Defaults to None.
+        @param policies: Allow-list of accepted usage policies. Defaults to an empty tuple, which
+            fails closed by accepting no policies. Pass ``None`` to auto-select any policy offered
+            by the provider (test-only; avoid in production).
         @param max_wait: Maximum seconds to wait for negotiation FINALIZED state and EDR entry. Defaults to 60.
         @param poll_interval: Seconds to wait between poll attempts. Defaults to 1.
         @param protocol: DSP protocol version to use. Pass ``None`` to use the subclass default. Defaults to None.
@@ -1227,7 +1235,7 @@ class BaseConnectorConsumerService(BaseService):
         return edr_entry
 
     def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
-                        policies: list = None, max_wait: int = 60, poll_interval: int = 1,
+                        policies: Sequence[dict] | None = (), max_wait: int = 60, poll_interval: int = 1,
                         protocol: str = None, catalog_context: dict = None, negotiation_context: dict = None) -> str:
 
         """
@@ -1236,8 +1244,9 @@ class BaseConnectorConsumerService(BaseService):
         Parameters:
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
-        policies (list | None, optional): Allow-list of accepted usage policies. Pass ``None`` to
-            accept any policy offered by the provider (test-only; avoid in production). Defaults to None.
+        policies (Sequence[dict] | None, optional): Allow-list of accepted usage policies. Defaults to
+            an empty tuple, which fails closed. Pass ``None`` explicitly to accept any policy offered by
+            the provider (test-only; avoid in production).
         max_wait (int): Maximum seconds to wait for negotiation FINALIZED state and EDR entry. Defaults to 60.
         poll_interval (int): Seconds to wait between poll attempts. Defaults to 1.
         protocol (str, optional): DSP protocol version. Pass ``None`` to use the subclass default. Defaults to None.
@@ -1318,7 +1327,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_id: str,
         counter_party_address: str,
         dct_type: str,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
         operator="="
     ) -> tuple[str, str]:
@@ -1367,7 +1376,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_id: str,
         counter_party_address: str,
         asset_id: str,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         asset_id_key=DEFAULT_ID_KEY,
         operator="="
     ) -> tuple[str, str]:
@@ -1416,7 +1425,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_id: str,
         counter_party_address: str,
         dct_type: str,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
         operator="=",
         session=None,
@@ -1475,7 +1484,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_id: str,
         counter_party_address: str,
         asset_id: str,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         asset_id_key=DEFAULT_ID_KEY,
         operator="=",
         session=None,
@@ -1537,7 +1546,7 @@ class BaseConnectorConsumerService(BaseService):
         dct_type: str,
         json=None,
         data=None,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
         operator="=",
         session=None,
@@ -1604,7 +1613,7 @@ class BaseConnectorConsumerService(BaseService):
         asset_id: str,
         json=None,
         data=None,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         asset_id_key=DEFAULT_ID_KEY,
         operator="=",
         session=None,
@@ -1669,7 +1678,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_id: str,
         counter_party_address: str,
         filter_expression: list[dict],
-        policies: list,
+        policies: Sequence[dict] | None,
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = None,
@@ -1727,7 +1736,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -1820,7 +1829,7 @@ class BaseConnectorConsumerService(BaseService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
@@ -1919,7 +1928,7 @@ class BaseConnectorConsumerService(BaseService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
