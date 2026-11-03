@@ -24,6 +24,8 @@
 import unittest
 from unittest.mock import Mock
 from fastapi import Request, HTTPException
+from keycloak.exceptions import KeycloakConnectionError
+from tractusx_sdk.exceptions import AuthServiceUnavailableError, TractusXSDKError
 from starlette.datastructures import Headers
 from tractusx_sdk.dataspace.managers.oauth2_manager import OAuth2Manager
 from unittest.mock import patch, MagicMock
@@ -268,6 +270,86 @@ class TestOAuth2Manager(unittest.TestCase):
 
         result = manager.is_authenticated(request)
         self.assertFalse(result)
+
+
+    # Lazy initialization (issue #269): the constructor must not contact Keycloak.
+
+    def test_init_with_unreachable_server_does_not_block_or_raise(self):
+        # Closed local port: before the fix the constructor raised KeycloakConnectionError here.
+        manager = OAuth2Manager("http://127.0.0.1:9/", self.realm, self.clientid, self.clientsecret)
+
+        self.assertFalse(manager.connected)
+
+    @patch("tractusx_sdk.dataspace.managers.oauth2_manager.KeycloakOpenID")
+    def test_init_does_not_contact_keycloak(self, mock_keycloak_cls):
+        manager = OAuth2Manager(self.auth_url, self.realm, self.clientid, self.clientsecret)
+
+        self.assertFalse(manager.connected)
+        mock_keycloak_cls.assert_not_called()
+
+    @patch("tractusx_sdk.dataspace.managers.oauth2_manager.KeycloakOpenID")
+    def test_get_token_connects_on_first_use(self, mock_keycloak_cls):
+        mock_keycloak = MagicMock()
+        mock_keycloak.well_known.return_value = True
+        mock_keycloak.token.return_value = {"access_token": "abc123"}
+        mock_keycloak_cls.return_value = mock_keycloak
+
+        manager = OAuth2Manager(self.auth_url, self.realm, self.clientid, self.clientsecret)
+        self.assertEqual(manager.get_token(), "abc123")
+        self.assertEqual(manager.get_token(), "abc123")
+
+        self.assertTrue(manager.connected)
+        mock_keycloak.well_known.assert_called_once()
+
+    @patch("tractusx_sdk.dataspace.managers.oauth2_manager.KeycloakOpenID")
+    def test_get_token_unreachable_raises_auth_service_error_and_retries(self, mock_keycloak_cls):
+        mock_keycloak = MagicMock()
+        mock_keycloak.well_known.side_effect = KeycloakConnectionError("down")
+        mock_keycloak_cls.return_value = mock_keycloak
+
+        manager = OAuth2Manager(self.auth_url, self.realm, self.clientid, self.clientsecret)
+
+        with self.assertRaises(AuthServiceUnavailableError) as exc:
+            manager.get_token()
+        # Still a ConnectionError and an SDK error, so existing handlers keep working.
+        self.assertIsInstance(exc.exception, ConnectionError)
+        self.assertIsInstance(exc.exception, TractusXSDKError)
+        self.assertIsInstance(exc.exception.__cause__, KeycloakConnectionError)
+        self.assertFalse(manager.connected)
+
+        # Keycloak comes back: the next call connects instead of staying failed.
+        mock_keycloak.well_known.side_effect = None
+        mock_keycloak.well_known.return_value = True
+        mock_keycloak.token.return_value = {"access_token": "abc123"}
+        self.assertEqual(manager.get_token(), "abc123")
+        self.assertEqual(mock_keycloak.well_known.call_count, 2)
+
+    @patch("tractusx_sdk.dataspace.managers.oauth2_manager.KeycloakOpenID")
+    def test_empty_well_known_on_first_use_raises_auth_service_error(self, mock_keycloak_cls):
+        mock_keycloak = MagicMock()
+        mock_keycloak.well_known.return_value = False
+        mock_keycloak_cls.return_value = mock_keycloak
+
+        manager = OAuth2Manager(self.auth_url, self.realm, self.clientid, self.clientsecret)
+
+        with self.assertRaises(AuthServiceUnavailableError):
+            manager.get_token()
+        self.assertFalse(manager.connected)
+
+    @patch("tractusx_sdk.dataspace.managers.oauth2_manager.KeycloakOpenID")
+    def test_is_authenticated_unreachable_returns_503(self, mock_keycloak_cls):
+        mock_keycloak = MagicMock()
+        mock_keycloak.well_known.side_effect = KeycloakConnectionError("down")
+        mock_keycloak_cls.return_value = mock_keycloak
+
+        manager = OAuth2Manager(self.auth_url, self.realm, self.clientid, self.clientsecret)
+
+        request = Mock(spec=Request)
+        request.headers = Headers({"Authorization": "Bearer validtoken"})
+
+        with self.assertRaises(HTTPException) as exc:
+            manager.is_authenticated(request)
+        self.assertEqual(exc.exception.status_code, 503)
 
 
 if __name__ == "__main__":
