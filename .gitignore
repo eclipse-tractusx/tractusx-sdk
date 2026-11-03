@@ -127,6 +127,7 @@ venv.bak/
 .ropeproject
 /site
 .mypy_cache/
+.ruff_cache/
 .dmypy.json
 dmypy.json
 .pyre/

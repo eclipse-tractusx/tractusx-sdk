@@ -133,6 +133,7 @@ nav:
   - Administration:
     - Overview: admin/index.md
     - Configuration: admin/configuration.md
+    - Logging and Error Handling: admin/logging.md
     - Production Deployment: admin/production-deployment.md
     - Security: admin/security.md
     - Health Checks: admin/health-checks.md

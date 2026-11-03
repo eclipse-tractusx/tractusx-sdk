@@ -2,7 +2,7 @@
 # Eclipse Tractus-X - Software Development KIT
 #
 # Copyright (c) 2026 LKS Next
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -27,17 +27,20 @@ Provides thread-safe methods for adding, retrieving, and deleting EDR connection
 """
 
 import copy
+from tractusx_sdk.exceptions import ConnectionManagerError
 from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
 from tractusx_sdk.dataspace.constants import JSONLDKeys
 import threading
 import logging
+
+logger = logging.getLogger(__name__)
 
 class MemoryConnectionManager(BaseConnectionManager):
     """
     Manages EDR connections in an in-memory cache with thread-safe operations.
     """
 
-    def __init__(self, provider_id_key: str = "providerId", edrs_key: str = "edrs", logger:logging.Logger=None, verbose: bool = False):
+    def __init__(self, provider_id_key: str = "providerId", edrs_key: str = "edrs"):
         """
         Initializes the MemoryConnectionManager with specified keys for provider ID and EDR count.
 
@@ -50,8 +53,6 @@ class MemoryConnectionManager(BaseConnectionManager):
         self.edrs_key = edrs_key
         self.open_connections=dict()
         self._lock = threading.RLock()
-        self.logger = logger
-        self.verbose = verbose
         
     def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry:dict) -> str | None:
         """
@@ -71,7 +72,7 @@ class MemoryConnectionManager(BaseConnectionManager):
         with self._lock:
             transfer_process_id: str = connection_entry.get(self.TRANSFER_ID_KEY, None)
             if transfer_process_id is None or transfer_process_id == "":
-                raise Exception(
+                raise ConnectionManagerError(
                     "[Memory Connection Manager] The transfer id key was not found or is empty! Not able to do the contract negotiation!")
             
             # Initialize nested dictionaries as needed.
@@ -105,9 +106,9 @@ class MemoryConnectionManager(BaseConnectionManager):
                 self.open_connections[self.edrs_key] = 0
 
             self.open_connections[self.edrs_key] += 1
-            if self.logger and self.verbose:
-                self.logger.info(
-                    f"[Memory Connection Manager] A new EDR entry was saved in the memory cache! [{self.open_connections[self.edrs_key]}] EDRs Available")
+            logger.debug(
+                "[Memory Connection Manager] A new EDR entry was saved in the memory cache! [%s] EDRs Available",
+                self.open_connections[self.edrs_key])
             return transfer_process_id
     
     def get_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
@@ -174,13 +175,11 @@ class MemoryConnectionManager(BaseConnectionManager):
                     del cached_details[policy_checksum]
                     if self.edrs_key in self.open_connections:
                         self.open_connections[self.edrs_key] -= 1
-                    if self.logger and self.verbose:
-                        self.logger.info(f"[Memory Connection Manager] Deleted EDR entry for policy checksum '{policy_checksum}'.")
+                    logger.debug("[Memory Connection Manager] Deleted EDR entry for policy checksum '%s'.", policy_checksum)
                     return True
                 return False
             except KeyError:
-                if self.logger and self.verbose:
-                    self.logger.error("[Memory Connection Manager] No EDR found to delete for the provided keys.")
+                logger.debug("[Memory Connection Manager] No EDR found to delete for the provided keys.")
                 return False
 
     def clear_connections_by_party(self, counter_party_id_substring: str) -> int:
@@ -209,8 +208,8 @@ class MemoryConnectionManager(BaseConnectionManager):
                 del self.open_connections[key]
 
             removed = len(keys_to_remove)
-            if self.logger and removed > 0:
-                self.logger.info(
+            if removed > 0:
+                logger.info(
                     "[Memory Connection Manager] Cleared %d party cache entries matching substring '%s'.",
                     removed, counter_party_id_substring
                 )
