@@ -143,6 +143,11 @@ def test_schema_finder_errors_are_sdk_errors_and_still_http_errors(valid_semanti
     assert isinstance(missing.value, (TractusXSDKError, HTTPError))
 
 
+def test_schema_finder_rejects_semantic_id_without_version_aspect_separator():
+    with pytest.raises(InvalidSemanticIdError):
+        submodel_schema_finder("urn:samm:io.catenax.batch:3.0.0")
+
+
 def test_schema_finder_keeps_the_cause_of_an_invalid_json(valid_semantic_id):
     mock_response = mock.Mock(status_code=200)
     mock_response.json.side_effect = ValueError("bad json")

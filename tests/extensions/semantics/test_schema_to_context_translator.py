@@ -27,6 +27,7 @@ import pytest
 import logging
 from unittest.mock import Mock, patch
 from tractusx_sdk.extensions.semantics.schema_to_context_translator import SammSchemaContextTranslator
+from tractusx_sdk.exceptions import InvalidSemanticIdError
 
 
 @pytest.fixture
@@ -206,19 +207,13 @@ class TestSchemaToJsonLD:
         assert "Custom" in context
         assert context["Custom"]["@id"] == "cx:Custom"
 
-    def test_schema_to_jsonld_invalid_semantic_id(self, translator):
-        """Test with invalid semantic ID."""
-        invalid_ids = [
-            "invalid_semantic_id",
-            "urn:samm:example:1.0.0",
-            "urn:samm:example:1.0.0#",
-            ""
-        ]
-        schema = {"type": "string"}
-        
-        for invalid_id in invalid_ids:
-            with pytest.raises(Exception, match="It was not possible to create flattened jsonld schema"):
-                translator.schema_to_jsonld(invalid_id, schema)
+    @pytest.mark.parametrize("method_name", ["schema_to_jsonld", "schema_to_jsonld_nested"])
+    @pytest.mark.parametrize("schema", [None, {"type": "string"}])
+    def test_invalid_semantic_id_propagates_its_typed_error(self, translator, method_name, schema):
+        method = getattr(translator, method_name)
+
+        with pytest.raises(InvalidSemanticIdError):
+            method("urn:samm:example:1.0.0", schema)
 
     def test_schema_to_jsonld_with_description(self, translator):
         """Test schema with description (flattened context)."""

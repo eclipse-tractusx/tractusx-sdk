@@ -152,8 +152,7 @@ class SammSchemaContextTranslator:
             return result.schema
                 
         except Exception as e:
-            # Documented behaviour: the failure is turned into None, so the caller is told here
-            logger.error("Error fetching schema for %s: %s", semantic_id, e, extra=log_extra(schema_urn=semantic_id, operation="semantics.fetch"))
+            logger.exception("Error fetching schema for %s: %s", semantic_id, e)
             return None
 
     def _find_schema(self, semantic_id: str, link_core: str) -> SchemaLookupResult:
@@ -201,6 +200,8 @@ class SammSchemaContextTranslator:
                         extra=log_extra(schema_urn=semantic_id, operation="semantics.prepare"))
             try:
                 schema = self._find_schema(semantic_id, link_core=link_core).schema
+            except InvalidSemanticIdError:
+                raise
             except Exception as e:
                 # The finder logged the cause: this adds which semantic id the translation was after
                 logger.error("The schema of '%s' could not be fetched for the translation: %s", semantic_id, type(e).__name__,
@@ -315,6 +316,8 @@ class SammSchemaContextTranslator:
             return {
                 "@context": response_context
             }
+        except InvalidSemanticIdError:
+            raise
         except Exception as e:
             # The original failure was logged where it happened (with its traceback): this says which semantic id it was for
             logger.error("The translation of '%s' into a flattened JSON-LD context failed: %s", semantic_id, type(e).__name__,
@@ -390,6 +393,8 @@ class SammSchemaContextTranslator:
             return {
                 "@context": response_context
             }
+        except InvalidSemanticIdError:
+            raise
         except Exception as e:
             # The original failure was logged where it happened (with its traceback): this says which semantic id it was for
             logger.error("The translation of '%s' into a nested JSON-LD context failed: %s", semantic_id, type(e).__name__,
