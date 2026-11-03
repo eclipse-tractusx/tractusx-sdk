@@ -2,8 +2,8 @@
 
 Eclipse Tractus-X - Software Development KIT
 
-Copyright (c) 2025 LKS Next
-Copyright (c) 2025 Contributors to the Eclipse Foundation
+Copyright (c) 2025,2026 LKS Next
+Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -101,7 +101,7 @@ full_url = HttpTools.concat_into_url(
 ### Tracer
 
 An optional recorder of the requests sent to (and the responses received from) external services.
-Every SDK service accepts the `trace` flag (like `verbose`), the adapters below them accept the
+Every SDK service accepts the `trace` flag, the adapters below them accept the
 `tracer` it produces, and both expose the collected trace as JSON. See [Request Tracing](../../../core-concepts/sdk-architecture/request-tracing.md)
 for the complete guide.
 
@@ -131,7 +131,7 @@ for the complete guide.
 from tractusx_sdk.dataspace.services.connector import ServiceFactory
 from tractusx_sdk.dataspace.tools import Tracer
 
-# The trace flag, like verbose, on any service
+# The trace flag on any service
 service = ServiceFactory.get_connector_provider_service(..., trace=True)
 service.assets.get_all()
 print(service.get_trace_json())
@@ -159,10 +159,13 @@ Specialized tools for handling Dataspace Protocol (DSP) operations, particularly
 
 | Method | Description | Parameters | Return Type |
 |--------|-------------|------------|-------------|
-| `filter_assets_and_policies()` | Filter assets and policies from catalog | `catalog`, `allowed_policies` | `list[tuple[str, dict]]` |
+| `filter_assets_and_policies()` | Filter assets and policies from catalog. Raises `EmptyCatalogError` or `PolicyMismatchError` (which carries a `PolicyEvaluation` for every rejected policy) | `catalog`, `allowed_policies` | `list[AssetPolicySelection]` (a `NamedTuple` of `asset_id`, `policy`, so it still unpacks as a pair) |
 | `get_dataset_policy()` | Get valid policy from dataset | `dataset`, `allowed_policies` | `dict \| None` |
-| `is_policy_valid()` | Check if policy is in allowed list | `policy`, `allowed_policies` | `bool` |
+| `evaluate_policy()` | Compare a policy with an allow-list and say why it was accepted or rejected | `policy`, `allowed_policies` | `PolicyEvaluation` (`accepted`, `verdict`, `matched_index`, `mismatches`) |
+| `is_policy_valid()` | Check if policy is in allowed list (the verdict of `evaluate_policy()`) | `policy`, `allowed_policies` | `bool` |
 | `is_catalog_empty()` | Check if catalog is empty | `catalog` | `bool` |
+
+The reasons a policy was rejected are returned by `evaluate_policy()` and carried by `PolicyMismatchError`; they are also echoed to the DEBUG log of `tractusx_sdk.dataspace.tools.dsp_tools`, but nothing needs to be read back from the logs. See [Logging and Error Handling](../../../admin/logging.md#why-was-a-policy-rejected).
 
 **Example:**
 
@@ -355,8 +358,8 @@ Tools for validating Tractus-X submodels against their semantic schemas.
 
 | Function | Description | Parameters | Return Type |
 |----------|-------------|------------|-------------|
-| `submodel_schema_finder()` | Find schema for semantic ID | `semantic_id`, `link_core` | `dict` |
-| `json_validator()` | Validate JSON against schema | `schema`, `json_to_validate`, `validation_type` | `dict` |
+| `submodel_schema_finder()` | Find schema for semantic ID. Raises `InvalidSemanticIdError` or `SchemaNotFoundError` (both also `requests.HTTPError`) | `semantic_id`, `link_core` | `SchemaLookupResult` (`schema`, `link`; also supports `result["schema"]`) |
+| `json_validator()` | Validate JSON against schema. Raises `SubmodelValidationError` (also `requests.HTTPError`, with the violations in `.issues`) unless `raise_on_error=False` | `schema`, `json_to_validate`, `validation_type`, `raise_on_error` | `ValidationResult` (`valid`, `issues`; also supports `result["status"]`) |
 
 **Example:**
 
@@ -389,6 +392,11 @@ try:
     print("Validation successful:", validation_result["message"])
 except Exception as e:
     print("Validation failed:", str(e))
+
+# Or get the violations back as data instead of an exception
+result = json_validator(schema, submodel_data, raise_on_error=False)
+for issue in result.issues:          # ValidationIssue: path, message, validator, expected, invalid_value
+    print(issue.path, issue.message)
 ```
 
 !!! tip "Best Practices"

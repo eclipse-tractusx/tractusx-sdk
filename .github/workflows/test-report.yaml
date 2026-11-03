@@ -241,8 +241,9 @@ jobs:
     - name: Write to Job Summary
       run: cat ${{ steps.summary-content.outputs.summary_path }} >> $GITHUB_STEP_SUMMARY
 
+    # Fork pull requests use the job summary because their token is read-only.
     - name: Find existing summary comment
-      if: github.event_name == 'pull_request'
+      if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
       uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4.0.0
       id: find-summary
       with:
@@ -251,7 +252,7 @@ jobs:
         body-includes: 🧪 Test Summary
 
     - name: Create or update summary comment
-      if: github.event_name == 'pull_request'
+      if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
       uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
       with:
         token: ${{ secrets.GITHUB_TOKEN }}

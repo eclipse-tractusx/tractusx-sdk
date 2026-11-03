@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -56,8 +57,10 @@ def quick_start():
     print("Quick Start: Tractus-X Discovery Services")
     print("=" * 45)
     
-    # 1. Set up basic logging
+    # 1. Set up basic logging. The SDK logs through the standard logging module:
+    # raise its level to see the discovery cache details
     logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(message)s')
+    logging.getLogger('tractusx_sdk').setLevel(logging.DEBUG)
     logger = logging.getLogger('discovery_quickstart')
     
     # 2. Set up OAuth2 authentication
@@ -79,14 +82,12 @@ def quick_start():
     # For real usage: oauth_manager.connect()
     # Note: You need to call oauth_manager.connect() before making actual API calls
     
-    # 3. Initialize services with enhanced logging
+    # 3. Initialize services
     logger.info("Initializing discovery services...")
     
     connector_discovery_service = ConnectorDiscoveryService(
         oauth=oauth_manager,
-        discovery_finder_service=discovery_finder,
-        verbose=True,    # Enable detailed cache logging
-        logger=logger    # Provide logger for enhanced output
+        discovery_finder_service=discovery_finder
     )
     
     connectors = connector_discovery_service.find_connector_by_bpn("YOUR_BPN")  # Replace with your actual BPN, e.g., "BPNL0000000093Q7"

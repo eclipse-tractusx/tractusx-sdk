@@ -3,8 +3,8 @@
 Eclipse Tractus-X - Software Development KIT
 
 Copyright (c) 2026 Mondragon Unibertsitatea
-Copyright (c) 2025 LKS Next
-Copyright (c) 2025 Contributors to the Eclipse Foundation
+Copyright (c) 2025,2026 LKS Next
+Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -42,20 +42,15 @@ import logging
 # Basic initialization
 translator = SammSchemaContextTranslator()
 
-# With custom logger
-logger = logging.getLogger("MyApp")
-translator = SammSchemaContextTranslator(
-    logger=logger,
-    verbose=True
-)
+# The translator logs through the standard logging module (logger
+# "tractusx_sdk.extensions.semantics"), so configure logging in your application
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("tractusx_sdk.extensions.semantics").setLevel(logging.DEBUG)
 ```
 
 ### Parameters
 
-| Parameter | Type                   | Required | Description                                      |
-|-----------|------------------------|----------|--------------------------------------------------|
-| `logger`  | `logging.Logger`       | No       | Logger instance for debugging and error reporting|
-| `verbose` | `bool`                 | No       | Enable verbose logging output (default: False)   |
+The constructor takes no arguments.
 
 ### Class Attributes
 
@@ -64,8 +59,6 @@ translator = SammSchemaContextTranslator(
 | `baseSchema`      | `Dict[str, Any]`   | The base schema being processed                      |
 | `recursionDepth`  | `int`              | Maximum recursion depth for circular references (default: 2) |
 | `depth`           | `int`              | Current recursion depth                              |
-| `logger`          | `logging.Logger`   | Logger instance                                      |
-| `verbose`         | `bool`             | Verbose logging flag                                 |
 
 ## Core Methods
 
@@ -219,7 +212,7 @@ from tractusx_sdk.extensions.semantics import SammSchemaContextTranslator
 import json
 
 # Initialize translator
-translator = SammSchemaContextTranslator(verbose=True)
+translator = SammSchemaContextTranslator()
 
 # Generate PCF context
 pcf_context = translator.schema_to_jsonld(
@@ -282,8 +275,8 @@ handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 logger.addHandler(handler)
 
-# Initialize translator with logger
-translator = SammSchemaContextTranslator(logger=logger, verbose=True)
+# Initialize translator (it logs through the standard logging module)
+translator = SammSchemaContextTranslator()
 
 # Define aspects to process
 aspects = [
@@ -449,10 +442,10 @@ else:
 
 ## Best Practices
 
-1. **Enable verbose mode during development** for better debugging
+1. **Configure logging in your application** during development (`logging.getLogger("tractusx_sdk.extensions.semantics").setLevel(logging.DEBUG)`) for better debugging
 2. **Cache fetched schemas** to reduce API calls and improve performance
 3. **Validate semantic IDs** before processing to catch errors early
-4. **Use custom loggers** to integrate with your application's logging system
+4. **Let the SDK log through the standard `logging` module** so it integrates with your application's logging system
 5. **Handle exceptions gracefully** - schema fetching can fail
 6. **Choose appropriate format** - flattened for simple data, nested for hierarchical
 7. **Store generated contexts** - reuse them across multiple data instances
