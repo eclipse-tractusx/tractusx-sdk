@@ -2,6 +2,7 @@
 
 Eclipse Tractus-X - Software Development KIT
 
+Copyright (c) 2026 LKS Next
 Copyright (c) 2026 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
@@ -18,8 +19,7 @@ SPDX-License-Identifier: CC-BY-4.0
 
 # Request Tracing
 
-Every SDK service, adapter and factory accepts an **optional `trace` flag**, exactly like the
-existing `verbose` flag. When it is enabled, the SDK stores every request sent to (and every
+Every SDK service, adapter and factory accepts an **optional `trace` flag**. When it is enabled, the SDK stores every request sent to (and every
 response received from) the external services contacted while its methods are executed -
 connectors, digital twin registries, discovery services, submodel servers, notification
 endpoints - and hands it back as **JSON you can parse**.
@@ -269,7 +269,7 @@ for entry in tracer.filter(url="/catalog/request", failed=True, min_duration_ms=
 
 ## Services take the flag, adapters take the tracer
 
-`trace` is a `bool` and lives where `verbose` lives: on the **services** and their factories.
+`trace` is a `bool` and lives on the **services** and their factories.
 Every SDK service inherits it from `BaseService`, which carries the tracing capability and
 hands the tracer down to everything the service is built upon - its adapters, sessions,
 controllers and sub-services are discovered automatically.
@@ -474,4 +474,13 @@ does, no matter which of the two paths a particular call takes.
 
 Not part of the trace: the non-HTTP submodel adapters (file system, S3), the Keycloak token
 requests of the `OAuth2Manager`, and the TCK connector helpers, which use the `requests`
-library directly and keep their own verbose logging.
+library directly and configure their own logging.
+
+## NOTICE
+
+This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
+
+- SPDX-License-Identifier: CC-BY-4.0
+- SPDX-FileCopyrightText: 2026 Contributors to the Eclipse Foundation
+- SPDX-FileCopyrightText: 2026 LKS Next
+- Source URL: [https://github.com/eclipse-tractusx/tractusx-sdk](https://github.com/eclipse-tractusx/tractusx-sdk)

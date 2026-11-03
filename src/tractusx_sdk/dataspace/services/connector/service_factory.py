@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -27,6 +28,8 @@ import logging
 
 from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
 from tractusx_sdk.dataspace.tools.tracing import resolve_tracer
+
+logger = logging.getLogger(__name__)
 
 
 class ServiceType(Enum):
@@ -84,6 +87,7 @@ class ServiceFactory:
             # Dynamically import the service class
             module = import_module(module_name)
             service_class = getattr(module, service_class_name)
+            logger.debug("Resolved %s from %s", service_class_name, module_name)
             return service_class.builder()
         except AttributeError as attr_exception:
             raise AttributeError(
@@ -101,9 +105,6 @@ class ServiceFactory:
             dma_path: str,
             headers: dict = None,
             connection_manager: BaseConnectionManager = None,
-            verbose: bool = True,
-            debug: bool = False,
-            logger: logging.Logger = None,
             trace: bool = False,
             **kwargs
     ):
@@ -115,8 +116,6 @@ class ServiceFactory:
         :param dma_path: The DMA path of the Connector service
         :param headers: The extra headers to be used for requests to the service
         :param connection_manager: The connection manager to use for the service
-        :param verbose: Verbose flag for the service
-        :param debug: Debug flag to log request payloads before HTTP calls
         :param trace: Flag enabling the tracing of the requests sent to (and the
             responses received from) the external services (default: False). The
             collected trace is available through `get_trace()`/`get_trace_json()`
@@ -135,7 +134,7 @@ class ServiceFactory:
         builder.connector_manager(connection_manager)
 
         # Include any additional parameters
-        builder.data({**kwargs, "verbose": verbose, "debug": debug, "logger": logger, "trace": trace})
+        builder.data({**kwargs, "trace": trace})
         return builder.build()
 
     @staticmethod
@@ -144,9 +143,6 @@ class ServiceFactory:
             base_url: str,
             dma_path: str,
             headers: dict = None,
-            verbose: bool = True,
-            debug: bool = False,
-            logger: logging.Logger = None,
             trace: bool = False,
             **kwargs
     ):
@@ -157,9 +153,6 @@ class ServiceFactory:
         :param base_url: The base URL of the Connector service
         :param dma_path: The DMA path of the Connector service
         :param headers: The extra headers to be used for requests to the service
-        :param verbose: Verbose flag for the service
-        :param debug: Debug flag to log request payloads before HTTP calls
-        :param logger: Logger instance for the service
         :param trace: Flag enabling the tracing of the requests sent to (and the
             responses received from) the external services (default: False). The
             collected trace is available through `get_trace()`/`get_trace_json()`
@@ -177,7 +170,7 @@ class ServiceFactory:
         builder.headers(headers)
 
         # Include any additional parameters
-        builder.data({**kwargs, "verbose": verbose, "debug": debug, "logger": logger, "trace": trace})
+        builder.data({**kwargs, "trace": trace})
         return builder.build()
 
     @staticmethod
@@ -187,8 +180,6 @@ class ServiceFactory:
             dma_path: str,
             headers: dict = None,
             connection_manager: BaseConnectionManager = None,
-            logger: logging.Logger = None,
-            verbose: bool = True,
             trace: bool = False,
             **kwargs
     ):
@@ -216,18 +207,14 @@ class ServiceFactory:
             base_url=base_url,
             dma_path=dma_path,
             headers=headers,
-            connection_manager=connection_manager,
-            verbose=verbose,
-            logger=logger
+            connection_manager=connection_manager
         )
 
         provider = ServiceFactory.get_connector_provider_service(
             dataspace_version=dataspace_version,
             base_url=base_url,
             dma_path=dma_path,
-            headers=headers,
-            verbose=verbose,
-            logger=logger
+            headers=headers
         )
 
         builder = ServiceFactory._get_service_builder(

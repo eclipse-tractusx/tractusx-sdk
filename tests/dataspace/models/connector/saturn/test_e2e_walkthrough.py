@@ -34,7 +34,6 @@ Tests validate:
 - Complete E2E flow from Asset to Transfer Process
 """
 
-import pytest
 import json
 from tractusx_sdk.dataspace.models.connector.model_factory import ModelFactory
 

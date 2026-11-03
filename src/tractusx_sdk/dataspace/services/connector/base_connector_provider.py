@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS Next
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -32,13 +32,15 @@ from typing import Any
 
 _UNSET_PROXY: Any = object()
 
+logger = logging.getLogger(__name__)
+
 
 class BaseConnectorProviderService(BaseService):
     _asset_controller: BaseDmaController
     _contract_definition_controller: BaseDmaController
     _policy_controller: BaseDmaController
 
-    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verbose: bool = True, debug: bool = False, logger: logging.Logger = None, verify_ssl: bool = True,
+    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verify_ssl: bool = True,
                  trace: bool = False):
         """
         :param trace: Flag enabling the tracing of the requests sent to (and the
@@ -47,9 +49,6 @@ class BaseConnectorProviderService(BaseService):
             `set_tracer()` shares it with other services
         """
         self.dataspace_version = dataspace_version
-        self.verbose = verbose
-        self.debug = debug
-        self.logger = logger or logging.getLogger(__name__)
         self.verify_ssl = verify_ssl
 
         self.dma_adapter = AdapterFactory.get_dma_adapter(
@@ -115,8 +114,7 @@ class BaseConnectorProviderService(BaseService):
         data_address_type: str = "HttpData",
         **kwargs
     ):
-        if self.verbose:
-            self.logger.info(f"Creating asset {asset_id} at {base_url}.")
+        logger.info("Creating asset %s at %s.", asset_id, base_url)
 
         if proxy_params is _UNSET_PROXY:
             proxy_params = {
@@ -134,6 +132,9 @@ class BaseConnectorProviderService(BaseService):
                 "cx-taxo": "https://w3id.org/catenax/taxonomy#",
                 "dct": "http://purl.org/dc/terms/"
             }
+
+        if semantic_id is not None:
+            context = {**context, "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/"}
 
         data_address = {
             "@type": "DataAddress",
@@ -179,17 +180,16 @@ class BaseConnectorProviderService(BaseService):
             kwargs=kwargs
         )
 
-        if self.debug:
-            self.logger.info(f"[Connector Service] [ASSET REQUEST]: {asset.to_data()}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[Connector Service] [ASSET REQUEST]: %s", asset.to_data())
 
         asset_response = self.assets.create(obj=asset, verify=self.verify_ssl)
 
         if asset_response.status_code != 200:
-            self.logger.error(asset_response.text)
+            logger.error("Failed to create asset %s: %s", asset_id, asset_response.text)
             raise ValueError(f"Failed to create asset {asset_id}. Status code: {asset_response.status_code}")
 
-        if self.verbose:
-            self.logger.info(f"Asset {asset_id} created successfully.")
+        logger.info("Asset %s created successfully.", asset_id)
 
         return asset_response.json()
 
@@ -213,7 +213,6 @@ class BaseConnectorProviderService(BaseService):
             _properties["cx-common:version"] = version
     
         if semantic_id is not None:
-            context["aas-semantics"] = "https://admin-shell.io/aas/3/0/HasSemantics/"
             _properties["aas-semantics:semanticId"] = {"@id": semantic_id}
             
         if properties is not None:
@@ -230,8 +229,7 @@ class BaseConnectorProviderService(BaseService):
         asset_id: str,
         **kwargs
     ) -> dict:
-        if self.verbose:
-            self.logger.info(f"Creating new contract with ID {contract_id}.")
+        logger.info("Creating new contract with ID %s.", contract_id)
 
         context = {
             "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
@@ -255,16 +253,15 @@ class BaseConnectorProviderService(BaseService):
             kwargs=kwargs
         )
 
-        if self.debug:
-            self.logger.info(f"[Connector Service] [CONTRACT DEFINITION REQUEST]: {contract.to_data()}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[Connector Service] [CONTRACT DEFINITION REQUEST]: %s", contract.to_data())
 
         created_contract = self.contract_definitions.create(obj=contract, verify=self.verify_ssl)
 
         if created_contract.status_code != 200:
             raise ValueError(f"Failed to create contract {contract_id}. Status code: {created_contract.status_code}")
 
-        if self.verbose:
-            self.logger.info(f"Contract {contract_id} created successfully.")
+        logger.info("Contract %s created successfully.", contract_id)
 
         return created_contract.json()
 
@@ -277,8 +274,7 @@ class BaseConnectorProviderService(BaseService):
         obligations: dict | list[dict] = None,
         **kwargs
     ) -> dict:
-        if self.verbose:
-            self.logger.info(f"Creating new policy with ID {policy_id}.")
+        logger.info("Creating new policy with ID %s.", policy_id)
 
         policy = ModelFactory.get_policy_model(
             dataspace_version=self.dataspace_version,
@@ -290,15 +286,14 @@ class BaseConnectorProviderService(BaseService):
             kwargs=kwargs
         )
 
-        if self.debug:
-            self.logger.info(f"[Connector Service] [POLICY REQUEST]: {policy.to_data()}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[Connector Service] [POLICY REQUEST]: %s", policy.to_data())
 
         created_policy = self.policies.create(obj=policy, verify=self.verify_ssl)
 
         if created_policy.status_code != 200:
             raise ValueError(f"Failed to create policy {policy_id}. Status code: {created_policy.status_code}, Response: {created_policy.text}")
 
-        if self.verbose:
-            self.logger.info(f"Policy {policy_id} created successfully.")
+        logger.info("Policy %s created successfully.", policy_id)
 
         return created_policy.json()

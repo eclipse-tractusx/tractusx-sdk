@@ -73,8 +73,6 @@ consumer_connector = ServiceFactory.get_connector_consumer_service(
         "X-Api-Key": os.getenv("CONSUMER_API_KEY"),
         "Content-Type": "application/json"
     },
-    logger=logger,
-    verbose=True
 )
 ```
 

@@ -3,8 +3,8 @@
 Eclipse Tractus-X - Software Development KIT
 
 Copyright (c) 2026 Mondragon Unibertsitatea
-Copyright (c) 2025 LKS Next
-Copyright (c) 2025 Contributors to the Eclipse Foundation
+Copyright (c) 2025,2026 LKS Next
+Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -52,7 +52,7 @@ Tools for processing SAMM (Semantic Aspect Meta Model) schemas and generating JS
 from tractusx_sdk.extensions.semantics import SammSchemaContextTranslator
 
 # Initialize translator
-translator = SammSchemaContextTranslator(verbose=True)
+translator = SammSchemaContextTranslator()
 
 # Convert SAMM schema to flattened JSON-LD context
 context = translator.schema_to_jsonld(
@@ -174,7 +174,7 @@ aas_service = AasService(
     auth_service=auth_manager
 )
 
-translator = SammSchemaContextTranslator(verbose=True)
+translator = SammSchemaContextTranslator()
 
 # 2. Get submodel semantic ID from DTR
 shell = aas_service.get_asset_administration_shell_descriptor_by_id(
@@ -313,7 +313,7 @@ except Exception as e:
 
 ## Best Practices
 
-1. **Enable verbose logging** for debugging schema transformations
+1. **Enable DEBUG logging** (`logging.getLogger("tractusx_sdk.extensions.semantics").setLevel(logging.DEBUG)`) for debugging schema transformations
 2. **Cache generated contexts** to avoid repeated API calls
 3. **Validate semantic IDs** before calling translation methods
 4. **Use nested format** for complex hierarchical data structures
@@ -378,17 +378,15 @@ context = translator.schema_to_jsonld(semantic_id="urn:samm:...")
 
 ### Custom Logging
 
+The translator logs through the standard `logging` module, under the `tractusx_sdk.extensions.semantics` logger. Set its level (and give it a handler) in your application:
+
 ```python
 import logging
 
-# Configure custom logger
-logger = logging.getLogger("SammTranslator")
-logger.setLevel(logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("tractusx_sdk.extensions.semantics").setLevel(logging.DEBUG)
 
-translator = SammSchemaContextTranslator(
-    logger=logger,
-    verbose=True
-)
+translator = SammSchemaContextTranslator()
 
 context = translator.schema_to_jsonld(semantic_id="urn:samm:...")
 ```
