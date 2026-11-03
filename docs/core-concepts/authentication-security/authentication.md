@@ -142,7 +142,7 @@ authenticated_headers = oauth_manager.add_auth_header(headers)
 
 | Property | What it is |
 |----------|------------|
-| `connected` | True if connected to Keycloak |
+| `connected` | True once the manager has connected to Keycloak. The connection is made on first use, so it is False right after you create the manager |
 | `token` | Current token info |
 | `clientid` | Your client ID |
 | `clientsecret` | Your client secret |
@@ -290,17 +290,13 @@ oauth_manager = OAuth2Manager(
 
 ### Error handling
 
-- Check if you're connected before making calls
+- The manager connects to Keycloak on first use, so creating it never blocks your application's startup; if Keycloak is unreachable, the first call raises `AuthServiceUnavailableError` (a `ConnectionError`) and `is_authenticated` raises HTTP 503, and the next call tries again
 - OAuth2Manager handles token expiry for you
 - Plan for when auth services are down
 
 ```python
 def safe_api_call(oauth_manager, api_function):
     try:
-        if not oauth_manager.connected:
-            print("Not connected to auth service")
-            return None
-        
         return api_function()
         
     except ConnectionError:
@@ -335,8 +331,8 @@ def safe_api_call(oauth_manager, api_function):
 
 #### Not connected errors
 
-- Call `connect()` before doing anything else
-- Check if the initial setup worked
+- The manager connects on first use; if Keycloak cannot be reached you get an `AuthServiceUnavailableError` (a `ConnectionError`), and the next call tries again
+- Check the `auth_url`, the realm and your network connection
 
 ### API key issues
 
