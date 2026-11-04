@@ -146,6 +146,7 @@ except TractusXSDKError as error:
 | `DiscoveryEndpointNotFoundError` | | The discovery service does not list the endpoint |
 | `DiscoveryUnauthorizedError` | | The discovery service refused the credentials (HTTP 401) |
 | `ConnectionManagerError` | | A connection manager could not store or load an entry |
+| `AuthServiceUnavailableError` | `ConnectionError` | The authentication service (Keycloak) could not be reached |
 | `ConnectorError` | `RuntimeError` | A call to an EDC connector failed |
 | `CatalogError` | `ConnectorError` | The catalog could not be obtained or holds no usable offer |
 | `EmptyCatalogError` | `CatalogError` | The catalog is missing, or has no dataset |
