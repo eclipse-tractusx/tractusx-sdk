@@ -663,14 +663,17 @@ class DspTools:
         if allowed_policies is _UNSET_ALLOWED_POLICIES:
             allowed_policies = []
 
-        ### Policy Evaluation
-        policies: dict | list | None = _get_policies(dataset)
-
-        if policies is None:
-            return None
+        policy, _ = DspTools._select_policy(
+            dataset=dataset,
+            allowed_policies=allowed_policies,
+        )
+        return policy
 
     @staticmethod
-    def _select_policy(dataset:dict, allowed_policies:list) -> tuple[dict | None, list[PolicyEvaluation]]:
+    def _select_policy(
+        dataset: dict,
+        allowed_policies: list[dict[str, Any]] | None,
+    ) -> tuple[dict | None, list[PolicyEvaluation]]:
         """
         Selects the first acceptable policy of a dataset.
 
