@@ -163,7 +163,7 @@ Each YAML file contains one or more **named sections** (e.g. `jupiter`, `saturn`
 
 > **💡 Quick Tips**:
 >
-> - **Debug logging**: Enabled by default. Use `--no-debug` to disable verbose output.
+> - **Debug logging**: Enabled by default. Use `--no-debug` to see INFO-level messages only.
 > - **Cleanup**: Enabled by default. Use `--no-cleanup` to preserve resources after test completion.
 > - See [Command-Line Options](#command-line-options) for detailed information.
 
@@ -345,9 +345,9 @@ python tck_e2e_saturn_0-11-X_simple.py \
 **`--no-debug`**: Disable DEBUG-level logging (**debug enabled by default**)
 
 - By default, all TCK tests run with DEBUG-level logging enabled
-- This provides verbose logging for all HTTP requests and responses
+- This logs all HTTP requests and responses (the SDK logs them at `DEBUG` level)
 - Shows detailed SDK internal operations
-- To disable verbose logging and see only INFO-level messages, use `--no-debug`
+- To see only INFO-level messages, use `--no-debug`
 - Example: `python tck_e2e_saturn_0-11-X_simple.py --no-debug`
 
 **`--no-cleanup`**: Skip resource cleanup after test (**cleanup enabled by default**)
@@ -752,4 +752,5 @@ This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses
 - SPDX-License-Identifier: CC-BY-4.0
 - SPDX-FileCopyrightText: 2026 Contributors to the Eclipse Foundation
 - SPDX-FileCopyrightText: 2026 Catena-X Automotive Network e.V.
+- SPDX-FileCopyrightText: 2026 LKS Next
 - Source URL: https://github.com/eclipse-tractusx/tractusx-sdk
