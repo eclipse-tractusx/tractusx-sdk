@@ -62,6 +62,7 @@ Here we also have a quick guide:
 - [**Provision**](#provision) - Setting up data provision and asset creation
   - [Digital Twin Registry](#digital-twin-registry) - Working with AAS shell descriptors
 - [**All in one**](#all-in-one) - Combined provider and consumer usage
+- [**Logging**](#logging) - Configuring the SDK's logging from your application
 
 ### Consumption
 
@@ -78,17 +79,15 @@ from tractusx_sdk.dataspace.services import BaseConnectorService
 from sqlmodel import create_engine
 
 engine = create_engine(str("postgresql://user:password@localhost:5432/db"))
-connection_manager = PostgresMemoryRefreshConnectionManager(
-    engine=engine, logger=logger, verbose=True)
+connection_manager = PostgresMemoryRefreshConnectionManager(engine=engine)
 
 # Another Postgres-Only option is available but is not recommended
 
 # FileSystem
-connection_manager = FileSystemConnectionManager(
-    path="./data/my-connections.json", logger=logger, verbose=True)
+connection_manager = FileSystemConnectionManager(path="./data/my-connections.json")
 
 # Memory Only
-connection_manager = MemoryConnectionManager(logger=logger, verbose=True)
+connection_manager = MemoryConnectionManager()
 
 #####################################################
 
@@ -103,8 +102,6 @@ consumer_connector_service: BaseConnectorService = ServiceFactory.get_connector_
     dma_path="/management",
     headers=consumer_connector_headers,
     connection_manager=connection_manager,  # Select one from above
-    logger=logger,  # You can remove this to keep logs disabled
-    verbose=True  # You can remove this to keep logs disabled
 )
 ```
 
@@ -256,8 +253,6 @@ provider_connector_service: BaseConnectorService = ServiceFactory.get_connector_
     base_url="https://my-connector-controlplane.url",
     dma_path="/management",
     headers=provider_connector_headers,
-    logger=logger,  # You can remove this to keep logs disabled
-    verbose=True  # You can remove this to keep logs disabled
 )
 provider_connector_service.create_asset(
     asset_id="my-asset-id",
@@ -374,13 +369,28 @@ connector_service = ServiceFactory.get_connector_service(
       dma_path="/management",
       headers=connector_connector_headers,
       connection_manager=connection_manager,
-      logger=logger, ## You can remove this to keep logs disabled
-      verbose=True ## You can remove this to keep logs disabled
 )
 
 connector_service.consumer.get_catalog(...)
 connector_service.provider.assets.create(...)
 ```
+
+### Logging
+
+The SDK never prints and never configures logging for you. Every module logs through the standard
+[`logging`](https://docs.python.org/3/library/logging.html) module, under the `tractusx_sdk` logger, and stays silent until
+your application sets logging up. There are no `verbose`, `debug` or `logger` arguments: the logging level decides what you see.
+
+```py
+import logging
+
+logging.basicConfig(level=logging.INFO)                          # your application's logging, as usual
+logging.getLogger("tractusx_sdk").setLevel(logging.DEBUG)        # more detail from the SDK only
+logging.getLogger("tractusx_sdk.dataspace.tools.dsp_tools").setLevel(logging.WARNING)  # or less, per module
+```
+
+What the SDK reports about a call, such as a rejected policy, comes back as a return value or as an exception that derives from
+`TractusXSDKError`, never as something to read from the logs. See the [Logging and Error Handling guide](./docs/admin/logging.md).
 
 ## Test Compliance Kits (TCKs)
 

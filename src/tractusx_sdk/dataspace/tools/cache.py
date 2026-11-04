@@ -93,8 +93,24 @@ class LocalCache(CacheProvider):
         await FastAPICache.get_backend().set(key, value, expire)
 
     async def delete(self, key: str):
-        """Delete cached value"""
-        await FastAPICache.get_backend().delete(key)
+        """
+        Delete the cached value for the given key.
+
+        FastAPI-Cache's ``InMemoryBackend`` does not implement ``delete``, so
+        this falls back to ``clear(key=...)``. Deleting a key that is not in
+        the cache does nothing.
+        """
+        backend = FastAPICache.get_backend()
+        delete = getattr(backend, "delete", None)
+        if callable(delete):
+            await delete(key)
+            return
+        try:
+            await backend.clear(key=key)
+        except KeyError:
+            # InMemoryBackend.clear() raises KeyError when the key is not
+            # in the cache. Deleting a missing key is a no-op, so ignore it.
+            pass
 
 
 def create_cache_provider() -> CacheProvider:

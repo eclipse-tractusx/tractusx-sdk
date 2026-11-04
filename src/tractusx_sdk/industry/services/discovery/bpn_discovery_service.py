@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -28,7 +29,26 @@ from tractusx_sdk.dataspace.managers import OAuth2Manager
 from tractusx_sdk.dataspace.services.discovery import DiscoveryFinderService
 from tractusx_sdk.dataspace.services.discovery.base_discovery_service import BaseDiscoveryService
 from tractusx_sdk.dataspace.tools.operators import op
+from tractusx_sdk.exceptions import DiscoveryEndpointNotFoundError, DiscoveryError, DiscoveryUnauthorizedError
 import requests
+
+logger = logging.getLogger(__name__)
+
+def _ensure_response(response: Optional[requests.Response], expected_status: int, failure_message: str) -> requests.Response:
+    """
+    Returns the response when it is the expected one, and raises the matching error otherwise.
+
+    :raises DiscoveryUnauthorizedError: The service answered 401.
+    :raises DiscoveryError: There was no response, or its status was not the expected one.
+    """
+    if response is None:
+        raise DiscoveryError("[BPN Discovery Service] No response received from the connector discovery service.")
+    if response.status_code == 401:
+        raise DiscoveryUnauthorizedError("[BPN Discovery Service] Unauthorized access. Please check your clientid permissions.")
+    if response.status_code != expected_status:
+        raise DiscoveryError(failure_message)
+    return response
+
 
 class BpnDiscoveryService(BaseDiscoveryService):
     session:requests.Session
@@ -36,7 +56,6 @@ class BpnDiscoveryService(BaseDiscoveryService):
     oauth:OAuth2Manager
     def __init__(self, oauth:OAuth2Manager, discovery_finder_service: DiscoveryFinderService, cache_timeout_seconds:int = 60 * 60 * 12,
                  session:requests.Session = None, base_path:str="/api/v1.0/administration/connectors/bpnDiscovery",
-                 verbose:bool=False, logger:Optional[logging.Logger]=None,
                  trace: bool = False):
         """
         Initialize the BPN Discovery Service.
@@ -46,8 +65,6 @@ class BpnDiscoveryService(BaseDiscoveryService):
             cache_timeout_seconds (int): Cache timeout in seconds (default: 12 hours).
             session (requests.Session): HTTP session for connection reuse.
             base_path (str): API path to append to the base URL from discovery finder (default: "/api/v1.0/administration/connectors/bpnDiscovery").
-            verbose (bool): Enable verbose logging (default: False).
-            logger (Optional[logging.Logger]): Logger instance for logging (default: None).
             trace (bool): Enable the tracing of the requests/responses (default: False).
                 The trace is available through `get_trace()`/`get_trace_json()`, and
                 `set_tracer()` shares it with other services.
@@ -64,8 +81,6 @@ class BpnDiscoveryService(BaseDiscoveryService):
             oauth=oauth,
             discovery_finder_service=discovery_finder_service,
             cache_timeout_seconds=cache_timeout_seconds,
-            verbose=verbose,
-            logger=logger,
             trace=trace
         )
 
@@ -89,7 +104,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         """
         endpoints = discovery_finder_service.find_discovery_urls(keys=[discovery_key])
         if(discovery_key not in endpoints):
-          raise Exception("[BPN Discovery Service] BPN Discovery endpoint not found!")
+          raise DiscoveryEndpointNotFoundError("[BPN Discovery Service] BPN Discovery endpoint not found!")
 
         base_url:str = endpoints[discovery_key]
         
@@ -143,12 +158,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         headers:dict = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})
 
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
-        if response is None:
-            raise Exception("[BPN Discovery Service] No response received from the connector discovery service.")
-        if response.status_code == 401:
-            raise Exception("[BPN Discovery Service] Unauthorized access. Please check your clientid permissions.")
-        if response.status_code != 200:
-            raise Exception("[BPN Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
+        _ensure_response(response, 200, "[BPN Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
 
         return response.json()
 
@@ -196,12 +206,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         headers:dict = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})
 
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
-        if response is None:
-            raise Exception("[BPN Discovery Service] No response received from the connector discovery service.")
-        if response.status_code == 401:
-            raise Exception("[BPN Discovery Service] Unauthorized access. Please check your clientid permissions.")
-        if response.status_code != 200:
-            raise Exception("[BPN Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
+        _ensure_response(response, 200, "[BPN Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
 
         return response.json()
 
@@ -219,6 +224,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         json_response:dict = self.search_bpns(keys=keys, identifier_type=identifier_type)
         bpns_data = json_response.get("bpns", [])
         bpns = op.extract_dict_values(array=bpns_data, key="value")
+        logger.debug("[BPN Discovery Service] Resolved %d BPN(s) for %d identifier key(s) of type '%s'.", len(set(bpns)), len(keys), identifier_type)
         return list(set(bpns)) if bpns else None
 
     def find_bpns_multi_type(self, search_filters:list) -> list | None:
@@ -278,12 +284,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         }
 
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
-        if response is None:
-            raise Exception("[BPN Discovery Service] No response received from the connector discovery service.")
-        if response.status_code == 401:
-            raise Exception("[BPN Discovery Service] Unauthorized access. Please check your clientid permissions.")
-        if response.status_code != 201:
-            raise Exception("[BPN Discovery Service] Failed to create BPN identifier.")
+        _ensure_response(response, 201, "[BPN Discovery Service] Failed to create BPN identifier.")
 
         return response.json()
 
@@ -307,12 +308,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         headers: dict = self.oauth.add_auth_header(headers={'Content-Type': 'application/json'})
 
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
-        if response is None:
-            raise Exception("[BPN Discovery Service] No response received from the connector discovery service.")
-        if response.status_code == 401:
-            raise Exception("[BPN Discovery Service] Unauthorized access. Please check your clientid permissions.")
-        if response.status_code != 201:
-            raise Exception("[BPN Discovery Service] Failed to create BPN identifiers batch.")
+        _ensure_response(response, 201, "[BPN Discovery Service] Failed to create BPN identifiers batch.")
 
         return response.json()
 
@@ -331,9 +327,4 @@ class BpnDiscoveryService(BaseDiscoveryService):
         headers: dict = self.oauth.add_auth_header(headers={'Content-Type': 'application/json'})
 
         response = HttpTools.do_delete_with_session(url=discovery_url, headers=headers, session=self.session)
-        if response is None:
-            raise Exception("[BPN Discovery Service] No response received from the connector discovery service.")
-        if response.status_code == 401:
-            raise Exception("[BPN Discovery Service] Unauthorized access. Please check your clientid permissions.")
-        if response.status_code != 204:
-            raise Exception(f"[BPN Discovery Service] Failed to delete BPN identifier with resourceId {resource_id}.")
+        _ensure_response(response, 204, f"[BPN Discovery Service] Failed to delete BPN identifier with resourceId {resource_id}.")

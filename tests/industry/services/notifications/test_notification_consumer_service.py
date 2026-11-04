@@ -63,11 +63,9 @@ class TestNotificationConsumerServiceConstruction:
         """Test direct construction with all parameters."""
         service = NotificationConsumerService(
             connector_consumer=mock_connector_consumer,
-            verbose=True,
         )
         
         assert service is not None
-        assert service.verbose is True
         assert service.connector_consumer is mock_connector_consumer
     
     def test_builder_construction(self, mock_connector_consumer):
@@ -75,13 +73,22 @@ class TestNotificationConsumerServiceConstruction:
         service = (
             NotificationConsumerService.builder()
             .connector_consumer(mock_connector_consumer)
-            .verbose(False)
             .build()
         )
         
         assert service is not None
-        assert service.verbose is False
         assert service.connector_consumer is mock_connector_consumer
+
+    def test_construction_rejects_the_removed_logging_arguments(self, mock_connector_consumer):
+        for removed in ({"verbose": True}, {"logger": None}):
+            with pytest.raises(TypeError):
+                NotificationConsumerService(connector_consumer=mock_connector_consumer, **removed)
+
+    def test_builder_has_no_logging_setters(self):
+        builder = NotificationConsumerService.builder()
+
+        assert not hasattr(builder, "verbose")
+        assert not hasattr(builder, "logger")
     
     def test_construction_without_connector_consumer(self):
         """Test construction without connector consumer."""
@@ -265,29 +272,7 @@ class TestNegotiateNotificationAccess:
             filter_expression=[filter_expression],
             policies=[],
         )
-    def test_negotiate_notification_access_uses_supported_connector_arguments_without_deprecated_params(self, mock_connector_consumer):
-            """Test negotiation only forwards arguments supported by the connector."""
-            filter_expression = {"operandLeft": "dct:type", "operator": "=", "operandRight": "event-api"}
-            mock_connector_consumer.get_filter_expression.return_value = filter_expression
-            mock_connector_consumer.negotiate_and_transfer.return_value = {"transferProcessId": "transfer-123"}
-    
-            service = NotificationConsumerService(
-                connector_consumer=mock_connector_consumer,
-            )
-    
-            service.negotiate_notification_access(
-                provider_bpn="BPNL000000000002",
-                provider_dsp_url="https://provider.com/dsp",
-                policies=[],
-                dct_type="event-api",
-            )
-    
-            mock_connector_consumer.negotiate_and_transfer.assert_called_once_with(
-                counter_party_id="BPNL000000000002",
-                counter_party_address="https://provider.com/dsp",
-                filter_expression=[filter_expression],
-                policies=[],
-            )
+
     def test_negotiate_notification_access_error(self, mock_connector_consumer):
         """Test error handling during negotiation."""
         mock_connector_consumer.get_filter_expression.return_value = {}
