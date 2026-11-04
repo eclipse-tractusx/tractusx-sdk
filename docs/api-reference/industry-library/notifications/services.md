@@ -138,8 +138,8 @@ Perform the full negotiation flow: query catalog, select asset/policy, start EDR
 edr_entry = notification_consumer.negotiate_notification_access(
     provider_bpn="BPNL000000000002",
     provider_dsp_url="https://provider.example.com/api/v1/dsp",
-    max_retries=6,
-    retry_timeout=10,
+    max_retries=6, #now deprecated and ignored
+    retry_timeout=10, #now deprecated and ignored
 )
 
 transfer_id = edr_entry.get("transferProcessId")

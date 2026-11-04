@@ -245,8 +245,8 @@ class NotificationConsumerService(BaseService):
             provider_bpn: Business Partner Number of the provider
             provider_dsp_url: DSP endpoint URL of the provider connector
             policies: Optional list of allowed policies for negotiation
-            max_retries: Maximum retries for EDR entry (default: 6)
-            retry_timeout: Timeout between retries in seconds (default: 10)
+            max_retries: Legacy argument retained for compatibility; it does not alter negotiation.
+            retry_timeout: Accepted for existing callers; timing is managed by the connector.
             dct_type: DCT type to filter by (default: DigitalTwinEventAPI)
             
         Returns:
@@ -273,8 +273,6 @@ class NotificationConsumerService(BaseService):
                 counter_party_address=provider_dsp_url,
                 filter_expression=filter_expression,
                 policies=policies,
-                max_retries=max_retries,
-                timeout=retry_timeout,
             )
             
             logger.info(
