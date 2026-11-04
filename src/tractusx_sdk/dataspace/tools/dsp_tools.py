@@ -29,7 +29,7 @@ import json
 import logging
 from dataclasses import dataclass, replace
 from enum import Enum
-from typing import NamedTuple
+from typing import Any,NamedTuple
 
 from tractusx_sdk.exceptions import EmptyCatalogError, PolicyMismatchError
 
@@ -43,6 +43,9 @@ logger = logging.getLogger(__name__)
 ## Ordered lookup: try DSP 2025-1 (unprefixed) first, then legacy (prefixed).
 _DATASET_KEYS = (DSP2025_DATASET_KEY, DSP_DATASET_KEY)   # "dataset", "dcat:dataset"
 _POLICY_KEYS  = (DSP2025_POLICY_KEY,  DSP_POLICY_KEY)    # "hasPolicy", "odrl:hasPolicy"
+
+
+_UNSET_ALLOWED_POLICIES: Any = object()
 
 
 def _get_datasets(catalog: dict):
@@ -648,20 +651,29 @@ class DspTools:
         return len(dataset) == 0
         
     @staticmethod
-    def get_dataset_policy(dataset:dict, allowed_policies:list=[]) -> dict | None:
+    def get_dataset_policy(
+        dataset: dict,
+        allowed_policies: list[dict[str, Any]] | None = _UNSET_ALLOWED_POLICIES,
+    ) -> dict | None:
         """
         Gets a valid policy from an dataset.
 
         @returns: dict: the selected policy or None if no valid policy was found
         """
-        ### Policy Evaluation
-        policies: dict | list | None = _get_policies(dataset)
+        if allowed_policies is _UNSET_ALLOWED_POLICIES:
+            allowed_policies = []
 
-        if policies is None:
-            return None
+        policy, _ = DspTools._select_policy(
+            dataset=dataset,
+            allowed_policies=allowed_policies,
+        )
+        return policy
 
     @staticmethod
-    def _select_policy(dataset:dict, allowed_policies:list) -> tuple[dict | None, list[PolicyEvaluation]]:
+    def _select_policy(
+        dataset: dict,
+        allowed_policies: list[dict[str, Any]] | None,
+    ) -> tuple[dict | None, list[PolicyEvaluation]]:
         """
         Selects the first acceptable policy of a dataset.
 

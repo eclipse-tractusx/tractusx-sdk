@@ -299,7 +299,7 @@ class BaseConnectorConsumerService(BaseService):
         return catalog_request
 
     def get_edr_negotiation_request(self, counter_party_id: str, counter_party_address: str, target: str,
-                                    policy: dict, protocol: str = DSP_0_8, context: dict = ["https://w3id.org/tractusx/policy/v1.0.0","http://www.w3.org/ns/odrl.jsonld",{VOCAB_KEY: EDC_NAMESPACE}]) -> BaseContractNegotiationModel:
+                                    policy: dict, protocol: str = DSP_0_8, context: dict = None) -> BaseContractNegotiationModel:
         """
         Builds the EDR Negotiation Request.
 
@@ -316,6 +316,9 @@ class BaseConnectorConsumerService(BaseService):
         if (offer_id is None):
             raise ValueError("[Connector Service]: Policy offer id is not available!")
 
+        if context is None:
+            context = ["https://w3id.org/tractusx/policy/v1.0.0", "http://www.w3.org/ns/odrl.jsonld", {VOCAB_KEY: EDC_NAMESPACE}]
+
         return ModelFactory.get_contract_negotiation_model(
             dataspace_version=self.dataspace_version,  # version is to be included in the BaseService class  
             context=context,
@@ -329,7 +332,10 @@ class BaseConnectorConsumerService(BaseService):
 
         ## Simple catalog request without filter
 
-    def get_catalog_request(self, counter_party_id: str, counter_party_address: str, context={"edc": EDC_NAMESPACE,"odrl": "http://www.w3.org/ns/odrl/2/","dct": "https://purl.org/dc/terms/"}) -> BaseCatalogModel:
+    def get_catalog_request(self, counter_party_id: str, counter_party_address: str, context=None) -> BaseCatalogModel:
+        if context is None:
+            context = {"edc": EDC_NAMESPACE, "odrl": "http://www.w3.org/ns/odrl/2/", "dct": "https://purl.org/dc/terms/"}
+
         return ModelFactory.get_catalog_model(
             dataspace_version=self.dataspace_version,
             context=context,
