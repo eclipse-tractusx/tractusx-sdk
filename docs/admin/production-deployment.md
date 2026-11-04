@@ -56,7 +56,7 @@ For deployable microservices built on the SDK, see [tractusx-sdk-services](https
 | **Connection manager** | Use `PostgresConnectionManager` for multi-process or containerized deployments |
 | **Transport security** | All EDC, DTR, and IAM URLs must use `https://` |
 | **Secrets** | All credentials injected via environment variables or a secrets manager |
-| **Logging** | Set `verbose=False`; configure log level to `INFO` or `WARNING` in production |
+| **Logging** | Leave the `tractusx_sdk` logger at `INFO` or `WARNING`; do not enable `DEBUG`. See [Logging and Error Handling](logging.md) |
 | **Protocol version** | Use `dataspace_version="saturn"` for new deployments targeting EDC 0.11.x+ |
 | **Dependency pinning** | Pin `tractusx-sdk` to a specific version in `requirements.txt` / `pyproject.toml` |
 

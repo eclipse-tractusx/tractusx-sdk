@@ -97,21 +97,21 @@ All communication between the SDK and external services must use **HTTPS**. Neve
 
 ## Logging and Data Exposure
 
-The `verbose=True` option in `ServiceFactory` logs full HTTP request and response bodies. This can expose:
+The SDK logs through the standard `logging` module and stays silent until your application configures it. What it writes depends on the level of the `tractusx_sdk` logger:
 
-- Authorization tokens
-- EDR endpoint URLs and access tokens
-- Contract negotiation details
-- Asset data
+- At `DEBUG` it logs the **request payloads** it sends (asset definitions, policies, contract definitions, catalog and negotiation requests), the raw discovery response, and the body of a failed catalog response. This can expose asset data, BPNs, policy and contract negotiation details.
+- At `INFO` and above it logs lifecycle events (identifiers and states), warnings and errors. The notification services also log the body of a failed notification response at `ERROR`.
+- The SDK does **not** log request headers, API keys or access tokens at any level.
 
-**Always set `verbose=False` in production.** Use it only in isolated development environments with non-sensitive data.
+**Never enable `DEBUG` for `tractusx_sdk` in production.** Use it only in isolated development environments with non-sensitive data, or route it to a restricted log.
 
 ```python
-service = ServiceFactory.get_connector_consumer_service(
-    ...,
-    verbose=False,  # must be False in production
-)
+import logging
+
+logging.getLogger("tractusx_sdk").setLevel(logging.WARNING)   # production
 ```
+
+To capture the exact HTTP exchange for troubleshooting, with sensitive headers masked by default, use [Request Tracing](../core-concepts/sdk-architecture/request-tracing.md) instead of `DEBUG`. See [Logging and Error Handling](logging.md) for the full guide.
 
 ## NOTICE
 
