@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See also the overarching [CHANGELOG.md](https://eclipse-tractusx.github.io/changelog) for Tractus-X releases.
 
+## [Unreleased]
+
+### Changed
+
+- chore: allow current FastAPI and uvicorn releases. The dependency ranges were `fastapi (>=0.143.2,<0.144.0)` and `uvicorn (>=0.30.0,<0.36.1)`, so an application on a newer FastAPI (for example 0.162 with Starlette 1.10 and uvicorn 0.54) could not install the SDK without overriding its pins. They are now `fastapi (>=0.143.2,<1.0.0)` and `uvicorn (>=0.30.0,<1.0.0)`. The lock file keeps the approved versions; the test suite passes with both the locked versions and FastAPI 0.162.0, Starlette 1.10.0 and uvicorn 0.54.0
+
 ## [0.8.2] - 2026-08-18
 
 ### Added
