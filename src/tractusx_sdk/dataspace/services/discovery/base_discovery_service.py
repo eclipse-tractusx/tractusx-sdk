@@ -126,8 +126,22 @@ class BaseDiscoveryService(BaseService, ABC):
                     if logger.isEnabledFor(logging.INFO):
                         valid_until = datetime.datetime.fromtimestamp(current_time + self.cache_timeout_seconds)
                         service_name = self.get_service_name()
-                        logger.info("[%s] Updated cache with new discovery URL for key '%s': %s", service_name, discovery_key, url)
-                        logger.info("[%s] Cache status: %d URL(s) cached, valid until %s", service_name, len(self.discovery_cache), valid_until.strftime('%Y-%m-%d %H:%M:%S'))
+                        logger.info(
+                            "[%s] Updated cache with new discovery URL for key '%s': %s",
+                            service_name,
+                            discovery_key,
+                            url,
+                        )
+                        logger.info(
+                            "[%s] Cache status: %d URL(s) cached, valid until %s",
+                            service_name,
+                            len(self.discovery_cache),
+                            valid_until.strftime('%Y-%m-%d %H:%M:%S'),
+                        )
+                elif not entry:
+                    raise ValueError(
+                        f"[{self.get_service_name()}] Discovery finder returned no URL for key '{discovery_key}'"
+                    )
                     
             except Exception as e:
                 # If we have a cached entry, preserve it and continue using it
