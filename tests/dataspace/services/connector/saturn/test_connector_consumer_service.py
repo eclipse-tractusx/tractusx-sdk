@@ -1080,6 +1080,7 @@ class TestSaturnConnectorConsumerService(TestCase):
             dsp_kwargs = mock_dsp.call_args[1]
             self.assertEqual(dsp_kwargs["bpnl"], bpnl)
             self.assertEqual(dsp_kwargs["counter_party_address"], counter_party_address)
+            self.assertIsNone(dsp_kwargs["policies"])
 
     def test_do_get_by_dct_type_with_bpnl_missing_dataplane(self):
         """Test do_get_by_dct_type_with_bpnl raises RuntimeError when DSP returns no dataplane info."""

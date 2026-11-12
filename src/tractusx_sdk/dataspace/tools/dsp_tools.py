@@ -580,7 +580,10 @@ class DspTools:
     """
     
     @staticmethod
-    def filter_assets_and_policies(catalog:dict, allowed_policies:list=[]) -> list[AssetPolicySelection]:
+    def filter_assets_and_policies(
+        catalog: dict,
+        allowed_policies: list[dict[str, Any]] | None = _UNSET_ALLOWED_POLICIES,
+    ) -> list[AssetPolicySelection]:
         """
         Method to select a asset and policy from a DCAT Catalog.
 
@@ -589,6 +592,9 @@ class DspTools:
         @raises PolicyMismatchError: No offer carried an acceptable policy. It carries the
             catalog, the allow-list and the ``PolicyEvaluation`` of every rejected policy.
         """
+
+        if allowed_policies is _UNSET_ALLOWED_POLICIES:
+            allowed_policies = []
 
         if catalog is None:
             raise EmptyCatalogError("It was not possible to get the policy, because the catalog is empty!")
