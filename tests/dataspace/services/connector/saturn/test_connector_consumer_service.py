@@ -533,6 +533,7 @@ class TestSaturnConnectorConsumerService(TestCase):
                 counter_party_address="https://provider.example.com",
                 filter_expression=[{"key": "test"}],
             )
+            self.mock_connection_manager.get_connection_transfer_id.assert_not_called()
     
     def test_get_transfer_id_cached(self):
         """Test get_transfer_id with cached transfer ID."""
@@ -553,17 +554,6 @@ class TestSaturnConnectorConsumerService(TestCase):
         
         self.assertEqual(result, cached_transfer_id)
         self.mock_connection_manager.get_connection_transfer_id.assert_called_once()
-
-    def test_get_transfer_id_without_policies_fails_closed(self):
-        """An omitted policy list must not accept a provider policy automatically."""
-        with self.assertRaises(ValueError):
-            self.service.get_transfer_id(
-                counter_party_id="BPNL000000000001",
-                counter_party_address="https://provider.example.com",
-                filter_expression=[{"key": "test"}],
-            )
-
-        self.mock_connection_manager.get_connection_transfer_id.assert_not_called()
 
     def test_get_transfer_id_omitted_policies_fails_closed(self):
         """An explicit None retains the opt-in catalog policy selection."""
