@@ -101,21 +101,24 @@ class BaseConnectorProviderService(BaseService):
         dct_subject: str = None,
         version: str = "3.0",
         semantic_id: str = None,
-        proxy_params: dict = {
-            "proxyQueryParams": "false",
-            "proxyPath": "true",
-            "proxyMethod": "true",
-            "proxyBody": "false"
-        },
+        proxy_params: dict = None,
         headers: dict = None,
         properties: dict = None,
         private_properties: dict = None,
         oauth2_config: dict = None,
-        context: dict = None,
+        context: dict | list | str | None = None,
         data_address_type: str = "HttpData",
         **kwargs
     ):
         logger.info("Creating asset %s at %s.", asset_id, base_url)
+
+        if proxy_params is None:
+            proxy_params = {
+                "proxyQueryParams": "false",
+                "proxyPath": "true",
+                "proxyMethod": "true",
+                "proxyBody": "false"
+            }
 
         # Use provided context or default
         if context is None:
@@ -127,7 +130,15 @@ class BaseConnectorProviderService(BaseService):
             }
 
         if semantic_id is not None:
-            context = {**context, "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/"}
+            semantic_context = {
+                "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/"
+            }
+            if isinstance(context, dict):
+                context = {**context, **semantic_context}
+            elif isinstance(context, list):
+                context = [*context, semantic_context]
+            elif isinstance(context, str):
+                context = [context, semantic_context]
 
         data_address = {
             "@type": "DataAddress",
@@ -262,9 +273,9 @@ class BaseConnectorProviderService(BaseService):
         self,
         policy_id: str,
         context: dict | list[dict] = None,
-        permissions: dict | list[dict] = [],
-        prohibitions: dict | list[dict] = [],
-        obligations: dict | list[dict] = [],
+        permissions: dict | list[dict] = None,
+        prohibitions: dict | list[dict] = None,
+        obligations: dict | list[dict] = None,
         **kwargs
     ) -> dict:
         logger.info("Creating new policy with ID %s.", policy_id)
