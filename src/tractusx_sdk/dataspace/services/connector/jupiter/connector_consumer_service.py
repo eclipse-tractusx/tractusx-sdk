@@ -22,6 +22,7 @@
 #################################################################################
 
 from requests import Response
+from collections.abc import Sequence
 from ..base_connector_consumer import BaseConnectorConsumerService
 
 
@@ -49,7 +50,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_id: str,
         counter_party_address: str,
         filter_expression: list[dict],
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         protocol: str = DSP_0_8,
@@ -93,11 +94,11 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         verify: bool = False,
-        headers: dict = {},
+        headers: dict = None,
         timeout: int = None,
         params: dict = None,
         allow_redirects: bool = False,
@@ -160,7 +161,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         content_type: str = "application/json",
         json=None,
         data=None,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         verify: bool = False,
@@ -230,7 +231,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         content_type: str = "application/json",
         json=None,
         data=None,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         verify: bool = False,

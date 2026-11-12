@@ -105,10 +105,10 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
             True if the connection was deleted successfully.
         """
         # Delegate to the base memory manager and trigger persistence in the background.
-        super().delete_connection(counter_party_id, counter_party_address, query_checksum, policy_checksum)
-
-        self._trigger_save()
-        return True
+        deleted = super().delete_connection(counter_party_id, counter_party_address, query_checksum, policy_checksum)
+        if deleted:
+            self._trigger_save()
+        return deleted
 
     def clear_connections_by_party(self, counter_party_id_substring: str) -> int:
         """
