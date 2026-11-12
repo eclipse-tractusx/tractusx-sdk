@@ -20,6 +20,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+import pytest
+from pydantic import ValidationError
+
 from tractusx_sdk.industry.models.aas.v3 import ProfileEnum, ServiceDescription
 
 # Self-description example from CX-0002 (Digital Twins in Catena-X), which mixes
@@ -48,3 +51,19 @@ def test_known_profile_still_equals_enum_member():
     description = ServiceDescription(profiles=[profile])
 
     assert description.profiles[0] == ProfileEnum.DISCOVERYSERVICESPECIFICATION_SSP_001
+
+
+def test_profiles_default_to_none():
+    assert ServiceDescription().profiles is None
+
+
+def test_non_string_profile_is_still_rejected():
+    with pytest.raises(ValidationError):
+        ServiceDescription(profiles=[1])
+
+
+def test_enum_member_input_is_coerced_to_plain_string():
+    # Items are plain str, not enum members.
+    description = ServiceDescription(profiles=[ProfileEnum.DISCOVERYSERVICESPECIFICATION_SSP_001])
+
+    assert type(description.profiles[0]) is str
