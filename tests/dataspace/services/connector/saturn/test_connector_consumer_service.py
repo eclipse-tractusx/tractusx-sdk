@@ -555,7 +555,7 @@ class TestSaturnConnectorConsumerService(TestCase):
 
         self.mock_connection_manager.get_connection_transfer_id.assert_not_called()
 
-    def test_get_transfer_id_with_explicit_none_auto_selects_policy(self):
+    def test_get_transfer_id_omitted_policies_fails_closed(self):
         """An explicit None retains the opt-in catalog policy selection."""
         self.mock_connection_manager.get_connection_transfer_id.return_value = "cached-transfer-123"
 
