@@ -247,7 +247,13 @@ class TestNegotiateNotificationAccess:
         call_kwargs = mock_connector_consumer.negotiate_and_transfer.call_args[1]
         assert call_kwargs["policies"] == policies
 
-    def test_negotiate_notification_access_uses_supported_connector_arguments(self, mock_connector_consumer):
+    @pytest.mark.parametrize(
+        ("max_retries", "retry_timeout"),
+        [(3, 42), (6, 10), (3, None), (None, 10)],
+    )
+    def test_negotiate_notification_access_warns_and_uses_supported_connector_arguments(
+        self, mock_connector_consumer, max_retries, retry_timeout
+    ):
         """Test negotiation only forwards arguments supported by the connector."""
         filter_expression = {"operandLeft": "dct:type", "operator": "=", "operandRight": "event-api"}
         mock_connector_consumer.get_filter_expression.return_value = filter_expression
@@ -257,14 +263,15 @@ class TestNegotiateNotificationAccess:
             connector_consumer=mock_connector_consumer,
         )
 
-        service.negotiate_notification_access(
-            provider_bpn="BPNL000000000002",
-            provider_dsp_url="https://provider.com/dsp",
-            policies=[],
-            max_retries=3,
-            retry_timeout=42,
-            dct_type="event-api",
-        )
+        with pytest.warns(DeprecationWarning, match="max_retries"):
+            service.negotiate_notification_access(
+                provider_bpn="BPNL000000000002",
+                provider_dsp_url="https://provider.com/dsp",
+                policies=[],
+                max_retries=max_retries,
+                retry_timeout=retry_timeout,
+                dct_type="event-api",
+            )
 
         mock_connector_consumer.negotiate_and_transfer.assert_called_once_with(
             counter_party_id="BPNL000000000002",

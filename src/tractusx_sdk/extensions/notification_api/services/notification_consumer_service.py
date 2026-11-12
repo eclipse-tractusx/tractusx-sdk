@@ -31,6 +31,7 @@ negotiate contracts, obtain EDR tokens, and send notifications through the datas
 """
 
 import logging
+import warnings
 from typing import Any, Dict, List, Optional
 
 from tractusx_sdk.dataspace.services.connector.base_connector_consumer import BaseConnectorConsumerService
@@ -172,8 +173,8 @@ class NotificationConsumerService(BaseService):
         provider_bpn: str,
         provider_dsp_url: str,
         policies: Optional[List[Dict]] = None,
-        max_retries: int = 6,
-        retry_timeout: int = 10,
+        max_retries: Optional[int] = None,
+        retry_timeout: Optional[int] = None,
         dct_type: str = DIGITAL_TWIN_EVENT_API_TYPE,
     ) -> Dict[str, Any]:
         """
@@ -189,8 +190,8 @@ class NotificationConsumerService(BaseService):
             provider_bpn: Business Partner Number of the provider
             provider_dsp_url: DSP endpoint URL of the provider connector
             policies: Optional list of allowed policies for negotiation
-            max_retries: This legacy option is accepted but has no effect on connector retries.
-            retry_timeout: The connector controls retry timing; this value remains accepted for compatibility.
+            max_retries: Deprecated and ignored. Will be removed in a future release.
+            retry_timeout: Deprecated and ignored. Will be removed in a future release.
             dct_type: DCT type to filter by (default: DigitalTwinEventAPI)
             
         Returns:
@@ -199,6 +200,14 @@ class NotificationConsumerService(BaseService):
         Raises:
             NotificationError: If negotiation fails
         """
+        if max_retries is not None or retry_timeout is not None:
+            warnings.warn(
+                "'max_retries' and 'retry_timeout' are deprecated and ignored; "
+                "they will be removed in a future release.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         connector = self._ensure_connector_consumer()
         
         logger.info("Negotiating notification access with provider %s", provider_bpn)
