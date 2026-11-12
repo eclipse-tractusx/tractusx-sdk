@@ -24,6 +24,7 @@
 from unittest import mock, TestCase, main
 import logging
 from requests import Response
+from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service import ConnectorConsumerService
 from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
@@ -523,6 +524,15 @@ class TestSaturnConnectorConsumerService(TestCase):
             )
             
             self.assertIsNone(result)
+
+    def test_get_transfer_id_without_policies_fails_closed(self):
+        """Omitting policies must reject the transfer instead of auto-selecting one."""
+        with self.assertRaisesRegex(ValueError, "No policy has been selected"):
+            self.service.get_transfer_id(
+                counter_party_id="BPNL000000000001",
+                counter_party_address="https://provider.example.com",
+                filter_expression=[{"key": "test"}],
+            )
     
     def test_get_transfer_id_cached(self):
         """Test get_transfer_id with cached transfer ID."""
@@ -640,6 +650,41 @@ class TestSaturnConnectorConsumerService(TestCase):
             
             with self.assertRaises(ConnectionError):
                 self.service.discover_connector_protocol(bpnl=bpnl)
+
+    def test_discover_connector_protocol_missing_response(self):
+        """Test discover_connector_protocol when the HTTP client returns no response."""
+        bpnl = "BPNL000000000001"
+
+        with mock.patch.object(self.service, '_connector_discovery_controller') as mock_discovery, \
+             mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.ModelFactory') as mock_factory:
+
+            mock_discovery.get_discover.return_value = None
+            mock_factory.get_connector_discovery_model.return_value = mock.Mock()
+
+            with self.assertRaisesRegex(
+                ConnectionError,
+                "It was not possible to perform connector discovery with the EDC provider! No response received"
+            ):
+                self.service.discover_connector_protocol(bpnl=bpnl)
+
+    def test_discover_connector_protocol_propagates_transport_error(self):
+        """Test discover_connector_protocol translates request failures."""
+        bpnl = "BPNL000000000001"
+        transport_error = RequestsConnectionError("connection failed")
+
+        with mock.patch.object(self.service, '_connector_discovery_controller') as mock_discovery, \
+             mock.patch('tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service.ModelFactory') as mock_factory:
+
+            mock_discovery.get_discover.side_effect = transport_error
+            mock_factory.get_connector_discovery_model.return_value = mock.Mock()
+
+            with self.assertRaisesRegex(
+                ConnectionError,
+                "It was not possible to perform connector discovery with the EDC provider! Network error: connection failed"
+            ) as raised:
+                self.service.discover_connector_protocol(bpnl=bpnl)
+
+            self.assertIs(raised.exception.__cause__, transport_error)
     
     def _assert_get_discovery_info(self, discovery_info, expected):
         with mock.patch.object(self.service, 'discover_connector_protocol') as mock_discover:
