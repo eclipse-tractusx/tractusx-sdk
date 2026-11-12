@@ -36,6 +36,7 @@ from ....models.connector.saturn.catalog_model import CatalogModel
 import hashlib
 from typing import Any
 from requests import Response
+from requests.exceptions import RequestException
 
 
 _DEFAULT_POLICIES: Any = object()
@@ -447,15 +448,23 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
         if verify is None:
             verify = getattr(self, 'verify_ssl', True)
-        response: Response = self.connector_discovery.get_discover(
-            ModelFactory.get_connector_discovery_model(dataspace_version=self.dataspace_version,
-                                                       bpnl=bpnl,
-                                                       counter_party_address=counter_party_address),
-            verify=verify
-        )
-        if response is None or response.status_code != 200:
+        try:
+            response: Response = self.connector_discovery.get_discover(
+                ModelFactory.get_connector_discovery_model(dataspace_version=self.dataspace_version,
+                                                           bpnl=bpnl,
+                                                           counter_party_address=counter_party_address),
+                verify=verify
+            )
+        except RequestException as exc:
             raise ConnectionError(
-                f"[Connector Service]: It was not possible to get the catalog from the EDC provider! Response code: [{response.status_code}]")
+                f"[Connector Service]: It was not possible to perform connector discovery with the EDC provider! Network error: {exc}"
+            ) from exc
+        if response is None:
+            raise ConnectionError(
+                "[Connector Service]: It was not possible to perform connector discovery with the EDC provider! No response received")
+        if response.status_code != 200:
+            raise ConnectionError(
+                f"[Connector Service]: It was not possible to perform connector discovery with the EDC provider! Response code: [{response.status_code}]")
         return response.json()
 
 
