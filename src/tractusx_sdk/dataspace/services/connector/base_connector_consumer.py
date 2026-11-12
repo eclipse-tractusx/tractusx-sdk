@@ -1166,7 +1166,7 @@ class BaseConnectorConsumerService(BaseService):
             f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] has failed! The EDR entry was not found after {max_wait}s!")
 
     def negotiate_and_transfer(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
-                              policies: Sequence[dict] | None = None, max_wait: int = 60, poll_interval: int = 1,
+                              policies: Sequence[dict] | None = (), max_wait: int = 60, poll_interval: int = 1,
                                protocol: str = None, catalog_context: dict = None, negotiation_context: dict = None) -> dict:
         """
         Performs the full DSP exchange: catalog lookup → contract negotiation → EDR entry retrieval.
