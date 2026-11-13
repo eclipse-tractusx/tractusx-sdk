@@ -96,7 +96,7 @@ class DiscoveryFinderService(BaseService):
         
         data = response.json()
 
-        if(not(self.endpoints_key in data) or len(data[self.endpoints_key]) == 0):
+        if(self.endpoints_key not in data or len(data[self.endpoints_key]) == 0):
             logger.error("[Discovery Finder Service] The discovery finder returned no endpoints for %s", keys,
                          extra=log_extra(url=self.url, operation="discovery.find_urls"))
             raise DiscoveryEndpointNotFoundError("[EDC Discovery Service] No endpoints were found in the discovery service for this keys!")
