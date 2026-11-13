@@ -30,6 +30,7 @@ from fastapi import Request, HTTPException
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from tractusx_sdk._logging_fields import log_extra, safe_url
+from tractusx_sdk._logging_helpers import log_failure
 
 # Security: this module handles client secrets, access tokens and Authorization headers.
 # None of them is ever logged, not even at DEBUG: only the realm, the (sanitised) server URL,
@@ -77,8 +78,8 @@ class OAuth2Manager(AuthManagerInterface):
         try:
             well_known = self.keycloak_openid.well_known()
         except Exception as exception:
-            logger.error("Unable to reach the identity provider at %s (realm %s): %s", safe_url(auth_url), realm,
-                         type(exception).__name__, extra=log_extra(url=auth_url, operation="oauth2.connect"))
+            log_failure(logger, "Unable to reach the identity provider at %s, realm %s (%s)", exception, safe_url(auth_url), realm,
+                        url=auth_url, operation="oauth2.connect")
             raise
 
         if (not well_known):
@@ -102,8 +103,7 @@ class OAuth2Manager(AuthManagerInterface):
         try:
             token:dict=self.keycloak_openid.token(self.clientid, self.clientsecret, grant_type=["client_credentials"], scope=scope)
         except Exception as exception:
-            logger.error("The identity provider rejected the token request: %s", type(exception).__name__,
-                         extra=log_extra(operation="oauth2.get_token"))
+            log_failure(logger, "The identity provider rejected the token request (%s)", exception, operation="oauth2.get_token")
             raise
         if(token is None):
             logger.error("The identity provider returned no token, the credentials might be incorrect",
@@ -149,8 +149,8 @@ class OAuth2Manager(AuthManagerInterface):
         try:
             user_info = self.keycloak_openid.userinfo(token)
         except Exception as exception:
-            logger.warning("Request rejected: the identity provider could not validate the bearer credential (%s)",
-                           type(exception).__name__, extra=log_extra(operation="oauth2.is_authenticated"))
+            log_failure(logger, "Request rejected: the identity provider could not validate the bearer credential (%s)", exception,
+                        level=logging.WARNING, operation="oauth2.is_authenticated")
             raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid or expired token.")
 
         authenticated = bool(user_info)

@@ -38,6 +38,7 @@ import requests
 from fastapi.responses import JSONResponse, Response
 
 from tractusx_sdk._logging_fields import http_status, log_extra, safe_url
+from tractusx_sdk._logging_helpers import log_failure
 
 from .tracing import traced_http
 
@@ -76,9 +77,9 @@ def _logged_http(method: str):
                 response = func(*args, **kwargs)
             except Exception as error:
                 elapsed_ms = (time.perf_counter() - started) * 1000
-                logger.debug(
-                    "HTTP %s %s failed after %.0f ms (%s)", method, url, elapsed_ms, type(error).__name__,
-                    extra=log_extra(http_method=method, url=url, elapsed_ms=round(elapsed_ms)),
+                log_failure(
+                    logger, "HTTP %s %s failed after %.0f ms (%s)", error, method, url, elapsed_ms,
+                    level=logging.DEBUG, http_method=method, url=url, elapsed_ms=round(elapsed_ms),
                 )
                 raise
 
@@ -222,15 +223,13 @@ class HttpTools:
     
     @staticmethod
     def proxy(response: requests.Response) -> Response:
-        media_type = response.headers.get('content-type')
-        if media_type is None:
+        if 'content-type' not in response.headers:
             logger.debug("The proxied response has no content-type, defaulting to application/json")
-            media_type = 'application/json'
         return Response(
             content=response.content,
             status_code=response.status_code,
             headers=dict(response.headers),
-            media_type=media_type
+            media_type=response.headers.get('content-type', 'application/json')
         )
         
     

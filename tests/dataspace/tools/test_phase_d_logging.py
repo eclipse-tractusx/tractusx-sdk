@@ -34,7 +34,7 @@ from tractusx_sdk.dataspace.tools.dsp_tools import DspTools
 from tractusx_sdk.dataspace.tools.encoding_tools import decode_base64_url_safe, encode_as_base64_url_safe
 from tractusx_sdk.dataspace.tools.operators import op
 from tractusx_sdk.dataspace.tools.tracing import Tracer
-from tractusx_sdk.dataspace.tools.validate_submodels import MAX_LOGGED_ISSUES, json_validator, submodel_schema_finder
+from tractusx_sdk.dataspace.tools.validate_submodels import _MAX_LOGGED_ISSUES, json_validator, submodel_schema_finder
 from tractusx_sdk.exceptions import (
     EmptyCatalogError, InvalidSemanticIdError, PolicyMismatchError, SchemaNotFoundError, SubmodelValidationError,
 )
@@ -207,10 +207,10 @@ class TestJsonValidatorLogging:
     def test_a_long_list_of_violations_is_cut(self, caplog):
         schema = {"type": "array", "items": {"type": "integer"}}
         with caplog.at_level(logging.DEBUG):
-            result = json_validator(schema, ["x"] * (MAX_LOGGED_ISSUES + 5), raise_on_error=False)
-        assert len(result.issues) == MAX_LOGGED_ISSUES + 5
+            result = json_validator(schema, ["x"] * (_MAX_LOGGED_ISSUES + 5), raise_on_error=False)
+        assert len(result.issues) == _MAX_LOGGED_ISSUES + 5
         messages = [r.getMessage() for r in _records(caplog, VALIDATE)]
-        assert sum(m.startswith("Validation issue at") for m in messages) == MAX_LOGGED_ISSUES
+        assert sum(m.startswith("Validation issue at") for m in messages) == _MAX_LOGGED_ISSUES
         assert "... and 5 more validation issue(s)" in messages
         assert any("returned in the result" in m for m in messages)
 

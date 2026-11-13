@@ -94,7 +94,7 @@ class TestTranslatorLogging:
             with pytest.raises(SchemaTranslationError):
                 translator.schema_to_jsonld(SEMANTIC_ID)
         records = _records(caplog, TRANSLATOR)
-        assert any("could not be fetched for the translation: SchemaNotFoundError" in r.getMessage() for r in records)
+        assert any("could not be fetched for the translation (SchemaNotFoundError)" in r.getMessage() for r in records)
         assert any(r.getMessage().startswith("Schema not provided, attempting to fetch") for r in records)
 
     def test_fetching_a_schema_logs_the_outcome_and_a_failure_still_returns_none(self, translator, caplog):

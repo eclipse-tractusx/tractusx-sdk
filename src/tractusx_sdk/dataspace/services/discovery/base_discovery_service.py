@@ -27,6 +27,7 @@ import logging
 from abc import ABC, abstractmethod
 
 from tractusx_sdk._logging_fields import log_extra, safe_url
+from tractusx_sdk._logging_helpers import log_failure
 from tractusx_sdk.dataspace.managers.oauth2_manager import OAuth2Manager
 from tractusx_sdk.dataspace.services.discovery import DiscoveryFinderService
 from tractusx_sdk.dataspace.services.service import BaseService
@@ -142,13 +143,13 @@ class BaseDiscoveryService(BaseService, ABC):
                 # If we have a cached entry, preserve it and continue using it
                 if entry:
                     # Log the error but continue with cached URL
-                    logger.warning("[%s] Failed to refresh discovery URL, using cached version (%s)", self.get_service_name(), type(e).__name__,
-                                   extra=log_extra(url=entry["url"], operation="discovery.refresh"))
+                    log_failure(logger, "[%s] Failed to refresh discovery URL, using cached version (%s)", e, self.get_service_name(),
+                                level=logging.WARNING, url=entry["url"], operation="discovery.refresh")
                     return entry["url"]
                 else:
                     # No cached entry available, re-raise the exception
-                    logger.error("[%s] Failed to get the discovery URL for key '%s' and there is no cached one to fall back to (%s)",
-                                 self.get_service_name(), discovery_key, type(e).__name__, extra=log_extra(operation="discovery.refresh"))
+                    log_failure(logger, "[%s] Failed to get the discovery URL for key '%s' and there is no cached one to fall back to (%s)", e,
+                                self.get_service_name(), discovery_key, operation="discovery.refresh")
                     raise
         else:
             # Using valid cached URL

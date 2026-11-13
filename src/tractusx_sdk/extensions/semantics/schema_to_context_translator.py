@@ -32,6 +32,7 @@ import hashlib
 import logging
 from typing import Dict, List, Optional, Tuple, Any
 from tractusx_sdk._logging_fields import log_extra
+from tractusx_sdk._logging_helpers import log_failure
 from tractusx_sdk.dataspace.tools import op
 from tractusx_sdk.dataspace.tools.validate_submodels import SchemaLookupResult, submodel_schema_finder
 from tractusx_sdk.exceptions import InvalidSemanticIdError, SchemaNotFoundError, SchemaTranslationError
@@ -152,8 +153,8 @@ class SammSchemaContextTranslator:
             return result.schema
                 
         except Exception as e:
-            logger.error("Error fetching schema for %s (%s)", semantic_id, type(e).__name__,
-                         extra=log_extra(schema_urn=semantic_id, operation="semantics.fetch"))
+            log_failure(logger, "Error fetching schema for %s (%s)", e, semantic_id,
+                        schema_urn=semantic_id, operation="semantics.fetch")
             return None
 
     def _find_schema(self, semantic_id: str, link_core: str) -> SchemaLookupResult:
@@ -205,8 +206,8 @@ class SammSchemaContextTranslator:
                 raise
             except Exception as e:
                 # The finder logged the cause: this adds which semantic id the translation was after
-                logger.error("The schema of '%s' could not be fetched for the translation: %s", semantic_id, type(e).__name__,
-                             extra=log_extra(schema_urn=semantic_id, operation="semantics.prepare"))
+                log_failure(logger, "The schema of '%s' could not be fetched for the translation (%s)", e, semantic_id,
+                            schema_urn=semantic_id, operation="semantics.prepare")
                 raise SchemaNotFoundError(f"Could not fetch schema for semantic ID: {semantic_id}") from e
         
         self.baseSchema = copy.copy(schema)
@@ -321,8 +322,8 @@ class SammSchemaContextTranslator:
             raise
         except Exception as e:
             # The original failure was logged where it happened (with its traceback): this says which semantic id it was for
-            logger.error("The translation of '%s' into a flattened JSON-LD context failed: %s", semantic_id, type(e).__name__,
-                         extra=log_extra(schema_urn=semantic_id, operation="semantics.schema_to_jsonld"))
+            log_failure(logger, "The translation of '%s' into a flattened JSON-LD context failed (%s)", e, semantic_id,
+                        schema_urn=semantic_id, operation="semantics.schema_to_jsonld")
             raise SchemaTranslationError("It was not possible to create flattened jsonld schema") from e
 
     def schema_to_jsonld_nested(self, semantic_id: str, schema: Optional[Dict[str, Any]] = None, link_core: str = 'https://raw.githubusercontent.com/eclipse-tractusx/sldt-semantic-models/main/',  aspect_prefix:str = "cx") -> Dict[str, Any]:
@@ -398,8 +399,8 @@ class SammSchemaContextTranslator:
             raise
         except Exception as e:
             # The original failure was logged where it happened (with its traceback): this says which semantic id it was for
-            logger.error("The translation of '%s' into a nested JSON-LD context failed: %s", semantic_id, type(e).__name__,
-                         extra=log_extra(schema_urn=semantic_id, operation="semantics.schema_to_jsonld_nested"))
+            log_failure(logger, "The translation of '%s' into a nested JSON-LD context failed (%s)", e, semantic_id,
+                        schema_urn=semantic_id, operation="semantics.schema_to_jsonld_nested")
             raise SchemaTranslationError("It was not possible to create jsonld schema") from e
     
 

@@ -84,6 +84,7 @@ logger = logging.getLogger(__name__)
 
 # The tracing swallows its own failures on purpose (it must never break the call it observes), and runs on
 # the hot path of every request. Each swallowed failure is therefore logged once per site, with its traceback.
+# The set is shared by all threads and not locked: a race can at worst log a site twice, which is harmless.
 _SWALLOWED_LOGGED: set = set()
 
 

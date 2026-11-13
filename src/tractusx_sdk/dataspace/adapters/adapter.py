@@ -27,6 +27,7 @@ import time
 import requests
 
 from tractusx_sdk._logging_fields import http_status, log_extra, safe_url
+from tractusx_sdk._logging_helpers import log_failure
 
 from ..tools import HttpTools
 from ..tools.tracing import TraceableMixin, Tracer, trace_call
@@ -225,9 +226,9 @@ class Adapter(TraceableMixin):
                 call.set_response(response)
         except Exception as error:
             elapsed_ms = (time.perf_counter() - started) * 1000
-            logger.debug(
-                "HTTP %s %s failed after %.0f ms (%s)", http_method, logged_url, elapsed_ms, type(error).__name__,
-                extra=log_extra(http_method=http_method, url=url, elapsed_ms=round(elapsed_ms)),
+            log_failure(
+                logger, "HTTP %s %s failed after %.0f ms (%s)", error, http_method, logged_url, elapsed_ms,
+                level=logging.DEBUG, http_method=http_method, url=url, elapsed_ms=round(elapsed_ms),
             )
             raise
 

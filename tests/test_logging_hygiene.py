@@ -48,6 +48,8 @@ ROOT_INIT = SRC_ROOT / "__init__.py"
 LOG_METHODS = {"debug", "info", "warning", "error", "critical", "exception", "log"}
 FLAG_NAMES = {"verbose", "debug", "logger"}
 APPLICATION_PREFIXES = ("extensions/tck/",)
+# Private helpers that log on behalf of the module that calls them, so they take the logger of the caller
+HELPER_MODULES = ("_logging_helpers.py",)
 
 
 def _modules(include_applications: bool = False):
@@ -181,10 +183,11 @@ class TestSourceConventions:
         assert offenders == []
 
     def test_no_verbose_debug_or_logger_parameters(self):
-        """No signature carries a flag for logging: the logging level decides. Only the TCK application takes a ``logger``."""
+        """No signature carries a flag for logging: the logging level decides. Only the TCK application and the private
+        helpers of the logging take a ``logger``."""
         offenders = []
         for path, tree in _modules(include_applications=True):
-            allowed = {"logger"} if _rel(path).startswith(APPLICATION_PREFIXES) else set()
+            allowed = {"logger"} if _rel(path).startswith(APPLICATION_PREFIXES + HELPER_MODULES) else set()
             for node in ast.walk(tree):
                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     args = node.args.posonlyargs + node.args.args + node.args.kwonlyargs
@@ -197,6 +200,7 @@ class TestSourceConventions:
         offenders = [
             _rel(path) for path, tree in _modules()
             if path != ROOT_INIT and _emits_log_records(tree) and not _defines_module_logger(tree)
+            and _rel(path) not in HELPER_MODULES
         ]
         assert offenders == []
 
@@ -222,6 +226,8 @@ class TestSourceConventions:
         """A ``logger`` parameter that is then logged through would silently replace the module logger."""
         offenders = []
         for path, tree in _modules():
+            if _rel(path) in HELPER_MODULES:
+                continue
             for function in ast.walk(tree):
                 if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     continue
@@ -283,11 +289,54 @@ class TestStructuredContext:
 
         offenders = []
         for path, tree in _modules():
+            if _rel(path) in HELPER_MODULES:
+                continue
             for call, value in self._extra_values(tree):
                 if isinstance(value, ast.Call):
                     unknown = [k.arg for k in value.keywords if k.arg is None or k.arg not in EXTRA_FIELDS]
                     if unknown:
                         offenders.append(f"{_rel(path)}:{call.lineno}:{unknown}")
+        assert offenders == []
+
+    @staticmethod
+    def _failure_calls(tree):
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "log_failure":
+                yield node
+
+    def test_log_failure_only_receives_documented_fields(self):
+        """The keywords of ``log_failure`` end up in ``log_extra``: they are the documented fields, or the level."""
+        from tractusx_sdk._logging_fields import EXTRA_FIELDS
+
+        offenders = []
+        for path, tree in _modules():
+            for call in self._failure_calls(tree):
+                unknown = [k.arg for k in call.keywords if k.arg is None or (k.arg != "level" and k.arg not in EXTRA_FIELDS)]
+                if unknown:
+                    offenders.append(f"{_rel(path)}:{call.lineno}:{unknown}")
+        assert offenders == []
+
+    def test_log_failure_is_never_given_secrets_nor_a_response_body(self):
+        """Past the logger, the message and the exception (whose type is all that is logged) come the format arguments."""
+        offenders = []
+        for path, tree in _modules():
+            for call in self._failure_calls(tree):
+                for argument in call.args[3:]:
+                    for node in ast.walk(argument):
+                        name = (node.id if isinstance(node, ast.Name) else node.attr if isinstance(node, ast.Attribute) else None)
+                        if name and (self.SECRET_NAME.search(name) or name in {"text", "content"}):
+                            offenders.append(f"{_rel(path)}:{call.lineno}:{name}")
+        assert offenders == []
+
+    def test_log_failure_is_given_the_module_logger_a_lazy_message_and_an_exception(self):
+        offenders = []
+        for path, tree in _modules():
+            for call in self._failure_calls(tree):
+                logger_ok = len(call.args) >= 3 and isinstance(call.args[0], ast.Name) and call.args[0].id == "logger"
+                message_ok = len(call.args) >= 3 and isinstance(call.args[1], ast.Constant) and isinstance(call.args[1].value, str) \
+                    and call.args[1].value.endswith("%s)")
+                if not (logger_ok and message_ok):
+                    offenders.append(f"{_rel(path)}:{call.lineno}")
         assert offenders == []
 
     def test_log_calls_are_never_given_secrets(self):

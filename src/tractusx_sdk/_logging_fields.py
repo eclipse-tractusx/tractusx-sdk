@@ -121,4 +121,4 @@ def log_extra(
 
 
 # The complete list of fields a log record of the SDK may carry
-EXTRA_FIELDS = frozenset(log_extra.__kwdefaults__)
+EXTRA_FIELDS = frozenset(log_extra.__kwdefaults__ or {})

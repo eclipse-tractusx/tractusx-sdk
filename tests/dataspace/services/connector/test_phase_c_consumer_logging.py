@@ -31,7 +31,7 @@ import pytest
 import tractusx_sdk.dataspace.services.connector.base_connector_consumer as bcc
 from tractusx_sdk.dataspace.managers.connection.memory import MemoryConnectionManager
 from tractusx_sdk.dataspace.services.connector.base_connector_consumer import (
-    BaseConnectorConsumerService, policy_id_of, should_log_poll,
+    BaseConnectorConsumerService, _policy_id_of, _should_log_poll,
 )
 from tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service import ConnectorConsumerService as SaturnConsumer
 from tractusx_sdk.exceptions import CatalogError, NegotiationError, TransferError
@@ -76,13 +76,13 @@ class TestHelpers:
 
     @pytest.mark.parametrize("attempt, expected", [(1, True), (2, False), (9, False), (10, True), (11, False), (20, True), (25, False)])
     def test_a_polling_loop_logs_its_first_attempt_and_then_one_in_ten(self, attempt, expected):
-        assert should_log_poll(attempt) is expected
+        assert _should_log_poll(attempt) is expected
 
     def test_policy_id_of(self):
-        assert policy_id_of(POLICY) == "policy-1"
-        assert policy_id_of({}) is None
-        assert policy_id_of(None) is None
-        assert policy_id_of("x") is None
+        assert _policy_id_of(POLICY) == "policy-1"
+        assert _policy_id_of({}) is None
+        assert _policy_id_of(None) is None
+        assert _policy_id_of("x") is None
 
 
 class TestConstructionAndEdr:
@@ -432,7 +432,7 @@ class TestOrchestration:
         failure = [r for r in _records(caplog) if "The DSP exchange" in r.getMessage()]
         assert len(failure) == 1
         record = failure[0]
-        assert record.levelno == logging.ERROR and record.exc_info is None and record.getMessage().endswith(": TimeoutError")
+        assert record.levelno == logging.ERROR and record.exc_info is None and record.getMessage().endswith("(TimeoutError)")
         assert f"failed at the {phase} phase" in record.getMessage()
         assert (getattr(record, "negotiation_id", None), getattr(record, "agreement_id", None),
                 getattr(record, "transfer_id", None)) == known
@@ -561,17 +561,18 @@ class TestSaturnConsumer:
         assert SECRET not in _dump(caplog) and SAFE_ADDRESS in _dump(caplog)
 
     def test_a_negotiation_is_logged_like_the_base_one(self, saturn, caplog):
+        # The response of the connector is read by the base class, which is where both flavours log it
         saturn._edr_controller.create.return_value = _response(200, {"@id": "neg-1"})
         with patch.object(saturn, "get_edr_negotiation_request", return_value=Mock(to_data=lambda: {})), caplog.at_level(logging.DEBUG):
             assert saturn.start_edr_negotiation("BPNL1", ADDRESS, "asset-1", POLICY) == "neg-1"
-        info = [r for r in _records(caplog, SATURN) if r.levelno == logging.INFO][0]
+        info = [r for r in _records(caplog, BASE) if r.levelno == logging.INFO][0]
         assert (info.negotiation_id, info.asset_id, info.policy_id) == ("neg-1", "asset-1", "policy-1")
         assert info.counter_party_address == SAFE_ADDRESS
 
         saturn._edr_controller.create.return_value = None
         with patch.object(saturn, "get_edr_negotiation_request", return_value=Mock(to_data=lambda: {})), caplog.at_level(logging.DEBUG):
             assert saturn.start_edr_negotiation("BPNL1", ADDRESS, "asset-1", POLICY) is None
-        assert _records(caplog, SATURN)[-1].levelno == logging.ERROR
+        assert _records(caplog, BASE)[-1].levelno == logging.ERROR
 
     def test_an_offer_without_an_id_is_logged_before_it_is_raised(self, saturn, caplog):
         with caplog.at_level(logging.DEBUG), pytest.raises(ValueError, match="Policy offer id"):

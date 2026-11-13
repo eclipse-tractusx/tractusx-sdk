@@ -39,6 +39,7 @@ from typing import Dict, List, Optional, Any
 from jsonschema import validate, ValidationError, SchemaError
 
 from tractusx_sdk._logging_fields import log_extra, safe_url
+from tractusx_sdk._logging_helpers import log_failure
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +98,8 @@ class SchemaValidator:
             
         except requests.exceptions.RequestException as e:
             # Kept in the report as data: the log says it as well, as the validation cannot go on without the schema
-            logger.warning("The schema could not be loaded from %s (%s)", safe_url(self.SCHEMA_URL), type(e).__name__,
-                           extra=log_extra(url=self.SCHEMA_URL, operation="geometry.load_schema"))
+            log_failure(logger, "The schema could not be loaded from %s (%s)", e, safe_url(self.SCHEMA_URL),
+                        level=logging.WARNING, url=self.SCHEMA_URL, operation="geometry.load_schema")
             self.add_error(f"Failed to load schema from URL: {e}")
             return False
         except json.JSONDecodeError as e:

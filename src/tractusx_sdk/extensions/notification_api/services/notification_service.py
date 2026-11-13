@@ -34,6 +34,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from tractusx_sdk._logging_fields import log_extra, safe_url
+from tractusx_sdk._logging_helpers import log_failure
 from tractusx_sdk.dataspace.services.connector.base_connector_provider import BaseConnectorProviderService
 from tractusx_sdk.dataspace.services.service import BaseService
 
@@ -201,8 +202,8 @@ class NotificationService(BaseService):
             
         except Exception as e:
             # Not a "not found": the lookup itself failed. It is treated as absent, so the asset will be created
-            logger.warning("The lookup of asset '%s' failed, treating it as not existing (%s)", asset_id, type(e).__name__,
-                           extra=log_extra(asset_id=asset_id, operation="notification.find_asset"))
+            log_failure(logger, "The lookup of asset '%s' failed, treating it as not existing (%s)", e, asset_id,
+                        level=logging.WARNING, asset_id=asset_id, operation="notification.find_asset")
             return None
     
     @classmethod

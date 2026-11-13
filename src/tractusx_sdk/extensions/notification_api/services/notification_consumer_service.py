@@ -34,6 +34,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from tractusx_sdk._logging_fields import log_extra, safe_url
+from tractusx_sdk._logging_helpers import log_failure
 from tractusx_sdk.dataspace.services.connector.base_connector_consumer import BaseConnectorConsumerService
 from tractusx_sdk.dataspace.tools import HttpTools
 from tractusx_sdk.dataspace.services.service import BaseService
@@ -171,9 +172,8 @@ class NotificationConsumerService(BaseService):
             return datasets
             
         except Exception as e:
-            logger.error("Failed to discover the notification assets of provider %s (%s)", provider_bpn, type(e).__name__,
-                         extra=log_extra(bpn=provider_bpn, counter_party_address=provider_dsp_url,
-                                         operation="notification.discover_assets"))
+            log_failure(logger, "Failed to discover the notification assets of provider %s (%s)", e, provider_bpn,
+                        bpn=provider_bpn, counter_party_address=provider_dsp_url, operation="notification.discover_assets")
             raise NotificationError(f"Failed to discover notification assets: {e}")
     
     def negotiate_notification_access(
@@ -241,9 +241,8 @@ class NotificationConsumerService(BaseService):
             return edr_entry
             
         except Exception as e:
-            logger.error("Failed to negotiate notification access with provider %s (%s)", provider_bpn, type(e).__name__,
-                         extra=log_extra(bpn=provider_bpn, counter_party_address=provider_dsp_url,
-                                         operation="notification.negotiate_access"))
+            log_failure(logger, "Failed to negotiate notification access with provider %s (%s)", e, provider_bpn,
+                        bpn=provider_bpn, counter_party_address=provider_dsp_url, operation="notification.negotiate_access")
             raise NotificationError(f"Failed to negotiate notification access: {e}")
     
     def get_notification_endpoint(
@@ -291,9 +290,8 @@ class NotificationConsumerService(BaseService):
             return endpoint, token
             
         except Exception as e:
-            logger.error("Failed to get the notification endpoint of provider %s (%s)", provider_bpn, type(e).__name__,
-                         extra=log_extra(bpn=provider_bpn, counter_party_address=provider_dsp_url,
-                                         operation="notification.get_endpoint"))
+            log_failure(logger, "Failed to get the notification endpoint of provider %s (%s)", e, provider_bpn,
+                        bpn=provider_bpn, counter_party_address=provider_dsp_url, operation="notification.get_endpoint")
             raise NotificationError(f"Failed to get notification endpoint: {e}")
     
     def send_notification(
@@ -361,9 +359,9 @@ class NotificationConsumerService(BaseService):
         except NotificationError:
             raise
         except Exception as e:
-            logger.error("Failed to send notification %s to provider %s (%s)", notification.header.message_id, provider_bpn, type(e).__name__,
-                         extra=log_extra(message_id=str(notification.header.message_id), bpn=provider_bpn,
-                                         counter_party_address=provider_dsp_url, operation="notification.send"))
+            log_failure(logger, "Failed to send notification %s to provider %s (%s)", e, notification.header.message_id, provider_bpn,
+                        message_id=str(notification.header.message_id), bpn=provider_bpn,
+                        counter_party_address=provider_dsp_url, operation="notification.send")
             raise NotificationError(f"Failed to send notification: {e}")
     
     def send_notification_to_endpoint(
@@ -462,10 +460,9 @@ class NotificationConsumerService(BaseService):
         except NotificationError:
             raise
         except Exception as e:
-            logger.error("Failed to send notification %s to endpoint %s (%s)", notification.header.message_id, safe_url(endpoint_url),
-                         type(e).__name__,
-                         extra=log_extra(message_id=str(notification.header.message_id), url=endpoint_url,
-                                         operation="notification.send_to_endpoint"))
+            log_failure(logger, "Failed to send notification %s to endpoint %s (%s)", e,
+                        notification.header.message_id, safe_url(endpoint_url),
+                        message_id=str(notification.header.message_id), url=endpoint_url, operation="notification.send_to_endpoint")
             raise NotificationError(f"Failed to send notification: {e}")
     
     def send_to_multiple_providers(
@@ -540,10 +537,9 @@ class NotificationConsumerService(BaseService):
                 
             except Exception as e:
                 # The failure is kept in the result, so the caller is not told through an exception: say it here
-                logger.warning("Sending notification %s to provider %s failed (%s)", notification.header.message_id, provider_bpn,
-                               type(e).__name__,
-                               extra=log_extra(message_id=str(notification.header.message_id), bpn=provider_bpn,
-                                               counter_party_address=provider_dsp_url, operation="notification.send_to_many"))
+                log_failure(logger, "Sending notification %s to provider %s failed (%s)", e, notification.header.message_id, provider_bpn,
+                            level=logging.WARNING, message_id=str(notification.header.message_id), bpn=provider_bpn,
+                            counter_party_address=provider_dsp_url, operation="notification.send_to_many")
                 results[provider_bpn] = {
                     "success": False,
                     "error": str(e),
