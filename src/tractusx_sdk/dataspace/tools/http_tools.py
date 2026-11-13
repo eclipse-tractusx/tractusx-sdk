@@ -59,7 +59,8 @@ def _logged_http(method: str):
     Headers, parameters and bodies are never logged. A response is logged at DEBUG, or at
     WARNING when the server failed (5xx): client errors (4xx) are an expected outcome for
     many callers, which are the ones that decide whether they matter. An exception raised
-    by the call is logged with its traceback before being re-raised unchanged.
+    by the call is logged at DEBUG by its type only, and re-raised unchanged: its message and
+    traceback quote the full URL, query string included.
 
     :param method: The HTTP method performed by the decorated function
     """
@@ -73,10 +74,10 @@ def _logged_http(method: str):
             started = time.perf_counter()
             try:
                 response = func(*args, **kwargs)
-            except Exception:
+            except Exception as error:
                 elapsed_ms = (time.perf_counter() - started) * 1000
-                logger.exception(
-                    "HTTP %s %s failed after %.0f ms", method, url, elapsed_ms,
+                logger.debug(
+                    "HTTP %s %s failed after %.0f ms (%s)", method, url, elapsed_ms, type(error).__name__,
                     extra=log_extra(http_method=method, url=url, elapsed_ms=round(elapsed_ms)),
                 )
                 raise

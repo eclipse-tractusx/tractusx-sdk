@@ -24,7 +24,7 @@
 """The log records of the connector consumer services (base and Saturn): the DSP state machine and the dataplane calls."""
 
 import logging
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -156,13 +156,13 @@ class TestCatalog:
         assert warning.bpn == "BPNL1" and "https://bad.example.com" in warning.getMessage()
         assert SECRET not in warning.getMessage() and SECRET not in str(warning.counter_party_address)
 
-    def test_the_parallel_fetch_logs_the_failure_with_its_traceback_and_re_raises_it(self, service, caplog):
+    def test_the_parallel_fetch_logs_the_failure_by_its_type_and_re_raises_it(self, service, caplog):
         catalogs = {}
         with patch.object(service, "get_catalog_with_filter", side_effect=ConnectionError("boom")), caplog.at_level(logging.DEBUG):
             with pytest.raises(ConnectionError):
                 service.get_catalog_with_filter_parallel("BPNL1", ADDRESS, [], catalogs=catalogs)
         failure = _records(caplog)[-1]
-        assert failure.levelno == logging.ERROR and failure.exc_info is not None
+        assert failure.levelno == logging.ERROR and failure.exc_info is None and failure.getMessage().endswith("(ConnectionError)")
         assert (failure.counter_party_id, failure.counter_party_address) == ("BPNL1", SAFE_ADDRESS)
         assert SECRET not in failure.getMessage()
 
@@ -232,11 +232,11 @@ class TestCatalogValidation:
             self._validate(service, catalog=None)
         assert _records(caplog)[-1].levelno == logging.ERROR
 
-    def test_a_policy_mismatch_is_logged_with_its_traceback_and_context(self, service, caplog):
+    def test_a_policy_mismatch_is_logged_by_its_type_with_context(self, service, caplog):
         with caplog.at_level(logging.DEBUG), pytest.raises(CatalogError):
             self._validate(service, catalog={"x": 1}, error=ValueError("no policy matches"))
-        failure = [r for r in _records(caplog) if r.exc_info][0]
-        assert failure.levelno == logging.ERROR
+        failure = [r for r in _records(caplog) if "matches the accepted policies" in r.getMessage()][0]
+        assert failure.levelno == logging.ERROR and failure.exc_info is None and failure.getMessage().endswith("(ValueError)")
         assert (failure.counter_party_id, failure.counter_party_address) == ("BPNL1", SAFE_ADDRESS)
 
     def test_no_valid_pair_is_logged_before_it_is_raised(self, service, caplog):
@@ -425,14 +425,14 @@ class TestOrchestration:
         ("_wait_for_transfer_process", "transfer process", ("neg-1", "agr-1", None)),
         ("_wait_for_edr_entry", "EDR entry", ("neg-1", "agr-1", "tp-1")),
     ])
-    def test_a_failure_is_logged_once_with_the_traceback_the_phase_and_the_ids_known_so_far(self, service, caplog, failing, phase, known):
+    def test_a_failure_is_logged_once_by_its_type_with_the_phase_and_the_ids_known_so_far(self, service, caplog, failing, phase, known):
         with caplog.at_level(logging.DEBUG), pytest.raises(TimeoutError):
             self._run(service, **{failing: TimeoutError("late")})
 
         failure = [r for r in _records(caplog) if "The DSP exchange" in r.getMessage()]
         assert len(failure) == 1
         record = failure[0]
-        assert record.levelno == logging.ERROR and record.exc_info[0] is TimeoutError
+        assert record.levelno == logging.ERROR and record.exc_info is None and record.getMessage().endswith(": TimeoutError")
         assert f"failed at the {phase} phase" in record.getMessage()
         assert (getattr(record, "negotiation_id", None), getattr(record, "agreement_id", None),
                 getattr(record, "transfer_id", None)) == known
@@ -481,10 +481,15 @@ class TestOrchestration:
             with pytest.raises(ConnectionError):
                 service.assets_exists("BPNL1", ADDRESS, [])
         failure = _records(caplog)[-1]
-        assert failure.levelno == logging.ERROR and failure.exc_info[0] is OSError and failure.counter_party_id == "BPNL1"
+        assert failure.levelno == logging.ERROR and failure.exc_info is None and failure.counter_party_id == "BPNL1"
+        assert failure.getMessage().endswith("(OSError)")
 
 
 class TestDataplaneCalls:
+
+    @pytest.fixture(autouse=True)
+    def _tls_warning_not_given_yet(self):
+        bcc._TLS_DEFAULT_WARNED.clear()
 
     def test_a_call_logs_the_method_and_the_path_but_never_the_edr_authorization(self, service, caplog):
         with patch.object(service, "do_dsp", return_value=("https://dp.example.com", f"edr-{SECRET}")), \
@@ -494,8 +499,16 @@ class TestDataplaneCalls:
         assert do_get.call_args.kwargs["headers"]["Authorization"] == f"edr-{SECRET}"
         messages = [r.getMessage() for r in _records(caplog)]
         assert any(m == f"[Connector Service] GET /data through the connector of [BPNL1] at {SAFE_ADDRESS}" for m in messages)
-        assert any("TLS verification of the dataplane request is disabled by default" in m for m in messages)
+        tls = [r for r in _records(caplog) if "NOT verified by default" in r.getMessage()]
+        assert len(tls) == 1 and tls[0].levelno == logging.WARNING
         assert SECRET not in _dump(caplog)
+
+    def test_the_unverified_tls_default_is_warned_once_per_process(self, service, caplog):
+        with patch.object(service, "do_dsp", return_value=("https://dp.example.com", "edr")), \
+                patch.object(bcc.HttpTools, "do_get", return_value=Mock(status_code=200)), caplog.at_level(logging.DEBUG):
+            service.do_get("BPNL1", ADDRESS, [], policies=[POLICY])
+            service.do_get("BPNL1", ADDRESS, [], policies=[POLICY])
+        assert len([r for r in _records(caplog) if "NOT verified by default" in r.getMessage()]) == 1
 
     @pytest.mark.parametrize("method, patched", [("do_post", "do_post"), ("do_put", "do_put")])
     def test_posting_and_putting_are_logged_and_an_explicit_verify_is_not_reported_as_a_default(self, service, caplog, method, patched):
@@ -505,7 +518,7 @@ class TestDataplaneCalls:
 
         messages = [r.getMessage() for r in _records(caplog)]
         assert any(m.startswith(f"[Connector Service] {method[3:].upper()} /x through the connector") for m in messages)
-        assert not any("disabled by default" in m for m in messages)
+        assert not any("NOT verified by default" in m for m in messages)
         assert SECRET not in _dump(caplog)
 
 
@@ -584,7 +597,8 @@ class TestSaturnConsumer:
                 patch(f"{SATURN}.DspTools.filter_assets_and_policies", side_effect=ValueError("none")), \
                 caplog.at_level(logging.DEBUG), pytest.raises(CatalogError):
             saturn._resolve_policies_from_catalog("BPNL1", ADDRESS, [], "dsp", {})
-        failure = [r for r in _records(caplog, SATURN) if r.exc_info][0]
+        failure = [r for r in _records(caplog, SATURN) if "No policy could be read" in r.getMessage()][0]
+        assert failure.exc_info is None and failure.getMessage().endswith("(ValueError)")
         assert (failure.counter_party_id, failure.counter_party_address) == ("BPNL1", SAFE_ADDRESS)
 
         caplog.clear()

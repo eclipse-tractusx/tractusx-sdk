@@ -206,7 +206,8 @@ def test_create_asset_failure_is_logged_as_an_error(mock_get_asset_model, servic
         with pytest.raises(ValueError, match="Failed to create asset"):
             service.create_asset(asset_id="123", base_url="http://test", dct_type="test")
 
-    assert "Failed to create asset 123: Bad Request" in caplog.text
+    assert "Failed to create asset 123 (status 400)" in caplog.text
+    assert "Bad Request" not in caplog.text
 
 
 @patch("tractusx_sdk.dataspace.models.connector.ModelFactory.get_asset_model")

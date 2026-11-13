@@ -192,7 +192,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
             response = send()
         except httpx.RequestError as request_error:
             elapsed_ms = round((time.perf_counter() - started) * 1000)
-            logger.error("HTTP %s %s failed after %d ms (%s)", method, logged_url, elapsed_ms, type(request_error).__name__,
+            logger.debug("HTTP %s %s failed after %d ms (%s)", method, logged_url, elapsed_ms, type(request_error).__name__,
                          extra=log_extra(http_method=method, url=url, elapsed_ms=elapsed_ms, adapter_type="HttpSubmodelAdapter"))
             raise
 

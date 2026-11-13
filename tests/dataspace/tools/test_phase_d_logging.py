@@ -23,9 +23,8 @@
 
 """The log records of the tools: DSP policies, schema validation, operators, encoding and tracing."""
 
-import json
 import logging
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 import requests
@@ -170,20 +169,21 @@ class TestSchemaFinderLogging:
         error = _records(caplog, VALIDATE)[-1]
         assert (error.levelno, error.status_code, error.schema_urn) == (logging.ERROR, 404, SEMANTIC_ID)
 
-    def test_a_connection_failure_is_logged_with_its_traceback_and_re_raised_unchanged(self, caplog):
+    def test_a_connection_failure_is_logged_by_its_type_at_debug_and_re_raised_unchanged(self, caplog):
         failure = requests.ConnectionError("refused")
         with patch(f"{VALIDATE}.get", side_effect=failure), caplog.at_level(logging.DEBUG), pytest.raises(requests.ConnectionError) as raised:
             submodel_schema_finder(SEMANTIC_ID)
         assert raised.value is failure
         record = _records(caplog, VALIDATE)[-1]
-        assert record.levelno == logging.ERROR and record.exc_info[1] is failure and record.schema_urn == SEMANTIC_ID
+        assert record.levelno == logging.DEBUG and record.exc_info is None and record.schema_urn == SEMANTIC_ID
+        assert record.getMessage().endswith("(ConnectionError)")
 
-    def test_a_schema_that_is_not_json_is_logged_with_its_traceback(self, caplog):
+    def test_a_schema_that_is_not_json_is_logged_by_its_type(self, caplog):
         with patch(f"{VALIDATE}.get", return_value=_Response(200, invalid=True)), caplog.at_level(logging.DEBUG), \
                 pytest.raises(SchemaNotFoundError):
             submodel_schema_finder(SEMANTIC_ID)
         record = _records(caplog, VALIDATE)[-1]
-        assert record.levelno == logging.ERROR and record.exc_info is not None
+        assert record.levelno == logging.ERROR and record.exc_info is None
 
 
 SCHEMA = {"type": "object", "properties": {"a": {"type": "integer"}, "b": {"type": "string"}}, "required": ["a"]}

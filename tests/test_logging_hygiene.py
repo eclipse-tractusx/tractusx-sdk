@@ -313,17 +313,46 @@ class TestStructuredContext:
                             offenders.append(f"{_rel(path)}:{call.lineno}:{name}")
         assert offenders == []
 
+    def test_log_calls_are_never_given_a_response_body(self):
+        """
+        ``response.text``, ``response.content`` and ``response.json()`` are the body of a remote answer: it may echo the
+        request (data addresses, credentials) or be arbitrarily large. Status codes and identifiers are logged instead.
+        """
+        offenders = []
+        for path, tree in _modules():
+            for call in _log_calls(tree):
+                for argument in call.args[1:]:
+                    for node in ast.walk(argument):
+                        if isinstance(node, ast.Attribute) and node.attr in {"text", "content"}:
+                            offenders.append(f"{_rel(path)}:{call.lineno}:.{node.attr}")
+                        elif (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                              and node.func.attr == "json" and not node.args and not node.keywords):
+                            offenders.append(f"{_rel(path)}:{call.lineno}:.json()")
+        assert offenders == []
+
+    # Modules that reach a remote service: an exception of ``requests``/``httpx`` quotes the full URL, query string included
+    EXCEPTION_TEXT_FREE_MODULES = frozenset({
+        "dataspace/managers/oauth2_manager.py", "dataspace/managers/auth_manager.py",
+        "industry/adapters/submodel_adapters/s3_adapter.py", "industry/adapters/submodel_adapters/http_submodel_adapter.py",
+        "dataspace/tools/http_tools.py", "dataspace/adapters/adapter.py",
+        "dataspace/services/connector/base_connector_provider.py",
+        "dataspace/services/connector/base_connector_consumer.py",
+        "dataspace/services/connector/saturn/connector_consumer_service.py",
+        "dataspace/services/discovery/base_discovery_service.py",
+        "dataspace/tools/validate_submodels.py",
+        "industry/services/notifications/notification_consumer_service.py",
+        "industry/services/notifications/notification_service.py",
+        "extensions/notification_api/services/notification_consumer_service.py",
+        "extensions/notification_api/services/notification_service.py",
+    })
 
     def test_the_credential_modules_never_log_exception_text_nor_tracebacks(self):
         """
-        The identity provider, the object store and the submodel service may echo request details in their errors: the
-        modules handling credentials log the exception TYPE (or the S3 error code) only, never its message
-        (``%s`` of the exception) nor a traceback (``exc_info``, ``exception()``).
+        The identity provider, the object store, the submodel service and every module that makes HTTP requests may echo
+        request details (the URL with its query string) in their errors: they log the exception TYPE (or the S3 error
+        code) only, never its message (``%s`` of the exception) nor a traceback (``exc_info``, ``exception()``).
         """
-        credential_modules = {
-            "dataspace/managers/oauth2_manager.py", "dataspace/managers/auth_manager.py",
-            "industry/adapters/submodel_adapters/s3_adapter.py", "industry/adapters/submodel_adapters/http_submodel_adapter.py",
-        }
+        credential_modules = self.EXCEPTION_TEXT_FREE_MODULES
         # What is allowed to read an exception: its type, or the error code of an S3 error
         allowed_readers = {"type", "_error_code"}
         offenders = []

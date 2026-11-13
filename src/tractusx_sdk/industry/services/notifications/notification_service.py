@@ -201,7 +201,7 @@ class NotificationService(BaseService):
             
         except Exception as e:
             # Not a "not found": the lookup itself failed. It is treated as absent, so the asset will be created
-            logger.warning("The lookup of asset '%s' failed, treating it as not existing: %s", asset_id, e, exc_info=True,
+            logger.warning("The lookup of asset '%s' failed, treating it as not existing (%s)", asset_id, type(e).__name__,
                            extra=log_extra(asset_id=asset_id, operation="notification.find_asset"))
             return None
     

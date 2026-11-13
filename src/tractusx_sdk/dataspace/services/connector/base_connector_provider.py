@@ -192,7 +192,7 @@ class BaseConnectorProviderService(BaseService):
         asset_response = self.assets.create(obj=asset, verify=self.verify_ssl)
 
         if asset_response.status_code != 200:
-            logger.error("Failed to create asset %s: %s", asset_id, asset_response.text,
+            logger.error("Failed to create asset %s (status %s)", asset_id, asset_response.status_code,
                          extra=log_extra(asset_id=asset_id, status_code=asset_response.status_code, operation="provider.create_asset"))
             raise ValueError(f"Failed to create asset {asset_id}. Status code: {asset_response.status_code}")
 
@@ -268,8 +268,7 @@ class BaseConnectorProviderService(BaseService):
         created_contract = self.contract_definitions.create(obj=contract, verify=self.verify_ssl)
 
         if created_contract.status_code != 200:
-            logger.error("Failed to create contract %s for asset %s (status %s): %s", contract_id, asset_id, created_contract.status_code,
-                         created_contract.text,
+            logger.error("Failed to create contract %s for asset %s (status %s)", contract_id, asset_id, created_contract.status_code,
                          extra=log_extra(asset_id=asset_id, policy_id=usage_policy_id, status_code=created_contract.status_code,
                                          operation="provider.create_contract"))
             raise ValueError(f"Failed to create contract {contract_id}. Status code: {created_contract.status_code}")
@@ -307,7 +306,7 @@ class BaseConnectorProviderService(BaseService):
         created_policy = self.policies.create(obj=policy, verify=self.verify_ssl)
 
         if created_policy.status_code != 200:
-            logger.error("Failed to create policy %s (status %s): %s", policy_id, created_policy.status_code, created_policy.text,
+            logger.error("Failed to create policy %s (status %s)", policy_id, created_policy.status_code,
                          extra=log_extra(policy_id=policy_id, status_code=created_policy.status_code, operation="provider.create_policy"))
             raise ValueError(f"Failed to create policy {policy_id}. Status code: {created_policy.status_code}, Response: {created_policy.text}")
 

@@ -83,20 +83,26 @@ def policy_id_of(policy) -> str | None:
     return policy.get("@id") if isinstance(policy, dict) else None
 
 
+# Set once the process has been warned that the dataplane requests are not verified by default
+_TLS_DEFAULT_WARNED = threading.Event()
+
+
 def log_dataplane_call(method: str, counter_party_id: str, counter_party_address: str, path: str, request_kwargs: dict) -> None:
     """
     Logs a request that goes through a dataspace connector to a dataplane (DSP exchange + HTTP call).
 
-    The headers (which carry the EDR authorization), the parameters and the body are never logged. The default
-    TLS verification of these calls is disabled when the caller does not decide, which is noted as it is a fallback.
+    The headers (which carry the EDR authorization), the parameters and the body are never logged. The TLS
+    verification of these calls is disabled when the caller does not decide: that is a warning, logged once.
     """
     logger.debug("[Connector Service] %s %s through the connector of [%s] at %s", method, safe_url(path), counter_party_id,
                  safe_url(counter_party_address),
                  extra=log_extra(http_method=method, counter_party_id=counter_party_id,
                                  counter_party_address=counter_party_address, operation="consumer.dataplane_call"))
-    if "verify" not in request_kwargs:
-        logger.debug("[Connector Service] No 'verify' given: the TLS verification of the dataplane request is disabled by default",
-                     extra=log_extra(http_method=method, operation="consumer.dataplane_call"))
+    if "verify" not in request_kwargs and not _TLS_DEFAULT_WARNED.is_set():
+        _TLS_DEFAULT_WARNED.set()
+        logger.warning("[Connector Service] No 'verify' given: the TLS certificate of the dataplane is NOT verified by default. "
+                       "Pass verify=True (or the path of a CA bundle) to verify it. This is logged once per process",
+                       extra=log_extra(http_method=method, operation="consumer.dataplane_call"))
 
 
 class BaseConnectorConsumerService(BaseService):
@@ -284,8 +290,6 @@ class BaseConnectorConsumerService(BaseService):
         ## In case the response code is not successfull or the response is null
         if response is None or response.status_code != 200:
             status_code = response.status_code if response is not None else 'None'
-            if response is not None:
-                logger.debug("[get_catalog] Error response body: %s", response.text)
             logger.error("[Connector Service] The catalog of [%s] at %s could not be retrieved (status %s)", counter_party_id,
                          safe_url(counter_party_address), status_code,
                          extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
@@ -666,7 +670,7 @@ class BaseConnectorConsumerService(BaseService):
                                                                  filter_expression=filter_expression,
                                                                  timeout=timeout, context=context)
             except Exception as e:
-                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", safe_url(edc_url), e,
+                logger.warning("[Connector Service]: Failed to get catalog from [%s] (%s)", safe_url(edc_url), type(e).__name__,
                                extra=log_extra(bpn=bpnl, counter_party_address=edc_url, operation="consumer.get_catalogs_with_filter_with_bpnl"))
                 catalogs[edc_url] = {"error": str(e)}
         return catalogs
@@ -725,7 +729,7 @@ class BaseConnectorConsumerService(BaseService):
                                                                  filter_expression=filter_expression,
                                                                  timeout=timeout, context=context)
             except Exception as e:
-                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", safe_url(edc_url), e,
+                logger.warning("[Connector Service]: Failed to get catalog from [%s] (%s)", safe_url(edc_url), type(e).__name__,
                                extra=log_extra(bpn=bpnl, counter_party_address=edc_url, operation="consumer.get_catalogs_with_filter_with_bpnl_parallel"))
                 catalogs[edc_url] = {"error": str(e)}
 
@@ -807,11 +811,12 @@ class BaseConnectorConsumerService(BaseService):
                                                                            counter_party_address=counter_party_address,
                                                                            filter_expression=filter_expression,
                                                                            timeout=timeout, context=context, **kwargs)
-        except Exception:
+        except Exception as e:
             ## Runs in a thread, where the exception would otherwise only reach the thread's excepthook
-            logger.exception("[Connector Service] Failed to get the catalog of [%s] from %s", counter_party_id, safe_url(counter_party_address),
-                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
-                                             operation="consumer.get_catalog_with_filter_parallel"))
+            logger.error("[Connector Service] Failed to get the catalog of [%s] from %s (%s)", counter_party_id, safe_url(counter_party_address),
+                         type(e).__name__,
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         operation="consumer.get_catalog_with_filter_parallel"))
             raise
 
     ## Get catalog request with filter
@@ -1036,10 +1041,10 @@ class BaseConnectorConsumerService(BaseService):
                 allowed_policies=policies
             )
         except Exception as e:
-            logger.exception("[Connector Service] No offer of [%s] at %s matches the accepted policies", counter_party_id,
-                             safe_url(counter_party_address),
-                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
-                                             operation="consumer.fetch_and_validate_catalog"))
+            logger.error("[Connector Service] No offer of [%s] at %s matches the accepted policies (%s)", counter_party_id,
+                         safe_url(counter_party_address), type(e).__name__,
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         operation="consumer.fetch_and_validate_catalog"))
             ## Chained, not swallowed: the cause carries the catalog that was read and the
             ## allow-list it was compared against (``PolicyMismatchError``), which is what
             ## lets the caller say *which* offers were rejected instead of only that none
@@ -1205,7 +1210,7 @@ class BaseConnectorConsumerService(BaseService):
                 logger.log(
                     logging.WARNING if should_log_poll(attempt) else logging.DEBUG,
                     "[Connector Service]: [%s] Failed to check negotiation state (attempt %d): %s",
-                    safe_url(counter_party_address), attempt, e,
+                    safe_url(counter_party_address), attempt, type(e).__name__,
                     extra=log_extra(negotiation_id=negotiation_id, counter_party_address=counter_party_address,
                                     operation="consumer.poll_negotiation_state"))
             
@@ -1258,7 +1263,7 @@ class BaseConnectorConsumerService(BaseService):
                 logger.log(
                     logging.WARNING if should_log_poll(attempt) else logging.DEBUG,
                     "[Connector Service]: [%s] Failed to check the transfer process state (attempt %d): %s",
-                    safe_url(counter_party_address), attempt, e,
+                    safe_url(counter_party_address), attempt, type(e).__name__,
                     extra=log_extra(agreement_id=agreement_id, counter_party_address=counter_party_address,
                                     operation="consumer.wait_for_transfer_process"))
 
@@ -1422,12 +1427,12 @@ class BaseConnectorConsumerService(BaseService):
                 max_wait=max_wait,
                 poll_interval=poll_interval
             )
-        except Exception:
-            ## One record, with the traceback and every identifier known when it failed. The helpers
-            ## log the specific cause without it.
-            logger.exception(
-                "[Connector Service] The DSP exchange with [%s] at %s failed at the %s phase (negotiation [%s], agreement [%s], transfer [%s])",
-                counter_party_id, safe_url(counter_party_address), phase, negotiation_id, agreement_id, transfer_id,
+        except Exception as e:
+            ## One record with every identifier known when it failed, and the type of the failure only: the
+            ## message and the traceback of an HTTP error quote the URL with its query string
+            logger.error(
+                "[Connector Service] The DSP exchange with [%s] at %s failed at the %s phase (negotiation [%s], agreement [%s], transfer [%s]): %s",
+                counter_party_id, safe_url(counter_party_address), phase, negotiation_id, agreement_id, transfer_id, type(e).__name__,
                 extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
                                 negotiation_id=negotiation_id, agreement_id=agreement_id, transfer_id=transfer_id,
                                 operation="consumer.negotiate_and_transfer"))
@@ -1938,11 +1943,11 @@ class BaseConnectorConsumerService(BaseService):
             catalog = self.get_catalog_with_filter(counter_party_id=counter_party_id,
                                                    counter_party_address=counter_party_address,
                                                    filter_expression=filter_expression, timeout=timeout)
-        except Exception:
-            logger.exception("[Connector Service] Failed to get the catalog of [%s] at %s to check whether the asset exists", counter_party_id,
-                             safe_url(counter_party_address),
-                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
-                                             operation="consumer.assets_exists"))
+        except Exception as e:
+            logger.error("[Connector Service] Failed to get the catalog of [%s] at %s to check whether the asset exists (%s)", counter_party_id,
+                         safe_url(counter_party_address), type(e).__name__,
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         operation="consumer.assets_exists"))
             raise ConnectionError(
                 f"[Connector Service]: Failed to get catalog for counter_party_id=[{counter_party_id}], counter_party_address=[{counter_party_address}], filter_expression=[{filter_expression}]")
 

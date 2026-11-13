@@ -142,13 +142,13 @@ class BaseDiscoveryService(BaseService, ABC):
                 # If we have a cached entry, preserve it and continue using it
                 if entry:
                     # Log the error but continue with cached URL
-                    logger.warning("[%s] Failed to refresh discovery URL, using cached version. Error: %s", self.get_service_name(), e,
+                    logger.warning("[%s] Failed to refresh discovery URL, using cached version (%s)", self.get_service_name(), type(e).__name__,
                                    extra=log_extra(url=entry["url"], operation="discovery.refresh"))
                     return entry["url"]
                 else:
                     # No cached entry available, re-raise the exception
-                    logger.error("[%s] Failed to get the discovery URL for key '%s' and there is no cached one to fall back to: %s",
-                                 self.get_service_name(), discovery_key, e, extra=log_extra(operation="discovery.refresh"))
+                    logger.error("[%s] Failed to get the discovery URL for key '%s' and there is no cached one to fall back to (%s)",
+                                 self.get_service_name(), discovery_key, type(e).__name__, extra=log_extra(operation="discovery.refresh"))
                     raise
         else:
             # Using valid cached URL

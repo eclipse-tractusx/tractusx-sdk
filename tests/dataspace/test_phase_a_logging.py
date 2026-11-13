@@ -111,7 +111,7 @@ class TestHttpToolsLogging:
         assert "-> None" in outcome.getMessage()
         assert not hasattr(outcome, "status_code")
 
-    def test_a_failure_is_logged_with_its_traceback_and_re_raised_unchanged(self, caplog):
+    def test_a_failure_is_logged_by_its_type_at_debug_and_re_raised_unchanged(self, caplog):
         error = requests.ConnectionError("connection refused")
         with patch("requests.get", side_effect=error), caplog.at_level(logging.DEBUG):
             with pytest.raises(requests.ConnectionError) as raised:
@@ -119,9 +119,10 @@ class TestHttpToolsLogging:
 
         assert raised.value is error
         failure = _records(caplog, self.LOGGER)[-1]
-        assert failure.levelno == logging.ERROR
-        assert failure.exc_info[1] is error
+        assert failure.levelno == logging.DEBUG
+        assert failure.exc_info is None
         assert failure.getMessage().startswith(f"HTTP GET {URL} failed after ")
+        assert failure.getMessage().endswith("(ConnectionError)")
 
     def test_nothing_secret_is_ever_logged(self, caplog):
         with patch("requests.get", return_value=MagicMock(status_code=200)), \
@@ -202,7 +203,7 @@ class TestAdapterLogging:
             adapter.get("x")
         assert _records(caplog, self.LOGGER)[-1].levelno == level
 
-    def test_a_failure_is_logged_with_its_traceback_and_re_raised_unchanged(self, adapter, caplog):
+    def test_a_failure_is_logged_by_its_type_at_debug_and_re_raised_unchanged(self, adapter, caplog):
         error = requests.Timeout("too slow")
         with patch.object(adapter.session, "request", side_effect=error), caplog.at_level(logging.DEBUG):
             with pytest.raises(requests.Timeout) as raised:
@@ -210,8 +211,8 @@ class TestAdapterLogging:
 
         assert raised.value is error
         failure = _records(caplog, self.LOGGER)[-1]
-        assert failure.levelno == logging.ERROR
-        assert failure.exc_info[1] is error
+        assert failure.levelno == logging.DEBUG
+        assert failure.exc_info is None and failure.getMessage().endswith("(Timeout)")
         assert failure.http_method == "DELETE"
 
     def test_nothing_secret_is_ever_logged(self, adapter, caplog):

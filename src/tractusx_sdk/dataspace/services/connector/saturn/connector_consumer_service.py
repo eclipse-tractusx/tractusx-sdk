@@ -366,10 +366,10 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             valid_assets_policies = DspTools.filter_assets_and_policies(
                 catalog=catalog_response, allowed_policies=None)
         except Exception as e:
-            logger.exception("[Connector Service] No policy could be read from the catalog of [%s] at %s", counter_party_id,
-                             safe_url(counter_party_address),
-                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
-                                             operation="consumer.resolve_policies_from_catalog"))
+            logger.error("[Connector Service] No policy could be read from the catalog of [%s] at %s (%s)", counter_party_id,
+                         safe_url(counter_party_address), type(e).__name__,
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         operation="consumer.resolve_policies_from_catalog"))
             raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] No policy found in catalog: [{str(e)}]") from e
         if not valid_assets_policies:
@@ -645,7 +645,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 )
                 catalogs[counter_party_address] = self.get_catalog(request=catalog_request, timeout=timeout)
             except Exception as e:
-                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", safe_url(counter_party_address), e,
+                logger.warning("[Connector Service]: Failed to get catalog from [%s] (%s)", safe_url(counter_party_address), type(e).__name__,
                                extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
                                                operation="consumer.get_catalogs_with_filter"))
                 catalogs[counter_party_address] = {"error": str(e)}
@@ -677,7 +677,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                              filter_expression=filter_expression, timeout=timeout,
                                                              context=context, namespace=namespace)
             except Exception as e:
-                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", safe_url(edc_url), e,
+                logger.warning("[Connector Service]: Failed to get catalog from [%s] (%s)", safe_url(edc_url), type(e).__name__,
                                extra=log_extra(bpn=bpnl, counter_party_address=edc_url, operation="consumer.get_catalogs_with_filter_with_bpnl"))
                 catalogs[edc_url] = {"error": str(e)}
         return catalogs
@@ -796,7 +796,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                              filter_expression=filter_expression, timeout=timeout,
                                                              context=context, namespace=namespace)
             except Exception as e:
-                logger.warning("[Connector Service]: Failed to get catalog from [%s]: %s", safe_url(edc_url), e,
+                logger.warning("[Connector Service]: Failed to get catalog from [%s] (%s)", safe_url(edc_url), type(e).__name__,
                                extra=log_extra(bpn=bpnl, counter_party_address=edc_url, operation="consumer.get_catalogs_with_filter_with_bpnl_parallel"))
                 catalogs[edc_url] = {"error": str(e)}
 

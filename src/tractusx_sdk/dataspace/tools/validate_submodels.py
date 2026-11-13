@@ -144,9 +144,9 @@ def submodel_schema_finder(
     started = time.perf_counter()
     try:
         response = get(schema_link)
-    except Exception:
-        logger.exception("The schema of '%s' could not be requested from %s", semantic_id, safe_url(schema_link),
-                         extra=log_extra(schema_urn=semantic_id, url=schema_link, operation="validate.schema_finder"))
+    except Exception as e:
+        logger.debug("The schema of '%s' could not be requested from %s (%s)", semantic_id, safe_url(schema_link), type(e).__name__,
+                     extra=log_extra(schema_urn=semantic_id, url=schema_link, operation="validate.schema_finder"))
         raise
 
     elapsed_ms = round((time.perf_counter() - started) * 1000)
@@ -159,7 +159,7 @@ def submodel_schema_finder(
     try:
         schema = response.json()
     except Exception as e:
-        logger.exception("The schema of '%s' obtained from %s is not valid JSON", semantic_id, safe_url(schema_link),
+        logger.error("The schema of '%s' obtained from %s is not valid JSON (%s)", semantic_id, safe_url(schema_link), type(e).__name__,
                          extra=log_extra(schema_urn=semantic_id, url=schema_link, status_code=http_status(response),
                                          operation="validate.schema_finder"))
         raise SchemaNotFoundError(f"422 Client Error: The schema obtained is not a valid json. schema link: {schema_link}") from e

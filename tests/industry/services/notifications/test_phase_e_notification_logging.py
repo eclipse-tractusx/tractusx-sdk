@@ -128,12 +128,12 @@ class TestDiscovery:
         assert "Found 2 DigitalTwinEventAPI asset(s)" in found.getMessage()
         assert SECRET not in _dump(caplog)
 
-    def test_a_discovery_failure_is_logged_with_its_traceback_and_context_and_wrapped_as_before(self, flavor, consumer, connector, caplog):
+    def test_a_discovery_failure_is_logged_by_its_type_with_context_and_wrapped_as_before(self, flavor, consumer, connector, caplog):
         connector.get_catalog_by_dct_type.side_effect = ConnectionError("down")
         with caplog.at_level(logging.DEBUG), pytest.raises(flavor.NotificationError, match="Failed to discover notification assets: down"):
             consumer.discover_notification_assets("BPNL000000000002", ADDRESS)
         failure = _records(caplog, flavor.consumer_logger)[-1]
-        assert failure.levelno == logging.ERROR and failure.exc_info[0] is ConnectionError
+        assert failure.levelno == logging.ERROR and failure.exc_info is None and failure.getMessage().endswith("(ConnectionError)")
         assert (failure.bpn, failure.counter_party_address) == ("BPNL000000000002", SAFE_ADDRESS)
         assert failure.operation == "notification.discover_assets"
         assert SECRET not in _dump(caplog)
@@ -148,12 +148,13 @@ class TestNegotiationAndEndpoint:
         done = _records(caplog, flavor.consumer_logger)[-1]
         assert (done.transfer_id, done.bpn, done.levelno) == ("tp-1", "BPNL000000000002", logging.INFO)
 
-    def test_a_negotiation_failure_is_logged_with_its_traceback_and_wrapped(self, flavor, consumer, connector, caplog):
+    def test_a_negotiation_failure_is_logged_by_its_type_and_wrapped(self, flavor, consumer, connector, caplog):
         connector.negotiate_and_transfer.side_effect = TimeoutError("late")
         with caplog.at_level(logging.DEBUG), pytest.raises(flavor.NotificationError):
             consumer.negotiate_notification_access("BPNL000000000002", ADDRESS)
         failure = _records(caplog, flavor.consumer_logger)[-1]
-        assert failure.exc_info[0] is TimeoutError and failure.counter_party_address == SAFE_ADDRESS
+        assert failure.exc_info is None and failure.getMessage().endswith("(TimeoutError)")
+        assert failure.counter_party_address == SAFE_ADDRESS
 
     def test_the_endpoint_is_logged_sanitised_and_the_token_never(self, flavor, consumer, connector, caplog):
         connector.do_dsp_by_dct_type.return_value = (ENDPOINT, f"edr-token-{SECRET}")
@@ -163,12 +164,13 @@ class TestNegotiationAndEndpoint:
         assert obtained.getMessage() == f"Obtained notification endpoint: {SAFE_ENDPOINT}" and obtained.url == SAFE_ENDPOINT
         assert SECRET not in _dump(caplog)
 
-    def test_an_endpoint_failure_is_logged_with_its_traceback(self, flavor, consumer, connector, caplog):
+    def test_an_endpoint_failure_is_logged_by_its_type(self, flavor, consumer, connector, caplog):
         connector.do_dsp_by_dct_type.side_effect = RuntimeError("no edr")
         with caplog.at_level(logging.DEBUG), pytest.raises(flavor.NotificationError):
             consumer.get_notification_endpoint("BPNL000000000002", ADDRESS)
         failure = _records(caplog, flavor.consumer_logger)[-1]
-        assert failure.exc_info[0] is RuntimeError and failure.operation == "notification.get_endpoint"
+        assert failure.exc_info is None and failure.getMessage().endswith("(RuntimeError)")
+        assert failure.operation == "notification.get_endpoint"
 
 
 class TestSending:
@@ -208,24 +210,24 @@ class TestSending:
             assert consumer.send_notification("BPNL000000000002", ADDRESS, notification)["status"] == "sent"
         assert any(expected in r.getMessage() and r.levelno == logging.DEBUG for r in _records(caplog, flavor.consumer_logger))
 
-    def test_a_rejected_notification_is_logged_with_a_cut_body_and_raised_as_before(self, flavor, consumer, connector, notification, caplog,
-                                                                                monkeypatch):
+    def test_a_rejected_notification_is_logged_with_its_status_and_never_its_body_and_raised_as_before(self, flavor, consumer, connector,
+                                                                                                      notification, caplog, monkeypatch):
         self._wire(connector, None)
         monkeypatch.setattr(import_module(flavor.consumer_logger).HttpTools, "do_post",
                             Mock(return_value=_response(500, text="x" * 5000)))
         with caplog.at_level(logging.DEBUG), pytest.raises(flavor.NotificationError, match="Status code: 500"):
             consumer.send_notification("BPNL000000000002", ADDRESS, notification)
         error = [r for r in _records(caplog, flavor.consumer_logger) if r.levelno == logging.ERROR and r.status_code == 500][0]
-        assert len(error.getMessage()) < 700 and error.message_id == str(notification.header.message_id)
+        assert "xxx" not in _dump(caplog) and error.message_id == str(notification.header.message_id)
 
-    def test_an_unexpected_failure_is_logged_with_its_traceback_and_context_and_wrapped(self, flavor, consumer, connector, notification, caplog,
-                                                                                    monkeypatch):
+    def test_an_unexpected_failure_is_logged_by_its_type_with_context_and_wrapped(self, flavor, consumer, connector, notification, caplog,
+                                                                                  monkeypatch):
         self._wire(connector, None)
         monkeypatch.setattr(import_module(flavor.consumer_logger).HttpTools, "do_post", Mock(side_effect=OSError("boom")))
         with caplog.at_level(logging.DEBUG), pytest.raises(flavor.NotificationError):
             consumer.send_notification("BPNL000000000002", ADDRESS, notification)
-        failures = [r for r in _records(caplog, flavor.consumer_logger) if r.exc_info]
-        assert failures and failures[0].exc_info[0] is OSError
+        failures = [r for r in _records(caplog, flavor.consumer_logger) if r.levelno == logging.ERROR and "(OSError)" in r.getMessage()]
+        assert failures and failures[0].exc_info is None
         assert failures[0].message_id == str(notification.header.message_id) and failures[0].url == SAFE_ENDPOINT
         assert SECRET not in _dump(caplog)
 
@@ -256,7 +258,7 @@ class TestSendingToSeveralProviders:
         records = _records(caplog, flavor.consumer_logger)
         warnings = [r for r in records if r.levelno == logging.WARNING]
         assert len(warnings) == 2
-        failed = [r for r in warnings if "provider down" in r.getMessage()][0]
+        failed = [r for r in warnings if "(RuntimeError)" in r.getMessage()][0]
         assert (failed.bpn, failed.counter_party_address) == ("BPNL00000000000B", SAFE_ADDRESS)
         assert any("lacks 'bpn' or 'dsp_url'" in r.getMessage() for r in warnings)
         summary = [r for r in records if r.levelno == logging.INFO][-1]
@@ -319,12 +321,13 @@ class TestNotificationServiceLogging:
                    for r in _records(caplog, flavor.service_logger))
         provider.create_asset.assert_not_called()
 
-    def test_a_failed_lookup_is_a_warning_with_its_traceback_because_it_is_not_a_not_found(self, flavor, service, provider, caplog):
+    def test_a_failed_lookup_is_a_warning_by_its_type_because_it_is_not_a_not_found(self, flavor, service, provider, caplog):
         provider.assets.get_by_id.side_effect = ConnectionError("connector down")
         with caplog.at_level(logging.DEBUG):
             service.ensure_notification_asset_exists("asset-1", ENDPOINT)
         warning = [r for r in _records(caplog, flavor.service_logger) if r.levelno == logging.WARNING][0]
-        assert "treating it as not existing" in warning.getMessage() and warning.exc_info[0] is ConnectionError
+        assert "treating it as not existing" in warning.getMessage() and warning.exc_info is None
+        assert warning.getMessage().endswith("(ConnectionError)")
         assert warning.asset_id == "asset-1"
 
 

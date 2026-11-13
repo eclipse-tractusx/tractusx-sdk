@@ -23,9 +23,8 @@
 
 """The log records of the submodel adapters (S3, file system, HTTP), their factory and the Digital Twin Registry service."""
 
-import json
 import logging
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import boto3
 import httpx
@@ -336,7 +335,8 @@ class TestHttpSubmodelAdapterLogging:
         adapter.client.get.side_effect = httpx.ConnectError(f"cannot connect to {self.URL}?token={SECRET}")
         with caplog.at_level(logging.DEBUG), pytest.raises(ConnectionError):
             adapter.read(METADATA)
-        error = [r for r in _records(caplog, HTTP) if r.levelno == logging.ERROR][0]
+        error = [r for r in _records(caplog, HTTP) if "failed after" in r.getMessage()][0]
+        assert error.levelno == logging.DEBUG
         assert "(ConnectError)" in error.getMessage() and error.exc_info is None
         assert SECRET not in _dump(caplog)
 
