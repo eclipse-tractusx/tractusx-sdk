@@ -22,11 +22,11 @@
 #################################################################################
 
 from .dma_controller import DmaController
-from tractusx_sdk.dataspace.controllers.connector.utils.mixins import CrudDmaController
+from tractusx_sdk.dataspace.controllers.connector.utils.mixins import CrudDmaController, UpdateByIdControllerMixin
 from tractusx_sdk.dataspace.models.connector.saturn import PolicyModel, EvaluationPolicyModel
 
 
-class PolicyController(CrudDmaController, DmaController):
+class PolicyController(UpdateByIdControllerMixin, CrudDmaController, DmaController):
     """
     Concrete implementation of the PolicyController for the Connector saturn Data Management API.
 
@@ -40,9 +40,7 @@ class PolicyController(CrudDmaController, DmaController):
         return super().create(obj, **kwargs)
 
     def update(self, obj: PolicyModel, **kwargs):
-        # Policy definitions are updated by id (PUT /v3/policydefinitions/{id}), not on the collection
-        kwargs["data"] = obj.to_data()
-        return self.adapter.put(url=f"{self.endpoint_url}/{obj.oid}", **kwargs)
+        return super().update(obj, **kwargs)
     
     def evaluation_plan(self, oid: str, obj: EvaluationPolicyModel, **kwargs):
         kwargs["data"] = obj.to_data()
