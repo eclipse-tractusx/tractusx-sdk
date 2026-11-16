@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See also the overarching [CHANGELOG.md](https://eclipse-tractusx.github.io/changelog) for Tractus-X releases.
 
+## [Unreleased]
+
+### Fixed
+
+- fix: a catalog offer is matched against `allowed_policies` on its rules alone - `permission`, `prohibition` and `obligation` (Saturn or Jupiter spelling). Any other attribute of the policy is ignored, on both sides: the `target` DSP 2025-1 allows on a catalog Offer ("Offers MAY contain any target attributes"), an `assigner`, a `profile`, an `@context` or anything a connector adds. Inside each rule, `target`, `assigner` and `assignee` are ignored too. Before, an offer carrying `"target": "<dataset id>"` was rejected by every allow-list, even one stating exactly its rules. An allow-list entry with no rule at all still matches nothing
+
 ## [0.8.2] - 2026-08-18
 
 ### Added
