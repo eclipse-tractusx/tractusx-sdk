@@ -40,7 +40,9 @@ class PolicyController(CrudDmaController, DmaController):
         return super().create(obj, **kwargs)
 
     def update(self, obj: PolicyModel, **kwargs):
-        return super().update(obj, **kwargs)
+        # Policy definitions are updated by id (PUT /v3/policydefinitions/{id}), not on the collection
+        kwargs["data"] = obj.to_data()
+        return self.adapter.put(url=f"{self.endpoint_url}/{obj.oid}", **kwargs)
     
     def evaluation_plan(self, oid: str, obj: EvaluationPolicyModel, **kwargs):
         kwargs["data"] = obj.to_data()
