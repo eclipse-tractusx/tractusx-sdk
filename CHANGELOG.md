@@ -25,12 +25,17 @@ See also the overarching [CHANGELOG.md](https://eclipse-tractusx.github.io/chang
 
 ### Fixed
 
+- fix: the warning about the unverified TLS default of the dataplane requests is logged once per process even when several threads race for it
+- fix: `get_cache_provider`, a dependency that runs on every request, reports a missing `app.state.cache_provider` once per process instead of once per request
+- fix: a catalog offer is matched against `allowed_policies` on its rules alone - `permission`, `prohibition` and `obligation` (Saturn or Jupiter spelling). Any other attribute of the policy is ignored, on both sides: the `target` DSP 2025-1 allows on a catalog Offer ("Offers MAY contain any target attributes"), an `assigner`, a `profile`, an `@context` or anything a connector adds. Inside each rule, `target`, `assigner` and `assignee` are ignored too. Before, an offer carrying `"target": "<dataset id>"` was rejected by every allow-list, even one stating exactly its rules. An allow-list entry with no rule at all still matches nothing
+
+### Security
+
+- fix: the data address of an asset (the headers and OAuth2 settings of the backend, i.e. its API keys) was written to the `DEBUG` log when an asset was created (present in v0.9.0-rc1). The request is no longer logged at any level; only a one-line summary with the identifiers is
 - fix: URLs carrying a secret (user information, query string, fragment, path parameters) no longer reach the logs through the message or the traceback of an exception, and the SDK logs the URL of a request through `safe_url`
 - fix: response bodies (failed catalog requests, failed notifications) are no longer written to the logs at any level; read them from `error.response_body`
 - fix: the EDR credentials no longer reach the logs when `PostgresMemoryConnectionManager` fails to load or save: SQLAlchemy quotes the parameters of the failed statement (the EDR rows, with their access tokens) in the message and the traceback, so the failure is logged by its type (`DBAPIError`) only. `FileSystemConnectionManager` and `op.delete_dir` follow the same rule
 - fix: `AasService` no longer logs a traceback when an operation fails with something other than a transport error: a validation error of the response quotes its values. The failure is logged by its type, and the exception is still re-raised unchanged
-- fix: the warning about the unverified TLS default of the dataplane requests is logged once per process even when several threads race for it
-- fix: a catalog offer is matched against `allowed_policies` on its rules alone - `permission`, `prohibition` and `obligation` (Saturn or Jupiter spelling). Any other attribute of the policy is ignored, on both sides: the `target` DSP 2025-1 allows on a catalog Offer ("Offers MAY contain any target attributes"), an `assigner`, a `profile`, an `@context` or anything a connector adds. Inside each rule, `target`, `assigner` and `assignee` are ignored too. Before, an offer carrying `"target": "<dataset id>"` was rejected by every allow-list, even one stating exactly its rules. An allow-list entry with no rule at all still matches nothing
 
 ## [0.8.2] - 2026-08-18
 

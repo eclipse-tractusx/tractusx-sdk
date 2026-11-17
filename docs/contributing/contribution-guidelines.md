@@ -67,6 +67,19 @@ More information on how to contribute to Eclipse Tractus-X is available at [Ecli
 - [Eclipse Tractus-X](https://eclipse-tractusx.github.io/) - Official project website
 - [Tractus-X KITs](https://eclipse-tractusx.github.io/Kits) - Standard specifications
 
+## Logging conventions
+
+The SDK is a library: its logs end up in the platforms of the applications that use it, next to credentials and business data. The rules below are enforced by `tests/test_logging_hygiene.py`, and the full guide is [Logging and Error Handling](../admin/logging.md).
+
+- Use one `logger = logging.getLogger(__name__)` per module. Never `print`, never configure logging, and do not add `verbose`, `debug` or `logger` arguments.
+- Format lazily, with `%s` arguments.
+- Build the context of a record only with `extra=log_extra(...)`, which accepts the documented fields, and give it an `operation=LogOperations.X` constant. A new constant goes in `src/tractusx_sdk/_logging_operations.py`, named after its value in upper case with the dot as an underscore (`consumer.get_catalog` is `CONSUMER_GET_CATALOG`).
+- Log a failure with `log_failure(logger, "... (%s)", error, ...)`, which logs the **type** of the exception. Never log `str(error)`, a traceback, `logger.exception(...)` or `exc_info=True`: the messages of `requests`, `httpx` and SQLAlchemy quote the URL with its query string or the SQL parameters, which can hold access tokens.
+- Log URLs with `safe_url`. Never log headers, tokens, credentials, response bodies or submodel data.
+- Levels: the inner layers of a call log at `DEBUG` and let the exception travel, and the operation that reports the failure logs one `ERROR`. Expected outcomes (a `404`, a missing BPN) stay at `DEBUG`, and a polling loop does not log every iteration.
+- A traceback is only allowed in the modules listed in `TRACEBACK_ALLOWED` in the hygiene test, each with the reason why what it catches holds nothing sensitive. A new entry is reviewed like any other security decision, and an entry that is no longer needed fails the test.
+- Test it with `caplog`. `tests/test_logging_secret_leaks.py` renders the records the way a handler would, tracebacks included, and asserts that a secret in the failure never reaches them.
+
 ## NOTICE
 
 This work is licensed under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).

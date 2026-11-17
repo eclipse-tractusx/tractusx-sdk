@@ -25,6 +25,7 @@
 """This file provides tools for caching.
 """
 
+import functools
 import logging
 from abc import ABC, abstractmethod
 from typing import Any, Optional
@@ -141,6 +142,12 @@ def create_cache_provider() -> CacheProvider:
     raise ValueError(f'Unknown CACHE_BACKEND: {CACHE_BACKEND}')
 
 
+@functools.lru_cache(maxsize=None)
+def _report_missing_cache_provider() -> None:
+    """Logged once per process: the dependency below runs on every request."""
+    logger.error("No cache provider is set in the application state (app.state.cache_provider)")
+
+
 def get_cache_provider(request: Request) -> CacheProvider:
     """
     Dependency function for retrieving the active cache provider from app state.
@@ -153,5 +160,5 @@ def get_cache_provider(request: Request) -> CacheProvider:
     try:
         return request.app.state.cache_provider
     except AttributeError:
-        logger.error("No cache provider is set in the application state (app.state.cache_provider)")
+        _report_missing_cache_provider()
         raise

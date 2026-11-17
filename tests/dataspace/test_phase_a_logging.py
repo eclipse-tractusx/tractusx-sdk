@@ -399,10 +399,21 @@ class TestCacheLogging:
         assert [r.levelno for r in _records(caplog, self.LOGGER)] == [logging.ERROR]
 
     def test_a_missing_provider_is_logged_before_the_error_propagates(self, caplog):
+        cache._report_missing_cache_provider.cache_clear()
         request = MagicMock()
         request.app.state = object()
         with caplog.at_level(logging.DEBUG), pytest.raises(AttributeError):
             cache.get_cache_provider(request)
+        assert [r.levelno for r in _records(caplog, self.LOGGER)] == [logging.ERROR]
+
+    def test_a_missing_provider_is_logged_once_however_many_requests_fail(self, caplog):
+        cache._report_missing_cache_provider.cache_clear()
+        request = MagicMock()
+        request.app.state = object()
+        with caplog.at_level(logging.DEBUG):
+            for _ in range(3):
+                with pytest.raises(AttributeError):
+                    cache.get_cache_provider(request)
         assert [r.levelno for r in _records(caplog, self.LOGGER)] == [logging.ERROR]
 
     def test_a_provider_in_the_state_is_returned_silently(self, caplog):
