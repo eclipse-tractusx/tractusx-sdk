@@ -28,6 +28,7 @@ import logging
 from typing import Any, Mapping
 
 from tractusx_sdk._logging_fields import log_extra, safe_url
+from tractusx_sdk._logging_operations import LogOperations
 
 from .. import SubmodelAdapter
 
@@ -195,7 +196,7 @@ class S3Adapter(SubmodelAdapter):
         Retrieve a submodel JSON object from S3.
         """
         key = self._extract_key(submodel_metadata)
-        logger.debug("S3 read: bucket '%s', key '%s'", self.bucket_name, key, extra=log_extra(adapter_type="S3Adapter", operation="s3.read"))
+        logger.debug("S3 read: bucket '%s', key '%s'", self.bucket_name, key, extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_READ))
         try:
             response = self.client.get_object(Bucket=self.bucket_name, Key=key)
             return json.loads(response["Body"].read())
@@ -203,12 +204,12 @@ class S3Adapter(SubmodelAdapter):
             if e.response["Error"]["Code"] in ("NoSuchKey", "404"):
                 # An expected outcome (e.g. checking before creating), not an alert
                 logger.debug("S3 read: key '%s' does not exist in bucket '%s'", key, self.bucket_name,
-                             extra=log_extra(adapter_type="S3Adapter", operation="s3.read"))
+                             extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_READ))
                 raise FileNotFoundError(
                     f"Submodel not found in S3: bucket={self.bucket_name}, key={key}"
                 ) from e
             logger.error("S3 read failed for key '%s' in bucket '%s' (%s)", key, self.bucket_name, _error_code(e),
-                         extra=log_extra(adapter_type="S3Adapter", operation="s3.read"))
+                         extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_READ))
             raise
 
     def write(self, submodel_metadata: Mapping[str, Any], content: bytes) -> None:
@@ -216,17 +217,17 @@ class S3Adapter(SubmodelAdapter):
         Write raw bytes to an S3 object.
         """
         if not isinstance(content, bytes):
-            logger.warning("S3 write rejected: the content must be bytes", extra=log_extra(adapter_type="S3Adapter", operation="s3.write"))
+            logger.warning("S3 write rejected: the content must be bytes", extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_WRITE))
             raise TypeError("Content must be bytes!")
 
         key = self._extract_key(submodel_metadata)
         logger.debug("S3 write: bucket '%s', key '%s', %d bytes", self.bucket_name, key, len(content),
-                     extra=log_extra(adapter_type="S3Adapter", operation="s3.write"))
+                     extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_WRITE))
         try:
             self.client.put_object(Bucket=self.bucket_name, Key=key, Body=content)
         except self.client_error as e:
             logger.error("S3 write failed for key '%s' in bucket '%s' (%s)", key, self.bucket_name, _error_code(e),
-                         extra=log_extra(adapter_type="S3Adapter", operation="s3.write"))
+                         extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_WRITE))
             raise RuntimeError(
                 f"Failed to write to S3: bucket={self.bucket_name}, key={key}"
             ) from e
@@ -237,13 +238,13 @@ class S3Adapter(SubmodelAdapter):
         """
         if content is not None and not isinstance(content, Mapping):
             logger.warning("S3 JSON write rejected: the content must be a mapping or None",
-                           extra=log_extra(adapter_type="S3Adapter", operation="s3.write_json"))
+                           extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_WRITE_JSON))
             raise TypeError("content must be a mapping or None")
 
         key = self._extract_key(submodel_metadata)
         body = json.dumps(content).encode("utf-8")
         logger.debug("S3 JSON write: bucket '%s', key '%s', %d bytes", self.bucket_name, key, len(body),
-                     extra=log_extra(adapter_type="S3Adapter", operation="s3.write_json"))
+                     extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_WRITE_JSON))
         try:
             self.client.put_object(
                 Bucket=self.bucket_name,
@@ -253,7 +254,7 @@ class S3Adapter(SubmodelAdapter):
             )
         except self.client_error as e:
             logger.error("S3 JSON write failed for key '%s' in bucket '%s' (%s)", key, self.bucket_name, _error_code(e),
-                         extra=log_extra(adapter_type="S3Adapter", operation="s3.write_json"))
+                         extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_WRITE_JSON))
             raise RuntimeError(
                 f"Failed to write JSON to S3: bucket={self.bucket_name}, key={key}"
             ) from e
@@ -264,12 +265,12 @@ class S3Adapter(SubmodelAdapter):
         """
         key = self._extract_key(submodel_metadata)
         logger.debug("S3 delete: bucket '%s', key '%s'", self.bucket_name, key,
-                     extra=log_extra(adapter_type="S3Adapter", operation="s3.delete"))
+                     extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_DELETE))
         try:
             self.client.delete_object(Bucket=self.bucket_name, Key=key)
         except self.client_error as e:
             logger.error("S3 delete failed for key '%s' in bucket '%s' (%s)", key, self.bucket_name, _error_code(e),
-                         extra=log_extra(adapter_type="S3Adapter", operation="s3.delete"))
+                         extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_DELETE))
             raise RuntimeError(
                 f"Failed to delete S3 object: bucket={self.bucket_name}, key={key}"
             ) from e
@@ -280,17 +281,17 @@ class S3Adapter(SubmodelAdapter):
         """
         key = self._extract_key(submodel_metadata)
         logger.debug("S3 exists: bucket '%s', key '%s'", self.bucket_name, key,
-                     extra=log_extra(adapter_type="S3Adapter", operation="s3.exists"))
+                     extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_EXISTS))
         try:
             self.client.head_object(Bucket=self.bucket_name, Key=key)
             return True
         except self.client_error as e:
             if e.response["Error"]["Code"] in ("404", "NoSuchKey"):
                 logger.debug("S3 exists: key '%s' does not exist in bucket '%s'", key, self.bucket_name,
-                             extra=log_extra(adapter_type="S3Adapter", operation="s3.exists"))
+                             extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_EXISTS))
                 return False
             logger.error("S3 exists check failed for key '%s' in bucket '%s' (%s)", key, self.bucket_name, _error_code(e),
-                         extra=log_extra(adapter_type="S3Adapter", operation="s3.exists"))
+                         extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_EXISTS))
             raise
 
     def list_contents(self, prefix: str | None = None) -> list[str]:
@@ -299,7 +300,7 @@ class S3Adapter(SubmodelAdapter):
         """
         if prefix is None:
             logger.debug("S3 list: no prefix given, listing the whole bucket '%s'", self.bucket_name,
-                         extra=log_extra(adapter_type="S3Adapter", operation="s3.list"))
+                         extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_LIST))
         try:
             paginator = self.client.get_paginator("list_objects_v2")
             page_iterator = paginator.paginate(Bucket=self.bucket_name, Prefix=prefix or "")
@@ -308,11 +309,11 @@ class S3Adapter(SubmodelAdapter):
                 contents = page.get("Contents", [])
                 keys.extend(obj["Key"] for obj in contents)
             logger.debug("S3 list: %d object(s) in bucket '%s' with prefix '%s'", len(keys), self.bucket_name, prefix or "",
-                         extra=log_extra(adapter_type="S3Adapter", operation="s3.list"))
+                         extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_LIST))
             return keys
         except self.client_error as e:
             logger.error("S3 list failed for prefix '%s' in bucket '%s' (%s)", prefix or "", self.bucket_name, _error_code(e),
-                         extra=log_extra(adapter_type="S3Adapter", operation="s3.list"))
+                         extra=log_extra(adapter_type="S3Adapter", operation=LogOperations.S3_LIST))
             raise RuntimeError(
                 f"Failed to list objects in S3: bucket={self.bucket_name}, prefix={prefix}"
             ) from e

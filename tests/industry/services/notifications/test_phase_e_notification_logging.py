@@ -242,7 +242,7 @@ class TestSending:
 
 class TestSendingToSeveralProviders:
 
-    def test_the_failures_that_are_kept_in_the_result_are_logged_and_the_run_is_summarised(self, flavor, consumer, notification, caplog):
+    def test_the_failures_that_are_kept_in_the_result_are_a_debug_detail_and_the_run_is_summarised(self, flavor, consumer, notification, caplog):
         def fake(provider_bpn, **kwargs):
             if provider_bpn == "BPNL00000000000B":
                 raise RuntimeError("provider down")
@@ -257,10 +257,10 @@ class TestSendingToSeveralProviders:
         assert [results[b]["success"] for b in ("BPNL00000000000A", "BPNL00000000000B", "BPNL00000000000C")] == [True, False, False]
         records = _records(caplog, flavor.consumer_logger)
         warnings = [r for r in records if r.levelno == logging.WARNING]
-        assert len(warnings) == 2
-        failed = [r for r in warnings if "(RuntimeError)" in r.getMessage()][0]
-        assert (failed.bpn, failed.counter_party_address) == ("BPNL00000000000B", SAFE_ADDRESS)
-        assert any("lacks 'bpn' or 'dsp_url'" in r.getMessage() for r in warnings)
+        assert len(warnings) == 1 and "lacks 'bpn' or 'dsp_url'" in warnings[0].getMessage()
+        failed = [r for r in records if "(RuntimeError)" in r.getMessage()]
+        assert len(failed) == 1 and failed[0].levelno == logging.DEBUG
+        assert (failed[0].bpn, failed[0].counter_party_address) == ("BPNL00000000000B", SAFE_ADDRESS)
         summary = [r for r in records if r.levelno == logging.INFO][-1]
         assert summary.getMessage() == f"Notification {notification.header.message_id} was sent to 1 of 3 provider(s)"
         assert SECRET not in _dump(caplog)

@@ -94,7 +94,7 @@ def http_status(response: Any) -> Optional[int]:
 
 
 def log_extra(
-    *,
+    *,  # NOSONAR
     asset_id: Optional[str] = None,
     aas_id: Optional[str] = None,
     submodel_id: Optional[str] = None,

@@ -7,6 +7,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See also the overarching [CHANGELOG.md](https://eclipse-tractusx.github.io/changelog) for Tractus-X releases.
 
+## [Unreleased]
+
+### Added
+
+- feat: a documented, stable structured context on every log record. The SDK builds the `extra` of a record only through `log_extra`, which accepts a fixed list of fields (`asset_id`, `negotiation_id`, `transfer_id`, `bpn`, `counter_party_address`, `url`, `status_code`, `elapsed_ms`, `operation`...), so a structured handler can filter on them without parsing messages. The `operation` of a record is one of the `LogOperations` constants (`consumer.get_catalog`...), so a typo cannot create a variant spelling. The list is documented in `docs/admin/logging.md` and a test keeps the guide and the code in sync
+- feat: every HTTP request the SDK sends is logged once (request line, status and elapsed time), at `DEBUG`, with a `WARNING` for a server failure (5xx). Nothing is computed while `DEBUG` is disabled
+- feat: log throttling. A polling loop logs its first attempt and then one in ten, a state poll that keeps failing is a `WARNING` once in a while and `DEBUG` otherwise, and the TLS warning of the dataplane requests is logged once per process, so a long negotiation or a hot loop no longer floods the log
+- test: hygiene guards (`tests/test_logging_hygiene.py`) that fail the build on a `print`, a `verbose`/`debug`/`logger` argument, a log call that is not lazy, an `extra` outside `log_extra`, an undocumented field, an `operation` that is not a `LogOperations` constant, or a secret, a response body or a URL with a query string in the arguments of a log call
+
+### Changed
+
+- feat: a failure is logged by the type of its exception (`... failed (ConnectError)`), through one helper (`log_failure`), never by its message or its traceback, which quote the full URL (query string included) and may echo what the remote service received
+- feat: one `ERROR` per failed operation, not one per layer. The inner layers (HTTP request, controller, state machine) log at `DEBUG` and let the exception travel; the operation that reports the failure (`negotiate_and_transfer`, the wrapper of the parallel catalog requests, a wrong configuration or argument) logs it once at `ERROR`. Failures kept in a result (one provider out of several in `send_to_many`), requests rejected by an authentication manager and undecodable inputs are `DEBUG`
+- feat: the control characters of the values a log record carries are escaped, so a value that comes from a remote party cannot forge a line of the log; the free text of a remote party is logged with `%r`
+- chore: the levels policy is documented in `docs/admin/logging.md` (what each level means, the single `ERROR`, the TLS warning), and `docs/admin/security.md` describes what is and is not logged
+
+### Fixed
+
+- fix: URLs carrying a secret (user information, query string, fragment, path parameters) no longer reach the logs through the message or the traceback of an exception, and the SDK logs the URL of a request through `safe_url`
+- fix: response bodies (failed catalog requests, failed notifications) are no longer written to the logs at any level; read them from `error.response_body`
+
 ## [0.8.2] - 2026-08-18
 
 ### Added

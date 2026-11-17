@@ -30,9 +30,6 @@ import pytest
 
 import tractusx_sdk.dataspace.services.connector.base_connector_consumer as bcc
 from tractusx_sdk.dataspace.managers.connection.memory import MemoryConnectionManager
-from tractusx_sdk.dataspace.services.connector.base_connector_consumer import (
-    BaseConnectorConsumerService, _policy_id_of, _should_log_poll,
-)
 from tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service import ConnectorConsumerService as SaturnConsumer
 from tractusx_sdk.exceptions import CatalogError, NegotiationError, TransferError
 
@@ -61,7 +58,7 @@ def _response(status=200, payload=None, text=""):
 
 @pytest.fixture
 def service():
-    service = BaseConnectorConsumerService(
+    service = bcc.BaseConnectorConsumerService(
         dataspace_version="jupiter", base_url="https://control.example.com", dma_path="/management",
         headers={"X-Api-Key": f"api-key-{SECRET}"}, connection_manager=MemoryConnectionManager())
     service._edr_controller = Mock()
@@ -76,20 +73,20 @@ class TestHelpers:
 
     @pytest.mark.parametrize("attempt, expected", [(1, True), (2, False), (9, False), (10, True), (11, False), (20, True), (25, False)])
     def test_a_polling_loop_logs_its_first_attempt_and_then_one_in_ten(self, attempt, expected):
-        assert _should_log_poll(attempt) is expected
+        assert bcc._should_log_poll(attempt) is expected
 
     def test_policy_id_of(self):
-        assert _policy_id_of(POLICY) == "policy-1"
-        assert _policy_id_of({}) is None
-        assert _policy_id_of(None) is None
-        assert _policy_id_of("x") is None
+        assert bcc._policy_id_of(POLICY) == "policy-1"
+        assert bcc._policy_id_of({}) is None
+        assert bcc._policy_id_of(None) is None
+        assert bcc._policy_id_of("x") is None
 
 
 class TestConstructionAndEdr:
 
     def test_creation_is_logged_without_the_headers(self, caplog):
         with caplog.at_level(logging.DEBUG):
-            BaseConnectorConsumerService(dataspace_version="jupiter", base_url="https://c.example.com", dma_path="/m",
+            bcc.BaseConnectorConsumerService(dataspace_version="jupiter", base_url="https://c.example.com", dma_path="/m",
                                          headers={"X-Api-Key": f"api-key-{SECRET}"})
         messages = [r.getMessage() for r in _records(caplog)]
         assert any("No connection manager given" in m for m in messages)
@@ -153,7 +150,7 @@ class TestCatalog:
                                                                filter_expression=[])
         assert result["https://ok.example.com"] == {"ok": True} and "error" in result[f"https://bad.example.com?token={SECRET}"]
         warning = [r for r in _records(caplog) if r.levelno == logging.WARNING][0]
-        assert warning.bpn == "BPNL1" and "https://bad.example.com" in warning.getMessage()
+        assert warning.bpn == "BPNL1" and warning.counter_party_address == "https://bad.example.com"
         assert SECRET not in warning.getMessage() and SECRET not in str(warning.counter_party_address)
 
     def test_the_parallel_fetch_logs_the_failure_by_its_type_and_re_raises_it(self, service, caplog):

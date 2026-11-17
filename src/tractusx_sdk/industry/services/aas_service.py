@@ -72,7 +72,7 @@ def _log_dtr(operation: str, arguments: Callable[[], dict], level: int, message:
                                bpn=bound.get("bpn"), operation=operation))
 
 
-def _logged(description: str, writes: bool = False):
+def _logged(description: str, writes: bool = False):  # NOSONAR
     """
     Logs an operation of the Digital Twin Registry service.
 

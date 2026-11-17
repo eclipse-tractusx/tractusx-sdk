@@ -31,6 +31,7 @@ from typing import Any, Callable, Mapping, Union, get_args, get_origin
 import types
 
 from tractusx_sdk._logging_fields import log_extra
+from tractusx_sdk._logging_operations import LogOperations
 
 # Security: the configuration of an adapter holds credentials (S3 keys, API tokens). Its values are never logged,
 # only the names of its settings.
@@ -90,7 +91,7 @@ class SubmodelAdapterFactory:
             return adapter_type.name.lower()
 
         if not isinstance(adapter_type, str) or not adapter_type.strip():
-            logger.warning("An adapter type must be a non-empty string or a SubmodelAdapterType", extra=log_extra(operation="adapter_factory"))
+            logger.warning("An adapter type must be a non-empty string or a SubmodelAdapterType", extra=log_extra(operation=LogOperations.ADAPTER_FACTORY))
             raise ValueError("adapter_type must be a non-empty string or SubmodelAdapterType")
 
         return adapter_type.strip().replace("-", "_").replace(" ", "_").lower()
@@ -151,42 +152,42 @@ class SubmodelAdapterFactory:
         """
         if not builder_factory and adapter_class is None:
             logger.warning("Registering the adapter type '%s' needs a builder_factory or an adapter_class", adapter_type,
-                           extra=log_extra(adapter_type=str(adapter_type), operation="adapter_factory.register"))
+                           extra=log_extra(adapter_type=str(adapter_type), operation=LogOperations.ADAPTER_FACTORY_REGISTER))
             raise ValueError("Either builder_factory or adapter_class must be provided")
 
         if builder_factory and adapter_class is not None:
             logger.warning("Registering the adapter type '%s': give a builder_factory or an adapter_class, not both", adapter_type,
-                           extra=log_extra(adapter_type=str(adapter_type), operation="adapter_factory.register"))
+                           extra=log_extra(adapter_type=str(adapter_type), operation=LogOperations.ADAPTER_FACTORY_REGISTER))
             raise ValueError("Provide only one of builder_factory or adapter_class")
 
         adapter_key = SubmodelAdapterFactory._normalize_type_key(adapter_type)
         if adapter_key in SubmodelAdapterFactory._registered_builders and not overwrite:
             logger.warning("The adapter type '%s' is already registered and overwrite is off", adapter_key,
-                           extra=log_extra(adapter_type=adapter_key, operation="adapter_factory.register"))
+                           extra=log_extra(adapter_type=adapter_key, operation=LogOperations.ADAPTER_FACTORY_REGISTER))
             raise ValueError(f"Adapter type '{adapter_type}' is already registered")
 
         if adapter_key in SubmodelAdapterFactory._registered_builders:
             logger.info("Overwriting the registered adapter type '%s'", adapter_key,
-                        extra=log_extra(adapter_type=adapter_key, operation="adapter_factory.register"))
+                        extra=log_extra(adapter_type=adapter_key, operation=LogOperations.ADAPTER_FACTORY_REGISTER))
 
         if builder_factory is not None:
             if not callable(builder_factory):
                 logger.warning("The builder_factory of the adapter type '%s' is not callable", adapter_key,
-                               extra=log_extra(adapter_type=adapter_key, operation="adapter_factory.register"))
+                               extra=log_extra(adapter_type=adapter_key, operation=LogOperations.ADAPTER_FACTORY_REGISTER))
                 raise TypeError("builder_factory must be callable")
             SubmodelAdapterFactory._registered_builders[adapter_key] = builder_factory
             logger.info("Registered the adapter type '%s' through a builder factory", adapter_key,
-                        extra=log_extra(adapter_type=adapter_key, operation="adapter_factory.register"))
+                        extra=log_extra(adapter_type=adapter_key, operation=LogOperations.ADAPTER_FACTORY_REGISTER))
             return
 
         class_builder = getattr(adapter_class, "builder", None)
         if not callable(class_builder):
             logger.warning("The adapter class of the adapter type '%s' has no callable builder", adapter_key,
-                           extra=log_extra(adapter_type=adapter_key, operation="adapter_factory.register"))
+                           extra=log_extra(adapter_type=adapter_key, operation=LogOperations.ADAPTER_FACTORY_REGISTER))
             raise TypeError("adapter_class must expose a callable builder classmethod")
         SubmodelAdapterFactory._registered_builders[adapter_key] = class_builder
         logger.info("Registered the adapter type '%s' through the class %s", adapter_key, getattr(adapter_class, "__name__", "?"),
-                    extra=log_extra(adapter_type=adapter_key, operation="adapter_factory.register"))
+                    extra=log_extra(adapter_type=adapter_key, operation=LogOperations.ADAPTER_FACTORY_REGISTER))
 
     @staticmethod
     def unregister_adapter(adapter_type: str) -> None:
@@ -203,10 +204,10 @@ class SubmodelAdapterFactory:
         adapter_key = SubmodelAdapterFactory._normalize_type_key(adapter_type)
         if SubmodelAdapterFactory._registered_builders.pop(adapter_key, None) is not None:
             logger.info("Unregistered the adapter type '%s'", adapter_key,
-                        extra=log_extra(adapter_type=adapter_key, operation="adapter_factory.unregister"))
+                        extra=log_extra(adapter_type=adapter_key, operation=LogOperations.ADAPTER_FACTORY_UNREGISTER))
         else:
             logger.debug("The adapter type '%s' was not registered, nothing to unregister", adapter_key,
-                         extra=log_extra(adapter_type=adapter_key, operation="adapter_factory.unregister"))
+                         extra=log_extra(adapter_type=adapter_key, operation=LogOperations.ADAPTER_FACTORY_UNREGISTER))
 
     @staticmethod
     def get_registered_adapter_types() -> list[str]:
@@ -268,12 +269,12 @@ class SubmodelAdapterFactory:
             adapter_key = SubmodelAdapterFactory._normalize_type_key(adapter_type)
             if adapter_key in SubmodelAdapterFactory._registered_builders:
                 logger.debug("The adapter type '%s' is not a built-in one, using its registered builder", adapter_key,
-                             extra=log_extra(adapter_type=adapter_key, operation="adapter_factory.get_builder"))
+                             extra=log_extra(adapter_type=adapter_key, operation=LogOperations.ADAPTER_FACTORY_GET_BUILDER))
                 return SubmodelAdapterFactory._registered_builders[adapter_key]()
 
             allowed = SubmodelAdapterFactory.get_available_adapter_types()
             logger.error("Unsupported adapter type '%s'. Allowed values: %s", adapter_type, ", ".join(sorted(set(allowed))),
-                         extra=log_extra(adapter_type=str(adapter_type), operation="adapter_factory.get_builder"))
+                         extra=log_extra(adapter_type=str(adapter_type), operation=LogOperations.ADAPTER_FACTORY_GET_BUILDER))
             raise ValueError(
                 f"Unsupported adapter type '{adapter_type}'. Allowed values: {', '.join(sorted(set(allowed)))}"
             )
@@ -286,17 +287,17 @@ class SubmodelAdapterFactory:
             module = import_module(module_name)
             adapter_class = getattr(module, adapter_class_name)
             logger.debug("Resolved %s from %s", adapter_class_name, module_name,
-                         extra=log_extra(adapter_type=adapter_class_name, operation="adapter_factory.get_builder"))
+                         extra=log_extra(adapter_type=adapter_class_name, operation=LogOperations.ADAPTER_FACTORY_GET_BUILDER))
             return adapter_class.builder()
         except AttributeError as attr_exception:
             logger.exception("The adapter class %s was not found in %s", adapter_class_name, module_name,
-                             extra=log_extra(adapter_type=adapter_class_name, operation="adapter_factory.get_builder"))
+                             extra=log_extra(adapter_type=adapter_class_name, operation=LogOperations.ADAPTER_FACTORY_GET_BUILDER))
             raise AttributeError(
                 f"Failed to import adapter class {adapter_class_name} for module {module_name}"
             ) from attr_exception
         except ImportError as import_exception:
             logger.exception("The adapter module %s could not be imported", module_name,
-                             extra=log_extra(adapter_type=adapter_class_name, operation="adapter_factory.get_builder"))
+                             extra=log_extra(adapter_type=adapter_class_name, operation=LogOperations.ADAPTER_FACTORY_GET_BUILDER))
             raise ImportError(
                 f"Failed to import module {module_name}. Ensure that the required packages are installed and the PYTHONPATH is set correctly."
             ) from import_exception
@@ -371,19 +372,19 @@ class SubmodelAdapterFactory:
         """
         if not isinstance(config, Mapping):
             logger.warning("The configuration of a '%s' adapter must be a mapping, got a %s", adapter_type, type(config).__name__,
-                           extra=log_extra(adapter_type=str(adapter_type), operation="adapter_factory.from_config"))
+                           extra=log_extra(adapter_type=str(adapter_type), operation=LogOperations.ADAPTER_FACTORY_FROM_CONFIG))
             raise TypeError("config must be a mapping")
 
         builder = SubmodelAdapterFactory._get_adapter_builder(adapter_type=adapter_type)
         # Only the names of the settings are logged: their values may be credentials
         logger.debug("Creating a '%s' adapter with the settings %s", adapter_type, sorted(config),
-                     extra=log_extra(adapter_type=str(adapter_type), operation="adapter_factory.from_config"))
+                     extra=log_extra(adapter_type=str(adapter_type), operation=LogOperations.ADAPTER_FACTORY_FROM_CONFIG))
 
         for key, value in config.items():
             builder_method = getattr(builder, key, None)
             if not callable(builder_method):
                 logger.warning("Unsupported setting '%s' for the adapter type '%s'", key, adapter_type,
-                               extra=log_extra(adapter_type=str(adapter_type), operation="adapter_factory.from_config"))
+                               extra=log_extra(adapter_type=str(adapter_type), operation=LogOperations.ADAPTER_FACTORY_FROM_CONFIG))
                 raise ValueError(f"Unsupported config key '{key}' for adapter type '{adapter_type}'")
 
             # Perform runtime type checking against the builder method's first parameter annotation, if available
@@ -394,7 +395,7 @@ class SubmodelAdapterFactory:
                     expected = SubmodelAdapterFactory._annotation_to_display_name(expected_annotation)
                     actual = type(value).__name__
                     logger.warning("The setting '%s' of the adapter type '%s' should be a %s, got a %s", key, adapter_type, expected, actual,
-                                   extra=log_extra(adapter_type=str(adapter_type), operation="adapter_factory.from_config"))
+                                   extra=log_extra(adapter_type=str(adapter_type), operation=LogOperations.ADAPTER_FACTORY_FROM_CONFIG))
                     raise TypeError(
                         f"Invalid type for config key '{key}' for adapter type '{adapter_type}': "
                         f"expected '{expected}', got '{actual}'"
@@ -404,7 +405,7 @@ class SubmodelAdapterFactory:
 
         adapter = builder.build()
         logger.info("Created a '%s' adapter (%s)", adapter_type, type(adapter).__name__,
-                    extra=log_extra(adapter_type=type(adapter).__name__, operation="adapter_factory.from_config"))
+                    extra=log_extra(adapter_type=type(adapter).__name__, operation=LogOperations.ADAPTER_FACTORY_FROM_CONFIG))
         return adapter
     
     @staticmethod

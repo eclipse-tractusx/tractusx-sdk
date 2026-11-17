@@ -33,6 +33,7 @@ import logging
 from typing import Dict, List, Optional, Tuple, Any
 from tractusx_sdk._logging_fields import log_extra
 from tractusx_sdk._logging_helpers import log_failure
+from tractusx_sdk._logging_operations import LogOperations
 from tractusx_sdk.dataspace.tools import op
 from tractusx_sdk.dataspace.tools.validate_submodels import SchemaLookupResult, submodel_schema_finder
 from tractusx_sdk.exceptions import InvalidSemanticIdError, SchemaNotFoundError, SchemaTranslationError
@@ -146,15 +147,15 @@ class SammSchemaContextTranslator:
             ...     print("Schema fetched successfully")
         """
         try:
-            logger.info("Fetching schema for semantic ID: %s", semantic_id, extra=log_extra(schema_urn=semantic_id, operation="semantics.fetch"))
+            logger.info("Fetching schema for semantic ID: %s", semantic_id, extra=log_extra(schema_urn=semantic_id, operation=LogOperations.SEMANTICS_FETCH))
             
             result = self._find_schema(semantic_id, link_core=link_core)
-            logger.info("Successfully fetched schema: %s", result.message, extra=log_extra(schema_urn=semantic_id, operation="semantics.fetch"))
+            logger.info("Successfully fetched schema: %s", result.message, extra=log_extra(schema_urn=semantic_id, operation=LogOperations.SEMANTICS_FETCH))
             return result.schema
                 
         except Exception as e:
             log_failure(logger, "Error fetching schema for %s (%s)", e, semantic_id,
-                        schema_urn=semantic_id, operation="semantics.fetch")
+                        schema_urn=semantic_id, operation=LogOperations.SEMANTICS_FETCH)
             return None
 
     def _find_schema(self, semantic_id: str, link_core: str) -> SchemaLookupResult:
@@ -199,7 +200,7 @@ class SammSchemaContextTranslator:
         # If schema is None, try to fetch it using the semantic ID
         if schema is None:
             logger.info("Schema not provided, attempting to fetch from semantic ID: %s", semantic_id,
-                        extra=log_extra(schema_urn=semantic_id, operation="semantics.prepare"))
+                        extra=log_extra(schema_urn=semantic_id, operation=LogOperations.SEMANTICS_PREPARE))
             try:
                 schema = self._find_schema(semantic_id, link_core=link_core).schema
             except InvalidSemanticIdError:
@@ -207,14 +208,14 @@ class SammSchemaContextTranslator:
             except Exception as e:
                 # The finder logged the cause: this adds which semantic id the translation was after
                 log_failure(logger, "The schema of '%s' could not be fetched for the translation (%s)", e, semantic_id,
-                            schema_urn=semantic_id, operation="semantics.prepare")
+                            schema_urn=semantic_id, operation=LogOperations.SEMANTICS_PREPARE)
                 raise SchemaNotFoundError(f"Could not fetch schema for semantic ID: {semantic_id}") from e
         
         self.baseSchema = copy.copy(schema)
         semantic_parts = semantic_id.split(self.rootRef)  
         if((len(semantic_parts) < 2) or (semantic_parts[1] == '')):
             logger.warning("The semantic id '%s' has no model reference (the part after '#')", semantic_id,
-                           extra=log_extra(schema_urn=semantic_id, operation="semantics.prepare"))
+                           extra=log_extra(schema_urn=semantic_id, operation=LogOperations.SEMANTICS_PREPARE))
             raise InvalidSemanticIdError("Invalid semantic id, missing the model reference!")
         
         aspect_name = semantic_parts[1]
@@ -222,7 +223,7 @@ class SammSchemaContextTranslator:
         if(aspect_prefix is None):
             aspect_prefix = f"{aspect_name.lower()}-aspect"
             logger.debug("No aspect prefix given, using '%s'", aspect_prefix,
-                         extra=log_extra(schema_urn=semantic_id, operation="semantics.prepare"))
+                         extra=log_extra(schema_urn=semantic_id, operation=LogOperations.SEMANTICS_PREPARE))
             
         self.aspectPrefix = aspect_prefix
 
@@ -231,7 +232,7 @@ class SammSchemaContextTranslator:
         
         if jsonld_context is None:
             logger.error("No JSON-LD context could be created for '%s': the schema has no usable root node", semantic_id,
-                         extra=log_extra(schema_urn=semantic_id, operation="semantics.prepare"))
+                         extra=log_extra(schema_urn=semantic_id, operation=LogOperations.SEMANTICS_PREPARE))
             raise SchemaTranslationError("It was not possible to generated the json-ld!")
         
         # Start with the basic JSON-LD structure
@@ -314,7 +315,7 @@ class SammSchemaContextTranslator:
                 response_context["@samm-urn"] = schema["x-samm-aspect-model-urn"]
                 
             logger.debug("Translated '%s' into a flattened JSON-LD context with %d entries", semantic_id, len(response_context),
-                         extra=log_extra(schema_urn=semantic_id, operation="semantics.schema_to_jsonld"))
+                         extra=log_extra(schema_urn=semantic_id, operation=LogOperations.SEMANTICS_SCHEMA_TO_JSONLD))
             return {
                 "@context": response_context
             }
@@ -323,7 +324,7 @@ class SammSchemaContextTranslator:
         except Exception as e:
             # The original failure was logged where it happened (with its traceback): this says which semantic id it was for
             log_failure(logger, "The translation of '%s' into a flattened JSON-LD context failed (%s)", e, semantic_id,
-                        schema_urn=semantic_id, operation="semantics.schema_to_jsonld")
+                        schema_urn=semantic_id, operation=LogOperations.SEMANTICS_SCHEMA_TO_JSONLD)
             raise SchemaTranslationError("It was not possible to create flattened jsonld schema") from e
 
     def schema_to_jsonld_nested(self, semantic_id: str, schema: Optional[Dict[str, Any]] = None, link_core: str = 'https://raw.githubusercontent.com/eclipse-tractusx/sldt-semantic-models/main/',  aspect_prefix:str = "cx") -> Dict[str, Any]:
@@ -391,7 +392,7 @@ class SammSchemaContextTranslator:
                 response_context[aspect_name]["@context"]["@samm-urn"] = schema["x-samm-aspect-model-urn"]
                 
             logger.debug("Translated '%s' into a nested JSON-LD context", semantic_id,
-                         extra=log_extra(schema_urn=semantic_id, operation="semantics.schema_to_jsonld_nested"))
+                         extra=log_extra(schema_urn=semantic_id, operation=LogOperations.SEMANTICS_SCHEMA_TO_JSONLD_NESTED))
             return {
                 "@context": response_context
             }
@@ -400,7 +401,7 @@ class SammSchemaContextTranslator:
         except Exception as e:
             # The original failure was logged where it happened (with its traceback): this says which semantic id it was for
             log_failure(logger, "The translation of '%s' into a nested JSON-LD context failed (%s)", e, semantic_id,
-                        schema_urn=semantic_id, operation="semantics.schema_to_jsonld_nested")
+                        schema_urn=semantic_id, operation=LogOperations.SEMANTICS_SCHEMA_TO_JSONLD_NESTED)
             raise SchemaTranslationError("It was not possible to create jsonld schema") from e
     
 
@@ -480,7 +481,7 @@ class SammSchemaContextTranslator:
         try:
             ## Schema must be not none and type must be in the schema
             if (property is None) or ("type" not in property):
-                logger.debug("No node was created for '%s': the property has no type", key, extra=log_extra(operation="semantics.create_node"))
+                logger.debug("No node was created for '%s': the property has no type", key, extra=log_extra(operation=LogOperations.SEMANTICS_CREATE_NODE))
                 return None
             
             ## Start by creating a simple node
@@ -579,7 +580,7 @@ class SammSchemaContextTranslator:
             ## If object has not the properties or the allOf key
             if not ((self.propertiesKey in property) or (self.allOfKey in property)):
                 logger.debug("The object has neither '%s' nor '%s', no object node was created", self.propertiesKey, self.allOfKey,
-                             extra=log_extra(operation="semantics.create_object_node"))
+                             extra=log_extra(operation=LogOperations.SEMANTICS_CREATE_OBJECT_NODE))
                 return None
             
             ## If allOf keys is present then it will be required to create a context with multiple properties added
@@ -635,7 +636,7 @@ class SammSchemaContextTranslator:
         try:
             ## If array node has not the item key
             if self.itemKey not in property:
-                logger.debug("The array has no '%s', no array node was created", self.itemKey, extra=log_extra(operation="semantics.create_array_node"))
+                logger.debug("The array has no '%s', no array node was created", self.itemKey, extra=log_extra(operation=LogOperations.SEMANTICS_CREATE_ARRAY_NODE))
                 return None
             
             item = property[self.itemKey]
@@ -800,18 +801,18 @@ class SammSchemaContextTranslator:
         try:
             ## If no key is provided or node is empty
             if(properties is None):
-                logger.debug("There are no properties to create a context from", extra=log_extra(operation="semantics.create_single_properties_context"))
+                logger.debug("There are no properties to create a context from", extra=log_extra(operation=LogOperations.SEMANTICS_CREATE_SINGLE_PROPERTIES_CONTEXT))
                 return None
             
             ## If no key is found
             if(not isinstance(properties, dict)):
                 logger.debug("The properties are a %s, not an object: no context was created", type(properties).__name__,
-                             extra=log_extra(operation="semantics.create_single_properties_context"))
+                             extra=log_extra(operation=LogOperations.SEMANTICS_CREATE_SINGLE_PROPERTIES_CONTEXT))
                 return None
             
             ## If no keys are provided in the properties
             if(len(properties.keys())  == 0):
-                logger.debug("The properties are empty: no context was created", extra=log_extra(operation="semantics.create_single_properties_context"))
+                logger.debug("The properties are empty: no context was created", extra=log_extra(operation=LogOperations.SEMANTICS_CREATE_SINGLE_PROPERTIES_CONTEXT))
                 return None
             
             ## Create new context dict from template
@@ -946,7 +947,7 @@ class SammSchemaContextTranslator:
             ## Ref property must exist in a property inside properties
             if self.refKey not in node:
                 logger.debug("The property '%s' has no '%s', no node property was created", key, self.refKey,
-                             extra=log_extra(operation="semantics.create_node_property"))
+                             extra=log_extra(operation=LogOperations.SEMANTICS_CREATE_NODE_PROPERTY))
                 return None
 
             ## Get reference from the base schema
@@ -956,7 +957,7 @@ class SammSchemaContextTranslator:
             ## If was not possible to get the reference return None
             if nodeProperty is None:
                 logger.debug("The reference of the property '%s' could not be expanded, no node property was created", key,
-                             extra=log_extra(operation="semantics.create_node_property"))
+                             extra=log_extra(operation=LogOperations.SEMANTICS_CREATE_NODE_PROPERTY))
                 return None
 
             ## Check if we need to add additional context information
@@ -1099,7 +1100,7 @@ class SammSchemaContextTranslator:
         try:
             if(not isinstance(ref, str)):
                 logger.debug("The reference is a %s, not a string: it cannot be resolved", type(ref).__name__,
-                             extra=log_extra(operation="semantics.get_schema_ref"))
+                             extra=log_extra(operation=LogOperations.SEMANTICS_GET_SCHEMA_REF))
                 return None
             
             # If the actual reference is already found means we are going in a loop
@@ -1110,13 +1111,13 @@ class SammSchemaContextTranslator:
             
             if(self.depth >= self.recursionDepth):
                 logger.warning("[WARNING] Infinite recursion detected in the following path: ref[%s] and acumulated ref[%s]!", ref, actualref,
-                               extra=log_extra(operation="semantics.get_schema_ref"))
+                               extra=log_extra(operation=LogOperations.SEMANTICS_GET_SCHEMA_REF))
                 self.depth=0
                 return None
             
             self.depth+=1
             logger.debug("Circular reference to '%s' allowed (depth %d of %d)", ref, self.depth, self.recursionDepth,
-                         extra=log_extra(operation="semantics.get_schema_ref"))
+                         extra=log_extra(operation=LogOperations.SEMANTICS_GET_SCHEMA_REF))
             
             path = ref.removeprefix(self.path_sep) 
 

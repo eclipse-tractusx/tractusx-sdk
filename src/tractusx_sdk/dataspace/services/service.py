@@ -25,6 +25,7 @@ import logging
 from abc import ABC, abstractmethod
 
 from tractusx_sdk._logging_fields import log_extra
+from tractusx_sdk._logging_operations import LogOperations
 
 from ..tools.tracing import TraceableMixin
 
@@ -127,5 +128,5 @@ class BaseService(TraceableMixin, ABC):
             """
             # Only the names of the settings are logged: they may include credentials (headers)
             logger.debug("Building %s with the settings %s", self.cls.__name__, sorted(self._data),
-                         extra=log_extra(dataspace_version=self._data.get("dataspace_version"), operation="service.build"))
+                         extra=log_extra(dataspace_version=self._data.get("dataspace_version"), operation=LogOperations.SERVICE_BUILD))
             return self.cls(**self._data)

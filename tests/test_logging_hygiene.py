@@ -331,13 +331,54 @@ class TestStructuredContext:
     def test_log_failure_is_given_the_module_logger_a_lazy_message_and_an_exception(self):
         offenders = []
         for path, tree in _modules():
+            # A message shared by several calls may be a module constant
+            constants = {target.id: node.value.value for node in tree.body if isinstance(node, ast.Assign)
+                         and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str)
+                         for target in node.targets if isinstance(target, ast.Name)}
             for call in self._failure_calls(tree):
                 logger_ok = len(call.args) >= 3 and isinstance(call.args[0], ast.Name) and call.args[0].id == "logger"
-                message_ok = len(call.args) >= 3 and isinstance(call.args[1], ast.Constant) and isinstance(call.args[1].value, str) \
-                    and call.args[1].value.endswith("%s)")
+                message = None
+                if len(call.args) >= 3:
+                    first = call.args[1]
+                    message = first.value if isinstance(first, ast.Constant) else constants.get(getattr(first, "id", None))
+                message_ok = isinstance(message, str) and message.endswith("%s)")
                 if not (logger_ok and message_ok):
                     offenders.append(f"{_rel(path)}:{call.lineno}")
         assert offenders == []
+
+    def test_the_operation_of_a_record_is_never_a_string_literal(self):
+        """The operation is a ``LogOperations`` constant, so that a typo cannot create a new one (computed ones are allowed)."""
+        from tractusx_sdk._logging_operations import LogOperations
+
+        offenders = []
+        for path, tree in _modules():
+            if _rel(path) in HELPER_MODULES:
+                continue
+            for call in ast.walk(tree):
+                if not (isinstance(call, ast.Call) and isinstance(call.func, ast.Name)
+                        and call.func.id in {"log_extra", "log_failure"}):
+                    continue
+                for keyword in call.keywords:
+                    if keyword.arg != "operation":
+                        continue
+                    value = keyword.value
+                    constant = (isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name)
+                                and value.value.id == "LogOperations" and hasattr(LogOperations, value.attr))
+                    computed = isinstance(value, (ast.JoinedStr, ast.Name))
+                    if not (constant or computed):
+                        offenders.append(f"{_rel(path)}:{call.lineno}")
+        assert offenders == []
+
+    def test_the_log_operations_follow_the_naming_convention(self):
+        """``AREA_STEP = "area.step"``: lower case dotted values, one constant per value, named after the value."""
+        from tractusx_sdk._logging_operations import LogOperations
+
+        constants = {name: value for name, value in vars(LogOperations).items() if name.isupper()}
+        assert constants
+        assert len(set(constants.values())) == len(constants)
+        for name, value in constants.items():
+            assert re.fullmatch(r"[a-z0-9_]+(\.[a-z0-9_]+)*", value), value
+            assert name == value.upper().replace(".", "_"), name
 
     def test_log_calls_are_never_given_secrets(self):
         """

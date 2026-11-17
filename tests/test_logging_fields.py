@@ -87,7 +87,7 @@ class TestLogExtra:
 
     def test_unknown_fields_are_rejected(self):
         with pytest.raises(TypeError):
-            log_extra(headers={"Authorization": "x"})
+            log_extra(**{"headers": {"Authorization": "x"}})
 
     def test_no_field_collides_with_a_reserved_log_record_attribute(self):
         assert EXTRA_FIELDS.isdisjoint(RESERVED)

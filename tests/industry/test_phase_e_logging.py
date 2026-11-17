@@ -426,7 +426,7 @@ class TestSubmodelAdapterFactoryLogging:
         try:
             with caplog.at_level(logging.DEBUG):
                 SubmodelAdapterFactory.register_adapter("custom_phase_e", adapter_class=Custom)
-                SubmodelAdapterFactory.register_adapter("custom_phase_e", builder_factory=lambda: Mock(), overwrite=True)
+                SubmodelAdapterFactory.register_adapter("custom_phase_e", builder_factory=Mock, overwrite=True)
                 SubmodelAdapterFactory._get_adapter_builder("custom_phase_e")
                 SubmodelAdapterFactory.unregister_adapter("custom_phase_e")
                 SubmodelAdapterFactory.unregister_adapter("custom_phase_e")
@@ -453,10 +453,10 @@ class TestSubmodelAdapterFactoryLogging:
         assert _records(caplog, FACTORY)[-1].levelno == logging.WARNING
 
     def test_registering_twice_without_overwrite_is_a_warning_before_it_is_raised(self, caplog):
-        SubmodelAdapterFactory.register_adapter("twice_phase_e", builder_factory=lambda: Mock())
+        SubmodelAdapterFactory.register_adapter("twice_phase_e", builder_factory=Mock)
         try:
             with caplog.at_level(logging.DEBUG), pytest.raises(ValueError, match="already registered"):
-                SubmodelAdapterFactory.register_adapter("twice_phase_e", builder_factory=lambda: Mock())
+                SubmodelAdapterFactory.register_adapter("twice_phase_e", builder_factory=Mock)
             assert _records(caplog, FACTORY)[-1].levelno == logging.WARNING
         finally:
             SubmodelAdapterFactory.unregister_adapter("twice_phase_e")

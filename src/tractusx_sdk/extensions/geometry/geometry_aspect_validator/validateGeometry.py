@@ -36,6 +36,7 @@ from typing import Dict, List, Optional, Any
 from enum import Enum
 
 from tractusx_sdk._logging_fields import log_extra
+from tractusx_sdk._logging_operations import LogOperations
 
 try:
     from .schemaValidator import SchemaValidator
@@ -177,7 +178,7 @@ class GeometryValidator:
             return self.schema_validator.load_schema_from_url()
     
     def load_json_file(self, file_path: Path) -> Optional[Dict[Any, Any]]:
-        logger.debug("Loading the scene file '%s'", file_path, extra=log_extra(operation="geometry.load_file"))
+        logger.debug("Loading the scene file '%s'", file_path, extra=log_extra(operation=LogOperations.GEOMETRY_LOAD_FILE))
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -199,7 +200,7 @@ class GeometryValidator:
         
         json_files = list(directory.glob('*.json'))
         logger.debug("Mapping the catenaXIds of %d JSON file(s) in '%s'", len(json_files), directory,
-                     extra=log_extra(operation="geometry.build_map"))
+                     extra=log_extra(operation=LogOperations.GEOMETRY_BUILD_MAP))
         
         for json_file in json_files:
             data = self.load_json_file(json_file)
@@ -211,8 +212,8 @@ class GeometryValidator:
                     self.catenax_id_map[catenax_id] = json_file
             elif data:
                 logger.debug("The file '%s' has no catenaXId, it is not part of the map", json_file.name,
-                             extra=log_extra(operation="geometry.build_map"))
-        logger.debug("The map holds %d catenaXId(s)", len(self.catenax_id_map), extra=log_extra(operation="geometry.build_map"))
+                             extra=log_extra(operation=LogOperations.GEOMETRY_BUILD_MAP))
+        logger.debug("The map holds %d catenaXId(s)", len(self.catenax_id_map), extra=log_extra(operation=LogOperations.GEOMETRY_BUILD_MAP))
     
     def find_referenced_catenax_ids(self, node: Dict[Any, Any]) -> List[str]:
         referenced_ids = []
@@ -225,11 +226,11 @@ class GeometryValidator:
     def validate_file(self, file_path: Path, depth: int = 0):
         file_key = str(file_path)
         if file_key in self.validated_files:
-            logger.debug("The file '%s' was already validated, skipping it", file_path.name, extra=log_extra(operation="geometry.validate_file"))
+            logger.debug("The file '%s' was already validated, skipping it", file_path.name, extra=log_extra(operation=LogOperations.GEOMETRY_VALIDATE_FILE))
             return
         
         self.validated_files.add(file_key)
-        logger.debug("Validating '%s' (depth %d)", file_path.name, depth, extra=log_extra(operation="geometry.validate_file"))
+        logger.debug("Validating '%s' (depth %d)", file_path.name, depth, extra=log_extra(operation=LogOperations.GEOMETRY_VALIDATE_FILE))
         
         data = self.load_json_file(file_path)
         if data is None:

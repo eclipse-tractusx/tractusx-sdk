@@ -28,6 +28,7 @@ import logging
 import os
 from pathlib import Path
 from tractusx_sdk._logging_fields import log_extra
+from tractusx_sdk._logging_operations import LogOperations
 from tractusx_sdk.dataspace.tools import op
 from typing import Any, List, Mapping
 
@@ -150,7 +151,7 @@ class FileSystemAdapter(SubmodelAdapter):
         """
         path = self._extract_relative_path(submodel_metadata)
         total_path = op.join_paths(self.root_path, path)
-        logger.debug("File system read: '%s'", path, extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.read"))
+        logger.debug("File system read: '%s'", path, extra=log_extra(adapter_type="FileSystemAdapter", operation=LogOperations.FS_READ))
         return op.read_json_file(total_path)
          
 
@@ -160,13 +161,13 @@ class FileSystemAdapter(SubmodelAdapter):
         """
         if not isinstance(content, bytes):
             logger.warning("File system write rejected: the content must be bytes",
-                           extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.write"))
+                           extra=log_extra(adapter_type="FileSystemAdapter", operation=LogOperations.FS_WRITE))
             raise TypeError("content must be bytes")
 
         path = self._extract_relative_path(submodel_metadata)
         total_path = op.join_paths(self.root_path, path)
         logger.debug("File system write: '%s', %d bytes", path, len(content),
-                     extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.write"))
+                     extra=log_extra(adapter_type="FileSystemAdapter", operation=LogOperations.FS_WRITE))
         Path(total_path).parent.mkdir(parents=True, exist_ok=True)
         Path(total_path).write_bytes(content)
 
@@ -176,12 +177,12 @@ class FileSystemAdapter(SubmodelAdapter):
         """
         if content is not None and not isinstance(content, Mapping):
             logger.warning("File system JSON write rejected: the content must be a mapping or None",
-                           extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.write_json"))
+                           extra=log_extra(adapter_type="FileSystemAdapter", operation=LogOperations.FS_WRITE_JSON))
             raise TypeError("content must be a mapping or None")
 
         path = self._extract_relative_path(submodel_metadata)
         total_path = op.join_paths(self.root_path, path)
-        logger.debug("File system JSON write: '%s'", path, extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.write_json"))
+        logger.debug("File system JSON write: '%s'", path, extra=log_extra(adapter_type="FileSystemAdapter", operation=LogOperations.FS_WRITE_JSON))
         Path(total_path).parent.mkdir(parents=True, exist_ok=True)
         op.to_json_file(content, json_file_path=total_path)
 
@@ -191,7 +192,7 @@ class FileSystemAdapter(SubmodelAdapter):
         """
         path = self._extract_relative_path(submodel_metadata)
         total_path = op.join_paths(self.root_path, path)
-        logger.debug("File system delete: '%s'", path, extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.delete"))
+        logger.debug("File system delete: '%s'", path, extra=log_extra(adapter_type="FileSystemAdapter", operation=LogOperations.FS_DELETE))
         op.delete_file(total_path)
         self._cleanup_empty_parent_directories(total_path)
 
@@ -202,7 +203,7 @@ class FileSystemAdapter(SubmodelAdapter):
         path = self._extract_relative_path(submodel_metadata)
         total_path = op.join_paths(self.root_path, path)
         found = op.path_exists(total_path)
-        logger.debug("File system exists: '%s' -> %s", path, found, extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.exists"))
+        logger.debug("File system exists: '%s' -> %s", path, found, extra=log_extra(adapter_type="FileSystemAdapter", operation=LogOperations.FS_EXISTS))
         return found
 
     def list_contents(self, directory_path: str) -> List[dict]:
@@ -221,7 +222,7 @@ class FileSystemAdapter(SubmodelAdapter):
                 except PermissionError:
                     continue
         logger.debug("File system list: %d file(s) in '%s'", len(results), directory_path,
-                     extra=log_extra(adapter_type="FileSystemAdapter", operation="fs.list"))
+                     extra=log_extra(adapter_type="FileSystemAdapter", operation=LogOperations.FS_LIST))
         return results
 
 

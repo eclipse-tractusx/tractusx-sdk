@@ -31,6 +31,7 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 from tractusx_sdk._logging_fields import log_extra, safe_url
 from tractusx_sdk._logging_helpers import log_failure
+from tractusx_sdk._logging_operations import LogOperations
 
 # Security: this module handles client secrets, access tokens and Authorization headers.
 # None of them is ever logged, not even at DEBUG: only the realm, the (sanitised) server URL,
@@ -62,7 +63,7 @@ class OAuth2Manager(AuthManagerInterface):
 
         self.connected=False
         logger.debug("Connecting to the identity provider at %s (realm %s)", safe_url(auth_url), realm,
-                     extra=log_extra(url=auth_url, operation="oauth2.connect"))
+                     extra=log_extra(url=auth_url, operation=LogOperations.OAUTH2_CONNECT))
         
         ## Store credentials
         self.clientid = clientid
@@ -79,17 +80,17 @@ class OAuth2Manager(AuthManagerInterface):
             well_known = self.keycloak_openid.well_known()
         except Exception as exception:
             log_failure(logger, "Unable to reach the identity provider at %s, realm %s (%s)", exception, safe_url(auth_url), realm,
-                        url=auth_url, operation="oauth2.connect")
+                        url=auth_url, operation=LogOperations.OAUTH2_CONNECT)
             raise
 
         if (not well_known):
             logger.error("The identity provider at %s (realm %s) did not return its well-known configuration",
-                         safe_url(auth_url), realm, extra=log_extra(url=auth_url, operation="oauth2.connect"))
+                         safe_url(auth_url), realm, extra=log_extra(url=auth_url, operation=LogOperations.OAUTH2_CONNECT))
             raise ConnectionError("Unable to access the Keycloak instance. Check the server URL, realm, and network connectivity.")
         
         self.connected=True
         logger.info("Connected to the identity provider at %s (realm %s)", safe_url(auth_url), realm,
-                    extra=log_extra(url=auth_url, operation="oauth2.connect"))
+                    extra=log_extra(url=auth_url, operation=LogOperations.OAUTH2_CONNECT))
     
 
     def get_token(self, scope:str="openid profile email"):
@@ -99,20 +100,20 @@ class OAuth2Manager(AuthManagerInterface):
             raise RuntimeError("Not connected. Please call the connect() method before requesting a token.")
 
         ## Get the token from the keycloak instance
-        logger.debug("Requesting a new access token (scope: %s)", scope, extra=log_extra(operation="oauth2.get_token"))
+        logger.debug("Requesting a new access token (scope: %s)", scope, extra=log_extra(operation=LogOperations.OAUTH2_GET_TOKEN))
         try:
             token:dict=self.keycloak_openid.token(self.clientid, self.clientsecret, grant_type=["client_credentials"], scope=scope)
         except Exception as exception:
-            log_failure(logger, "The identity provider rejected the token request (%s)", exception, operation="oauth2.get_token")
+            log_failure(logger, "The identity provider rejected the token request (%s)", exception, operation=LogOperations.OAUTH2_GET_TOKEN)
             raise
         if(token is None):
             logger.error("The identity provider returned no token, the credentials might be incorrect",
-                         extra=log_extra(operation="oauth2.get_token"))
+                         extra=log_extra(operation=LogOperations.OAUTH2_GET_TOKEN))
             raise ValueError("Failed to retrieve token from IAM instance. The credentials might be incorrect.")
         ## Store the token
         self.token = token
         expires_in = token.get("expires_in") if isinstance(token, dict) else None
-        logger.debug("Access token obtained (expires in %s seconds)", expires_in, extra=log_extra(operation="oauth2.get_token"))
+        logger.debug("Access token obtained (expires in %s seconds)", expires_in, extra=log_extra(operation=LogOperations.OAUTH2_GET_TOKEN))
         return self.token["access_token"]
     
     def add_auth_header(self, headers:dict=None):
@@ -126,7 +127,7 @@ class OAuth2Manager(AuthManagerInterface):
             headers = dict()
         ## Build token header
         headers["Authorization"] = "Bearer " + self.get_token()
-        logger.debug("Authorization header added", extra=log_extra(operation="oauth2.add_auth_header"))
+        logger.debug("Authorization header added", extra=log_extra(operation=LogOperations.OAUTH2_ADD_AUTH_HEADER))
         return headers
 
     def is_authenticated(self, request: Request) -> bool:
@@ -143,20 +144,20 @@ class OAuth2Manager(AuthManagerInterface):
         authorization: str = request.headers.get("Authorization")
         if not authorization or not authorization.startswith("Bearer "):
             logger.debug("Request rejected: the Authorization header is missing or is not a Bearer one",
-                           extra=log_extra(operation="oauth2.is_authenticated"))
+                           extra=log_extra(operation=LogOperations.OAUTH2_IS_AUTHENTICATED))
             raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Missing or invalid Authorization header.")
         token = authorization.split(" ")[1]
         try:
             user_info = self.keycloak_openid.userinfo(token)
         except Exception as exception:
             log_failure(logger, "Request rejected: the identity provider could not validate the bearer credential (%s)", exception,
-                        level=logging.DEBUG, operation="oauth2.is_authenticated")
+                        level=logging.DEBUG, operation=LogOperations.OAUTH2_IS_AUTHENTICATED)
             raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid or expired token.")
 
         authenticated = bool(user_info)
         if authenticated:
-            logger.debug("Request authenticated", extra=log_extra(operation="oauth2.is_authenticated"))
+            logger.debug("Request authenticated", extra=log_extra(operation=LogOperations.OAUTH2_IS_AUTHENTICATED))
         else:
             logger.debug("Request rejected: the identity provider returned no user information",
-                           extra=log_extra(operation="oauth2.is_authenticated"))
+                           extra=log_extra(operation=LogOperations.OAUTH2_IS_AUTHENTICATED))
         return authenticated

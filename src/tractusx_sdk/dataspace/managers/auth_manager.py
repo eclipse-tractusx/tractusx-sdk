@@ -35,6 +35,7 @@ from fastapi import Request
 from .auth_manager_interface import AuthManagerInterface
 
 from tractusx_sdk._logging_fields import log_extra
+from tractusx_sdk._logging_operations import LogOperations
 
 # Security: the configured API key and the key sent by the caller are never logged
 logger = logging.getLogger(__name__)
@@ -59,16 +60,16 @@ class AuthManager(AuthManagerInterface):
         api_key_from_header = request.headers.get(self.api_key_header, None)
         if(api_key_from_header is None):
             logger.debug("Request rejected: the API key header is missing",
-                           extra=log_extra(operation="auth.is_authenticated"))
+                           extra=log_extra(operation=LogOperations.AUTH_IS_AUTHENTICATED))
             return False
         
 
         if(api_key_from_header == self.configured_api_key):
-            logger.debug("Request authenticated with an API key", extra=log_extra(operation="auth.is_authenticated"))
+            logger.debug("Request authenticated with an API key", extra=log_extra(operation=LogOperations.AUTH_IS_AUTHENTICATED))
             return True
         
         logger.debug("Request rejected: the API key does not match the configured one",
-                       extra=log_extra(operation="auth.is_authenticated"))
+                       extra=log_extra(operation=LogOperations.AUTH_IS_AUTHENTICATED))
         return False
     
     def add_auth_header(self, headers: dict={}) -> dict:
@@ -76,5 +77,5 @@ class AuthManager(AuthManagerInterface):
             logger.error("An auth header was requested but the authentication is not enabled")
             raise RuntimeError("Authentication is not enabled. Cannot get auth headers.")
         auth_header = {self.api_key_header: self.configured_api_key}
-        logger.debug("API key header added", extra=log_extra(operation="auth.add_auth_header"))
+        logger.debug("API key header added", extra=log_extra(operation=LogOperations.AUTH_ADD_AUTH_HEADER))
         return {**headers, **auth_header}
