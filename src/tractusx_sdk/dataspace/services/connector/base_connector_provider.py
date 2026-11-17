@@ -47,6 +47,9 @@ class BaseConnectorProviderService(BaseService):
         self.dataspace_version = dataspace_version
         self.verify_ssl = verify_ssl
 
+        if headers is None:
+            headers = {}
+
         self.dma_adapter = AdapterFactory.get_dma_adapter(
             dataspace_version=dataspace_version,
             base_url=base_url,
