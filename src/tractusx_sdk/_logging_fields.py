@@ -33,6 +33,8 @@ ends up in them:
   an attribute reserved by :class:`logging.LogRecord`.
 * :func:`safe_url` removes everything of a URL that could carry a secret (user
   information, query string, fragment and path parameters).
+* The control characters of the values (line breaks, escape sequences...) are
+  escaped, so that a value that comes from a remote party cannot forge a log line.
 
 Headers, tokens, credentials and bodies are never part of the fields.
 """
@@ -43,9 +45,20 @@ from urllib.parse import urlsplit, urlunsplit
 
 _INVALID_URL = "<invalid-url>"
 _PATH_PARAMETERS = re.compile(r";[^/]*")
+_CONTROL_CHARACTERS = re.compile("[\x00-\x1f\x7f-\x9f\u2028\u2029]")
 
 # Fields holding a URL, which are sanitised before being attached to a record.
 _URL_FIELDS = ("url", "counter_party_address")
+
+
+def escape_control_characters(value: Any) -> Any:
+    """
+    Escapes the control characters of a string (a line break becomes a backslash and an ``n``), leaving any other
+    value untouched. A string that comes from a remote party goes through it before it is written to a log.
+    """
+    if not isinstance(value, str):
+        return value
+    return _CONTROL_CHARACTERS.sub(lambda match: match.group().encode("unicode_escape").decode("ascii"), value)
 
 
 def safe_url(url: Any) -> Optional[str]:
@@ -69,7 +82,7 @@ def safe_url(url: Any) -> Optional[str]:
 
     host = parts.netloc.rpartition("@")[2]
     path = _PATH_PARAMETERS.sub("", parts.path)
-    return urlunsplit((parts.scheme, host, path, "", ""))
+    return escape_control_characters(urlunsplit((parts.scheme, host, path, "", "")))
 
 
 def http_status(response: Any) -> Optional[int]:
@@ -107,17 +120,40 @@ def log_extra(
     """
     Builds the ``extra`` argument of a log call.
 
-    Fields that are None are left out, and the URL fields are sanitised with
-    :func:`safe_url`. Usage::
+    Fields that are None are left out, the URL fields are sanitised with
+    :func:`safe_url` and the control characters of the strings are escaped. Usage::
 
         logger.debug("Fetching %s", name, extra=log_extra(asset_id=asset_id, bpn=bpn))
     """
-    values = dict(locals())  # the arguments only: nothing else is defined yet
-    fields = {key: value for key, value in values.items() if value is not None}
-    for name in _URL_FIELDS:
-        if name in fields:
-            fields[name] = safe_url(fields[name])
-    return fields
+    fields = {
+        "asset_id": asset_id,
+        "aas_id": aas_id,
+        "submodel_id": submodel_id,
+        "message_id": message_id,
+        "bpn": bpn,
+        "policy_id": policy_id,
+        "negotiation_id": negotiation_id,
+        "agreement_id": agreement_id,
+        "transfer_id": transfer_id,
+        "edr_id": edr_id,
+        "counter_party_id": counter_party_id,
+        "counter_party_address": counter_party_address,
+        "dataspace_version": dataspace_version,
+        "http_method": http_method,
+        "url": url,
+        "status_code": status_code,
+        "elapsed_ms": elapsed_ms,
+        "adapter_type": adapter_type,
+        "schema_urn": schema_urn,
+        "model": model,
+        "operation": operation,
+    }
+    extra: Dict[str, Any] = {}
+    for key, value in fields.items():
+        if value is None:
+            continue
+        extra[key] = safe_url(value) if key in _URL_FIELDS else escape_control_characters(value)
+    return extra
 
 
 # The complete list of fields a log record of the SDK may carry

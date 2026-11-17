@@ -58,7 +58,7 @@ class AuthManager(AuthManagerInterface):
         
         api_key_from_header = request.headers.get(self.api_key_header, None)
         if(api_key_from_header is None):
-            logger.warning("Request rejected: the API key header is missing",
+            logger.debug("Request rejected: the API key header is missing",
                            extra=log_extra(operation="auth.is_authenticated"))
             return False
         
@@ -67,7 +67,7 @@ class AuthManager(AuthManagerInterface):
             logger.debug("Request authenticated with an API key", extra=log_extra(operation="auth.is_authenticated"))
             return True
         
-        logger.warning("Request rejected: the API key does not match the configured one",
+        logger.debug("Request rejected: the API key does not match the configured one",
                        extra=log_extra(operation="auth.is_authenticated"))
         return False
     

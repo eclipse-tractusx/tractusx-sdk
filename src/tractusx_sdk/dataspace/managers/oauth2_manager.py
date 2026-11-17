@@ -142,7 +142,7 @@ class OAuth2Manager(AuthManagerInterface):
         
         authorization: str = request.headers.get("Authorization")
         if not authorization or not authorization.startswith("Bearer "):
-            logger.warning("Request rejected: the Authorization header is missing or is not a Bearer one",
+            logger.debug("Request rejected: the Authorization header is missing or is not a Bearer one",
                            extra=log_extra(operation="oauth2.is_authenticated"))
             raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Missing or invalid Authorization header.")
         token = authorization.split(" ")[1]
@@ -150,13 +150,13 @@ class OAuth2Manager(AuthManagerInterface):
             user_info = self.keycloak_openid.userinfo(token)
         except Exception as exception:
             log_failure(logger, "Request rejected: the identity provider could not validate the bearer credential (%s)", exception,
-                        level=logging.WARNING, operation="oauth2.is_authenticated")
+                        level=logging.DEBUG, operation="oauth2.is_authenticated")
             raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid or expired token.")
 
         authenticated = bool(user_info)
         if authenticated:
             logger.debug("Request authenticated", extra=log_extra(operation="oauth2.is_authenticated"))
         else:
-            logger.warning("Request rejected: the identity provider returned no user information",
+            logger.debug("Request rejected: the identity provider returned no user information",
                            extra=log_extra(operation="oauth2.is_authenticated"))
         return authenticated

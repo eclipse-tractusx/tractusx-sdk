@@ -254,7 +254,8 @@ class TestOperatorsLogging:
             assert op.write_to_file(None, str(tmp_path / "x")) is False
         assert len(_records(caplog, OPERATORS)) == 2
 
-    def test_a_json_file_that_cannot_be_read_is_a_warning_with_the_path_and_never_the_content(self, tmp_path, caplog):
+    def test_a_json_file_that_cannot_be_read_is_a_warning_and_a_missing_one_a_debug_record_with_the_path_and_never_the_content(
+            self, tmp_path, caplog):
         broken = tmp_path / "broken.json"
         broken.write_text(f'{{"key": "{SECRET}" oops')
         with caplog.at_level(logging.DEBUG):
@@ -263,8 +264,9 @@ class TestOperatorsLogging:
             with pytest.raises(FileNotFoundError):
                 op.read_json_file(str(tmp_path / "missing.json"))
         records = _records(caplog, OPERATORS)
-        assert [r.levelno for r in records] == [logging.WARNING, logging.WARNING]
-        assert str(broken) in records[0].getMessage() and records[0].exc_info is not None
+        assert [r.levelno for r in records] == [logging.WARNING, logging.DEBUG]
+        assert str(broken) in records[0].getMessage() and records[0].exc_info is None
+        assert records[0].getMessage().endswith("(JSONDecodeError)") and records[1].getMessage().endswith("(FileNotFoundError)")
         assert SECRET not in _dump(caplog)
 
     def test_a_json_file_that_can_be_read_is_silent_and_its_handle_is_closed(self, tmp_path, caplog):
@@ -315,11 +317,11 @@ class TestEncodingToolsLogging:
         assert caplog.records == []
 
     @pytest.mark.parametrize("encoded", [f"!!{SECRET}!!", "/w"])
-    def test_a_string_that_cannot_be_decoded_is_logged_by_its_length_only(self, caplog, encoded):
+    def test_a_string_that_cannot_be_decoded_is_logged_at_debug_by_its_length_only(self, caplog, encoded):
         with caplog.at_level(logging.DEBUG), pytest.raises(Exception):
             decode_base64_url_safe(encoded)
         record = _records(caplog, ENCODING)[-1]
-        assert record.levelno == logging.ERROR and record.exc_info is not None
+        assert record.levelno == logging.DEBUG and record.exc_info is None
         assert "characters could not be decoded" in record.getMessage()
         assert SECRET not in record.getMessage() and not any(SECRET in str(a) for a in record.args)
 

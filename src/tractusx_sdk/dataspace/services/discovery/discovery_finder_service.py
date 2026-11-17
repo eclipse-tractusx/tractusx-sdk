@@ -89,7 +89,7 @@ class DiscoveryFinderService(BaseService):
         response:Response = HttpTools.do_post(url=self.url, headers=headers, json=body, **self._trace_kwargs())
         ## In case the response code is not successfull or the response is null
         if(response is None or response.status_code != 200):
-            logger.error("[Discovery Finder Service] The discovery finder did not answer successfully (status %s)",
+            logger.debug("[Discovery Finder Service] The discovery finder did not answer successfully (status %s)",
                          getattr(response, "status_code", None),
                          extra=log_extra(url=self.url, status_code=http_status(response), operation="discovery.find_urls"))
             raise DiscoveryError("[EDC Discovery Service] It was not possible to get the discovery service because the response was not successful!")
@@ -97,7 +97,7 @@ class DiscoveryFinderService(BaseService):
         data = response.json()
 
         if(self.endpoints_key not in data or len(data[self.endpoints_key]) == 0):
-            logger.error("[Discovery Finder Service] The discovery finder returned no endpoints for %s", keys,
+            logger.debug("[Discovery Finder Service] The discovery finder returned no endpoints for %s", keys,
                          extra=log_extra(url=self.url, operation="discovery.find_urls"))
             raise DiscoveryEndpointNotFoundError("[EDC Discovery Service] No endpoints were found in the discovery service for this keys!")
 

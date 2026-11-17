@@ -112,7 +112,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         """
         endpoints = discovery_finder_service.find_discovery_urls(keys=[discovery_key])
         if(discovery_key not in endpoints):
-          logger.error("[BPN Discovery Service] The discovery finder has no endpoint for key '%s'", discovery_key,
+          logger.debug("[BPN Discovery Service] The discovery finder has no endpoint for key '%s'", discovery_key,
                        extra=log_extra(operation="bpn_discovery.get_url"))
           raise DiscoveryEndpointNotFoundError("[BPN Discovery Service] BPN Discovery endpoint not found!")
 

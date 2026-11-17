@@ -63,10 +63,11 @@ def controller_method(func):
                 f"Please ensure that {class_name} defines an 'endpoint_url' attribute in order to use {func_name}."
             )
 
-        logger.debug(
-            "Controller operation %s.%s", class_name, func_name,
-            extra=log_extra(operation=f"{class_name}.{func_name}"),
-        )
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "Controller operation %s.%s", class_name, func_name,
+                extra=log_extra(operation=f"{class_name}.{func_name}"),
+            )
         ret_val = func(*args, **kwargs)
         return ret_val
 

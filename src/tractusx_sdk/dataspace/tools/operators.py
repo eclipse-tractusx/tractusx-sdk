@@ -39,6 +39,8 @@ import io
 
 from datetime import datetime, timezone, timedelta
 
+from tractusx_sdk._logging_helpers import log_failure
+
 logger = logging.getLogger(__name__)
 
 """
@@ -104,9 +106,13 @@ class op:
         try:
             with open(file_path,"r",encoding=encoding) as f:
                 data = json.load(f)
-        except (OSError, ValueError):
-            # The path and the error: the content of the file is not logged
-            logger.warning("The JSON file '%s' could not be read", file_path, exc_info=True)
+        except FileNotFoundError as error:
+            # Callers such as the file system adapter treat a missing file as an expected outcome
+            log_failure(logger, "The JSON file '%s' does not exist (%s)", error, file_path, level=logging.DEBUG)
+            raise
+        except (OSError, ValueError) as error:
+            # The path and the type of the error: the content of the file is not logged
+            log_failure(logger, "The JSON file '%s' could not be read (%s)", error, file_path, level=logging.WARNING)
             raise
         
         return data  

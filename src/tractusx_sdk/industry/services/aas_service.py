@@ -26,7 +26,7 @@
 import functools
 import inspect
 import logging
-from typing import Dict, List
+from typing import Callable, Dict, List
 
 from requests import HTTPError
 import requests
@@ -50,6 +50,28 @@ from tractusx_sdk.dataspace.managers.oauth2_manager import OAuth2Manager
 logger = logging.getLogger(__name__)
 
 
+def _bound_arguments(signature: inspect.Signature, call_args: tuple, call_kwargs: dict) -> dict:
+    """The arguments of a call by name, or none when the call does not match the signature (the callee reports it)."""
+    try:
+        return signature.bind(*call_args, **call_kwargs).arguments
+    except TypeError:
+        return {}
+
+
+def _log_dtr(operation: str, arguments: Callable[[], dict], level: int, message: str, *message_args, **log_kwargs) -> None:
+    """
+    Logs a record of an operation of the Digital Twin Registry service, with the identifiers it is about.
+
+    The arguments of the call are only bound when the record is going to be emitted: this runs on every call.
+    """
+    if not logger.isEnabledFor(level):
+        return
+    bound = arguments()
+    logger.log(level, message, *message_args, stacklevel=2, **log_kwargs,
+               extra=log_extra(aas_id=bound.get("aas_identifier"), submodel_id=bound.get("submodel_identifier"),
+                               bpn=bound.get("bpn"), operation=operation))
+
+
 def _logged(description: str, writes: bool = False):
     """
     Logs an operation of the Digital Twin Registry service.
@@ -68,30 +90,21 @@ def _logged(description: str, writes: bool = False):
 
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
-            arguments = signature.bind(self, *args, **kwargs).arguments
-            aas_id, submodel_id, bpn = arguments.get("aas_identifier"), arguments.get("submodel_identifier"), arguments.get("bpn")
-
-            logger.debug("DTR: %s", description,
-                         extra=log_extra(aas_id=aas_id, submodel_id=submodel_id, bpn=bpn, operation=operation))
+            emit = functools.partial(_log_dtr, operation, functools.partial(_bound_arguments, signature, (self, *args), kwargs))
+            emit(logging.DEBUG, "DTR: %s", description)
             try:
                 result = func(self, *args, **kwargs)
             except requests.RequestException:
                 raise
             except Exception:
-                logger.exception("DTR: %s failed", description,
-                                 extra=log_extra(aas_id=aas_id, submodel_id=submodel_id, bpn=bpn, operation=operation))
+                emit(logging.ERROR, "DTR: %s failed", description, exc_info=True)
                 raise
 
             if isinstance(result, Result):
-                logger.debug("DTR: %s was answered with a non-2XX status, returned as a Result with %d message(s)", description,
-                             len(result.messages or []),
-                             extra=log_extra(aas_id=aas_id, submodel_id=submodel_id, bpn=bpn, operation=operation))
-            elif writes:
-                logger.info("DTR: %s succeeded", description,
-                            extra=log_extra(aas_id=aas_id, submodel_id=submodel_id, bpn=bpn, operation=operation))
+                emit(logging.DEBUG, "DTR: %s was answered with a non-2XX status, returned as a Result with %d message(s)",
+                     description, len(result.messages or []))
             else:
-                logger.debug("DTR: %s succeeded", description,
-                             extra=log_extra(aas_id=aas_id, submodel_id=submodel_id, bpn=bpn, operation=operation))
+                emit(logging.INFO if writes else logging.DEBUG, "DTR: %s succeeded", description)
             return result
 
         return wrapper

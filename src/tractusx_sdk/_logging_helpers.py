@@ -28,9 +28,51 @@ They are not part of the public API.
 """
 
 import logging
+import time
 from typing import Any
 
-from tractusx_sdk._logging_fields import log_extra
+from tractusx_sdk._logging_fields import http_status, log_extra, safe_url
+
+
+def log_http_request(logger: logging.Logger, method: str, url: Any, **fields: Any) -> None:
+    """
+    Logs the request line of an HTTP call (method and URL without its query string) at DEBUG.
+
+    Nothing is computed while DEBUG is disabled: it runs on the hot path of every request. Headers, parameters and
+    bodies are never logged.
+    """
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("HTTP %s %s", method, safe_url(url), extra=log_extra(http_method=method, url=url, **fields), stacklevel=2)
+
+
+def log_http_outcome(logger: logging.Logger, method: str, url: Any, response: Any, started: float, **fields: Any) -> None:
+    """
+    Logs the outcome of an HTTP call: a WARNING when the server failed (5xx), DEBUG otherwise.
+
+    A client error (4xx) is an expected outcome for many callers, which are the ones that decide whether it matters.
+    ``started`` is the ``time.perf_counter()`` taken before the call.
+    """
+    status = http_status(response)
+    level = logging.WARNING if status is not None and status >= 500 else logging.DEBUG
+    if not logger.isEnabledFor(level):
+        return
+    elapsed_ms = (time.perf_counter() - started) * 1000
+    logger.log(level, "HTTP %s %s -> %s in %.0f ms", method, safe_url(url), status, elapsed_ms,
+               extra=log_extra(http_method=method, url=url, status_code=status, elapsed_ms=round(elapsed_ms), **fields),
+               stacklevel=2)
+
+
+def log_http_failure(logger: logging.Logger, method: str, url: Any, error: BaseException, started: float, **fields: Any) -> None:
+    """
+    Logs, at DEBUG and by its type only, the exception of an HTTP call that is about to be re-raised unchanged.
+
+    The message and the traceback of the exception quote the full URL, query string included.
+    """
+    if not logger.isEnabledFor(logging.DEBUG):
+        return
+    elapsed_ms = (time.perf_counter() - started) * 1000
+    logger.debug("HTTP %s %s failed after %.0f ms (%s)", method, safe_url(url), elapsed_ms, type(error).__name__,
+                 extra=log_extra(http_method=method, url=url, elapsed_ms=round(elapsed_ms), **fields), stacklevel=2)
 
 
 def log_failure(

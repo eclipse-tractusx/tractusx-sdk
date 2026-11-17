@@ -30,8 +30,8 @@ from uuid import UUID
 from urllib.parse import quote
 import httpx
 
-from tractusx_sdk._logging_fields import http_status, log_extra, safe_url
-from tractusx_sdk._logging_helpers import log_failure
+from tractusx_sdk._logging_fields import log_extra, safe_url
+from tractusx_sdk._logging_helpers import log_http_failure, log_http_outcome, log_http_request
 from tractusx_sdk.dataspace.tools.tracing import TraceableMixin, Tracer, trace_call
 from tractusx_sdk.industry.adapters import SubmodelAdapter
 
@@ -185,24 +185,15 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         The headers and the body are never logged. A server failure (5xx) is a warning and a client error is not,
         since some are expected (e.g. a 404 when checking whether a submodel exists).
         """
-        logged_url = safe_url(url)
-        logger.debug("HTTP %s %s", method, logged_url,
-                     extra=log_extra(http_method=method, url=url, adapter_type="HttpSubmodelAdapter"))
+        log_http_request(logger, method, url, adapter_type="HttpSubmodelAdapter")
         started = time.perf_counter()
         try:
             response = send()
         except httpx.RequestError as request_error:
-            elapsed_ms = round((time.perf_counter() - started) * 1000)
-            log_failure(logger, "HTTP %s %s failed after %d ms (%s)", request_error, method, logged_url, elapsed_ms,
-                        level=logging.DEBUG, http_method=method, url=url, elapsed_ms=elapsed_ms, adapter_type="HttpSubmodelAdapter")
+            log_http_failure(logger, method, url, request_error, started, adapter_type="HttpSubmodelAdapter")
             raise
 
-        elapsed_ms = round((time.perf_counter() - started) * 1000)
-        status = http_status(response)
-        level = logging.WARNING if status is not None and status >= 500 else logging.DEBUG
-        logger.log(level, "HTTP %s %s -> %s in %d ms", method, logged_url, status, elapsed_ms,
-                   extra=log_extra(http_method=method, url=url, status_code=status, elapsed_ms=elapsed_ms,
-                                   adapter_type="HttpSubmodelAdapter"))
+        log_http_outcome(logger, method, url, response, started, adapter_type="HttpSubmodelAdapter")
         return response
 
     def _trace_call(self, method: str, url: str, headers: dict = None, body: Any = None):

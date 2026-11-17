@@ -99,3 +99,24 @@ class TestLogExtra:
         with caplog.at_level(logging.DEBUG):
             logging.getLogger("tractusx_sdk.test").debug("x", extra=log_extra(**{f: "v" for f in EXTRA_FIELDS}))
         assert {f for f in EXTRA_FIELDS if hasattr(caplog.records[0], f)} == set(EXTRA_FIELDS)
+
+
+class TestControlCharacters:
+    """A value that comes from a remote party must not be able to forge a log line."""
+
+    def test_the_control_characters_of_a_field_are_escaped(self):
+        extra = log_extra(negotiation_id="n-1\nERROR forged record", bpn="BPN\r\x1b[31m", operation="a\u2028b")
+        assert extra == {"negotiation_id": "n-1\\nERROR forged record", "bpn": "BPN\\r\\x1b[31m", "operation": "a\\u2028b"}
+
+    def test_the_urls_are_sanitised_and_escaped(self):
+        assert safe_url("https://host/a\x1bb?token=1") == "https://host/a\\x1bb"
+        assert log_extra(url="https://host/a\x1bb")["url"] == "https://host/a\\x1bb"
+
+    def test_a_printable_value_is_left_as_it_is(self):
+        assert log_extra(asset_id="urn:uuid:ñ-é €", status_code=200, elapsed_ms=1.5) == {
+            "asset_id": "urn:uuid:ñ-é €", "status_code": 200, "elapsed_ms": 1.5}
+
+    def test_an_escaped_value_is_a_single_line_in_the_rendered_record(self, caplog):
+        with caplog.at_level(logging.DEBUG):
+            logging.getLogger("tractusx_sdk.test").debug("x", extra=log_extra(transfer_id="t\nFORGED"))
+        assert "\n" not in caplog.records[0].transfer_id

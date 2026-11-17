@@ -37,8 +37,8 @@ from io import BytesIO
 import requests
 from fastapi.responses import JSONResponse, Response
 
-from tractusx_sdk._logging_fields import http_status, log_extra, safe_url
-from tractusx_sdk._logging_helpers import log_failure
+from tractusx_sdk._logging_fields import log_extra
+from tractusx_sdk._logging_helpers import log_http_failure, log_http_outcome, log_http_request
 
 from .tracing import traced_http
 
@@ -51,6 +51,13 @@ def _resolve_session(session):
         logger.debug("No session provided, using a new requests.Session for this request")
         return requests.Session()
     return session
+
+
+def _request_url(args: tuple, kwargs: dict):
+    """The URL an HTTP helper was called with, whether it is given by position or by name (not yet sanitised)."""
+    if "url" in kwargs:
+        return kwargs["url"]
+    return args[0] if args else None
 
 
 def _logged_http(method: str):
@@ -69,27 +76,16 @@ def _logged_http(method: str):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            url = safe_url(kwargs["url"] if "url" in kwargs else (args[0] if args else None))
-            logger.debug("HTTP %s %s", method, url, extra=log_extra(http_method=method, url=url))
+            log_http_request(logger, method, _request_url(args, kwargs))
 
             started = time.perf_counter()
             try:
                 response = func(*args, **kwargs)
             except Exception as error:
-                elapsed_ms = (time.perf_counter() - started) * 1000
-                log_failure(
-                    logger, "HTTP %s %s failed after %.0f ms (%s)", error, method, url, elapsed_ms,
-                    level=logging.DEBUG, http_method=method, url=url, elapsed_ms=round(elapsed_ms),
-                )
+                log_http_failure(logger, method, _request_url(args, kwargs), error, started)
                 raise
 
-            elapsed_ms = (time.perf_counter() - started) * 1000
-            status = http_status(response)
-            level = logging.WARNING if status is not None and status >= 500 else logging.DEBUG
-            logger.log(
-                level, "HTTP %s %s -> %s in %.0f ms", method, url, status, elapsed_ms,
-                extra=log_extra(http_method=method, url=url, status_code=status, elapsed_ms=round(elapsed_ms)),
-            )
+            log_http_outcome(logger, method, _request_url(args, kwargs), response, started)
             return response
 
         return wrapper

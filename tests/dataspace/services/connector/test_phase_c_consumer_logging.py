@@ -109,13 +109,13 @@ class TestConstructionAndEdr:
         with caplog.at_level(logging.DEBUG), pytest.raises(ConnectionError):
             service.get_edr("tp-1")
         error = _records(caplog)[-1]
-        assert error.levelno == logging.ERROR and error.transfer_id == "tp-1"
+        assert error.levelno == logging.DEBUG and error.transfer_id == "tp-1"
         assert getattr(error, "status_code", None) == status
 
     def test_a_missing_edr_is_logged_before_it_is_raised(self, service, caplog):
         with patch.object(service, "get_edr", return_value=None), caplog.at_level(logging.DEBUG), pytest.raises(RuntimeError):
             service.get_endpoint_with_token("tp-1")
-        assert _records(caplog)[-1].levelno == logging.ERROR
+        assert _records(caplog)[-1].levelno == logging.DEBUG
 
 
 class TestCatalog:
@@ -133,7 +133,7 @@ class TestCatalog:
         service._catalog_controller.get_catalog.return_value = _response(503, text="down")
         with caplog.at_level(logging.DEBUG), pytest.raises(CatalogRequestError):
             service.get_catalog(request=Mock(to_data=lambda: {}), counter_party_id="BPNL1", counter_party_address=ADDRESS)
-        error = [r for r in _records(caplog) if r.levelno == logging.ERROR][0]
+        error = [r for r in _records(caplog) if r.levelno == logging.DEBUG and getattr(r, "status_code", None) == 503][0]
         assert (error.status_code, error.counter_party_id) == (503, "BPNL1")
         assert SECRET not in _dump(caplog)
 
@@ -190,28 +190,28 @@ class TestNegotiationStart:
         assert SECRET not in _dump(caplog)
 
     @pytest.mark.parametrize("response, status", [(None, None), (Mock(status_code=409), 409)])
-    def test_a_negotiation_that_cannot_start_is_an_error_even_though_it_returns_none(self, service, caplog, response, status):
+    def test_a_negotiation_that_cannot_start_is_a_warning_because_it_returns_none_instead_of_raising(self, service, caplog, response, status):
         with caplog.at_level(logging.DEBUG):
             assert self._start(service, response) is None
         error = _records(caplog)[-1]
-        assert error.levelno == logging.ERROR and error.asset_id == "asset-1" and getattr(error, "status_code", None) == status
+        assert error.levelno == logging.WARNING and error.asset_id == "asset-1" and getattr(error, "status_code", None) == status
 
     def test_an_answer_without_a_negotiation_id_is_an_error(self, service, caplog):
         with caplog.at_level(logging.DEBUG):
             assert self._start(service, _response(200, {})) is None
         assert "returned no negotiation id" in _records(caplog)[-1].getMessage()
 
-    def test_the_offers_are_tried_in_turn_with_a_warning_for_each_one_that_fails(self, service, caplog):
+    def test_the_offers_are_tried_in_turn_and_each_one_that_fails_is_a_debug_record(self, service, caplog):
         with patch.object(service, "start_edr_negotiation", side_effect=[None, "neg-2"]), caplog.at_level(logging.DEBUG):
             assert service._start_negotiation_for_assets("BPNL1", ADDRESS, [("a1", POLICY), ("a2", POLICY)]) == "neg-2"
-        warning = [r for r in _records(caplog) if r.levelno == logging.WARNING][0]
-        assert warning.asset_id == "a1" and warning.policy_id == "policy-1"
+        failed = [r for r in _records(caplog) if "trying the next offer" in r.getMessage()][0]
+        assert failed.levelno == logging.DEBUG and failed.asset_id == "a1" and failed.policy_id == "policy-1"
 
-    def test_no_offer_that_can_be_negotiated_is_an_error_before_it_is_raised(self, service, caplog):
+    def test_no_offer_that_can_be_negotiated_is_logged_before_it_is_raised(self, service, caplog):
         with patch.object(service, "start_edr_negotiation", return_value=None), caplog.at_level(logging.DEBUG):
             with pytest.raises(NegotiationError):
                 service._start_negotiation_for_assets("BPNL1", ADDRESS, [("a1", POLICY)])
-        assert _records(caplog)[-1].levelno == logging.ERROR and "1 offer(s) tried" in _records(caplog)[-1].getMessage()
+        assert _records(caplog)[-1].levelno == logging.DEBUG and "1 offer(s) tried" in _records(caplog)[-1].getMessage()
 
 
 class TestCatalogValidation:
@@ -230,19 +230,19 @@ class TestCatalogValidation:
     def test_an_empty_catalog_is_logged_before_it_is_raised(self, service, caplog):
         with caplog.at_level(logging.DEBUG), pytest.raises(CatalogError):
             self._validate(service, catalog=None)
-        assert _records(caplog)[-1].levelno == logging.ERROR
+        assert _records(caplog)[-1].levelno == logging.DEBUG
 
     def test_a_policy_mismatch_is_logged_by_its_type_with_context(self, service, caplog):
         with caplog.at_level(logging.DEBUG), pytest.raises(CatalogError):
             self._validate(service, catalog={"x": 1}, error=ValueError("no policy matches"))
         failure = [r for r in _records(caplog) if "matches the accepted policies" in r.getMessage()][0]
-        assert failure.levelno == logging.ERROR and failure.exc_info is None and failure.getMessage().endswith("(ValueError)")
+        assert failure.levelno == logging.DEBUG and failure.exc_info is None and failure.getMessage().endswith("(ValueError)")
         assert (failure.counter_party_id, failure.counter_party_address) == ("BPNL1", SAFE_ADDRESS)
 
     def test_no_valid_pair_is_logged_before_it_is_raised(self, service, caplog):
         with caplog.at_level(logging.DEBUG), pytest.raises(CatalogError):
             self._validate(service, catalog={"x": 1}, filtered=[])
-        assert _records(caplog)[-1].levelno == logging.ERROR
+        assert _records(caplog)[-1].levelno == logging.DEBUG
 
 
 class TestStateMachine:
@@ -257,7 +257,7 @@ class TestStateMachine:
             for _ in range(3):
                 _, last = service._check_single_negotiation_state("neg-1", ADDRESS, last)
         infos = [r for r in _records(caplog) if r.levelno == logging.INFO]
-        assert [r.getMessage().rsplit(": ", 1)[-1] for r in infos] == ["REQUESTED", "AGREED"]
+        assert [r.getMessage().rsplit(": ", 1)[-1] for r in infos] == ["'REQUESTED'", "'AGREED'"]
         assert {r.negotiation_id for r in infos} == {"neg-1"}
         assert SECRET not in _dump(caplog)
 
@@ -266,7 +266,7 @@ class TestStateMachine:
         with caplog.at_level(logging.DEBUG), pytest.raises(NegotiationError):
             service._check_single_negotiation_state("neg-1", ADDRESS, None)
         error = _records(caplog)[-1]
-        assert (error.levelno, error.negotiation_id) == (logging.ERROR, "neg-1")
+        assert (error.levelno, error.negotiation_id) == (logging.DEBUG, "neg-1")
 
     def test_the_agreement_id_is_logged_when_the_negotiation_is_finalized(self, service, caplog):
         service._contract_negotiation_controller.get_by_id.return_value = _response(200, {"contractAgreementId": "agr-1"})
@@ -279,7 +279,7 @@ class TestStateMachine:
         service._contract_negotiation_controller.get_by_id.return_value = response
         with caplog.at_level(logging.DEBUG), pytest.raises(NegotiationError):
             service._get_agreement_id("neg-1")
-        assert _records(caplog)[-1].levelno == logging.ERROR and _records(caplog)[-1].negotiation_id == "neg-1"
+        assert _records(caplog)[-1].levelno == logging.DEBUG and _records(caplog)[-1].negotiation_id == "neg-1"
 
     def test_polling_logs_the_attempts_at_debug_without_logging_every_iteration(self, service, caplog):
         service._contract_negotiation_controller.get_state_by_id.return_value = _response(200, {"state": "REQUESTED"})
@@ -290,12 +290,12 @@ class TestStateMachine:
         assert [m.split("attempt ")[1].split(" ")[0] for m in polling] == ["1", "10", "20"]
         assert {r.levelno for r in _records(caplog) if "Polling the state" in r.getMessage()} == {logging.DEBUG}
 
-    def test_a_timeout_is_an_error_with_the_attempts_and_the_last_state_before_it_is_raised(self, service, caplog):
+    def test_a_timeout_is_logged_with_the_attempts_and_the_last_state_before_it_is_raised(self, service, caplog):
         service._contract_negotiation_controller.get_state_by_id.return_value = _response(200, {"state": "REQUESTED"})
         with caplog.at_level(logging.DEBUG), pytest.raises(TimeoutError):
             service._poll_negotiation_state("neg-1", ADDRESS, max_wait=3, poll_interval=1)
         error = _records(caplog)[-1]
-        assert error.levelno == logging.ERROR and "3 attempt(s) (last state: REQUESTED)" in error.getMessage()
+        assert error.levelno == logging.DEBUG and "3 attempt(s) (last state: 'REQUESTED')" in error.getMessage()
         assert error.negotiation_id == "neg-1"
 
     def test_a_transient_failure_is_a_warning_once_in_a_while_and_debug_otherwise(self, service, caplog):
@@ -311,21 +311,22 @@ class TestStateMachine:
         with patch.object(service, "_get_agreement_id", return_value="agr-1"), caplog.at_level(logging.DEBUG):
             assert service._poll_negotiation_state("neg-1", ADDRESS, max_wait=10, poll_interval=1) == "agr-1"
 
-    def test_a_transfer_process_that_does_not_exist_yet_is_logged_per_throttled_attempt(self, service, caplog):
+    def test_a_transfer_process_that_does_not_exist_yet_is_logged_per_throttled_attempt_the_first_one_at_info(self, service, caplog):
         with patch.object(service, "get_transfer_process", return_value=None), caplog.at_level(logging.DEBUG), pytest.raises(TimeoutError):
             service._wait_for_transfer_process("agr-1", ADDRESS, max_wait=22, poll_interval=1)
-        waiting = [r.getMessage() for r in _records(caplog) if "not yet created" in r.getMessage()]
-        assert [m.split("attempt ")[1].split(",")[0] for m in waiting] == ["1", "10", "20"]
+        waiting = [r for r in _records(caplog) if "not yet created" in r.getMessage()]
+        assert [r.getMessage().split("attempt ")[1].split(",")[0] for r in waiting] == ["1", "10", "20"]
+        assert [r.levelno for r in waiting] == [logging.INFO, logging.DEBUG, logging.DEBUG]
         error = _records(caplog)[-1]
-        assert error.levelno == logging.ERROR and error.agreement_id == "agr-1"
+        assert error.levelno == logging.DEBUG and error.agreement_id == "agr-1"
 
     def test_a_terminated_transfer_process_is_logged_with_its_reason_before_it_is_raised(self, service, caplog):
         process = {"@id": "tp-1", "state": "TERMINATED", "errorDetail": "provider refused"}
         with patch.object(service, "get_transfer_process", return_value=process), caplog.at_level(logging.DEBUG), pytest.raises(TransferError):
             service._wait_for_transfer_process("agr-1", ADDRESS, max_wait=5, poll_interval=1)
         error = _records(caplog)[-1]
-        assert error.levelno == logging.ERROR and (error.transfer_id, error.agreement_id) == ("tp-1", "agr-1")
-        assert "provider refused" in error.getMessage()
+        assert error.levelno == logging.DEBUG and (error.transfer_id, error.agreement_id) == ("tp-1", "agr-1")
+        assert "'provider refused'" in error.getMessage()
 
     def test_a_started_transfer_process_logs_its_state_change_with_the_ids(self, service, caplog):
         with patch.object(service, "get_transfer_process", return_value={"@id": "tp-1", "state": "STARTED"}), caplog.at_level(logging.DEBUG):
@@ -340,12 +341,12 @@ class TestStateMachine:
         failures = [r for r in _records(caplog) if "Failed to check the transfer process" in r.getMessage()]
         assert [r.levelno for r in failures] == [logging.WARNING, logging.DEBUG]
 
-    def test_the_edr_entry_wait_is_throttled_and_times_out_with_an_error(self, service, caplog):
+    def test_the_edr_entry_wait_is_throttled_the_first_attempt_at_info_and_times_out_quietly(self, service, caplog):
         with patch.object(service, "get_edr_entry", return_value=None), caplog.at_level(logging.DEBUG), pytest.raises(TimeoutError):
             service._wait_for_edr_entry("neg-1", ADDRESS, max_wait=12, poll_interval=1)
         waiting = [r for r in _records(caplog) if "not yet available" in r.getMessage()]
-        assert len(waiting) == 2 and {r.levelno for r in waiting} == {logging.DEBUG}
-        assert _records(caplog)[-1].levelno == logging.ERROR
+        assert [r.levelno for r in waiting] == [logging.INFO, logging.DEBUG]
+        assert _records(caplog)[-1].levelno == logging.DEBUG
 
 
 class TestEdrEntryAndTransferProcess:
@@ -367,7 +368,7 @@ class TestEdrEntryAndTransferProcess:
         service._edr_controller.query.return_value = Mock(status_code=500)
         with caplog.at_level(logging.DEBUG), pytest.raises(ConnectionError):
             service.get_edr_entry("neg-1")
-        assert (_records(caplog)[-1].levelno, _records(caplog)[-1].status_code) == (logging.ERROR, 500)
+        assert (_records(caplog)[-1].levelno, _records(caplog)[-1].status_code) == (logging.DEBUG, 500)
 
     def test_a_transfer_process_query_rejected_for_every_key_is_logged_with_the_keys_but_not_the_bodies(self, service, caplog):
         service._transfer_process_agreement_id_key = None
@@ -375,7 +376,7 @@ class TestEdrEntryAndTransferProcess:
         with caplog.at_level(logging.DEBUG), pytest.raises(ValueError):
             service.get_transfer_process("agr-1")
         error = _records(caplog)[-1]
-        assert error.levelno == logging.ERROR and error.agreement_id == "agr-1"
+        assert error.levelno == logging.DEBUG and error.agreement_id == "agr-1"
         assert "contractAgreementId" in error.getMessage() and SECRET not in _dump(caplog)
 
     def test_a_transient_lack_of_response_is_a_debug_record(self, service, caplog):
@@ -468,7 +469,7 @@ class TestOrchestration:
     def test_an_empty_exchange_result_is_logged_before_it_is_raised(self, service, caplog):
         with patch.object(service, "negotiate_and_transfer", return_value=None), caplog.at_level(logging.DEBUG), pytest.raises(RuntimeError):
             service.get_transfer_id(policies=[POLICY], counter_party_id="BPNL1", counter_party_address=ADDRESS, filter_expression=[])
-        assert _records(caplog)[-1].levelno == logging.ERROR
+        assert _records(caplog)[-1].levelno == logging.DEBUG
 
     def test_checking_that_an_asset_exists_logs_the_outcome_or_the_failure(self, service, caplog):
         with patch.object(service, "get_catalog_with_filter", return_value={"x": 1}), \
@@ -481,7 +482,7 @@ class TestOrchestration:
             with pytest.raises(ConnectionError):
                 service.assets_exists("BPNL1", ADDRESS, [])
         failure = _records(caplog)[-1]
-        assert failure.levelno == logging.ERROR and failure.exc_info is None and failure.counter_party_id == "BPNL1"
+        assert failure.levelno == logging.DEBUG and failure.exc_info is None and failure.counter_party_id == "BPNL1"
         assert failure.getMessage().endswith("(OSError)")
 
 
@@ -572,7 +573,7 @@ class TestSaturnConsumer:
         saturn._edr_controller.create.return_value = None
         with patch.object(saturn, "get_edr_negotiation_request", return_value=Mock(to_data=lambda: {})), caplog.at_level(logging.DEBUG):
             assert saturn.start_edr_negotiation("BPNL1", ADDRESS, "asset-1", POLICY) is None
-        assert _records(caplog, BASE)[-1].levelno == logging.ERROR
+        assert _records(caplog, BASE)[-1].levelno == logging.WARNING
 
     def test_an_offer_without_an_id_is_logged_before_it_is_raised(self, saturn, caplog):
         with caplog.at_level(logging.DEBUG), pytest.raises(ValueError, match="Policy offer id"):
@@ -605,7 +606,7 @@ class TestSaturnConsumer:
         caplog.clear()
         with patch.object(saturn, "get_catalog_with_filter", return_value=None), caplog.at_level(logging.DEBUG), pytest.raises(CatalogError):
             saturn._resolve_policies_from_catalog("BPNL1", ADDRESS, [], "dsp", {})
-        assert _records(caplog, SATURN)[-1].levelno == logging.ERROR
+        assert _records(caplog, SATURN)[-1].levelno == logging.DEBUG
 
     def test_the_discovery_of_a_connector_is_logged_and_its_failure_too(self, saturn, caplog):
         saturn._connector_discovery_controller.get_discover.return_value = _response(200, {"counterPartyAddress": ADDRESS})
@@ -616,15 +617,15 @@ class TestSaturnConsumer:
         saturn._connector_discovery_controller.get_discover.return_value = _response(500)
         with patch(f"{SATURN}.ModelFactory.get_connector_discovery_model"), caplog.at_level(logging.DEBUG), pytest.raises(ConnectionError):
             saturn.discover_connector_protocol("BPNL1", ADDRESS)
-        error = [r for r in _records(caplog, SATURN) if r.levelno == logging.ERROR][0]
-        assert (error.bpn, error.status_code) == ("BPNL1", 500)
+        error = [r for r in _records(caplog, SATURN) if getattr(r, "status_code", None) == 500][0]
+        assert (error.bpn, error.levelno) == ("BPNL1", logging.DEBUG)
 
     def test_a_discovery_response_without_a_key_is_logged_before_it_is_raised(self, saturn, caplog):
         with patch.object(saturn, "discover_connector_protocol", return_value={"counterPartyAddress": "a"}), \
                 caplog.at_level(logging.DEBUG), pytest.raises(KeyError):
             saturn.get_discovery_info("BPNL1")
-        error = [r for r in _records(caplog, SATURN) if r.levelno == logging.ERROR][0]
-        assert error.bpn == "BPNL1" and "counterPartyId" in error.getMessage()
+        error = [r for r in _records(caplog, SATURN) if "has no 'counterPartyId'" in r.getMessage()][0]
+        assert error.bpn == "BPNL1" and error.levelno == logging.DEBUG
 
     def test_a_failing_catalog_of_several_connectors_is_a_sanitised_warning(self, saturn, caplog):
         with patch.object(saturn, "get_catalog_request_with_filter", side_effect=ConnectionError("boom")), caplog.at_level(logging.DEBUG):

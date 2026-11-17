@@ -24,6 +24,8 @@
 import base64
 import logging
 
+from tractusx_sdk._logging_helpers import log_failure
+
 logger = logging.getLogger(__name__)
 
 def encode_as_base64_url_safe(string: str) -> str:
@@ -64,8 +66,9 @@ def decode_base64_url_safe(encoded_string: str) -> str:
     # Decode the string
     try:
         decoded = base64.urlsafe_b64decode(encoded_string.encode("ascii")).decode("utf-8")
-    except Exception:
-        # Only the length is logged: the content of the string is not
-        logger.exception("A base64 string of %d characters could not be decoded", len(encoded_string))
+    except Exception as error:
+        # The input comes from the outside: only its length is logged, at DEBUG so that it cannot flood the log
+        log_failure(logger, "A base64 string of %d characters could not be decoded (%s)", error, len(encoded_string),
+                    level=logging.DEBUG)
         raise
     return decoded

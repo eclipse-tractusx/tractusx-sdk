@@ -26,8 +26,8 @@ import time
 
 import requests
 
-from tractusx_sdk._logging_fields import http_status, log_extra, safe_url
-from tractusx_sdk._logging_helpers import log_failure
+from tractusx_sdk._logging_fields import log_extra, safe_url
+from tractusx_sdk._logging_helpers import log_http_failure, log_http_outcome, log_http_request
 
 from ..tools import HttpTools
 from ..tools.tracing import TraceableMixin, Tracer, trace_call
@@ -196,17 +196,14 @@ class Adapter(TraceableMixin):
 
         url = HttpTools.concat_into_url(self.base_url, path)
         http_method = str(method).upper()
-        logged_url = safe_url(url)
 
         body = kwargs.get("json")
         if body is None:
             body = kwargs.get("data")
 
         # Headers, parameters and bodies are never logged: they carry credentials and business data
-        logger.debug(
-            "HTTP %s %s", http_method, logged_url,
-            extra=log_extra(http_method=http_method, url=url, adapter_type=type(self).__name__),
-        )
+        adapter_type = type(self).__name__
+        log_http_request(logger, http_method, url, adapter_type=adapter_type)
         started = time.perf_counter()
 
         try:
@@ -225,23 +222,9 @@ class Adapter(TraceableMixin):
                 )
                 call.set_response(response)
         except Exception as error:
-            elapsed_ms = (time.perf_counter() - started) * 1000
-            log_failure(
-                logger, "HTTP %s %s failed after %.0f ms (%s)", error, http_method, logged_url, elapsed_ms,
-                level=logging.DEBUG, http_method=http_method, url=url, elapsed_ms=round(elapsed_ms),
-            )
+            log_http_failure(logger, http_method, url, error, started, adapter_type=adapter_type)
             raise
 
-        elapsed_ms = (time.perf_counter() - started) * 1000
-        status = http_status(response)
-        # A client error (4xx) is an expected outcome for many callers, so only a server failure is a warning
-        level = logging.WARNING if status is not None and status >= 500 else logging.DEBUG
-        logger.log(
-            level, "HTTP %s %s -> %s in %.0f ms", http_method, logged_url, status, elapsed_ms,
-            extra=log_extra(
-                http_method=http_method, url=url, status_code=status, elapsed_ms=round(elapsed_ms),
-                adapter_type=type(self).__name__,
-            ),
-        )
+        log_http_outcome(logger, http_method, url, response, started, adapter_type=adapter_type)
 
         return response

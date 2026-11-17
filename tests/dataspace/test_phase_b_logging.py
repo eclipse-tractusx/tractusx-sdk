@@ -152,21 +152,21 @@ class TestOAuth2ManagerLogging:
         assert any(r.getMessage() == "Authorization header added" for r in caplog.records)
         assert SECRET not in _dump(caplog) and "Bearer" not in _dump(caplog)
 
-    def test_a_missing_authorization_header_is_a_warning(self, manager, caplog):
+    def test_a_missing_authorization_header_is_a_debug_record(self, manager, caplog):
         with caplog.at_level(logging.DEBUG), pytest.raises(HTTPException) as raised:
             manager.is_authenticated(_request())
         assert raised.value.status_code == 401
-        assert _records(caplog, self.LOGGER)[-1].levelno == logging.WARNING
+        assert _records(caplog, self.LOGGER)[-1].levelno == logging.DEBUG
 
-    def test_a_credential_that_cannot_be_validated_is_a_warning_without_its_value(self, manager, keycloak, caplog):
+    def test_a_credential_that_cannot_be_validated_is_a_debug_record_without_its_value(self, manager, keycloak, caplog):
         keycloak.userinfo.side_effect = Exception(f"token {SECRET} expired")
         with caplog.at_level(logging.DEBUG), pytest.raises(HTTPException) as raised:
             manager.is_authenticated(_request(f"Bearer {SECRET}"))
 
         assert raised.value.status_code == 401
-        warning = _records(caplog, self.LOGGER)[-1]
-        assert warning.levelno == logging.WARNING and warning.exc_info is None
-        assert "(Exception)" in warning.getMessage()
+        rejection = _records(caplog, self.LOGGER)[-1]
+        assert rejection.levelno == logging.DEBUG and rejection.exc_info is None
+        assert "(Exception)" in rejection.getMessage()
         assert SECRET not in _dump(caplog)
 
     def test_an_authenticated_request_is_logged_at_debug(self, manager, caplog):
@@ -175,11 +175,11 @@ class TestOAuth2ManagerLogging:
         assert _records(caplog, self.LOGGER)[-1].levelno == logging.DEBUG
         assert SECRET not in _dump(caplog)
 
-    def test_an_empty_user_info_is_a_warning_and_returns_false(self, manager, keycloak, caplog):
+    def test_an_empty_user_info_is_a_debug_record_and_returns_false(self, manager, keycloak, caplog):
         keycloak.userinfo.return_value = {}
         with caplog.at_level(logging.DEBUG):
             assert manager.is_authenticated(_request(f"Bearer {SECRET}")) is False
-        assert _records(caplog, self.LOGGER)[-1].levelno == logging.WARNING
+        assert _records(caplog, self.LOGGER)[-1].levelno == logging.DEBUG
         assert SECRET not in _dump(caplog)
 
 
@@ -194,18 +194,18 @@ class TestAuthManagerLogging:
         assert {r.levelno for r in _records(caplog, self.LOGGER)} == {logging.DEBUG}
         assert SECRET not in _dump(caplog)
 
-    def test_a_missing_key_is_a_warning(self, caplog):
+    def test_a_missing_key_is_a_debug_record(self, caplog):
         manager = AuthManager(configured_api_key=self.KEY, auth_enabled=True)
         with caplog.at_level(logging.DEBUG):
             assert manager.is_authenticated(_request()) is False
-        assert _records(caplog, self.LOGGER)[-1].levelno == logging.WARNING
+        assert _records(caplog, self.LOGGER)[-1].levelno == logging.DEBUG
         assert SECRET not in _dump(caplog)
 
-    def test_a_wrong_key_is_a_warning_that_logs_neither_key(self, caplog):
+    def test_a_wrong_key_is_a_debug_record_that_logs_neither_key(self, caplog):
         manager = AuthManager(configured_api_key=self.KEY, auth_enabled=True)
         with caplog.at_level(logging.DEBUG):
             assert manager.is_authenticated(_request(**{"X-Api-Key": "wrong-supplied-key"})) is False
-        assert _records(caplog, self.LOGGER)[-1].levelno == logging.WARNING
+        assert _records(caplog, self.LOGGER)[-1].levelno == logging.DEBUG
         assert SECRET not in _dump(caplog) and "wrong-supplied-key" not in _dump(caplog)
 
     def test_a_valid_key_is_accepted_at_debug(self, caplog):
@@ -411,7 +411,7 @@ class TestDiscoveryFinderServiceLogging:
             http.do_post.return_value = response
             self._service(oauth).find_discovery_urls(["bpn"])
         error = _records(caplog, self.LOGGER)[-1]
-        assert error.levelno == logging.ERROR
+        assert error.levelno == logging.DEBUG
         assert getattr(error, "status_code", None) == status
 
     def test_an_answer_without_endpoints_is_logged_before_it_is_raised(self, oauth, caplog):
@@ -420,7 +420,7 @@ class TestDiscoveryFinderServiceLogging:
         with patch(self.HTTP) as http, caplog.at_level(logging.DEBUG), pytest.raises(DiscoveryEndpointNotFoundError):
             http.do_post.return_value = response
             self._service(oauth).find_discovery_urls(["bpn"])
-        assert _records(caplog, self.LOGGER)[-1].levelno == logging.ERROR
+        assert _records(caplog, self.LOGGER)[-1].levelno == logging.DEBUG
 
 
 class _FakeDiscoveryService(ConnectorDiscoveryService):
@@ -590,4 +590,4 @@ class TestBpnDiscoveryServiceLogging:
         finder.find_discovery_urls.return_value = {}
         with caplog.at_level(logging.DEBUG), pytest.raises(DiscoveryEndpointNotFoundError):
             service.get_discovery_url(finder, "k")
-        assert _records(caplog, self.LOGGER)[-1].levelno == logging.ERROR
+        assert _records(caplog, self.LOGGER)[-1].levelno == logging.DEBUG

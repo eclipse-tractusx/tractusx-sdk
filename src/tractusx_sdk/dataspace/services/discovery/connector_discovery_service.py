@@ -78,7 +78,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         """
         endpoints = discovery_finder_service.find_discovery_urls(keys=[discovery_key])
         if(discovery_key not in endpoints):
-          logger.error("[Connector Discovery Service] The discovery finder has no endpoint for key '%s'", discovery_key,
+          logger.debug("[Connector Discovery Service] The discovery finder has no endpoint for key '%s'", discovery_key,
                        extra=log_extra(operation="discovery.connector"))
           raise DiscoveryEndpointNotFoundError("[Connector Discovery Service] Connector Discovery endpoint not found!")
         

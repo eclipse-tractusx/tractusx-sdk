@@ -145,6 +145,8 @@ class MemoryConnectionManager(BaseConnectionManager):
             oid_data: dict = edc_data.get(query_checksum, {})
             cached_entry: dict = oid_data.get(policy_checksum, {})
 
+        if not logger.isEnabledFor(logging.DEBUG):
+            return cached_entry
         if cached_entry:
             logger.debug(
                 "[Memory Connection Manager] Cache hit for the EDR of %s at %s", counter_party_id, safe_url(counter_party_address),

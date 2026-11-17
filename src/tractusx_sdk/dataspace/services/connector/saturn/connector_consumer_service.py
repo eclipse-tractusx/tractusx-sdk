@@ -247,7 +247,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         """
         offer_id = policy.get("@id", None)
         if (offer_id is None):
-            logger.error("[Connector Service] The policy offered for asset [%s] has no offer id (@id)", target,
+            logger.debug("[Connector Service] The policy offered for asset [%s] has no offer id (@id)", target,
                          extra=log_extra(asset_id=target, counter_party_id=counter_party_id,
                                          operation="consumer.get_edr_negotiation_request"))
             raise ValueError("[Connector Service]: Policy offer id is not available!")
@@ -333,7 +333,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             filter_expression=filter_expression
         )
         if catalog_response is None:
-            logger.error("[Connector Service] The catalog of [%s] at %s is empty: no policy can be discovered", counter_party_id,
+            logger.debug("[Connector Service] The catalog of [%s] at %s is empty: no policy can be discovered", counter_party_id,
                          safe_url(counter_party_address),
                          extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
                                          operation="consumer.resolve_policies_from_catalog"))
@@ -344,13 +344,13 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 catalog=catalog_response, allowed_policies=None)
         except Exception as e:
             log_failure(logger, "[Connector Service] No policy could be read from the catalog of [%s] at %s (%s)", e,
-                        counter_party_id, safe_url(counter_party_address),
+                        counter_party_id, safe_url(counter_party_address), level=logging.DEBUG,
                         counter_party_id=counter_party_id, counter_party_address=counter_party_address,
                         operation="consumer.resolve_policies_from_catalog")
             raise CatalogError(
                 f"[Connector Service]: [{counter_party_address}] No policy found in catalog: [{str(e)}]") from e
         if not valid_assets_policies:
-            logger.error("[Connector Service] The catalog of [%s] at %s has no policy", counter_party_id, safe_url(counter_party_address),
+            logger.debug("[Connector Service] The catalog of [%s] at %s has no policy", counter_party_id, safe_url(counter_party_address),
                          extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
                                          operation="consumer.resolve_policies_from_catalog"))
             raise CatalogError(
@@ -433,7 +433,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             verify=verify
         )
         if response is None or response.status_code != 200:
-            logger.error("[Connector Service] The connector discovery of BPN [%s] was not successful (status %s)", bpnl,
+            logger.debug("[Connector Service] The connector discovery of BPN [%s] was not successful (status %s)", bpnl,
                          getattr(response, "status_code", None),
                          extra=log_extra(bpn=bpnl, counter_party_address=counter_party_address, status_code=http_status(response),
                                          operation="consumer.discover_connector_protocol"))
@@ -465,7 +465,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 return discovery_info[namespaced]
             if key in discovery_info:
                 return discovery_info[key]
-            logger.error("[Connector Service] The discovery response of BPN [%s] has no '%s'. Keys: %s", bpnl, key, list(discovery_info.keys()),
+            logger.debug("[Connector Service] The discovery response of BPN [%s] has no '%s'. Keys: %r", bpnl, key, list(discovery_info.keys()),
                          extra=log_extra(bpn=bpnl, operation="consumer.get_discovery_info"))
             raise KeyError(f"Key '{key}' not found in discovery response (tried '{namespaced}' and '{key}'). Keys: {list(discovery_info.keys())}")
 
