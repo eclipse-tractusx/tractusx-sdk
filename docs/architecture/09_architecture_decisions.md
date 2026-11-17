@@ -29,7 +29,7 @@ This chapter indexes all Architecture Decision Records (ADRs) for the Eclipse Tr
 | [ADR-0002](../contributing/architectural-decisions/0002-data-storage-architecture.md) | Data Storage Architecture | Accepted | 2025-02-20 |
 | [ADR-0003](../contributing/architectural-decisions/0003-sdk-module-architecture.md) | SDK Module Architecture | Accepted | 2025-03-31 |
 | [ADR-0004](../contributing/architectural-decisions/0004-tractusx-sdk-services.md) | Tractus-X SDK Services (separate repo) | Accepted | 2025-05-12 |
-| [ADR-0005](../contributing/architectural-decisions/0005-avoid-mutable-default-arguments.md) | Avoid Mutable Default Arguments | Proposed | 2026-11-17 |
+| [ADR-0005](../contributing/architectural-decisions/0005-default-policy-handling.md) | Default Policy Handling | Accepted | 2026-11-17 |
 
 ## Summaries
 
@@ -49,9 +49,9 @@ The SDK adopts a **modular directory structure** with `adapters`, `controllers`,
 
 Deployable microservices that use the SDK are maintained in [tractusx-sdk-services](https://github.com/eclipse-tractusx/tractusx-sdk-services), not in this repository. This keeps the SDK as a pure library and avoids coupling it to deployment infrastructure.
 
-### ADR-0005 — Avoid Mutable Default Arguments
+### ADR-0005 — Default Policy Handling
 
-SDK functions and methods should not use mutable objects as default argument values. Use immutable defaults or create a fresh mutable value inside the function.
+Policy configuration defaults to `None`, which means all policies are accepted. Consumers that need policy restrictions must provide them explicitly.
 
 ## Adding New ADRs
 

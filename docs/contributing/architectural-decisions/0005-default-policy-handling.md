@@ -16,25 +16,25 @@ SPDX-License-Identifier: CC-BY-4.0
 
 -->
 
-# 5. Avoid mutable default arguments
+# 5. Default policy handling
 
 Date: 2026-11-17
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
-Python evaluates default argument values when a function is defined, not each time it is called. If a mutable value such as a list, dictionary, or set is used as a default, calls can share and unexpectedly modify the same object. This can cause state to leak between calls and produce hard-to-find bugs in SDK consumers.
+Requiring policy configuration during development adds setup and maintenance overhead. A permissive default makes it easier to develop and use the SDK when no policy restrictions are required.
 
 ## Decision
 
-SDK functions and methods must not use mutable objects as default argument values. Use an immutable default when suitable. When a mutable value is needed, use `None` as the default and create a new object inside the function.
+Policy configuration defaults to `None`. When no policies are supplied, all policies are accepted. Consumers that require restrictions must provide the relevant policies explicitly.
 
 ## Consequences
 
-This avoids unintended state sharing between calls and makes behavior more predictable for SDK consumers. Functions that need mutable defaults require a small amount of initialization in their body.
+This reduces configuration overhead for development and unrestricted use cases. The default is permissive, so consumers that need policy enforcement are responsible for supplying policy restrictions.
 
 ## NOTICE
 
