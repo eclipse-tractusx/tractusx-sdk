@@ -119,9 +119,9 @@ class ModelFactory:
             dataspace_version: str,
             oid: str,
             data_address: dict,
-            context: dict | list | str = None,
-            properties: dict = None,
-            private_properties: dict = None,
+            context: dict | list | str | None = None,
+            properties: dict | None = None,
+            private_properties: dict | None = None,
             **kwargs
     ):
         """
@@ -162,11 +162,11 @@ class ModelFactory:
             dataspace_version: str,
             counter_party_address: str,
             counter_party_id: str,
-            context: dict | list | str = None,
-            additional_scopes: list = None,
-            queryspec_model: BaseQuerySpecModel = None,
-            queryspec: dict = None,
-            protocol: str = None,
+            context: dict | list | str | None = None,
+            additional_scopes: list | None = None,
+            queryspec_model: BaseQuerySpecModel | None = None,
+            queryspec: dict | None = None,
+            protocol: str | None = None,
             **kwargs
     ):
         """
@@ -216,8 +216,8 @@ class ModelFactory:
             oid: str,
             access_policy_id: str,
             contract_policy_id: str,
-            context: dict | list | str = None,
-            assets_selector: list = None,
+            context: dict | list | str | None = None,
+            assets_selector: list | None = None,
             **kwargs
     ):
         """
@@ -258,11 +258,11 @@ class ModelFactory:
             offer_id: str,
             asset_id: str,
             provider_id: str,
-            offer_policy_model: BasePolicyModel = None,
-            offer_policy: dict = None,
-            context: dict | list | str = None,
-            callback_addresses: list = None,
-            protocol: str = None,
+            offer_policy_model: BasePolicyModel | None = None,
+            offer_policy: dict | None = None,
+            context: dict | list | str | None = None,
+            callback_addresses: list | None = None,
+            protocol: str | None = None,
             **kwargs
     ):
         """
@@ -315,10 +315,10 @@ class ModelFactory:
     def get_policy_model(
             dataspace_version: str,
             oid: str,
-            context: dict | list | str = None,
-            permissions: dict | list[dict] = None,
-            prohibitions: dict | list[dict] = None,
-            obligations: dict | list[dict] = None,
+            context: dict | list | str | None = None,
+            permissions: dict | list[dict] | None = None,
+            prohibitions: dict | list[dict] | None = None,
+            obligations: dict | list[dict] | None = None,
             **kwargs
     ):
         """
@@ -360,12 +360,12 @@ class ModelFactory:
     @staticmethod
     def get_queryspec_model(
             dataspace_version: str,
-            context: dict | list | str = None,
+            context: dict | list | str | None = None,
             offset: int = 0,
             limit: int = 10,
             sort_order: str = "DESC",
             sort_field: str = "createdAt",
-            filter_expression: list[dict] = None,
+            filter_expression: list[dict] | None = None,
             **kwargs
     ):
         """
@@ -407,9 +407,9 @@ class ModelFactory:
             transfer_type: str,
             contract_id: str,
             data_destination: dict,
-            private_properties: dict = None,
-            callback_addresses: list[dict] = None,
-            context: dict | list | str = None,
+            private_properties: dict | None = None,
+            callback_addresses: list[dict] | None = None,
+            context: dict | list | str | None = None,
             **kwargs
     ):
         """
@@ -454,7 +454,7 @@ class ModelFactory:
             dataspace_version: str,
             bpnl: str,
             counter_party_address: str,
-            context: dict | list | str = None,
+            context: dict | list | str | None = None,
             **kwargs
     ):
         if(dataspace_version == "jupiter"):
