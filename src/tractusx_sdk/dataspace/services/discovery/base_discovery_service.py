@@ -135,9 +135,13 @@ class BaseDiscoveryService(BaseService, ABC):
                         logger.info("[%s] Updated cache with new discovery URL for key '%s': %s", service_name, discovery_key, safe_url(url),
                                     extra=log_extra(url=url, operation="discovery.refresh"))
                         logger.info("[%s] Cache status: %d URL(s) cached, valid until %s", service_name, len(self.discovery_cache), valid_until.strftime('%Y-%m-%d %H:%M:%S'))
+                elif not entry:
+                    raise ValueError(
+                        f"[{self.get_service_name()}] Discovery finder returned no URL for key '{discovery_key}'"
+                    )
                 else:
-                    logger.warning("[%s] The discovery finder returned no URL for key '%s'", self.get_service_name(), discovery_key,
-                                   extra=log_extra(operation="discovery.refresh"))
+                    logger.warning("[%s] The discovery finder returned no URL for key '%s', using the cached one", self.get_service_name(),
+                                   discovery_key, extra=log_extra(url=entry["url"], operation="discovery.refresh"))
                     
             except Exception as e:
                 # If we have a cached entry, preserve it and continue using it

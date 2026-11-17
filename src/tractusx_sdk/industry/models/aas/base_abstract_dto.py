@@ -87,7 +87,7 @@ class AbstractServiceDescription(BaseAbstractModel):
     The Description object enables servers to present their capabilities to the clients, in particular which profiles they implement.
     """
 
-    profiles: List[ProfileEnum] | None = Field(None)
+    profiles: List[str] | None = Field(None)
 
 
 class AbstractPagingMetadata(BaseAbstractModel):
