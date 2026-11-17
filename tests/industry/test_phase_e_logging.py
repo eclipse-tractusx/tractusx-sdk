@@ -31,6 +31,7 @@ import httpx
 import pytest
 from botocore.exceptions import ClientError
 from moto import mock_aws
+from pydantic import ValidationError
 from requests import HTTPError
 
 from tractusx_sdk.dataspace.managers.auth_manager import AuthManager
@@ -524,12 +525,22 @@ class TestAasServiceLogging:
         record = _records(caplog, AAS)[-1]
         assert (record.aas_id, record.submodel_id, record.levelno) == (AAS_ID, "sm-1", logging.INFO)
 
-    def test_a_response_that_does_not_match_the_model_is_logged_with_its_traceback_and_re_raised(self, service, caplog):
+    def test_a_response_that_does_not_match_the_model_is_logged_by_its_type_and_re_raised(self, service, caplog):
         with patch(f"{AAS}.HttpTools") as http, caplog.at_level(logging.DEBUG), pytest.raises(Exception) as raised:
             http.do_get_with_session.return_value = self._response(200, {"unexpected": "shape"})
             service.get_all_asset_administration_shell_descriptors()
         failure = [r for r in _records(caplog, AAS) if r.levelno == logging.ERROR][0]
-        assert failure.exc_info[1] is raised.value and failure.operation == "aas.get_all_asset_administration_shell_descriptors"
+        assert failure.getMessage() == f"DTR: get all shell descriptors failed ({type(raised.value).__name__})"
+        assert failure.exc_info is None and failure.operation == "aas.get_all_asset_administration_shell_descriptors"
+
+    def test_the_values_of_a_response_that_does_not_match_the_model_are_never_logged(self, service, caplog):
+        with patch(f"{AAS}.HttpTools") as http, caplog.at_level(logging.DEBUG), pytest.raises(ValidationError) as raised:
+            http.do_get_with_session.return_value = self._response(200, {"profiles": [{"secret": SECRET}]})
+            service.get_description()
+        assert SECRET in str(raised.value)
+        assert [r for r in _records(caplog, AAS) if r.levelno == logging.ERROR]
+        assert [r for r in caplog.records if r.exc_info] == []
+        assert SECRET not in _dump(caplog)
 
     def test_a_transport_failure_is_not_logged_a_second_time_by_the_service(self, service, caplog):
         import requests

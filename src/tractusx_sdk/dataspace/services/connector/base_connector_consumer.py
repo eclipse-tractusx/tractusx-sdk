@@ -89,6 +89,7 @@ def _policy_id_of(policy) -> str | None:
 
 # Set once the process has been warned that the dataplane requests are not verified by default
 _TLS_DEFAULT_WARNED = threading.Event()
+_TLS_WARNING_LOCK = threading.Lock()
 
 
 def _log_dataplane_call(method: str, counter_party_id: str, counter_party_address: str, path: str, request_kwargs: dict) -> None:
@@ -103,10 +104,13 @@ def _log_dataplane_call(method: str, counter_party_id: str, counter_party_addres
                  extra=log_extra(http_method=method, counter_party_id=counter_party_id,
                                  counter_party_address=counter_party_address, operation=LogOperations.CONSUMER_DATAPLANE_CALL))
     if "verify" not in request_kwargs and not _TLS_DEFAULT_WARNED.is_set():
-        _TLS_DEFAULT_WARNED.set()
-        logger.warning("[Connector Service] No 'verify' given: the TLS certificate of the dataplane is NOT verified by default. "
-                       "Pass verify=True (or the path of a CA bundle) to verify it. This is logged once per process",
-                       extra=log_extra(http_method=method, operation=LogOperations.CONSUMER_DATAPLANE_CALL))
+        with _TLS_WARNING_LOCK:
+            already_warned = _TLS_DEFAULT_WARNED.is_set()
+            _TLS_DEFAULT_WARNED.set()
+        if not already_warned:
+            logger.warning("[Connector Service] No 'verify' given: the TLS certificate of the dataplane is NOT verified by default. "
+                           "Pass verify=True (or the path of a CA bundle) to verify it. This is logged once per process",
+                           extra=log_extra(http_method=method, operation=LogOperations.CONSUMER_DATAPLANE_CALL))
 
 
 class BaseConnectorConsumerService(BaseService):

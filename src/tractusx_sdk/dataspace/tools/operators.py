@@ -153,7 +153,7 @@ class op:
             shutil.rmtree(dir_name)
             return True
         except Exception as e:
-            logger.debug("Could not delete the directory '%s': %s", dir_name, e)
+            log_failure(logger, "Could not delete the directory '%s' (%s)", e, dir_name, level=logging.DEBUG)
             return False
     
     """

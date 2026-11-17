@@ -38,7 +38,14 @@ import pytest
 import requests
 
 import tractusx_sdk.dataspace.services.connector.base_connector_consumer as bcc
+from sqlalchemy.exc import DBAPIError
+from sqlmodel import create_engine
+
 from tractusx_sdk.dataspace.adapters.adapter import Adapter
+from tractusx_sdk.dataspace.managers.connection.database import postgres_memory_connection_manager as postgres_module
+from tractusx_sdk.dataspace.managers.connection.database.postgres_memory_connection_manager import PostgresMemoryConnectionManager
+from tractusx_sdk.dataspace.managers.connection.file_system import file_system_connection_manager as file_system_module
+from tractusx_sdk.dataspace.managers.connection.file_system.file_system_connection_manager import FileSystemConnectionManager
 from tractusx_sdk.dataspace.managers.connection.memory import MemoryConnectionManager
 from tractusx_sdk.dataspace.services.connector import BaseConnectorProviderService
 from tractusx_sdk.dataspace.services.connector.base_connector_consumer import BaseConnectorConsumerService
@@ -237,6 +244,69 @@ class TestSchemaFinder:
         with patch("tractusx_sdk.dataspace.tools.validate_submodels.get", side_effect=_leaky()), caplog.at_level(logging.DEBUG), \
                 pytest.raises(requests.ConnectionError):
             submodel_schema_finder(SEMANTIC_ID)
+        _assert_clean(caplog)
+
+
+class TestConnectionManagers:
+    """The EDR entries hold access tokens: SQLAlchemy quotes the parameters of a failed statement in its message."""
+
+    EDRS = {"BPNL000000000001": {ADDRESS: {"query": {"policy": {"@id": "tp-1", "authorization": SECRET}}}}}
+
+    @staticmethod
+    def _leaky_statement_error():
+        error = DBAPIError("INSERT INTO edr_connections (edr_data) VALUES (?)", {"edr_data": {"authorization": SECRET}}, Exception("boom"))
+        assert SECRET in str(error)
+        return error
+
+    @pytest.fixture
+    def postgres(self):
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        # The same table name as the other tests: the dynamic table of the manager cannot be declared twice under two names
+        manager = PostgresMemoryConnectionManager(engine=engine, table_name="test_edr_connections")
+        yield manager
+        manager.open_connections = {}
+        manager.stop()
+
+    @pytest.fixture
+    def file_system(self, tmp_path):
+        manager = FileSystemConnectionManager(path=str(tmp_path / "edrs.json"), persist_interval=3600)
+        yield manager
+        manager._stop_event.set()
+
+    def test_a_failed_save_to_the_database_never_logs_the_parameters_of_the_statement(self, postgres, caplog):
+        postgres.open_connections = self.EDRS
+        with patch.object(postgres_module, "Session") as session, caplog.at_level(logging.DEBUG):
+            session.return_value.__enter__.return_value.commit.side_effect = self._leaky_statement_error()
+            postgres._save_to_db()
+        assert [r.getMessage() for r in caplog.records if r.levelno == logging.ERROR] == [
+            "[PostgresMemoryConnectionManager] Error saving to db (DBAPIError)"]
+        _assert_clean(caplog)
+
+    def test_a_failed_load_from_the_database_never_logs_the_text_of_the_statement(self, postgres, caplog):
+        with patch.object(postgres_module, "Session") as session, caplog.at_level(logging.DEBUG):
+            session.return_value.__enter__.return_value.exec.side_effect = self._leaky_statement_error()
+            postgres._load_from_db()
+        assert [r.getMessage() for r in caplog.records if r.levelno == logging.ERROR] == [
+            "[PostgresMemoryConnectionManager] Error loading from db (DBAPIError)"]
+        _assert_clean(caplog)
+
+    def test_a_failed_save_to_a_file_never_logs_the_text_of_the_failure(self, file_system, caplog):
+        file_system.open_connections = self.EDRS
+        with patch.object(file_system_module.json, "dump", side_effect=TypeError(f"cannot write {SECRET}")), caplog.at_level(logging.DEBUG):
+            file_system._save_to_file()
+        failure = [r for r in caplog.records if r.levelno == logging.ERROR]
+        assert len(failure) == 1
+        assert failure[0].getMessage().endswith("edrs.json' (TypeError)")
+        _assert_clean(caplog)
+
+    def test_a_failed_load_from_a_file_never_logs_the_text_of_the_failure(self, file_system, caplog):
+        with open(file_system.file_path, "w", encoding="utf-8") as stored:
+            stored.write("{}")
+        with patch.object(file_system_module.json, "load", side_effect=ValueError(f"cannot read {SECRET}")), caplog.at_level(logging.DEBUG):
+            file_system._load_if_updated()
+        failure = [r for r in caplog.records if r.levelno == logging.ERROR]
+        assert len(failure) == 1
+        assert failure[0].getMessage().endswith("edrs.json' (ValueError)")
         _assert_clean(caplog)
 
 

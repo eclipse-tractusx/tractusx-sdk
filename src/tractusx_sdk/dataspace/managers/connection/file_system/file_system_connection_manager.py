@@ -32,6 +32,7 @@ import os
 import threading
 import time
 from filelock import FileLock
+from tractusx_sdk._logging_helpers import log_failure
 from ..memory import MemoryConnectionManager
 import hashlib
 
@@ -96,8 +97,8 @@ class FileSystemConnectionManager(MemoryConnectionManager):
                     json.dump(self.open_connections, f)
                 self._last_loaded_hash = current_hash
             logger.debug("[FileSystemConnectionManager] Saved the connections to '%s'", self.file_path)
-        except Exception:
-            logger.exception("[FileSystemConnectionManager] Error saving to file '%s'", self.file_path)
+        except Exception as error:
+            log_failure(logger, "[FileSystemConnectionManager] Error saving to file '%s' (%s)", error, self.file_path)
 
     def _load_if_updated(self):
         """
@@ -114,8 +115,8 @@ class FileSystemConnectionManager(MemoryConnectionManager):
                     self.open_connections = file_connections
                     self._last_loaded_hash = file_hash
                     logger.debug("[FileSystemConnectionManager] Reloaded the connections from '%s' (changed on disk)", self.file_path)
-        except Exception:
-            logger.exception("[FileSystemConnectionManager] Error loading from file '%s'", self.file_path)
+        except Exception as error:
+            log_failure(logger, "[FileSystemConnectionManager] Error loading from file '%s' (%s)", error, self.file_path)
 
     def _calculate_hash(self, data):
         """

@@ -235,7 +235,8 @@ class SchemaValidator:
             return False
             
         except SchemaError as e:
-            logger.warning("The loaded schema is not a valid JSON schema (%s)", e.validator, extra=log_extra(operation=LogOperations.GEOMETRY_VALIDATE))
+            violated_rule = e.validator  # the name of the keyword of the schema, not a value
+            logger.warning("The loaded schema is not a valid JSON schema (%s)", violated_rule, extra=log_extra(operation=LogOperations.GEOMETRY_VALIDATE))
             self.add_error(f"Schema error: {e.message}", log_message="Schema error: the loaded schema is not valid")
             return False
     

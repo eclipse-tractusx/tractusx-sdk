@@ -420,39 +420,58 @@ class TestStructuredContext:
                             offenders.append(f"{_rel(path)}:{call.lineno}:.json()")
         assert offenders == []
 
-    # Modules that reach a remote service: an exception of ``requests``/``httpx`` quotes the full URL, query string included
-    EXCEPTION_TEXT_FREE_MODULES = frozenset({
-        "dataspace/managers/oauth2_manager.py", "dataspace/managers/auth_manager.py",
-        "industry/adapters/submodel_adapters/s3_adapter.py", "industry/adapters/submodel_adapters/http_submodel_adapter.py",
-        "dataspace/tools/http_tools.py", "dataspace/adapters/adapter.py",
-        "dataspace/services/connector/base_connector_provider.py",
-        "dataspace/services/connector/base_connector_consumer.py",
-        "dataspace/services/connector/saturn/connector_consumer_service.py",
-        "dataspace/services/discovery/base_discovery_service.py",
-        "dataspace/tools/validate_submodels.py",
-        "industry/services/notifications/notification_consumer_service.py",
-        "industry/services/notifications/notification_service.py",
-        "extensions/notification_api/services/notification_consumer_service.py",
-        "extensions/notification_api/services/notification_service.py",
-    })
+    # Default deny. A traceback carries the message of its exception, and the exceptions of a remote service or a database
+    # repeat what was sent to them (the URL with its query string, the SQL parameters with the EDR credentials...). A module
+    # may log one only when it is listed here, with the reason why what it can catch holds nothing sensitive.
+    TRACEBACK_ALLOWED = {
+        "dataspace/adapters/connector/adapter_factory.py": "import errors: names of modules and classes",
+        "dataspace/controllers/connector/controller_factory.py": "import errors: names of modules and classes",
+        "dataspace/models/connector/model_factory.py": "import errors: names of modules and classes",
+        "dataspace/services/connector/service_factory.py": "import errors: names of modules and classes",
+        "industry/adapters/submodel_adapter_factory.py": "import errors: names of modules and classes",
+        "industry/adapters/submodel_adapters/file_system_adapter.py": "local OSError about the storage path, which is logged anyway",
+        "extensions/semantics/schema_to_context_translator.py": "the translation of a public schema: logged once, where it originates",
+        "dataspace/tools/tracing.py": "swallowed failures of the tracing itself, DEBUG, once per site",
+    }
 
-    def test_the_credential_modules_never_log_exception_text_nor_tracebacks(self):
+    @staticmethod
+    def _traceback_calls(tree):
+        """The calls that log a traceback: ``exception()``, ``exc_info=`` and keywords unpacked into a log call."""
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            exception_call = (isinstance(node.func, ast.Attribute) and node.func.attr == "exception"
+                              and (_is_logger_target(node.func.value)
+                                   or (isinstance(node.func.value, ast.Name) and node.func.value.id == "logging")))
+            unpacking_log_call = (isinstance(node.func, ast.Attribute) and node.func.attr in LOG_METHODS
+                                  and _is_logger_target(node.func.value) and any(k.arg is None for k in node.keywords))
+            if exception_call or unpacking_log_call or any(k.arg == "exc_info" for k in node.keywords):
+                yield node
+
+    def test_a_traceback_is_only_logged_by_the_modules_that_are_allowed_to(self):
+        offenders = []
+        for path, tree in _modules():
+            if _rel(path) in HELPER_MODULES or _rel(path) in self.TRACEBACK_ALLOWED:
+                continue
+            offenders.extend(f"{_rel(path)}:{call.lineno}" for call in self._traceback_calls(tree))
+        assert offenders == []
+
+    def test_every_module_allowed_to_log_a_traceback_still_does(self):
+        """An entry that is no longer needed is removed, so that the list can only shrink."""
+        sites = {_rel(path): list(self._traceback_calls(tree)) for path, tree in _modules()}
+        assert [name for name in self.TRACEBACK_ALLOWED if not sites.get(name)] == []
+
+    def test_no_module_logs_the_text_of_an_exception(self):
         """
-        The identity provider, the object store, the submodel service and every module that makes HTTP requests may echo
-        request details (the URL with its query string) in their errors: they log the exception TYPE (or the S3 error
-        code) only, never its message (``%s`` of the exception) nor a traceback (``exc_info``, ``exception()``).
+        An exception is read for its TYPE (or the error code of an S3 error) only, never for its message (the ``%s`` of
+        the exception): ``requests``, ``httpx`` and SQLAlchemy quote the URL, the query string or the parameters in it.
         """
-        credential_modules = self.EXCEPTION_TEXT_FREE_MODULES
         # What is allowed to read an exception: its type, or the error code of an S3 error
         allowed_readers = {"type", "_error_code"}
         offenders = []
         for path, tree in _modules():
-            if _rel(path) not in credential_modules:
-                continue
             handlers = {h.name for h in ast.walk(tree) if isinstance(h, ast.ExceptHandler) and h.name}
             for call in _log_calls(tree):
-                if call.func.attr == "exception" or any(k.arg == "exc_info" for k in call.keywords):
-                    offenders.append(f"{_rel(path)}:{call.lineno}:traceback")
                 for argument in call.args[1:]:
                     allowed = {id(n) for c in ast.walk(argument)
                                if isinstance(c, ast.Call) and isinstance(c.func, ast.Name) and c.func.id in allowed_readers

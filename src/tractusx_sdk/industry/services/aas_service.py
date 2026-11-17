@@ -58,7 +58,7 @@ def _bound_arguments(signature: inspect.Signature, call_args: tuple, call_kwargs
         return {}
 
 
-def _log_dtr(operation: str, arguments: Callable[[], dict], level: int, message: str, *message_args, **log_kwargs) -> None:
+def _log_dtr(operation: str, arguments: Callable[[], dict], level: int, message: str, *message_args) -> None:
     """
     Logs a record of an operation of the Digital Twin Registry service, with the identifiers it is about.
 
@@ -67,7 +67,7 @@ def _log_dtr(operation: str, arguments: Callable[[], dict], level: int, message:
     if not logger.isEnabledFor(level):
         return
     bound = arguments()
-    logger.log(level, message, *message_args, stacklevel=2, **log_kwargs,
+    logger.log(level, message, *message_args, stacklevel=2,
                extra=log_extra(aas_id=bound.get("aas_identifier"), submodel_id=bound.get("submodel_identifier"),
                                bpn=bound.get("bpn"), operation=operation))
 
@@ -80,8 +80,8 @@ def _logged(description: str, writes: bool = False):  # NOSONAR
     * A non-2XX answer comes back as a ``Result`` and not as an exception: it is expected for some callers
       (e.g. checking whether a submodel exists before creating it), so it is a DEBUG record, not a warning.
     * A successful write (create, update, delete) is an INFO record.
-    * A failure that is not a transport error (those are logged where the request is made) is logged with its
-      traceback and the identifiers, and re-raised unchanged.
+    * A failure that is not a transport error (those are logged where the request is made) is logged by its type
+      and the identifiers, and re-raised unchanged: its message and traceback may quote the data of the response.
     """
 
     def decorator(func):
@@ -96,8 +96,8 @@ def _logged(description: str, writes: bool = False):  # NOSONAR
                 result = func(self, *args, **kwargs)
             except requests.RequestException:
                 raise
-            except Exception:
-                emit(logging.ERROR, "DTR: %s failed", description, exc_info=True)
+            except Exception as error:
+                emit(logging.ERROR, "DTR: %s failed (%s)", description, type(error).__name__)
                 raise
 
             if isinstance(result, Result):

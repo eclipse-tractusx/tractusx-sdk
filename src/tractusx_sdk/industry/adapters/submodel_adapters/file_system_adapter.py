@@ -117,7 +117,8 @@ class FileSystemAdapter(SubmodelAdapter):
         try:
             relative_path = self.path_pattern.format(**submodel_metadata)
         except KeyError as key_error:
-            logger.warning("The submodel metadata lacks '%s', which the path pattern '%s' needs", key_error.args[0], self.path_pattern,
+            missing_key = key_error.args[0]  # the name of a metadata key of the pattern, not a value
+            logger.warning("The submodel metadata lacks '%s', which the path pattern '%s' needs", missing_key, self.path_pattern,
                            extra=log_extra(adapter_type="FileSystemAdapter"))
             raise KeyError(
                 f"Missing required path key '{key_error.args[0]}' for pattern '{self.path_pattern}'"

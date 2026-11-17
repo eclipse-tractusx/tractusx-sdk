@@ -24,6 +24,8 @@
 """The log records of the connector consumer services (base and Saturn): the DSP state machine and the dataplane calls."""
 
 import logging
+import threading
+import time
 from unittest.mock import Mock, patch
 
 import pytest
@@ -506,6 +508,27 @@ class TestDataplaneCalls:
                 patch.object(bcc.HttpTools, "do_get", return_value=Mock(status_code=200)), caplog.at_level(logging.DEBUG):
             service.do_get("BPNL1", ADDRESS, [], policies=[POLICY])
             service.do_get("BPNL1", ADDRESS, [], policies=[POLICY])
+        assert len([r for r in _records(caplog) if "NOT verified by default" in r.getMessage()]) == 1
+
+    def test_the_unverified_tls_default_is_warned_once_even_when_threads_race_for_it(self, caplog):
+        class SlowEvent(threading.Event):
+            def is_set(self):
+                value = super().is_set()
+                time.sleep(0.02)  # widens the window between the check and the set
+                return value
+
+        barrier = threading.Barrier(8)
+
+        def call():
+            barrier.wait()
+            bcc._log_dataplane_call("GET", "BPNL1", ADDRESS, "/x", {})
+
+        with patch.object(bcc, "_TLS_DEFAULT_WARNED", SlowEvent()), caplog.at_level(logging.DEBUG):
+            threads = [threading.Thread(target=call) for _ in range(8)]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
         assert len([r for r in _records(caplog) if "NOT verified by default" in r.getMessage()]) == 1
 
     @pytest.mark.parametrize("method, patched", [("do_post", "do_post"), ("do_put", "do_put")])

@@ -30,7 +30,8 @@ from sqlmodel import select, delete, Session, SQLModel
 from sqlalchemy.exc import SQLAlchemyError
 from ..memory.memory_connection_manager import MemoryConnectionManager
 import logging
-from ....constants import JSONLDKeys  
+from ....constants import JSONLDKeys
+from tractusx_sdk._logging_helpers import log_failure  
 
 logger = logging.getLogger(__name__)
 
@@ -183,8 +184,9 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
                     self.open_connections[self.edrs_key] = _loaded_edrs
                 logger.debug("[PostgresMemoryConnectionManager] Loaded %d edrs from the database.", _loaded_edrs)
                 self._last_saved_hash = hashlib.sha256(json.dumps(self.open_connections, sort_keys=True, default=str).encode()).hexdigest()
-            except SQLAlchemyError:
-                logger.exception("[PostgresMemoryConnectionManager] Error loading from db")
+            except SQLAlchemyError as error:
+                # The message of the error quotes the SQL parameters, which are the EDRs with their credentials
+                log_failure(logger, "[PostgresMemoryConnectionManager] Error loading from db (%s)", error)
     
     def _calculate_connection_hash(self, provider_id, endpoint, query_checksum, policy_checksum):
         """
@@ -228,8 +230,8 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
                     session.commit()
                     self._last_saved_hash = current_hash
                     logger.debug("[PostgresMemoryConnectionManager] Saved %d edrs to the database.", _saved_edrs)
-            except SQLAlchemyError:
-                logger.exception("[PostgresMemoryConnectionManager] Error saving to db")
+            except SQLAlchemyError as error:
+                log_failure(logger, "[PostgresMemoryConnectionManager] Error saving to db (%s)", error)
 
     def stop(self):
         """
