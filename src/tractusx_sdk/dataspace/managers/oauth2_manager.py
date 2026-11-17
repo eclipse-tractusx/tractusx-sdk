@@ -81,7 +81,7 @@ class OAuth2Manager(AuthManagerInterface):
         self.token = token
         return self.token["access_token"]
     
-    def add_auth_header(self, headers:dict=None):
+    def add_auth_header(self, headers:dict | None=None):
         ## Check if connected
         if(not self.connected):
             raise RuntimeError("Not connected. Please call the connect() method before requesting an authorization header.")

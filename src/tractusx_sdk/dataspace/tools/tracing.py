@@ -595,8 +595,8 @@ class Tracer:
         self,
         entry: TraceEntry,
         response: Any = None,
-        error: BaseException = None,
-        duration_ms: float = None,
+        error: BaseException | None = None,
+        duration_ms: float | None = None,
     ) -> TraceEntry:
         """
         Completes an entry with the response received, or the error raised.
@@ -702,12 +702,12 @@ class Tracer:
         self,
         method: Any = None,
         status_code: Any = None,
-        url: str = None,
-        context: str = None,
-        operation: str = None,
-        operation_id: str = None,
-        failed: bool = None,
-        min_duration_ms: float = None,
+        url: str | None = None,
+        context: str | None = None,
+        operation: str | None = None,
+        operation_id: str | None = None,
+        failed: bool | None = None,
+        min_duration_ms: float | None = None,
     ) -> list:
         """
         Returns the entries matching every given criterion.

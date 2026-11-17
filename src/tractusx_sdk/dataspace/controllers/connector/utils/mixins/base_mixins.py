@@ -120,7 +120,7 @@ class QueryControllerMixin:
     endpoint_url: str
 
     @controller_method
-    def query(self, obj: BaseQuerySpecModel = None, **kwargs):
+    def query(self, obj: BaseQuerySpecModel | None = None, **kwargs):
         if obj:
             kwargs["data"] = obj.to_data()
 

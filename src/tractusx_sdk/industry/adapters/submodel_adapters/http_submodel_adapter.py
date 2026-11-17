@@ -161,7 +161,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         if not isinstance(self.url_pattern, str) or not self.url_pattern.strip():
             raise ValueError("url_pattern must be a non-empty string")
 
-    def _trace_call(self, method: str, url: str, headers: dict = None, body: Any = None):
+    def _trace_call(self, method: str, url: str, headers: dict | None = None, body: Any = None):
         """
         Traces a single call to the external submodel service.
 

@@ -61,7 +61,7 @@ class op:
 
     
     @staticmethod
-    def to_json(source_object,indent:int=None,ensure_ascii:bool=True):
+    def to_json(source_object,indent:int | None=None,ensure_ascii:bool=True):
         """
             Method to convert a python object to a JSON string
                 Accepts: obj:Source object in serializable formats (not sets, custom objects or bytes)

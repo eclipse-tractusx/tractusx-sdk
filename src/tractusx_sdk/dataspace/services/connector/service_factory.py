@@ -103,8 +103,8 @@ class ServiceFactory:
             dataspace_version: str,
             base_url: str,
             dma_path: str,
-            headers: dict = None,
-            connection_manager: BaseConnectionManager = None,
+            headers: dict | None = None,
+            connection_manager: BaseConnectionManager | None = None,
             trace: bool = False,
             **kwargs
     ):
@@ -142,7 +142,7 @@ class ServiceFactory:
             dataspace_version: str,
             base_url: str,
             dma_path: str,
-            headers: dict = None,
+            headers: dict | None = None,
             trace: bool = False,
             **kwargs
     ):
@@ -178,8 +178,8 @@ class ServiceFactory:
             dataspace_version: str,
             base_url: str,
             dma_path: str,
-            headers: dict = None,
-            connection_manager: BaseConnectionManager = None,
+            headers: dict | None = None,
+            connection_manager: BaseConnectionManager | None = None,
             trace: bool = False,
             **kwargs
     ):
