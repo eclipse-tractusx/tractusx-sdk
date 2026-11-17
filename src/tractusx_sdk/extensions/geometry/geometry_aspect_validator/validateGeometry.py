@@ -32,16 +32,13 @@ import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
+from typing import Dict, List, Optional, Any
 from enum import Enum
 
-if TYPE_CHECKING:
+try:
     from .schemaValidator import SchemaValidator
-else:
-    try:
-        from .schemaValidator import SchemaValidator
-    except ImportError:  # executed as a script from this directory
-        from schemaValidator import SchemaValidator
+except ImportError:  # executed as a script from this directory
+    from schemaValidator import SchemaValidator # type: ignore[import-not-found, no-redef]
 
 logger = logging.getLogger(__name__)
 
