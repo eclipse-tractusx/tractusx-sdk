@@ -26,7 +26,7 @@ from pydantic import BaseModel as PydanticBaseModel
 
 class BaseModel(PydanticBaseModel, ABC):
     @abstractmethod
-    def to_data(self):
+    def to_data(self) -> str:
         """
         This method is intended to convert the model inheriting this class to a JSON
         representing the data that will be sent to the connector when using a policy model.
@@ -34,7 +34,9 @@ class BaseModel(PydanticBaseModel, ABC):
         :return: a JSON representation of the model
         """
 
-        return NotImplemented
+        ## Abstract placeholder: concrete models must override this method
+        not_implemented: str = NotImplemented
+        return not_implemented
 
     @classmethod
     def builder(cls):
@@ -52,9 +54,9 @@ class BaseModel(PydanticBaseModel, ABC):
         Default _Builder class for the BaseModel.
         """
 
-        def __init__(self, cls):
+        def __init__(self, cls: type) -> None:
             self.cls = cls
-            self._data = {}
+            self._data: dict = {}
 
         def data(self, data: dict):
             """

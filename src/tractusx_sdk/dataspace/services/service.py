@@ -80,9 +80,9 @@ class BaseService(TraceableMixin, ABC):
         Default _Builder class for a Service.
         """
 
-        def __init__(self, cls):
+        def __init__(self, cls: type) -> None:
             self.cls = cls
-            self._data = {}
+            self._data: dict = {}
 
         def dataspace_version(self, dataspace_version: str):
             self._data["dataspace_version"] = dataspace_version

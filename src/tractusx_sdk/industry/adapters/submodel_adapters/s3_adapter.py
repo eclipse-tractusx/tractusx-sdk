@@ -56,9 +56,9 @@ class S3Adapter(SubmodelAdapter):
         return cls._Builder(cls)
 
     class _Builder:
-        def __init__(self, cls):
+        def __init__(self, cls: type) -> None:
             self.cls = cls
-            self._data = {}
+            self._data: dict = {}
 
         def bucket_name(self, bucket_name: str):
             self._data["bucket_name"] = bucket_name

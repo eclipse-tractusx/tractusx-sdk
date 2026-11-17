@@ -79,7 +79,8 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         if(discovery_key not in endpoints):
           raise DiscoveryEndpointNotFoundError("[Connector Discovery Service] Connector Discovery endpoint not found!")
         
-        return endpoints[discovery_key]
+        discovery_endpoint: str = endpoints[discovery_key]
+        return discovery_endpoint
 
     def get_connector_discovery_url(self, connector_discovery_key:str="bpn") -> str:
         """
@@ -152,7 +153,8 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         # Iterate over the json_response to find the connectorEndpoint for the specified BPN
         for item in json_response:
             if item.get(bpn_key) == bpn:
-                return item.get(connector_endpoint_key, [])
+                connector_endpoints: list | None = item.get(connector_endpoint_key, [])
+                return connector_endpoints
         # If the BPN is not found, return None or an empty list
         logger.debug("[Connector Discovery Service] No connector endpoints were found for BPN '%s'.", bpn)
         return None

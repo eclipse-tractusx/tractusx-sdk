@@ -63,7 +63,7 @@ class BaseCatalogModel(BaseModel, ABC):
             queryspec_data = queryspec.to_data()
             return self.queryspec(queryspec_data)
 
-        def queryspec(self, queryspec: dict):
+        def queryspec(self, queryspec: dict | str):
             self._data["queryspec"] = queryspec
             return self
 

@@ -47,7 +47,7 @@ class OAuth2Manager(AuthManagerInterface):
         self.connect(auth_url=auth_url, realm=realm, clientid=clientid, clientsecret=clientsecret)
 
 
-    def connect(self, auth_url, realm, clientid, clientsecret):
+    def connect(self, auth_url: str, realm: str, clientid: str, clientsecret: str) -> None:
 
         self.connected=False
         

@@ -77,7 +77,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from time import perf_counter
 from types import FrameType
-from typing import Any, Iterable, Iterator, Optional
+from typing import Any, Callable, Iterable, Iterator, Optional, TypeVar, cast
 
 import requests
 
@@ -282,7 +282,8 @@ def _content_type(headers: Any) -> Optional[str]:
     if headers is None:
         return None
     try:
-        return headers.get("Content-Type") or headers.get("content-type")
+        content_type: Optional[str] = headers.get("Content-Type") or headers.get("content-type")
+        return content_type
     except (AttributeError, TypeError):
         return None
 
@@ -1042,7 +1043,10 @@ def _has_bound_tracer(args: tuple, kwargs: dict) -> bool:
     return any(getattr(argument, TRACER_ATTRIBUTE, None) is not None for argument in args)
 
 
-def traced_http(method: str):
+F = TypeVar("F", bound=Callable[..., Any])
+
+
+def traced_http(method: str) -> Callable[[F], F]:
     """
     Instruments an HTTP helper function, so that its calls can be traced.
 
@@ -1058,11 +1062,11 @@ def traced_http(method: str):
     :param method: The HTTP method performed by the decorated function
     """
 
-    def decorator(func):
-        signature = None
+    def decorator(func: F) -> F:
+        signature: Optional[inspect.Signature] = None
 
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             tracer = kwargs.pop("tracer", None)
             context = kwargs.pop("trace_context", None)
 
@@ -1097,7 +1101,7 @@ def traced_http(method: str):
             ) as call:
                 return call.set_response(func(*args, **kwargs))
 
-        return wrapper
+        return cast(F, wrapper)
 
     return decorator
 

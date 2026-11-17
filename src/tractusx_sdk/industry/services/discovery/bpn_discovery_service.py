@@ -158,7 +158,8 @@ class BpnDiscoveryService(BaseDiscoveryService):
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
         _ensure_response(response, 200, "[BPN Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
 
-        return response.json()
+        search_response: dict = response.json()
+        return search_response
 
     def search_bpns_multi_type(self, search_filters:list) -> dict:
         """
@@ -206,7 +207,8 @@ class BpnDiscoveryService(BaseDiscoveryService):
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
         _ensure_response(response, 200, "[BPN Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
 
-        return response.json()
+        multi_type_response: dict = response.json()
+        return multi_type_response
 
     def find_bpns(self, keys:list, identifier_type:str="manufacturerPartId") -> list | None:
         """
@@ -284,7 +286,8 @@ class BpnDiscoveryService(BaseDiscoveryService):
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
         _ensure_response(response, 201, "[BPN Discovery Service] Failed to create BPN identifier.")
 
-        return response.json()
+        created_identifier: dict = response.json()
+        return created_identifier
 
     def set_multiple_identifiers(self, identifiers: list, identifier_type:str="manufacturerPartId") -> list:
         """
@@ -308,7 +311,8 @@ class BpnDiscoveryService(BaseDiscoveryService):
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
         _ensure_response(response, 201, "[BPN Discovery Service] Failed to create BPN identifiers batch.")
 
-        return response.json()
+        created_identifiers: list = response.json()
+        return created_identifiers
 
     def delete_bpn_identifier_by_id(self, resource_id: str, identifier_type:str="manufacturerPartId") -> None:
         """

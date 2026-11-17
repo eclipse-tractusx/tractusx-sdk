@@ -112,7 +112,7 @@ class BaseConnectorProviderService(BaseService):
         context: dict | list | str | None = None,
         data_address_type: str = "HttpData",
         **kwargs
-    ):
+    ) -> dict:
         logger.info("Creating asset %s at %s.", asset_id, base_url)
 
         if proxy_params is None:
@@ -198,11 +198,12 @@ class BaseConnectorProviderService(BaseService):
 
         logger.info("Asset %s created successfully.", asset_id)
 
-        return asset_response.json()
+        created_asset: dict = asset_response.json()
+        return created_asset
 
     
-    def build_properties(self, dct_type=None, dct_subject=None, version=None,
-                     semantic_id=None, properties=None):
+    def build_properties(self, dct_type: str | None = None, dct_subject: str | None = None, version: str | None = None,
+                     semantic_id: str | None = None, properties: dict | None = None) -> dict:
                          
         _properties: dict = {}   # local — a fresh dict each call
     
@@ -270,7 +271,8 @@ class BaseConnectorProviderService(BaseService):
 
         logger.info("Contract %s created successfully.", contract_id)
 
-        return created_contract.json()
+        created_contract_data: dict = created_contract.json()
+        return created_contract_data
 
     def create_policy(
         self,
@@ -303,4 +305,5 @@ class BaseConnectorProviderService(BaseService):
 
         logger.info("Policy %s created successfully.", policy_id)
 
-        return created_policy.json()
+        created_policy_data: dict = created_policy.json()
+        return created_policy_data

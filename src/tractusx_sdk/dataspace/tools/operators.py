@@ -37,7 +37,7 @@ import json
 import time
 import io
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, tzinfo
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +108,7 @@ class op:
         return data  
 
     @ staticmethod
-    def path_exists(file_path):
+    def path_exists(file_path: str) -> bool:
         """
             Method to check if a file or directory exists
                 Accepts: file_path: Path to the file or directory
@@ -232,7 +232,7 @@ class op:
         return timestamp
     
     @staticmethod
-    def get_filedatetime(zone=timezone.utc):
+    def get_filedatetime(zone: tzinfo = timezone.utc) -> str:
         """
             Method to get the current time according to the specified zone
                 Accepts: zone: The timezone to get the timestamp from
@@ -241,7 +241,7 @@ class op:
         return datetime.now(zone).strftime("%Y%m%d_%H%M%S")
     
     @staticmethod
-    def get_filedate(zone=timezone.utc):
+    def get_filedate(zone: tzinfo = timezone.utc) -> str:
         """
             Method to get the current date according to the specified zone
                 Accepts: zone: The timezone to get the timestamp from
@@ -282,7 +282,7 @@ class op:
         return True
     
     @staticmethod
-    def wait(seconds):
+    def wait(seconds: float) -> None:
         """
             Wrapper method to sleep for some seconds
             Accepts: seconds: Number of seconds to sleep

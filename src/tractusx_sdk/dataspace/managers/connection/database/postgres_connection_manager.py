@@ -99,7 +99,7 @@ class PostgresConnectionManager(BaseConnectionManager):
                 logger.debug("[Postgres Connection Manager] A new EDR entry was saved in the database.")
         return transfer_process_id
 
-    def get_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
+    def get_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str) -> dict | None:
         """
         Retrieves the EDR connection data for the given parameters.
 

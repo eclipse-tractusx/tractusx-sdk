@@ -30,7 +30,7 @@ import logging
 from dataclasses import dataclass, replace
 from enum import Enum
 from collections.abc import Sequence
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from tractusx_sdk.exceptions import EmptyCatalogError, PolicyMismatchError
 
@@ -46,10 +46,10 @@ _DATASET_KEYS = (DSP2025_DATASET_KEY, DSP_DATASET_KEY)   # "dataset", "dcat:data
 _POLICY_KEYS  = (DSP2025_POLICY_KEY,  DSP_POLICY_KEY)    # "hasPolicy", "odrl:hasPolicy"
 
 
-def _get_datasets(catalog: dict):
+def _get_datasets(catalog: dict) -> dict | list | None:
     """Return the ``dataset`` value from a catalog, trying DSP 2025-1 and legacy keys."""
     for key in _DATASET_KEYS:
-        value = catalog.get(key)
+        value: dict | list | None = catalog.get(key)
         if value is not None:
             return value
     return None
@@ -64,7 +64,7 @@ def _get_policies(dataset: dict):
     return None
 
 
-def _normalize_policy_value(value):
+def _normalize_policy_value(value: Any) -> Any:
     """
     Recursively normalize a policy value for comparison.
 
@@ -138,7 +138,7 @@ _RULE_BINDING_KEYS = frozenset({
 })
 
 
-def _policy_rules(policy):
+def _policy_rules(policy: Any) -> Any:
     """
     Return the terms of *policy*: its ``permission``, ``prohibition`` and
     ``obligation`` values (Saturn or Jupiter spelling), and nothing else.
@@ -161,7 +161,7 @@ def _policy_rules(policy):
     if not isinstance(policy, dict) or not any(key in policy for key in _ODRL_RULE_KEYS):
         return policy
 
-    def _unbound(rule):
+    def _unbound(rule: Any) -> Any:
         if not isinstance(rule, dict):
             return rule
         return {k: v for k, v in rule.items() if k not in _RULE_BINDING_KEYS}
@@ -241,7 +241,8 @@ def _right_operand_matches(catalog_right, allowed_right) -> bool:
         cat_set = _to_set(catalog_right)
         allow_set = _to_set(allowed_right)
         return allow_set.issubset(cat_set)
-    return catalog_right == allowed_right
+    catalog_matches: bool = catalog_right == allowed_right
+    return catalog_matches
 
 
 def _constraint_matches(cat_dict: dict, allow_dict: dict) -> bool:
@@ -320,7 +321,8 @@ def _policies_match(normalized_policy, normalized_allowed) -> bool:
             for c, a in zip(normalized_policy, normalized_allowed)
         )
 
-    return normalized_policy == normalized_allowed
+    policies_match: bool = normalized_policy == normalized_allowed
+    return policies_match
 
 
 def _explain_constraint_diff(cat_dict: dict, allow_dict: dict, path: str) -> list[str]:
@@ -637,7 +639,7 @@ class DspTools:
         if catalog is None:
             raise EmptyCatalogError("It was not possible to get the policy, because the catalog is empty!")
         
-        dataset:list|dict = _get_datasets(catalog)
+        dataset:list|dict|None = _get_datasets(catalog)
         ### Asset Evaluation
 
         valid_assets:list[AssetPolicySelection] = []
@@ -684,7 +686,7 @@ class DspTools:
     
     @staticmethod
     def is_catalog_empty(catalog:dict) -> bool:
-        dataset:list|dict = _get_datasets(catalog)
+        dataset:list|dict|None = _get_datasets(catalog)
         if(dataset is None):
             return False
         

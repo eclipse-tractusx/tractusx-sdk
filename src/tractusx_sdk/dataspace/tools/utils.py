@@ -48,7 +48,7 @@ def get_log_config(path, type):
         logging.config.dictConfig(log_config)
         return log_config
 
-def create_log(log_config, current_date, type):
+def create_log(log_config: dict, current_date: str, type: str) -> dict:
     op.make_dir(dir_name="logs/"+current_date)
     log_config["handlers"]["file"]["filename"] = f'logs/{current_date}/{op.get_filedatetime()}-{type}.log'
     return log_config

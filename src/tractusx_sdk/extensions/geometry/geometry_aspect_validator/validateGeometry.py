@@ -177,7 +177,7 @@ class GeometryValidator:
     def load_json_file(self, file_path: Path) -> Optional[Dict[Any, Any]]:
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+                data: Optional[Dict[Any, Any]] = json.load(f)
                 return data
         except FileNotFoundError:
             self.schema_validator.add_error(f'File not found: {file_path}')
@@ -253,7 +253,7 @@ class GeometryValidator:
         return self.report().render(self.validation_level)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description='Validate geometry nodes from SingleLevelSceneNode JSON files',
         epilog='''

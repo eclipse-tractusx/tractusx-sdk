@@ -53,9 +53,9 @@ class Controller:
         the adapter their builder accepts without breaking the base builder contract.
         """
 
-        def __init__(self, cls):
+        def __init__(self, cls: type) -> None:
             self.cls = cls
-            self._data = {}
+            self._data: dict = {}
 
         def adapter(self, adapter: AdapterT):
             self._data["adapter"] = adapter

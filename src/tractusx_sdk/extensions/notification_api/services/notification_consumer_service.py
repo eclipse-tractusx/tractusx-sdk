@@ -155,7 +155,7 @@ class NotificationConsumerService(BaseService):
             )
             
             # Extract datasets from catalog
-            datasets = catalog.get("dcat:dataset", [])
+            datasets: List[Dict[str, Any]] = catalog.get("dcat:dataset", [])
             if isinstance(datasets, dict):
                 datasets = [datasets]
             
@@ -423,7 +423,8 @@ class NotificationConsumerService(BaseService):
                 return {"status": "sent", "message_id": notification.header.message_id}
             
             try:
-                return response.json()
+                sent_response: Dict[str, Any] = response.json()
+                return sent_response
             except Exception:
                 # Response is not JSON, return status info
                 return {"status": "sent", "message_id": notification.header.message_id}
@@ -553,7 +554,7 @@ class NotificationConsumerService(BaseService):
     class _Builder:
         """Builder class for fluent NotificationConsumerService construction."""
         
-        def __init__(self, cls):
+        def __init__(self, cls: "type[NotificationConsumerService]") -> None:
             self.cls = cls
             self._data: Dict[str, Any] = {}
         

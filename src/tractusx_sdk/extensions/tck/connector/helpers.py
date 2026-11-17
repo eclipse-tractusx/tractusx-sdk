@@ -226,7 +226,7 @@ def initialize_provider_service(
         ConnectorProviderService instance.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_header(logger, title)
 
     header_fn("Initializing Provider Connector Service")
@@ -275,7 +275,7 @@ def initialize_consumer_service(
         ConnectorConsumerService instance.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_header(logger, title)
 
     header_fn("Initializing Consumer Connector Service")
@@ -330,7 +330,7 @@ def upload_sample_data(
         verify: Whether to verify SSL certificates. Defaults to True. The TCK runners pass ``config.verify_ssl``.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_header(logger, title)
 
     header_fn("PHASE 0: Uploading Sample Data to Backend Storage")
@@ -394,7 +394,7 @@ def access_data_with_edr(
         ``requests.Response`` from the data plane.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_header(logger, title)
 
     header_fn("PHASE 3: Accessing Data with EDR")
@@ -463,7 +463,7 @@ def cleanup_provider_resources(
         header_fn: Function ``(title) -> None`` to print section header.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_header(logger, title)
 
     header_fn("CLEANUP: Deleting Provider Resources")
@@ -499,7 +499,7 @@ def cleanup_backend_data(
         verify: Whether to verify SSL certificates. Defaults to False.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_header(logger, title)
 
     header_fn("CLEANUP: Deleting Backend Data")
@@ -868,7 +868,7 @@ def provision_simple(
         Dict with ``asset_id``, ``access_policy_id``, ``usage_policy_id``, ``contract_def_id``.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_separator(logger, title)
 
     header_fn("PHASE 1: Provider Data Provision")
@@ -976,7 +976,7 @@ def consume_simple_bpnl(
         ``requests.Response`` from the data source.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_separator(logger, title)
 
     header_fn("PHASE 2: Consumer — do_get_with_bpnl")
@@ -1035,7 +1035,7 @@ def consume_simple_did(
         ``requests.Response`` from the data source.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_separator(logger, title)
 
     header_fn("PHASE 2: Consumer — do_get (DID-based)")

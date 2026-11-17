@@ -28,6 +28,7 @@
 ## Extended here for fastapi
 
 import requests
+from typing import Any
 from fastapi.responses import JSONResponse, Response
 from io import BytesIO
 import urllib.parse
@@ -48,7 +49,8 @@ class HttpTools:
     # do get request without session
     @staticmethod
     @traced_http("GET")
-    def do_get(url,verify=True,headers=None,timeout=None,params=None,allow_redirects=False):
+    def do_get(url: str, verify: bool = True, headers: dict | None = None, timeout: float | None = None,
+               params: dict | None = None, allow_redirects: bool = False) -> requests.Response:
         return requests.get(url=url,verify=verify,
                             timeout=timeout,headers=headers,
                             params=params,allow_redirects=allow_redirects)
@@ -56,7 +58,9 @@ class HttpTools:
     # do get request with session
     @staticmethod
     @traced_http("GET")
-    def do_get_with_session(url,session=None,verify=True,headers=None,timeout=None, params=None,allow_redirects=False):
+    def do_get_with_session(url: str, session: requests.Session | None = None, verify: bool = True,
+                            headers: dict | None = None, timeout: float | None = None,
+                            params: dict | None = None, allow_redirects: bool = False) -> requests.Response:
         if session is None:
             session = requests.Session()
         return session.get(url=url,verify=verify,
@@ -66,7 +70,8 @@ class HttpTools:
     # do post request without session
     @staticmethod
     @traced_http("POST")
-    def do_post(url,data=None,verify=True,headers=None,timeout=None,json=None,allow_redirects=False):
+    def do_post(url: str, data: Any = None, verify: bool = True, headers: dict | None = None,
+                timeout: float | None = None, json: Any = None, allow_redirects: bool = False) -> requests.Response:
         return requests.post(url=url,verify=verify,
                              timeout=timeout,headers=headers,
                              data=data,json=json,
@@ -75,7 +80,9 @@ class HttpTools:
     # do post request with session
     @staticmethod
     @traced_http("POST")
-    def do_post_with_session(url,session=None,data=None,verify=True,headers=None,timeout=None,json=None,allow_redirects=False):
+    def do_post_with_session(url: str, session: requests.Session | None = None, data: Any = None, verify: bool = True,
+                             headers: dict | None = None, timeout: float | None = None, json: Any = None,
+                             allow_redirects: bool = False) -> requests.Response:
         if session is None:
             session = requests.Session()
         return session.post(url=url,verify=verify,
@@ -86,7 +93,8 @@ class HttpTools:
     # do put request without session
     @staticmethod
     @traced_http("PUT")
-    def do_put(url, data=None, verify=True, headers=None, timeout=None, json=None, allow_redirects=False):
+    def do_put(url: str, data: Any = None, verify: bool = True, headers: dict | None = None,
+               timeout: float | None = None, json: Any = None, allow_redirects: bool = False) -> requests.Response:
         return requests.put(url=url, verify=verify,
                             timeout=timeout, headers=headers,
                             data=data, json=json,
@@ -95,7 +103,9 @@ class HttpTools:
     # do put request with session
     @staticmethod
     @traced_http("PUT")
-    def do_put_with_session(url, session=None, data=None, verify=True, headers=None, timeout=None, json=None, allow_redirects=False):
+    def do_put_with_session(url: str, session: requests.Session | None = None, data: Any = None, verify: bool = True,
+                            headers: dict | None = None, timeout: float | None = None, json: Any = None,
+                            allow_redirects: bool = False) -> requests.Response:
         if session is None:
             session = requests.Session()
         return session.put(url=url, verify=verify,
@@ -106,7 +116,8 @@ class HttpTools:
     # do delete request without session
     @staticmethod
     @traced_http("DELETE")
-    def do_delete(url, verify=True, headers=None, timeout=None, params=None, allow_redirects=False):
+    def do_delete(url: str, verify: bool = True, headers: dict | None = None, timeout: float | None = None,
+                  params: dict | None = None, allow_redirects: bool = False) -> requests.Response:
         return requests.delete(url=url, verify=verify,
                                timeout=timeout, headers=headers,
                                params=params, allow_redirects=allow_redirects)
@@ -114,7 +125,9 @@ class HttpTools:
     # do delete request with session
     @staticmethod
     @traced_http("DELETE")
-    def do_delete_with_session(url, session=None, verify=True, headers=None, timeout=None, params=None, allow_redirects=False):
+    def do_delete_with_session(url: str, session: requests.Session | None = None, verify: bool = True,
+                               headers: dict | None = None, timeout: float | None = None,
+                               params: dict | None = None, allow_redirects: bool = False) -> requests.Response:
         if session is None:
             session = requests.Session()
         return session.delete(url=url, verify=verify,
@@ -123,7 +136,7 @@ class HttpTools:
 
     # prepare response
     @staticmethod
-    def json_response(data, status_code: int = 200, headers: dict | None = None):
+    def json_response(data: Any, status_code: int = 200, headers: dict | None = None) -> JSONResponse:
         response = JSONResponse(
             content=data,
             status_code=status_code,
@@ -133,7 +146,7 @@ class HttpTools:
         return response
 
     @staticmethod
-    def concat_into_url(*args):
+    def concat_into_url(*args: Any) -> str:
         """
         Joins given arguments into an url. Trailing and leading slashes are stripped for each argument.
 
@@ -144,15 +157,15 @@ class HttpTools:
         return "/".join(map(lambda x: str(x).strip("/"), args))
     
     @staticmethod
-    def get_host(url):
+    def get_host(url: str) -> str:
         return HttpTools.explode_url(url=url).netloc
     
     @staticmethod 
-    def explode_url(url):
+    def explode_url(url: str) -> urllib.parse.ParseResult:
         return urllib.parse.urlparse(url=url)    
 
     @staticmethod
-    def empty_response(status=204):
+    def empty_response(status: int = 204) -> Response:
         return Response(status_code=status)
     
     @staticmethod

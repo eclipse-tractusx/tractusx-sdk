@@ -80,7 +80,7 @@ class LocalCache(CacheProvider):
     It initializes an in-memory backend and proxies calls to FastAPI-Cache.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the in-memory cache backend."""
         FastAPICache.init(InMemoryBackend())
 
@@ -137,4 +137,5 @@ def get_cache_provider(request: Request) -> CacheProvider:
         The cache provider instance stored in `app.state.cache_provider`.
     """
 
-    return request.app.state.cache_provider
+    cache_provider: CacheProvider = request.app.state.cache_provider
+    return cache_provider

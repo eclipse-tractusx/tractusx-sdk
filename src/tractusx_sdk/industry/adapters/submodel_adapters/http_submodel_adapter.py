@@ -50,9 +50,9 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         return cls._Builder(cls)
 
     class _Builder:
-        def __init__(self, cls):
+        def __init__(self, cls: type) -> None:
             self.cls = cls
-            self._data = {}
+            self._data: dict = {}
 
         def base_url(self, base_url: str):
             self._data["base_url"] = base_url
@@ -279,7 +279,8 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         try:
             with self._trace_call("GET", url, headers=headers) as call:
                 response = call.set_response(self.client.get(url, headers=headers))
-            return self._handle_response(response, "GET")
+            result: dict[str, Any] = self._handle_response(response, "GET")
+            return result
         except httpx.RequestError as request_error:
             raise ConnectionError(f"Connection error while reading submodel: {request_error}") from request_error
 

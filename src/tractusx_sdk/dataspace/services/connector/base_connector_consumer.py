@@ -159,7 +159,7 @@ class BaseConnectorConsumerService(BaseService):
     def transfer_processes(self):
         return self._transfer_process_controller
 
-    def get_data_plane_headers(self, access_token, content_type=None):
+    def get_data_plane_headers(self, access_token: str, content_type: str | None = None) -> dict[str, str]:
         ## Build the headers needed for the edc the app to communicate with the edc data plane
         headers = {
             "Accept": "*/*",
@@ -196,7 +196,8 @@ class BaseConnectorConsumerService(BaseService):
         if (response is None or response.status_code != 200):
             raise ConnectionError(
                 "[Connector Service]: It was not possible to get the edr because the EDC response was not successful!")
-        return response.json()
+        edr_data: dict = response.json()
+        return edr_data
 
     def get_endpoint_with_token(self, transfer_id: str) -> tuple[str, str]:
         """
@@ -249,7 +250,8 @@ class BaseConnectorConsumerService(BaseService):
                 status_code=response.status_code if response is not None else None,
                 response_body=response.text if response is not None else None,
             )
-        return response.json()
+        catalog_data: dict = response.json()
+        return catalog_data
 
     ## Simple catalog request with filter
 
@@ -323,7 +325,7 @@ class BaseConnectorConsumerService(BaseService):
         if context is None:
             context = ["https://w3id.org/tractusx/policy/v1.0.0", "http://www.w3.org/ns/odrl.jsonld", {VOCAB_KEY: EDC_NAMESPACE}]
 
-        return ModelFactory.get_contract_negotiation_model(
+        negotiation_request: BaseContractNegotiationModel = ModelFactory.get_contract_negotiation_model(
             dataspace_version=self.dataspace_version,  # version is to be included in the BaseService class  
             context=context,
             counter_party_address=counter_party_address,
@@ -333,6 +335,7 @@ class BaseConnectorConsumerService(BaseService):
             offer_policy=policy,
             protocol=protocol
         )
+        return negotiation_request
 
         ## Simple catalog request without filter
 
@@ -340,12 +343,13 @@ class BaseConnectorConsumerService(BaseService):
         if context is None:
             context = {"edc": EDC_NAMESPACE, "odrl": "http://www.w3.org/ns/odrl/2/", "dct": "https://purl.org/dc/terms/"}
 
-        return ModelFactory.get_catalog_model(
+        catalog_request: BaseCatalogModel = ModelFactory.get_catalog_model(
             dataspace_version=self.dataspace_version,
             context=context,
             counter_party_id=counter_party_id,  ## bpn of the provider
             counter_party_address=counter_party_address,  ## dsp url from the provider
         )
+        return catalog_request
 
     def start_edr_negotiation(self, counter_party_id: str, counter_party_address: str, target: str,
                               policy: dict, verify: bool | None = None, protocol: str = DSP_0_8, context: dict | list | None = None) -> str | None:
@@ -392,20 +396,22 @@ class BaseConnectorConsumerService(BaseService):
 
     def get_edr_negotiation_filter(self, negotiation_id: str) -> BaseQuerySpecModel:
 
-        return ModelFactory.get_queryspec_model(
+        negotiation_filter: BaseQuerySpecModel = ModelFactory.get_queryspec_model(
             dataspace_version=self.dataspace_version,
             filter_expression=[
                 self.get_filter_expression(key=self.NEGOTIATION_ID_KEY, operator="=", value=negotiation_id)]
         )
+        return negotiation_filter
 
     def get_transfer_process_filter(self, agreement_id: str, agreement_id_key: str | None = None) -> BaseQuerySpecModel:
 
-        return ModelFactory.get_queryspec_model(
+        transfer_process_filter: BaseQuerySpecModel = ModelFactory.get_queryspec_model(
             dataspace_version=self.dataspace_version,
             filter_expression=[
                 self.get_filter_expression(key=agreement_id_key or self.AGREEMENT_ID_KEY,
                                            operator="=", value=agreement_id)]
         )
+        return transfer_process_filter
 
     def get_catalogs_by_dct_type(self, counter_party_id: str, edcs: list, dct_type: str,
                                  dct_type_key: str = DEFAULT_DCT_TYPE_KEY, timeout: int | None = None, **kwargs):
@@ -523,9 +529,10 @@ class BaseConnectorConsumerService(BaseService):
         Returns:
         dict: The filtered EDC catalog.
         """
-        return self.get_catalog_by_dct_type(counter_party_id=bpnl, counter_party_address=counter_party_address,
-                                            dct_type=dct_type, dct_type_key=dct_type_key, operator=operator,
-                                            timeout=timeout, context=context)
+        filtered_catalog: dict = self.get_catalog_by_dct_type(counter_party_id=bpnl, counter_party_address=counter_party_address,
+                                                              dct_type=dct_type, dct_type_key=dct_type_key, operator=operator,
+                                                              timeout=timeout, context=context)
+        return filtered_catalog
 
     def get_catalog_by_asset_id_with_bpnl(self, bpnl: str, counter_party_address: str, asset_id: str,
                                           id_key: str = DEFAULT_ID_KEY, operator: str = "=",
@@ -816,7 +823,7 @@ class BaseConnectorConsumerService(BaseService):
             raise ConnectionError(f"[Connector Service]: EDR Entry not found for the negotiation_id=[{negotiation_id}]!")
 
         ## The response is a list
-        data = response.json()
+        data: list[dict] = response.json()
 
         if (len(data) == 0):
             return None
@@ -882,7 +889,7 @@ class BaseConnectorConsumerService(BaseService):
                     agreement_id_key)
 
             ## The response is a list
-            data = response.json()
+            data: list[dict] = response.json()
 
             if (len(data) == 0):
                 return None
@@ -1033,7 +1040,7 @@ class BaseConnectorConsumerService(BaseService):
                 f"[Connector Service]: It was not possible to retrieve the negotiation [{negotiation_id}] to read the contract agreement id!")
 
         data = response.json()
-        agreement_id = data.get(self.AGREEMENT_ID_KEY, data.get(f"edc:{self.AGREEMENT_ID_KEY}"))
+        agreement_id: str | None = data.get(self.AGREEMENT_ID_KEY, data.get(f"edc:{self.AGREEMENT_ID_KEY}"))
         if agreement_id is None:
             raise NegotiationError(
                 f"[Connector Service]: The negotiation [{negotiation_id}] is FINALIZED but no contract agreement id was returned!")
@@ -1111,7 +1118,7 @@ class BaseConnectorConsumerService(BaseService):
                     counter_party_address, e)
 
             if transfer_process is not None:
-                transfer_process_id = transfer_process.get("@id")
+                transfer_process_id: str | None = transfer_process.get("@id")
                 transfer_state = transfer_process.get("state", transfer_process.get("edc:state"))
 
                 # Log state change if state changed

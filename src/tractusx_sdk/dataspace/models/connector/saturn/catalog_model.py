@@ -31,7 +31,7 @@ class CatalogModel(BaseCatalogModel):
     protocol: str = Field(default="dataspace-protocol-http:2025-1")
     
 
-    def to_data(self):
+    def to_data(self) -> str:
         """
         Converts the model to a JSON representation of the data that will
         be sent to a jupiter connector when using a catalog model.

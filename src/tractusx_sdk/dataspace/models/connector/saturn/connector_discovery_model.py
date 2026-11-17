@@ -31,7 +31,7 @@ class ConnectorDiscoveryModel(BaseConnectorDiscoveryModel):
     TYPE: str = Field(default="tx:ConnectorParamsDiscoveryRequest", frozen=True)
     CONTEXT: dict = Field({"tx": "https://w3id.org/tractusx/v0.0.1/ns/","edc": "https://w3id.org/edc/v0.0.1/ns/"}, frozen=True)
 
-    def to_data(self):
+    def to_data(self) -> str:
         """
         Converts the model to a JSON representing the data that will
         be sent to a saturn connector when using a connector discovery model.

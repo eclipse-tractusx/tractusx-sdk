@@ -21,7 +21,7 @@
 #################################################################################
 
 from json import dumps as jdumps
-from typing import ClassVar
+from typing import Any, ClassVar
 from pydantic import Field
 
 from ..base_policy_model import BasePolicyModel
@@ -43,7 +43,7 @@ class PolicyModel(BasePolicyModel):
         "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     }
 
-    def to_data(self):
+    def to_data(self) -> str:
         """
         Converts the model to a JSON representing the data that
         will be sent to the connector when using a policy model.
@@ -72,7 +72,7 @@ class PolicyModel(BasePolicyModel):
 
         return jdumps(data)
     
-    def _normalize_constraints(self, items):
+    def _normalize_constraints(self, items: Any) -> Any:
         """
         Recursively normalize constraint values to ensure proper JSON-LD serialization.
         
@@ -103,7 +103,7 @@ class PolicyModel(BasePolicyModel):
         
         return normalized
     
-    def _normalize_constraint_dict(self, constraint):
+    def _normalize_constraint_dict(self, constraint: dict) -> dict:
         """
         Normalize a constraint dictionary, handling 'and'/'or' operators and rightOperand arrays.
         
@@ -122,7 +122,7 @@ class PolicyModel(BasePolicyModel):
         
         return result
     
-    def _build_context(self):
+    def _build_context(self) -> list:
         """
         Builds the @context for the policy according to Tractus-X EDC specification.
         

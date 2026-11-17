@@ -302,7 +302,8 @@ class SubmodelAdapterFactory:
             return "Any"
 
         try:
-            return annotation.__name__
+            annotation_name: str = annotation.__name__
+            return annotation_name
         except AttributeError:
             return str(annotation)
 

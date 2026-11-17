@@ -148,7 +148,8 @@ class BaseDiscoveryService(BaseService, ABC):
                 if entry:
                     # Log the error but continue with cached URL
                     logger.warning("[%s] Failed to refresh discovery URL, using cached version. Error: %s", self.get_service_name(), e)
-                    return entry["url"]
+                    cached_url: str = entry["url"]
+                    return cached_url
                 else:
                     # No cached entry available, re-raise the exception
                     raise
@@ -160,7 +161,8 @@ class BaseDiscoveryService(BaseService, ABC):
                 logger.debug("[%s] Using cached discovery URL for key '%s': %s", service_name, discovery_key, entry['url'])
                 logger.debug("[%s] Cache status: %d URL(s) cached, this entry valid until %s", service_name, len(self.discovery_cache), valid_until.strftime('%Y-%m-%d %H:%M:%S'))
             
-        return self.discovery_cache[discovery_key]["url"]
+        discovery_url: str = self.discovery_cache[discovery_key]["url"]
+        return discovery_url
 
     def flush_cache(self) -> int:
         """

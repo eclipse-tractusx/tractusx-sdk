@@ -111,7 +111,7 @@ class MemoryConnectionManager(BaseConnectionManager):
                 self.open_connections[self.edrs_key])
             return transfer_process_id
     
-    def get_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
+    def get_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str) -> dict:
         """
         Retrieves a specific EDR connection from the cache.
 

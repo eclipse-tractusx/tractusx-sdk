@@ -74,9 +74,9 @@ class Adapter(TraceableMixin):
         Default _Builder class for an Adapter.
         """
 
-        def __init__(self, cls):
+        def __init__(self, cls: type) -> None:
             self.cls = cls
-            self._data = {}
+            self._data: dict = {}
 
         def base_url(self, base_url: str):
             self._data["base_url"] = base_url

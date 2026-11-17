@@ -1037,7 +1037,8 @@ class SammSchemaContextTranslator:
             ref_hash = hashlib.sha256(ref.encode()).hexdigest()
             if ref_hash not in actualref:     
                 path = ref.removeprefix(self.path_sep) 
-                return op.get_attribute(self.baseSchema, attr_path=path, path_sep=self.refPathSep, default_value=None)
+                schema_node: Optional[Dict[str, Any]] = op.get_attribute(self.baseSchema, attr_path=path, path_sep=self.refPathSep, default_value=None)
+                return schema_node
             
             if(self.depth >= self.recursionDepth):
                 logger.warning("[WARNING] Infinite recursion detected in the following path: ref[%s] and acumulated ref[%s]!", ref, actualref)
@@ -1048,6 +1049,7 @@ class SammSchemaContextTranslator:
             
             path = ref.removeprefix(self.path_sep) 
 
-            return op.get_attribute(self.baseSchema, attr_path=path, path_sep=self.refPathSep, default_value=None)
+            ref_node: Optional[Dict[str, Any]] = op.get_attribute(self.baseSchema, attr_path=path, path_sep=self.refPathSep, default_value=None)
+            return ref_node
         except Exception as e:
             raise SchemaTranslationError("It was not possible to get schema reference") from e

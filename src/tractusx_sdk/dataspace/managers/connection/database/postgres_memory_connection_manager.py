@@ -28,6 +28,7 @@ import json
 from ....models.connection.database.edr_base import EDRBase
 from sqlmodel import select, delete, Session, SQLModel
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.engine import Engine
 from ..memory.memory_connection_manager import MemoryConnectionManager
 import logging
 from ....constants import JSONLDKeys  
@@ -41,7 +42,7 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
     Inherits from MemoryConnectionManager to maintain an in-memory cache and extends it with persistent storage functionality.
     """
 
-    def __init__(self, engine, provider_id_key="providerId", table_name="edr_connections", edrs_key="edrs"):
+    def __init__(self, engine: Engine, provider_id_key: str = "providerId", table_name: str = "edr_connections", edrs_key: str = "edrs") -> None:
         """
         Initialize the Postgres memory-backed connection manager.
 
@@ -61,8 +62,8 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
         self.open_connections = {}
         self._stop_event = threading.Event()
         self.edrs_key = edrs_key
-        self._save_thread = None
-        self._last_saved_hash = None
+        self._save_thread: threading.Thread | None = None
+        self._last_saved_hash: str | None = None
         SQLModel.metadata.create_all(engine)
         class DynamicEDRConnection(EDRBase, table=True):
             __tablename__ = table_name
@@ -127,7 +128,7 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
             self._trigger_save()
         return removed
 
-    def _trigger_save(self):
+    def _trigger_save(self) -> None:
         """
         Trigger a background thread to persist current connections to the database.
         Skips if a save is already in progress.
@@ -137,7 +138,7 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
         self._save_thread = threading.Thread(target=self._save_to_db, daemon=True)
         self._save_thread.start()
         
-    def _load_from_db(self):
+    def _load_from_db(self) -> None:
         """
         Reload connections from the DB if any hashes have changed compared to memory.
         """
@@ -184,14 +185,14 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
             except SQLAlchemyError:
                 logger.exception("[PostgresMemoryConnectionManager] Error loading from db")
     
-    def _calculate_connection_hash(self, provider_id, endpoint, query_checksum, policy_checksum):
+    def _calculate_connection_hash(self, provider_id: str, endpoint: str, query_checksum: str, policy_checksum: str) -> str:
         """
         Generate a SHA256 hash based on connection keys for change detection.
         """
         base_string = f"{provider_id}:{endpoint}:{query_checksum}:{policy_checksum}"
         return hashlib.sha256(base_string.encode()).hexdigest()
           
-    def _save_to_db(self):
+    def _save_to_db(self) -> None:
         """
         Persist current in-memory connections to the DB only if changes are detected.
         """

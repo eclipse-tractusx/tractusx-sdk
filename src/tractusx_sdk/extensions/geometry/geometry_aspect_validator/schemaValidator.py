@@ -43,7 +43,7 @@ class SchemaValidator:
     
     SCHEMA_URL = "https://raw.githubusercontent.com/eclipse-tractusx/sldt-semantic-models/main/io.catenax.single_level_scene_node/1.0.0/gen/SingleLevelSceneNode-schema.json"
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.schema: Optional[Dict[Any, Any]] = None
         self.errors: List[str] = []
         self.warnings: List[str] = []
