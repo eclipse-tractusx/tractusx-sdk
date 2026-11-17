@@ -22,11 +22,11 @@
 #################################################################################
 
 from .dma_controller import DmaController
-from tractusx_sdk.dataspace.controllers.connector.utils.mixins import CrudDmaController
+from tractusx_sdk.dataspace.controllers.connector.utils.mixins import CrudDmaController, UpdateByIdControllerMixin
 from tractusx_sdk.dataspace.models.connector.saturn import PolicyModel, EvaluationPolicyModel
 
 
-class PolicyController(CrudDmaController, DmaController):
+class PolicyController(UpdateByIdControllerMixin, CrudDmaController, DmaController):
     """
     Concrete implementation of the PolicyController for the Connector saturn Data Management API.
 

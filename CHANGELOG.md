@@ -30,6 +30,7 @@ See also the overarching [CHANGELOG.md](https://eclipse-tractusx.github.io/chang
 - fix: the EDR credentials no longer reach the logs when `PostgresMemoryConnectionManager` fails to load or save: SQLAlchemy quotes the parameters of the failed statement (the EDR rows, with their access tokens) in the message and the traceback, so the failure is logged by its type (`DBAPIError`) only. `FileSystemConnectionManager` and `op.delete_dir` follow the same rule
 - fix: `AasService` no longer logs a traceback when an operation fails with something other than a transport error: a validation error of the response quotes its values. The failure is logged by its type, and the exception is still re-raised unchanged
 - fix: the warning about the unverified TLS default of the dataplane requests is logged once per process even when several threads race for it
+- fix: a catalog offer is matched against `allowed_policies` on its rules alone - `permission`, `prohibition` and `obligation` (Saturn or Jupiter spelling). Any other attribute of the policy is ignored, on both sides: the `target` DSP 2025-1 allows on a catalog Offer ("Offers MAY contain any target attributes"), an `assigner`, a `profile`, an `@context` or anything a connector adds. Inside each rule, `target`, `assigner` and `assignee` are ignored too. Before, an offer carrying `"target": "<dataset id>"` was rejected by every allow-list, even one stating exactly its rules. An allow-list entry with no rule at all still matches nothing
 
 ## [0.8.2] - 2026-08-18
 
