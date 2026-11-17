@@ -53,9 +53,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
-        protocol: str = DSP_0_8,
-        catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: list = DEFAULT_NEGOTIATION_CONTEXT,
+        protocol: str | None = DSP_0_8,
+        catalog_context: dict | list | None = DEFAULT_CONTEXT,
+        negotiation_context: dict | list | None = DEFAULT_NEGOTIATION_CONTEXT,
     ) -> str:
         """
         Jupiter (legacy) override of :meth:`BaseConnectorConsumerService.get_transfer_id`.

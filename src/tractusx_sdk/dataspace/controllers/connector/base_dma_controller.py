@@ -20,8 +20,12 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import TypeVar
+
 from ..controller import Controller
 from ...adapters.connector.base_dma_adapter import BaseDmaAdapter
+
+DmaAdapterT = TypeVar("DmaAdapterT", bound=BaseDmaAdapter)
 
 
 class BaseDmaController(Controller):
@@ -31,8 +35,8 @@ class BaseDmaController(Controller):
         """
         super().__init__(adapter)
 
-    class _Builder(Controller._Builder):
-        def adapter(self, adapter: BaseDmaAdapter):
+    class _Builder(Controller._Builder[DmaAdapterT]):
+        def adapter(self, adapter: DmaAdapterT):
             """
             Overwrite the default Controller builder adapter method to force a BaseDmaAdapter-type adapter.
             """

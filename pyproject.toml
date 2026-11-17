@@ -106,15 +106,11 @@ ignore_missing_imports = true
 # Legacy baseline: modules with known type errors, silenced so CI only catches regressions.
 # Entries must only ever be removed (fix the module, then delete it here); never add new ones.
 module = [
-    "tractusx_sdk.dataspace.controllers.connector.base_dma_controller",
-    "tractusx_sdk.dataspace.controllers.connector.jupiter.dma_controller",
-    "tractusx_sdk.dataspace.controllers.connector.saturn.dma_controller",
     "tractusx_sdk.dataspace.managers.connection.database.postgres_connection_manager",
     "tractusx_sdk.dataspace.managers.connection.database.postgres_memory_connection_manager",
     "tractusx_sdk.dataspace.managers.connection.memory.memory_connection_manager",
     "tractusx_sdk.dataspace.managers.oauth2_manager",
     "tractusx_sdk.dataspace.services.connector.base_connector_consumer",
-    "tractusx_sdk.dataspace.services.connector.jupiter.connector_consumer_service",
     "tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service",
     "tractusx_sdk.dataspace.services.discovery.base_discovery_service",
     "tractusx_sdk.dataspace.tools.cache",
