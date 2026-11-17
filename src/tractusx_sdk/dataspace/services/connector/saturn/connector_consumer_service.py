@@ -128,6 +128,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 counter_party_address, counter_party_id, protocol
             )
             # Use provided values and protocol
+            if counter_party_address is None or counter_party_id is None:
+                raise ValueError(
+                    "[Connector Service]: Either a bpnl or both counter_party_id and counter_party_address must be provided!")
             return counter_party_address, counter_party_id, protocol
     
     def _execute_http_request(self, method: str, dataplane_url: str, access_token: str, path: str = "/",
@@ -184,10 +187,12 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 timeout=timeout, allow_redirects=allow_redirects, **self._trace_kwargs()
             )
 
+        raise ValueError(f"HTTP method '{method}' is not supported. Only {', '.join(allowed_methods)} are allowed.")
+
     def _get_catalog_internal(self, counter_party_id: str | None = None, counter_party_address: str | None = None,
                             bpnl: str | None = None, filter_expression: list[dict] | None = None, timeout: int | None = None,
                             protocol: str = DSP_2025, context: dict = DEFAULT_CONTEXT, 
-                            namespace: str = EDC_NAMESPACE, verify: bool | None = None) -> dict:
+                            namespace: str = EDC_NAMESPACE, verify: bool | None = None) -> dict | None:
         """
         Internal method to get catalog with optional BPNL resolution and filtering.
         """
@@ -409,7 +414,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         current_policies_checksum = hashlib.sha3_256(str(policies).encode('utf-8')).hexdigest()
         filter_expression_checksum = hashlib.sha3_256(str(filter_expression).encode('utf-8')).hexdigest()
         ## If the counter party id is already available and also the dct type is in the counter_party_id and the transfer key is also present
-        transfer_process_id: str = self.connection_manager.get_connection_transfer_id(counter_party_id=counter_party_id,
+        transfer_process_id: str | None = self.connection_manager.get_connection_transfer_id(counter_party_id=counter_party_id,
                                                                                       counter_party_address=counter_party_address,
                                                                                       query_checksum=filter_expression_checksum,
                                                                                       policy_checksum=current_policies_checksum)
@@ -444,6 +449,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                                       query_checksum=filter_expression_checksum,
                                                                       policy_checksum=current_policies_checksum,
                                                                       connection_entry=edr_entry)
+        if transfer_process_id is None:
+            raise RuntimeError("[Connector Service]: The EDR connection could not be stored! No transfer process id was returned!")
         logger.info("[Connector Service]: The EDR Entry was found! Transfer Process ID: [%s]", transfer_process_id)
 
         return transfer_process_id
@@ -540,7 +547,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     ## Get catalog request with filter
     def get_catalog_with_filter(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
                                 timeout: int | None = None, verify: bool | None = None, context=DEFAULT_CONTEXT,
-                                protocol: str = DSP_2025, **kwargs) -> dict:
+                                protocol: str = DSP_2025, **kwargs) -> dict | None:
         """
         Retrieves a catalog from the EDC provider based on a specified filter.
 
@@ -670,7 +677,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
     def get_catalog_by_asset_id(self, counter_party_id: str, counter_party_address: str, asset_id: str,
                           id_key: str = DEFAULT_ID_KEY, operator: str = "=", timeout: int | None = None,
-                          verify: bool | None = None, context=DEFAULT_CONTEXT, protocol: str = DSP_2025, **kwargs) -> dict:
+                          verify: bool | None = None, context=DEFAULT_CONTEXT, protocol: str = DSP_2025, **kwargs) -> dict | None:
         """
         Retrieves a catalog filtered by a specific asset ID.
 
@@ -701,7 +708,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
     def get_catalog_by_asset_id_with_bpnl(self, bpnl: str, counter_party_address: str, asset_id: str,
                                     id_key: str = DEFAULT_ID_KEY, operator: str = "=", timeout: int | None = None,
-                                    verify: bool | None = None, context=DEFAULT_CONTEXT, namespace: str = EDC_NAMESPACE) -> dict:
+                                    verify: bool | None = None, context=DEFAULT_CONTEXT, namespace: str = EDC_NAMESPACE) -> dict | None:
         """
         Retrieves a catalog filtered by a specific asset ID, discovering the connector via BPNL.
 
@@ -735,6 +742,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             protocol=protocol,
             context=context
         )
+        if catalogs is None:
+            catalogs = {}
         catalogs[counter_party_address] = self.get_catalog(request=catalog_request, timeout=timeout)
 
     def get_catalog_with_filter_parallel_with_bpnl(self, bpnl: str, counter_party_address: str,

@@ -203,7 +203,7 @@ class BaseConnectorConsumerService(BaseService):
         @returns: tuple[dataplane_endpoint:str, authorization:str]
         """
         ## Get authorization key from the edr
-        edr: dict = self.get_edr(transfer_id=transfer_id)
+        edr: dict | None = self.get_edr(transfer_id=transfer_id)
         if (edr is None):
             raise RuntimeError("[Connector Service]: It was not possible to retrieve the edr token and the dataplane endpoint!")
 
@@ -449,7 +449,7 @@ class BaseConnectorConsumerService(BaseService):
 
     def get_catalog_by_asset_id(self, counter_party_id: str, counter_party_address: str, asset_id: str,
                                 id_key: str = DEFAULT_ID_KEY, operator: str = "=", 
-                                timeout: int | None = None, verify: bool | None = None, context=DEFAULT_CONTEXT, **kwargs) -> dict:
+                                timeout: int | None = None, verify: bool | None = None, context=DEFAULT_CONTEXT, **kwargs) -> dict | None:
         """
         Retrieves a catalog filtered by a specific asset ID.
 
@@ -530,7 +530,7 @@ class BaseConnectorConsumerService(BaseService):
     def get_catalog_by_asset_id_with_bpnl(self, bpnl: str, counter_party_address: str, asset_id: str,
                                           id_key: str = DEFAULT_ID_KEY, operator: str = "=",
                                           timeout: int | None = None, verify: bool | None = None,
-                                          context: dict = DEFAULT_CONTEXT) -> dict:
+                                          context: dict = DEFAULT_CONTEXT) -> dict | None:
         """
         Retrieves a catalog filtered by asset ID, using the BPNL as the counter party ID.
 
@@ -740,6 +740,8 @@ class BaseConnectorConsumerService(BaseService):
     def get_catalog_with_filter_parallel(self, counter_party_id: str, counter_party_address: str,
                                          filter_expression: list[dict], catalogs: dict | None = None,
                                          timeout: int | None = None, context: dict = DEFAULT_CONTEXT, **kwargs) -> None:
+        if catalogs is None:
+            catalogs = {}
         catalogs[counter_party_address] = self.get_catalog_with_filter(counter_party_id=counter_party_id,
                                                                        counter_party_address=counter_party_address,
                                                                        filter_expression=filter_expression,
@@ -747,7 +749,7 @@ class BaseConnectorConsumerService(BaseService):
 
     ## Get catalog request with filter
     def get_catalog_with_filter(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
-                                timeout: int | None = None, verify: bool | None = None, context: dict = DEFAULT_CONTEXT, **kwargs) -> dict:
+                                timeout: int | None = None, verify: bool | None = None, context: dict = DEFAULT_CONTEXT, **kwargs) -> dict | None:
         """
         Retrieves a catalog from the EDC provider based on a specified filter.
 
@@ -1170,7 +1172,7 @@ class BaseConnectorConsumerService(BaseService):
 
     def negotiate_and_transfer(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
                               policies: Sequence[dict] | None = (), max_wait: int = 60, poll_interval: int = 1,
-                               protocol: str | None = None, catalog_context: dict | None = None, negotiation_context: dict | None = None) -> dict:
+                                protocol: str | None = None, catalog_context: dict | list | None = None, negotiation_context: dict | list | None = None) -> dict:
         """
         Performs the full DSP exchange: catalog lookup → contract negotiation → EDR entry retrieval.
 
@@ -1287,7 +1289,7 @@ class BaseConnectorConsumerService(BaseService):
         current_policies_checksum = hashlib.sha3_256(str(policy_memory_id or policies).encode('utf-8')).hexdigest()
         filter_expression_checksum = hashlib.sha3_256(str(filter_expression).encode('utf-8')).hexdigest()
         ## If the counter party id is already available and the transfer key is also present
-        transfer_process_id: str = self.connection_manager.get_connection_transfer_id(counter_party_id=counter_party_id,
+        transfer_process_id: str | None = self.connection_manager.get_connection_transfer_id(counter_party_id=counter_party_id,
                                                                                       counter_party_address=counter_party_address,
                                                                                       query_checksum=filter_expression_checksum,
                                                                                       policy_checksum=current_policies_checksum)
@@ -1321,6 +1323,8 @@ class BaseConnectorConsumerService(BaseService):
                                                                       query_checksum=filter_expression_checksum,
                                                                       policy_checksum=current_policies_checksum,
                                                                       connection_entry=edr_entry)
+        if transfer_process_id is None:
+            raise RuntimeError("[Connector Service]: The EDR connection could not be stored! No transfer process id was returned!")
         logger.info("[Connector Service]: The EDR Entry was found! Transfer Process ID: [%s]", transfer_process_id)
 
         return transfer_process_id
@@ -1554,7 +1558,7 @@ class BaseConnectorConsumerService(BaseService):
         operator="=",
         session=None,
         **kwargs,
-    ) -> tuple[str, str]:
+    ) -> Response:
         """
         Executes an HTTP POST request to an asset behind an EDC, filtered by DCT type.
         
@@ -1577,7 +1581,7 @@ class BaseConnectorConsumerService(BaseService):
             (e.g., path, content_type, headers, timeout, verify, allow_redirects).
 
         Returns:
-        tuple[str, str]: A tuple containing (dataplane_endpoint, access_token) for the completed request.
+        Response: The HTTP response of the completed POST request.
 
         Raises:
         RuntimeError: If EDR negotiation fails or dataplane details cannot be retrieved.
@@ -1621,7 +1625,7 @@ class BaseConnectorConsumerService(BaseService):
         operator="=",
         session=None,
         **kwargs
-    ) -> tuple[str, str]:
+    ) -> Response:
         """
         Executes an HTTP POST request to a specific asset behind an EDC.
         
@@ -1644,7 +1648,7 @@ class BaseConnectorConsumerService(BaseService):
             (e.g., path, content_type, headers, timeout, verify, allow_redirects).
 
         Returns:
-        tuple[str, str]: A tuple containing (dataplane_endpoint, access_token) for the completed request.
+        Response: The HTTP response of the completed POST request.
 
         Raises:
         RuntimeError: If EDR negotiation fails or dataplane details cannot be retrieved.
