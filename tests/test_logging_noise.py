@@ -32,10 +32,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-import tractusx_sdk.dataspace.services.connector.base_connector_consumer as bcc
 from tractusx_sdk.dataspace.managers.auth_manager import AuthManager
 from tractusx_sdk.dataspace.managers.connection.memory import MemoryConnectionManager
-from tractusx_sdk.dataspace.services.connector.base_connector_consumer import BaseConnectorConsumerService
+from tractusx_sdk.dataspace.services.connector.base_connector_consumer import BaseConnectorConsumerService, op
 from tractusx_sdk.dataspace.tools.encoding_tools import decode_base64_url_safe
 from tractusx_sdk.exceptions import CatalogRequestError, NegotiationError, TransferError
 
@@ -58,7 +57,7 @@ def service():
     service._edr_controller = Mock()
     service._contract_negotiation_controller = Mock()
     service._transfer_process_controller = Mock()
-    with patch.object(bcc.op, "wait"):
+    with patch.object(op, "wait"):
         yield service
 
 

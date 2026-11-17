@@ -36,8 +36,6 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import requests
-
-import tractusx_sdk.dataspace.services.connector.base_connector_consumer as bcc
 from sqlalchemy.exc import DBAPIError
 from sqlmodel import create_engine
 
@@ -48,7 +46,7 @@ from tractusx_sdk.dataspace.managers.connection.file_system import file_system_c
 from tractusx_sdk.dataspace.managers.connection.file_system.file_system_connection_manager import FileSystemConnectionManager
 from tractusx_sdk.dataspace.managers.connection.memory import MemoryConnectionManager
 from tractusx_sdk.dataspace.services.connector import BaseConnectorProviderService
-from tractusx_sdk.dataspace.services.connector.base_connector_consumer import BaseConnectorConsumerService
+from tractusx_sdk.dataspace.services.connector.base_connector_consumer import BaseConnectorConsumerService, op
 from tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service import ConnectorConsumerService as SaturnConsumer
 from tractusx_sdk.dataspace.services.discovery.connector_discovery_service import ConnectorDiscoveryService
 from tractusx_sdk.dataspace.tools.http_tools import HttpTools
@@ -135,7 +133,7 @@ def consumer(request):
     else:
         service = BaseConnectorConsumerService(dataspace_version="jupiter", base_url="https://control.example.com",
                                                dma_path="/management", connection_manager=MemoryConnectionManager())
-    with patch.object(bcc.op, "wait"):
+    with patch.object(op, "wait"):
         yield service
 
 

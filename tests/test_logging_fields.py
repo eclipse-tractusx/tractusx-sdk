@@ -85,9 +85,10 @@ class TestLogExtra:
     def test_zero_values_are_kept(self):
         assert log_extra(elapsed_ms=0, status_code=0) == {"elapsed_ms": 0, "status_code": 0}
 
-    def test_unknown_fields_are_rejected(self):
+    @pytest.mark.parametrize("name", ["headers", "authorization", "access_token", "body"])
+    def test_unknown_fields_are_rejected(self, name):
         with pytest.raises(TypeError):
-            log_extra(**{"headers": {"Authorization": "x"}})
+            log_extra(**{name: "x"})
 
     def test_no_field_collides_with_a_reserved_log_record_attribute(self):
         assert EXTRA_FIELDS.isdisjoint(RESERVED)
