@@ -38,7 +38,7 @@ class BaseConnectorService(BaseService):
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str,
                  consumer_service: BaseConnectorConsumerService,
                  provider_service: BaseConnectorProviderService,
-                 headers: dict = None,
+                 headers: dict | None = None,
                  auth_manager: AuthManagerInterface | None = None,
                  trace: bool = False):
         """
