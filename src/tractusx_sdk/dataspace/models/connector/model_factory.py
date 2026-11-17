@@ -453,7 +453,7 @@ class ModelFactory:
     def get_connector_discovery_model(
             dataspace_version: str,
             bpnl: str,
-            counter_party_address: str,
+            counter_party_address: str | None,
             context: dict | list | str | None = None,
             **kwargs
     ):

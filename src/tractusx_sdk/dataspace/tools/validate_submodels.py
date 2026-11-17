@@ -23,7 +23,7 @@
 
 import logging
 from dataclasses import dataclass, fields
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 
 from requests import get
 import jsonschema
@@ -39,6 +39,8 @@ logger = logging.getLogger(__name__)
 
 class _DictAccess:
     """Read access by key (``result["schema"]``), kept so code written for the former ``dict`` results keeps working."""
+
+    __dataclass_fields__: ClassVar[dict[str, Any]]  ## provided by the @dataclass decorator of the subclasses
 
     def __getitem__(self, key: str) -> Any:
         if key not in {f.name for f in fields(self)}:
@@ -106,7 +108,6 @@ class ValidationResult(_DictAccess):
 ## License: Apache License, Version 2.0
 ## Source: https://github.com/eclipse-tractusx/tractusx-sdk-services/blob/cfd73933ad7871891bee9f117b32643bc9abad40/test-orchestrator/test_orchestrator/utils.py#L176-L217
 
-@staticmethod
 def submodel_schema_finder(
         semantic_id,
         link_core: Optional[str] = 'https://raw.githubusercontent.com/eclipse-tractusx/sldt-semantic-models/main/') -> SchemaLookupResult:
@@ -145,7 +146,6 @@ def submodel_schema_finder(
 
     return SchemaLookupResult(schema=schema, link=schema_link)
 
-@staticmethod
 def json_validator(schema, json_to_validate, validation_type = 'jsonschema', raise_on_error: bool = True) -> ValidationResult:
     """
     Validates a JSON object against a given schema.

@@ -29,6 +29,7 @@ import json
 import logging
 from dataclasses import dataclass, replace
 from enum import Enum
+from collections.abc import Sequence
 from typing import NamedTuple
 
 from tractusx_sdk.exceptions import EmptyCatalogError, PolicyMismatchError
@@ -623,7 +624,7 @@ class DspTools:
     """
     
     @staticmethod
-    def filter_assets_and_policies(catalog:dict, allowed_policies:list=[]) -> list[AssetPolicySelection]:
+    def filter_assets_and_policies(catalog:dict, allowed_policies:Sequence | None=[]) -> list[AssetPolicySelection]:
         """
         Method to select a asset and policy from a DCAT Catalog.
 
@@ -694,7 +695,7 @@ class DspTools:
         return len(dataset) == 0
         
     @staticmethod
-    def get_dataset_policy(dataset:dict, allowed_policies:list=[]) -> dict | None:
+    def get_dataset_policy(dataset:dict, allowed_policies:Sequence | None=[]) -> dict | None:
         """
         Gets a valid policy from an dataset.
 
@@ -706,8 +707,10 @@ class DspTools:
         if policies is None:
             return None
 
+        return None
+
     @staticmethod
-    def _select_policy(dataset:dict, allowed_policies:list) -> tuple[dict | None, list[PolicyEvaluation]]:
+    def _select_policy(dataset:dict, allowed_policies:Sequence | None) -> tuple[dict | None, list[PolicyEvaluation]]:
         """
         Selects the first acceptable policy of a dataset.
 
@@ -736,7 +739,7 @@ class DspTools:
         return None, rejections
 
     @staticmethod
-    def evaluate_policy(policy:dict, allowed_policies:list | None=None) -> PolicyEvaluation:
+    def evaluate_policy(policy:dict, allowed_policies:Sequence | None=None) -> PolicyEvaluation:
         """
         Compares a catalog offer policy against an allow-list and reports the outcome.
 
@@ -787,7 +790,7 @@ class DspTools:
         return PolicyEvaluation(PolicyVerdict.NO_MATCH, policy_id=policy_id, mismatches=tuple(mismatches))
 
     @staticmethod
-    def is_policy_valid(policy:dict, allowed_policies:list | None=None) -> bool:
+    def is_policy_valid(policy:dict, allowed_policies:Sequence | None=None) -> bool:
         """
         Checks whether a catalog offer policy is acceptable.
 

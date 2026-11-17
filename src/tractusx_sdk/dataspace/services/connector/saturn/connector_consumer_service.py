@@ -303,7 +303,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return content.get("@id", None)
     
     def _resolve_policies_from_catalog(self, counter_party_id: str, counter_party_address: str,
-                                        filter_expression: list[dict], protocol: str,
+                                        filter_expression: list[dict] | None, protocol: str,
                                         catalog_context: dict | list) -> list:
         """
         Auto-discovers and selects a policy from the provider's catalog when policies=None.
@@ -356,7 +356,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             counter_party_address, policies)
         return policies
 
-    def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
+    def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict] | None,
                         policies: Sequence[dict] | None = (), max_wait: int = 60, poll_interval: int = 1,
                         protocol: str | None = DSP_2025, catalog_context: dict | list | None = DEFAULT_CONTEXT,
                         negotiation_context: dict | list | None = DEFAULT_NEGOTIATION_CONTEXT) -> str:
@@ -545,7 +545,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         )
         
     ## Get catalog request with filter
-    def get_catalog_with_filter(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
+    def get_catalog_with_filter(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict] | None,
                                 timeout: int | None = None, verify: bool | None = None, context=DEFAULT_CONTEXT,
                                 protocol: str = DSP_2025, **kwargs) -> dict | None:
         """
@@ -569,7 +569,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                         verify=verify)
         
     def get_catalog_request_with_filter(self, counter_party_id: str, counter_party_address: str,
-                                        filter_expression: list[dict], context=DEFAULT_CONTEXT, protocol: str = DSP_2025) -> CatalogModel:
+                                        filter_expression: list[dict] | None, context=DEFAULT_CONTEXT, protocol: str = DSP_2025) -> CatalogModel:
         """
         Prepares a catalog request with a filter for a specific key-value pair.
 
@@ -821,7 +821,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         self,
         counter_party_id: str,
         counter_party_address: str,
-        filter_expression: list[dict],
+        filter_expression: list[dict] | None,
         policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,

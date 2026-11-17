@@ -31,7 +31,7 @@ negotiate contracts, obtain EDR tokens, and send notifications through the datas
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from tractusx_sdk.dataspace.services.connector.base_connector_consumer import BaseConnectorConsumerService
 from tractusx_sdk.dataspace.tools import HttpTools
@@ -273,8 +273,8 @@ class NotificationConsumerService(BaseService):
                 counter_party_address=provider_dsp_url,
                 filter_expression=filter_expression,
                 policies=policies,
-                max_retries=max_retries,
-                timeout=retry_timeout,
+                max_wait=max_retries * retry_timeout,
+                poll_interval=retry_timeout,
             )
             
             logger.info(
@@ -294,7 +294,7 @@ class NotificationConsumerService(BaseService):
         counter_party_address: str,
         policies: Optional[List[Dict]] = None,
         dct_type: str = DIGITAL_TWIN_EVENT_API_TYPE,
-    ) -> Dict[str, Any]:
+    ) -> Tuple[str, str]:
         """
         Negotiate notification access using BPNL-based connector discovery.
         

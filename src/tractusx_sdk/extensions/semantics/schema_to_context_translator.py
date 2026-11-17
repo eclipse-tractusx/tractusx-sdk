@@ -78,7 +78,7 @@ class SammSchemaContextTranslator:
         Returns:
             None
         """
-        self.baseSchema = {}
+        self.baseSchema: dict = {}
         self.rootRef = "#"
         self.refKey = "$ref"
         self.path_sep = "#/"
@@ -96,7 +96,7 @@ class SammSchemaContextTranslator:
             "@version": 1.1,
             self.schemaPrefix: "https://schema.org/"
         }
-        self.contextTemplate = {
+        self.contextTemplate: Dict[str, Any] = {
             "@version": 1.1,
             "id": "@id",
             "type": "@type"
@@ -601,7 +601,7 @@ class SammSchemaContextTranslator:
             if self.refKey not in item:
                 return self.create_value_node(property=item, node=node)
 
-            node[self.contextPrefix] = self.create_item_context(item=item, actualref=actualref)
+            node[self.contextPrefix] = self.create_item_context(item=item, actualref=actualref or "")
             return node
         except Exception as e:
             raise SchemaTranslationError("It was not possible to create the array node") from e
@@ -957,7 +957,7 @@ class SammSchemaContextTranslator:
             if (property is None): return None
             
             ## Create new json ld simple node
-            newNode = dict()
+            newNode: Dict[str, Any] = dict()
 
             ## If the key is not none create a new node
             if key is not None:

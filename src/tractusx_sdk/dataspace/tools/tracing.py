@@ -76,7 +76,8 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from time import perf_counter
-from typing import Any, Iterator, Optional
+from types import FrameType
+from typing import Any, Iterable, Iterator, Optional
 
 import requests
 
@@ -129,7 +130,7 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _json_safe(value: Any, max_chars: int) -> Any:
+def _json_safe(value: Any, max_chars: int | None) -> Any:
     """
     Converts a value into something that can safely be serialized to JSON.
 
@@ -199,14 +200,14 @@ def _shrink_value(value: Any, budget: list) -> Any:
         return shrunk
 
     if isinstance(value, (list, tuple)):
-        shrunk = []
+        shrunk_items: list = []
         items = list(value)
         for position, item in enumerate(items):
             if budget[0] <= 0:
-                shrunk.append(TRUNCATED_MARKER.format(count=len(items) - position, unit="items"))
+                shrunk_items.append(TRUNCATED_MARKER.format(count=len(items) - position, unit="items"))
                 break
-            shrunk.append(_shrink_value(item, budget))
-        return shrunk
+            shrunk_items.append(_shrink_value(item, budget))
+        return shrunk_items
 
     budget[0] -= len(str(value))
     return value
@@ -226,7 +227,7 @@ def _safe_getattr(obj: Any, name: str, default: Any = None) -> Any:
         return default
 
 
-def _body_safe(value: Any, max_chars: int) -> Any:
+def _body_safe(value: Any, max_chars: int | None) -> Any:
     """
     Records a request/response body, keeping it structured whenever possible.
 
@@ -250,7 +251,7 @@ def _body_safe(value: Any, max_chars: int) -> Any:
     return _json_safe(value, max_chars)
 
 
-def _truncate(value: str, max_chars: int) -> str:
+def _truncate(value: str, max_chars: int | None) -> str:
     """Truncates a string, appending a marker when content was dropped."""
     if max_chars is None or max_chars <= 0 or len(value) <= max_chars:
         return value
@@ -293,6 +294,7 @@ def _infer_context() -> Optional[str]:
     Walks up the stack, skipping the tracing/HTTP plumbing, and builds a
     `ClassName.method_name` label out of the first relevant frame.
     """
+    frame: Optional[FrameType]
     try:
         frame = sys._getframe(1)  # NOSONAR - only executed while tracing is enabled
     except (ValueError, AttributeError):  # pragma: no cover - platform dependent
@@ -323,7 +325,7 @@ class TraceEntry:
     id: str
     index: int
     method: str
-    url: str
+    url: Optional[str]
     context: Optional[str] = None
     operation: Optional[str] = None
     operation_id: Optional[str] = None
@@ -552,7 +554,7 @@ class Tracer:
     def start_entry(
         self,
         method: str,
-        url: str,
+        url: Optional[str],
         headers: Any = None,
         params: Any = None,
         body: Any = None,
@@ -945,7 +947,7 @@ def resolve_tracers(tracer: Any = None, session: Any = None, extra: Any = None) 
 @contextmanager
 def trace_call(
     method: str,
-    url: str,
+    url: Optional[str],
     tracer: Any = None,
     session: Any = None,
     headers: Any = None,
@@ -1071,6 +1073,7 @@ def traced_http(method: str):
             if signature is None:
                 signature = inspect.signature(func)
 
+            arguments: dict[str, Any]
             try:
                 bound = signature.bind(*args, **kwargs)
                 bound.apply_defaults()
@@ -1160,6 +1163,7 @@ def _traceable_components(value: Any) -> Iterator:
         yield value
         return
 
+    items: Iterable[Any]
     if isinstance(value, dict):
         items = value.values()
     elif isinstance(value, (list, tuple, set)):

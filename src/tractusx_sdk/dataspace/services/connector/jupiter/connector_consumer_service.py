@@ -49,7 +49,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         self,
         counter_party_id: str,
         counter_party_address: str,
-        filter_expression: list[dict],
+        filter_expression: list[dict] | None,
         policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,

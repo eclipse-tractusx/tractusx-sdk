@@ -70,10 +70,8 @@ class BpnDiscoveryService(BaseDiscoveryService):
                 `set_tracer()` shares it with other services.
         """
         self.oauth = oauth
-        self.session = session
         self.base_path = base_path
-        if(not self.session):
-            self.session = requests.Session()
+        self.session = session if session else requests.Session()
 
         # The session is set beforehand, so that the trace configured by the base
         # service covers every call made with it
@@ -127,7 +125,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         """
         return self.get_discovery_url(self.discovery_finder_service, bpn_discovery_key)
 
-    def search_bpns(self, keys:list, identifier_type:str="manufacturerPartId") -> list | None:
+    def search_bpns(self, keys:list, identifier_type:str="manufacturerPartId") -> dict:
         """
         Sends a search request to the BPN discovery service.
 

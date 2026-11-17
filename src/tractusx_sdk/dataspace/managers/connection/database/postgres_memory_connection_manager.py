@@ -72,7 +72,7 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
         DynamicEDRConnection.metadata.create_all(engine)
         self._load_from_db()
 
-    def add_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum, connection_entry) -> str:
+    def add_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum, connection_entry) -> str | None:
         """
         Add a new EDR connection and trigger database persistence.
 
@@ -204,7 +204,7 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
             try:
                 _saved_edrs=0
                 with Session(self.engine) as session:
-                    session.exec(delete(self.EDRConnection))
+                    session.execute(delete(self.EDRConnection))
                     for provider_id, endpoints in self.open_connections.items():
                         if provider_id == self.edrs_key:
                             continue

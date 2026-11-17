@@ -271,7 +271,7 @@ class BaseConnectorConsumerService(BaseService):
             "operandRight": value
         }
 
-    def get_query_spec(self, filter_expression: list[dict]) -> dict:
+    def get_query_spec(self, filter_expression: list[dict] | None) -> dict:
         return {
             "@context": {
                 VOCAB_KEY: EDC_NAMESPACE
@@ -281,7 +281,7 @@ class BaseConnectorConsumerService(BaseService):
         }
 
     def get_catalog_request_with_filter(self, counter_party_id: str, counter_party_address: str,
-                                        filter_expression: list[dict], context: dict=DEFAULT_CONTEXT) -> BaseCatalogModel:
+                                        filter_expression: list[dict] | None, context: dict=DEFAULT_CONTEXT) -> BaseCatalogModel:
         """
         Prepares a catalog request with a filter for a specific key-value pair.
 
@@ -748,7 +748,7 @@ class BaseConnectorConsumerService(BaseService):
                                                                        timeout=timeout, context=context, **kwargs)
 
     ## Get catalog request with filter
-    def get_catalog_with_filter(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
+    def get_catalog_with_filter(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict] | None,
                                 timeout: int | None = None, verify: bool | None = None, context: dict = DEFAULT_CONTEXT, **kwargs) -> dict | None:
         """
         Retrieves a catalog from the EDC provider based on a specified filter.
@@ -913,7 +913,7 @@ class BaseConnectorConsumerService(BaseService):
         return kwargs
 
     def _fetch_and_validate_catalog(self, counter_party_id: str, counter_party_address: str,
-                                     filter_expression: list[dict], policies: Sequence[dict] | None = (),
+                                     filter_expression: list[dict] | None, policies: Sequence[dict] | None = (),
                                      **catalog_kwargs) -> list:
         """
         Fetch catalog and validate that matching assets with acceptable policies exist.
@@ -1170,7 +1170,7 @@ class BaseConnectorConsumerService(BaseService):
         raise TimeoutError(
             f"[Connector Service]: [{counter_party_address}] The EDR Negotiation [{negotiation_id}] has failed! The EDR entry was not found after {max_wait}s!")
 
-    def negotiate_and_transfer(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
+    def negotiate_and_transfer(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict] | None,
                               policies: Sequence[dict] | None = (), max_wait: int = 60, poll_interval: int = 1,
                                 protocol: str | None = None, catalog_context: dict | list | None = None, negotiation_context: dict | list | None = None) -> dict:
         """
@@ -1239,7 +1239,7 @@ class BaseConnectorConsumerService(BaseService):
 
         return edr_entry
 
-    def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
+    def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict] | None,
                         policies: Sequence[dict] | None = (), max_wait: int = 60, poll_interval: int = 1,
                         protocol: str | None = None, catalog_context: dict | list | None = None, negotiation_context: dict | list | None = None) -> str:
 
@@ -1684,7 +1684,7 @@ class BaseConnectorConsumerService(BaseService):
         self,
         counter_party_id: str,
         counter_party_address: str,
-        filter_expression: list[dict],
+        filter_expression: list[dict] | None,
         policies: Sequence[dict] | None,
         max_wait: int = 60,
         poll_interval: int = 1,
