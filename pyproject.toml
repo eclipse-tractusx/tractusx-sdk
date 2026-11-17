@@ -106,8 +106,6 @@ ignore_missing_imports = true
 # Legacy baseline: modules with known type errors, silenced so CI only catches regressions.
 # Entries must only ever be removed (fix the module, then delete it here); never add new ones.
 module = [
-    "tractusx_sdk.dataspace.adapters.adapter",
-    "tractusx_sdk.dataspace.adapters.connector.base_dma_adapter",
     "tractusx_sdk.dataspace.controllers.connector.base_dma_controller",
     "tractusx_sdk.dataspace.controllers.connector.jupiter.dma_controller",
     "tractusx_sdk.dataspace.controllers.connector.saturn.dma_controller",
@@ -125,7 +123,6 @@ module = [
     "tractusx_sdk.dataspace.tools.validate_submodels",
     "tractusx_sdk.extensions.geometry.geometry_aspect_validator.validateGeometry",
     "tractusx_sdk.extensions.notification_api.services.notification_consumer_service",
-    "tractusx_sdk.extensions.notification_api.services.notification_service",
     "tractusx_sdk.extensions.semantics.schema_to_context_translator",
     "tractusx_sdk.extensions.tck.connector.runners",
     "tractusx_sdk.industry.adapters.submodel_adapters.file_system_adapter",
@@ -134,7 +131,6 @@ module = [
     "tractusx_sdk.industry.services.aas_service",
     "tractusx_sdk.industry.services.discovery.bpn_discovery_service",
     "tractusx_sdk.industry.services.notifications.notification_consumer_service",
-    "tractusx_sdk.industry.services.notifications.notification_service",
 ]
 ignore_errors = true
 

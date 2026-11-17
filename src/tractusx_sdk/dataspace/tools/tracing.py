@@ -1313,7 +1313,8 @@ class TraceableMixin:
 
         :param name: Optional name of the operation, stored in its entries
         """
-        tracer = self._tracer if self.trace_enabled else Tracer(name=name)
+        bound_tracer = self._tracer
+        tracer = bound_tracer if bound_tracer is not None and bound_tracer.enabled else Tracer(name=name)
         with tracer.activate(name) as operation:
             yield operation
 

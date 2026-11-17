@@ -303,7 +303,7 @@ class BaseConnectorConsumerService(BaseService):
         return catalog_request
 
     def get_edr_negotiation_request(self, counter_party_id: str, counter_party_address: str, target: str,
-                                    policy: dict, protocol: str = DSP_0_8, context: dict | None = None) -> BaseContractNegotiationModel:
+                                    policy: dict, protocol: str = DSP_0_8, context: dict | list | None = None) -> BaseContractNegotiationModel:
         """
         Builds the EDR Negotiation Request.
 
@@ -348,7 +348,7 @@ class BaseConnectorConsumerService(BaseService):
         )
 
     def start_edr_negotiation(self, counter_party_id: str, counter_party_address: str, target: str,
-                              policy: dict, verify: bool | None = None, protocol: str = DSP_0_8, context: dict | None = None) -> str | None:
+                              policy: dict, verify: bool | None = None, protocol: str = DSP_0_8, context: dict | list | None = None) -> str | None:
         """
         Starts the edr negotiation and gives the negotation id
 
@@ -705,7 +705,7 @@ class BaseConnectorConsumerService(BaseService):
     def do_dsp_with_bpnl(self, bpnl: str, counter_party_address: str, filter_expression: list[dict] | None = None,
                          policies: Sequence[dict] | None = (), max_wait: int = 60, poll_interval: int = 1,
                          catalog_context: dict = DEFAULT_CONTEXT,
-                         negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> tuple[str, str]:
+                         negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT) -> tuple[str, str]:
         """
         Performs all DSP operations until retrieving an EDR, using the BPNL as the counter party ID.
 
@@ -892,7 +892,7 @@ class BaseConnectorConsumerService(BaseService):
             f"[Connector Service]: The Transfer Process query for the agreement_id=[{agreement_id}] was rejected by the connector! "
             f"Tried the filter keys {rejected}. Set the accepted one in TRANSFER_PROCESS_AGREEMENT_ID_KEYS.")
 
-    def _build_optional_kwargs(self, protocol: str | None = None, context: dict | None = None, 
+    def _build_optional_kwargs(self, protocol: str | None = None, context: dict | list | None = None, 
                                 protocol_key: str = 'protocol', context_key: str = 'context') -> dict:
         """
         Build optional keyword arguments dictionary, skipping None values.
@@ -1239,7 +1239,7 @@ class BaseConnectorConsumerService(BaseService):
 
     def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
                         policies: Sequence[dict] | None = (), max_wait: int = 60, poll_interval: int = 1,
-                        protocol: str | None = None, catalog_context: dict | None = None, negotiation_context: dict | None = None) -> str:
+                        protocol: str | None = None, catalog_context: dict | list | None = None, negotiation_context: dict | list | None = None) -> str:
 
         """
         Returns a cached EDR transfer ID if available, otherwise performs a full contract negotiation.
@@ -1684,8 +1684,8 @@ class BaseConnectorConsumerService(BaseService):
         policies: Sequence[dict] | None,
         max_wait: int = 60,
         poll_interval: int = 1,
-        catalog_context: dict | None = None,
-        negotiation_context: dict | None = None,
+        catalog_context: dict | list | None = None,
+        negotiation_context: dict | list | None = None,
         protocol: str = DSP_0_8
     ) -> tuple[str, str]:
         """
@@ -1743,7 +1743,7 @@ class BaseConnectorConsumerService(BaseService):
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """
@@ -1836,7 +1836,7 @@ class BaseConnectorConsumerService(BaseService):
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """
@@ -1935,7 +1935,7 @@ class BaseConnectorConsumerService(BaseService):
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """

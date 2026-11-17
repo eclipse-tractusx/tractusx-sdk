@@ -222,7 +222,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return self.get_catalog(request=catalog_request, timeout=timeout, verify=verify)
     
     def get_edr_negotiation_request(self, counter_party_id: str, counter_party_address: str, target: str,
-                                    policy: dict, protocol: str = DSP_2025, context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> ContractNegotiationModel:
+                                    policy: dict, protocol: str = DSP_2025, context: dict | list = DEFAULT_NEGOTIATION_CONTEXT) -> ContractNegotiationModel:
         """
         Builds the EDR Negotiation Request.
 
@@ -253,7 +253,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         )
     
     def start_edr_negotiation(self, counter_party_id: str, counter_party_address: str, target: str,
-                              policy: dict, protocol: str = DSP_2025, context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> str | None:
+                              policy: dict, protocol: str = DSP_2025, context: dict | list = DEFAULT_NEGOTIATION_CONTEXT) -> str | None:
         """
         Starts the edr negotiation and gives the negotiation id.
 
@@ -350,7 +350,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
                         policies: Sequence[dict] | None = (), max_wait: int = 60, poll_interval: int = 1,
                         protocol: str = DSP_2025, catalog_context: dict = DEFAULT_CONTEXT,
-                        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> str:
+                        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT) -> str:
 
         """
         Checks if the transfer is already available at the location or not...
@@ -476,6 +476,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         """
         discovery_info = self.discover_connector_protocol(bpnl=bpnl, counter_party_address=counter_party_address, verify=verify)
         logger.debug("[get_discovery_info] Raw discovery response: %s", discovery_info)
+
+        if discovery_info is None:
+            raise TypeError(f"[Connector Service]: Connector discovery for BPNL [{bpnl}] returned an empty response!")
 
         def _get(key: str):
             namespaced = f"{namespace}{key}"
@@ -757,7 +760,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                         max_wait: int = 60, poll_interval: int = 1,
                         namespace: str = EDC_NAMESPACE,
                         catalog_context: dict = DEFAULT_CONTEXT,
-                        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> tuple[str, str]:
+                        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT) -> tuple[str, str]:
         """
         Does all the dsp necessary operations until getting the edr.
         Giving you all the necessary data to request data to the edc dataplane.
@@ -791,7 +794,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         protocol: str = DSP_2025
     ) -> tuple[str, str]:
         """
@@ -835,7 +838,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """
@@ -905,7 +908,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """
@@ -974,7 +977,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """
@@ -1044,7 +1047,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """
@@ -1117,7 +1120,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """
@@ -1302,7 +1305,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """

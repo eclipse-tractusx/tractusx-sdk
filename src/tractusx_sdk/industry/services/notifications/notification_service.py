@@ -161,7 +161,11 @@ class NotificationService(BaseService):
         """
         try:
             # Query the asset by ID
-            response = self._connector_provider.assets.get_by_id(asset_id)
+            provider = self._connector_provider
+            if provider is None:
+                return None
+
+            response = provider.assets.get_by_id(asset_id)
             
             if response.status_code == 200:
                 asset_data = response.json()
