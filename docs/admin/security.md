@@ -101,7 +101,7 @@ The SDK logs through the standard `logging` module and stays silent until your a
 
 - At `DEBUG` it logs the **request payloads** it sends (policies, contract definitions, catalog and negotiation requests). This can expose BPNs, policy and contract negotiation details.
 - At `INFO` and above it logs lifecycle events (identifiers and states), warnings and errors. A failure is logged by the type of its exception, and URLs are logged without their user information, query string and fragment.
-- The SDK does **not** log request headers, API keys, access tokens, response bodies or the data address of an asset at any level, and it escapes the control characters of the values it logs, so a remote party cannot forge a log line.
+- The SDK library does **not** log request headers, API keys, access tokens, response bodies or the data address of an asset at any level, and it escapes the control characters of the values it logs, so a remote party cannot forge a log line. The Connector TCK command line runner is the exception: it is a test tool that prints the answers of the connector it tests, so do not send its output to a shared log platform.
 
 **Never enable `DEBUG` for `tractusx_sdk` in production.** Use it only in isolated development environments with non-sensitive data, or route it to a restricted log.
 

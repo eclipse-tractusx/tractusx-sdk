@@ -154,13 +154,13 @@ logging.getLogger("tractusx_sdk").addHandler(handler)
 
 ## What is never logged
 
-The SDK handles credentials and business data, and its logs are built so they cannot leak either. These guarantees hold at **every** level, `DEBUG` included, and tests enforce them:
+The SDK handles credentials and business data, and its logs are built so they cannot leak either. These guarantees hold for the library at **every** level, `DEBUG` included, and tests enforce them. The one exception is the Connector TCK command line runner, an application that prints what the connector under test answered: see [Command line tools](#command-line-tools).
 
 - **No credentials.** Request and response headers, API keys, access tokens, client secrets, the EDR `authorization` value, S3 access keys and the key the SDK itself is configured with are never logged. The `Authorization` header of a request is never part of a record. Where a service is configured with credentials (the OAuth2 manager, the API key manager, the S3 and HTTP submodel adapters, the adapter factory) the log says *what kind* of credential is used (`credentials from the environment or the IAM role`, `auth: bearer`), never its value, and the factory logs the *names* of the settings it receives, not their values.
 - **URLs are stripped.** Every URL is logged through `safe_url`: only the scheme, host, port and path are kept. The user information (`user:password@`), the query string, the fragment and path parameters (`;jsessionid=...`) are removed, because any of them can carry a token or a session id. `https://user:pw@host/api?token=abc` is logged as `https://host/api`.
 - **No payloads of stored or validated data.** The content of a submodel read from or written to S3, a file or an HTTP service is never logged, only its size. A validation reports *where* a document violates a schema (`path` and rule), never the offending value. The data address of an asset (which holds the headers and OAuth2 settings of your backend) is never logged: asset creation logs a one-line summary.
-- **No response bodies.** The body of a response is never logged, whatever its status code: the status code is. When you need the body of an error, read `error.response_body` from the exception the call raises.
-- **No exception text where it could echo a secret.** The identity provider, the object store, the connectors and the submodel services may repeat details of the request in their errors. In the modules that talk to them the SDK logs the *type* of the exception (`ConnectError`) or the store's error code (`AccessDenied`), never its message or traceback.
+- **No response bodies.** The library never logs the body of a response, whatever its status code: the status code is logged. When you need the body of an error, read `error.response_body` from the exception the call raises. (The TCK runner is the exception, see [Command line tools](#command-line-tools).)
+- **No exception text where it could echo a secret.** The identity provider, the object store, the connectors, the submodel services, the EDR databases and the Digital Twin Registry service may repeat details of the request or of the data in their errors: `requests` and `httpx` quote the URL with its query string, a failed SQL statement quotes its parameters (the EDRs, with their access tokens), and a model validation error quotes the values of the response. The SDK logs the *type* of the exception (`ConnectError`, `DBAPIError`) or the store's error code (`AccessDenied`), never its message nor its traceback. A test enforces it by default: a module may log a traceback only when it is on a short allow-list, whose reason is that what it catches holds nothing sensitive (for example the import errors of the factories).
 - **No forged lines.** A value that comes from a remote party cannot break out of its log line: its control characters are escaped.
 - **Cache keys** are not logged, because callers are free to build them from sensitive data.
 
@@ -344,6 +344,8 @@ The arguments were removed in 0.9.0. Passing them raises a `TypeError`.
 ## Command line tools
 
 The Connector TCK and the geometry validator are applications, so they configure the logging of their own process. See the [TCK API Reference](../tck/connector/api-reference.md) (`--no-debug` switches `DEBUG` off).
+
+The guarantees of [What is never logged](#what-is-never-logged) are those of the library. The TCK runner is a test tool: it prints the answers of the connector it tests, response bodies included, so keep its output out of shared log platforms.
 
 ## NOTICE
 
