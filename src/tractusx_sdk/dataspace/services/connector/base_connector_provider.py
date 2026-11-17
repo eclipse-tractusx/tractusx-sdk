@@ -27,10 +27,6 @@ from ...controllers.connector.base_dma_controller import BaseDmaController
 from ...controllers.connector.controller_factory import ControllerType, ControllerFactory
 from ...models.connector.model_factory import ModelFactory
 import logging
-from typing import Any
-
-
-_UNSET_PROXY: Any = object()
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +101,7 @@ class BaseConnectorProviderService(BaseService):
         dct_subject: str = None,
         version: str = "3.0",
         semantic_id: str = None,
-        proxy_params: dict[str, str] | None = _UNSET_PROXY,
+        proxy_params: dict = None,
         headers: dict = None,
         properties: dict = None,
         private_properties: dict = None,
@@ -116,7 +112,7 @@ class BaseConnectorProviderService(BaseService):
     ):
         logger.info("Creating asset %s at %s.", asset_id, base_url)
 
-        if proxy_params is _UNSET_PROXY:
+        if proxy_params is None:
             proxy_params = {
                 "proxyQueryParams": "false",
                 "proxyPath": "true",
