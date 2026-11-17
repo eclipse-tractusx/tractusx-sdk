@@ -90,6 +90,7 @@ python_version = "3.12"
 files = ["src"]
 mypy_path = "src"
 explicit_package_bases = true
+strict_equality = true
 namespace_packages = true
 check_untyped_defs = true
 show_error_codes = true
