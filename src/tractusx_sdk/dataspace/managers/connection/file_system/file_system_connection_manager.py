@@ -32,6 +32,7 @@ import os
 import threading
 import time
 from filelock import FileLock
+from tractusx_sdk._logging_helpers import log_failure
 from ..memory import MemoryConnectionManager
 import hashlib
 
@@ -64,6 +65,7 @@ class FileSystemConnectionManager(MemoryConnectionManager):
         self._stop_event = threading.Event()
         self._last_loaded_hash = None
         self._load_if_updated()
+        logger.debug("[FileSystemConnectionManager] Persisting the connections to '%s' every %s seconds", self.file_path, self.persist_interval)
         self._start_background_tasks()
 
     def _start_background_tasks(self):
@@ -94,8 +96,9 @@ class FileSystemConnectionManager(MemoryConnectionManager):
                 with open(self.file_path, "w") as f:
                     json.dump(self.open_connections, f)
                 self._last_loaded_hash = current_hash
-        except Exception:
-            logger.exception("[FileSystemConnectionManager] Error saving to file '%s'", self.file_path)
+            logger.debug("[FileSystemConnectionManager] Saved the connections to '%s'", self.file_path)
+        except Exception as error:
+            log_failure(logger, "[FileSystemConnectionManager] Error saving to file '%s' (%s)", error, self.file_path)
 
     def _load_if_updated(self):
         """
@@ -111,8 +114,9 @@ class FileSystemConnectionManager(MemoryConnectionManager):
                 if file_hash != self._last_loaded_hash:
                     self.open_connections = file_connections
                     self._last_loaded_hash = file_hash
-        except Exception:
-            logger.exception("[FileSystemConnectionManager] Error loading from file '%s'", self.file_path)
+                    logger.debug("[FileSystemConnectionManager] Reloaded the connections from '%s' (changed on disk)", self.file_path)
+        except Exception as error:
+            log_failure(logger, "[FileSystemConnectionManager] Error loading from file '%s' (%s)", error, self.file_path)
 
     def _calculate_hash(self, data):
         """
@@ -124,4 +128,5 @@ class FileSystemConnectionManager(MemoryConnectionManager):
         """
         Stop the background persistence thread.
         """
+        logger.debug("[FileSystemConnectionManager] Stopping the persistence thread")
         self._stop_event.set()

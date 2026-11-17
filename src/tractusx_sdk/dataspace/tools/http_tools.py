@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -27,12 +28,69 @@
 ## Source: https://github.com/eclipse-tractusx/digital-product-pass/blob/main/dpp-verification/simple-wallet/utilities/httpUtils.py
 ## Extended here for fastapi
 
+import functools
+import logging
+import time
+import urllib.parse
+from io import BytesIO
+
 import requests
 from fastapi.responses import JSONResponse, Response
-from io import BytesIO
-import urllib.parse
+
+from tractusx_sdk._logging_fields import log_extra
+from tractusx_sdk._logging_helpers import log_http_failure, log_http_outcome, log_http_request
 
 from .tracing import traced_http
+
+logger = logging.getLogger(__name__)
+
+
+def _resolve_session(session):
+    """Returns the given session, or a one-off one when the caller did not provide it."""
+    if session is None:
+        logger.debug("No session provided, using a new requests.Session for this request")
+        return requests.Session()
+    return session
+
+
+def _request_url(args: tuple, kwargs: dict):
+    """The URL an HTTP helper was called with, whether it is given by position or by name (not yet sanitised)."""
+    if "url" in kwargs:
+        return kwargs["url"]
+    return args[0] if args else None
+
+
+def _logged_http(method: str):
+    """
+    Logs the request line (method and URL, without query string) and the outcome of an HTTP helper.
+
+    Headers, parameters and bodies are never logged. A response is logged at DEBUG, or at
+    WARNING when the server failed (5xx): client errors (4xx) are an expected outcome for
+    many callers, which are the ones that decide whether they matter. An exception raised
+    by the call is logged at DEBUG by its type only, and re-raised unchanged: its message and
+    traceback quote the full URL, query string included.
+
+    :param method: The HTTP method performed by the decorated function
+    """
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            log_http_request(logger, method, _request_url(args, kwargs))
+
+            started = time.perf_counter()
+            try:
+                response = func(*args, **kwargs)
+            except Exception as error:
+                log_http_failure(logger, method, _request_url(args, kwargs), error, started)
+                raise
+
+            log_http_outcome(logger, method, _request_url(args, kwargs), response, started)
+            return response
+
+        return wrapper
+
+    return decorator
 
 
 class HttpTools:
@@ -48,6 +106,7 @@ class HttpTools:
     # do get request without session
     @staticmethod
     @traced_http("GET")
+    @_logged_http("GET")
     def do_get(url,verify=True,headers=None,timeout=None,params=None,allow_redirects=False):
         return requests.get(url=url,verify=verify,
                             timeout=timeout,headers=headers,
@@ -56,9 +115,9 @@ class HttpTools:
     # do get request with session
     @staticmethod
     @traced_http("GET")
+    @_logged_http("GET")
     def do_get_with_session(url,session=None,verify=True,headers=None,timeout=None, params=None,allow_redirects=False):
-        if session is None:
-            session = requests.Session()
+        session = _resolve_session(session)
         return session.get(url=url,verify=verify,
                            timeout=timeout,headers=headers,
                            params=params,allow_redirects=allow_redirects)
@@ -66,6 +125,7 @@ class HttpTools:
     # do post request without session
     @staticmethod
     @traced_http("POST")
+    @_logged_http("POST")
     def do_post(url,data=None,verify=True,headers=None,timeout=None,json=None,allow_redirects=False):
         return requests.post(url=url,verify=verify,
                              timeout=timeout,headers=headers,
@@ -75,9 +135,9 @@ class HttpTools:
     # do post request with session
     @staticmethod
     @traced_http("POST")
+    @_logged_http("POST")
     def do_post_with_session(url,session=None,data=None,verify=True,headers=None,timeout=None,json=None,allow_redirects=False):
-        if session is None:
-            session = requests.Session()
+        session = _resolve_session(session)
         return session.post(url=url,verify=verify,
                             timeout=timeout,headers=headers,
                             data=data,json=json,
@@ -86,6 +146,7 @@ class HttpTools:
     # do put request without session
     @staticmethod
     @traced_http("PUT")
+    @_logged_http("PUT")
     def do_put(url, data=None, verify=True, headers=None, timeout=None, json=None, allow_redirects=False):
         return requests.put(url=url, verify=verify,
                             timeout=timeout, headers=headers,
@@ -95,9 +156,9 @@ class HttpTools:
     # do put request with session
     @staticmethod
     @traced_http("PUT")
+    @_logged_http("PUT")
     def do_put_with_session(url, session=None, data=None, verify=True, headers=None, timeout=None, json=None, allow_redirects=False):
-        if session is None:
-            session = requests.Session()
+        session = _resolve_session(session)
         return session.put(url=url, verify=verify,
                            timeout=timeout, headers=headers,
                            data=data, json=json,
@@ -106,6 +167,7 @@ class HttpTools:
     # do delete request without session
     @staticmethod
     @traced_http("DELETE")
+    @_logged_http("DELETE")
     def do_delete(url, verify=True, headers=None, timeout=None, params=None, allow_redirects=False):
         return requests.delete(url=url, verify=verify,
                                timeout=timeout, headers=headers,
@@ -114,9 +176,9 @@ class HttpTools:
     # do delete request with session
     @staticmethod
     @traced_http("DELETE")
+    @_logged_http("DELETE")
     def do_delete_with_session(url, session=None, verify=True, headers=None, timeout=None, params=None, allow_redirects=False):
-        if session is None:
-            session = requests.Session()
+        session = _resolve_session(session)
         return session.delete(url=url, verify=verify,
                               timeout=timeout, headers=headers,
                               params=params, allow_redirects=allow_redirects)
@@ -157,6 +219,8 @@ class HttpTools:
     
     @staticmethod
     def proxy(response: requests.Response) -> Response:
+        if 'content-type' not in response.headers:
+            logger.debug("The proxied response has no content-type, defaulting to application/json")
         return Response(
             content=response.content,
             status_code=response.status_code,
@@ -173,6 +237,7 @@ class HttpTools:
     # Generates a error response with message
     @staticmethod
     def get_error_response(status=500,message="It was not possible to process/execute this request!"):
+        logger.debug("Building an error response with status %s", status, extra=log_extra(status_code=status))
         return HttpTools.json_response({
             "message": message,
             "status": status 
@@ -184,6 +249,7 @@ class HttpTools:
     
     @staticmethod
     def get_not_authorized():
+        logger.debug("Building a not authorized (401) response", extra=log_extra(status_code=401))
         return HttpTools.json_response({
             "message": "Not Authorized",
             "status": 401

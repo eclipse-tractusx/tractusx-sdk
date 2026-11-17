@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,10 +21,18 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+import logging
+import time
+
 import requests
+
+from tractusx_sdk._logging_fields import log_extra, safe_url
+from tractusx_sdk._logging_helpers import log_http_failure, log_http_outcome, log_http_request
 
 from ..tools import HttpTools
 from ..tools.tracing import TraceableMixin, Tracer, trace_call
+
+logger = logging.getLogger(__name__)
 
 
 class Adapter(TraceableMixin):
@@ -55,6 +64,13 @@ class Adapter(TraceableMixin):
 
         if headers:
             self.session.headers.update(headers)
+
+        # Only the number of default headers is logged: their values may be credentials
+        logger.debug(
+            "Adapter %s created for %s with %d default header(s)",
+            type(self).__name__, safe_url(base_url), len(headers or {}),
+            extra=log_extra(url=base_url, adapter_type=type(self).__name__),
+        )
 
         self._init_tracing(tracer=tracer)
 
@@ -116,6 +132,7 @@ class Adapter(TraceableMixin):
         Close the requests session
         """
 
+        logger.debug("Closing the session of adapter %s", type(self).__name__)
         self.session.close()
 
     def get(self, url: str, **kwargs):
@@ -178,24 +195,36 @@ class Adapter(TraceableMixin):
         """
 
         url = HttpTools.concat_into_url(self.base_url, path)
+        http_method = str(method).upper()
 
         body = kwargs.get("json")
         if body is None:
             body = kwargs.get("data")
 
-        with trace_call(
-                method=method,
-                url=url,
-                tracer=self._tracer,
-                headers=kwargs.get("headers", self.session.headers),
-                params=kwargs.get("params"),
-                body=body
-        ) as call:
-            response = self.session.request(
-                method=method,
-                url=url,
-                **kwargs
-            )
-            call.set_response(response)
+        # Headers, parameters and bodies are never logged: they carry credentials and business data
+        adapter_type = type(self).__name__
+        log_http_request(logger, http_method, url, adapter_type=adapter_type)
+        started = time.perf_counter()
+
+        try:
+            with trace_call(
+                    method=method,
+                    url=url,
+                    tracer=self._tracer,
+                    headers=kwargs.get("headers", self.session.headers),
+                    params=kwargs.get("params"),
+                    body=body
+            ) as call:
+                response = self.session.request(
+                    method=method,
+                    url=url,
+                    **kwargs
+                )
+                call.set_response(response)
+        except Exception as error:
+            log_http_failure(logger, http_method, url, error, started, adapter_type=adapter_type)
+            raise
+
+        log_http_outcome(logger, http_method, url, response, started, adapter_type=adapter_type)
 
         return response

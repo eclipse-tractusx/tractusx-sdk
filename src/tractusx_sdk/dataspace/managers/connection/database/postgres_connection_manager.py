@@ -23,6 +23,7 @@
 ## Code created partially using a LLM (GPT 4o) and reviewed by a human committer
 
 from sqlmodel import Session, select
+from tractusx_sdk._logging_fields import log_extra, safe_url
 from tractusx_sdk.exceptions import ConnectionManagerError
 from ..base_connection_manager import BaseConnectionManager
 from ....models.connection.database.edr_base import EDRBase
@@ -56,6 +57,7 @@ class PostgresConnectionManager(BaseConnectionManager):
         self.EDRConnection = DynamicEDRConnection
         # Ensure the database table exists based on the dynamic class definition
         DynamicEDRConnection.metadata.create_all(engine)
+        logger.debug("[Postgres Connection Manager] The EDR table '%s' is ready", table_name)
 
     def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry: dict) -> str | None:
         """
@@ -74,6 +76,9 @@ class PostgresConnectionManager(BaseConnectionManager):
         # Extract transfer process ID from the EDR entry and validate it exists
         transfer_process_id: str = connection_entry.get(JSONLDKeys.AT_ID, None)
         if not transfer_process_id:
+            logger.error(
+                "[Postgres Connection Manager] The EDR entry for %s has no transfer id, it cannot be stored",
+                counter_party_id, extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address))
             raise ConnectionManagerError("[Postgres Connection Manager] The transfer id key was not found or is empty! Not able to do the contract negotiation!")
 
         # Remove metadata fields that are not needed for storage
@@ -97,7 +102,13 @@ class PostgresConnectionManager(BaseConnectionManager):
             if not session.get(self.EDRConnection, transfer_process_id):
                 session.add(new_entry)
                 session.commit()
-                logger.debug("[Postgres Connection Manager] A new EDR entry was saved in the database.")
+                logger.debug("[Postgres Connection Manager] A new EDR entry was saved in the database.",
+                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                             transfer_id=transfer_process_id))
+            else:
+                logger.debug("[Postgres Connection Manager] The EDR entry is already stored, nothing to add.",
+                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                             transfer_id=transfer_process_id))
         return transfer_process_id
 
     def get_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
@@ -123,6 +134,13 @@ class PostgresConnectionManager(BaseConnectionManager):
         # Execute the query and return the stored EDR data if found, otherwise return an empty dict
         with Session(self.engine) as session:
             result = session.exec(stmt).first()
+        if result:
+            logger.debug("[Postgres Connection Manager] Found the EDR of %s at %s", counter_party_id, safe_url(counter_party_address),
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                         transfer_id=result.transfer_id))
+        else:
+            logger.debug("[Postgres Connection Manager] No EDR stored for %s at %s", counter_party_id, safe_url(counter_party_address),
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address))
         return result.edr_data if result else {}
 
     def get_connection_transfer_id(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
@@ -148,6 +166,10 @@ class PostgresConnectionManager(BaseConnectionManager):
         # Execute the query and return the transfer process ID if found, otherwise None
         with Session(self.engine) as session:
             result = session.exec(stmt).first()
+        if not result:
+            logger.debug("[Postgres Connection Manager] No transfer id stored for %s at %s", counter_party_id,
+                         safe_url(counter_party_address),
+                         extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address))
         return result if result else None
 
     def delete_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str) -> bool:
@@ -175,10 +197,14 @@ class PostgresConnectionManager(BaseConnectionManager):
         with Session(self.engine) as session:
             result = session.exec(stmt).first()
             if result:
+                deleted_transfer_id = result.transfer_id
                 session.delete(result)
                 session.commit()
-                logger.debug("[Postgres Connection Manager] Deleted EDR entry for policy checksum '%s'.", policy_checksum)
+                logger.debug("[Postgres Connection Manager] Deleted EDR entry for policy checksum '%s'.", policy_checksum,
+                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
+                                             transfer_id=deleted_transfer_id))
                 return True
             else:
-                logger.debug("[Postgres Connection Manager] No EDR found to delete for the provided keys.")
+                logger.debug("[Postgres Connection Manager] No EDR found to delete for the provided keys.",
+                             extra=log_extra(counter_party_id=counter_party_id, counter_party_address=counter_party_address))
                 return False

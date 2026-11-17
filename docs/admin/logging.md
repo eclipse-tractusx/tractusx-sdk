@@ -29,6 +29,7 @@ The SDK follows the conventions of a Python library:
 - The SDK **never prints** and **never configures logging**. A `NullHandler` is attached to the `tractusx_sdk` logger, so importing and using the SDK produces no output until *your application* sets logging up.
 - There are no `verbose`, `debug` or `logger` arguments. The logging level you choose decides what you see, exactly as for any other library.
 - Messages are formatted lazily (`%s` arguments), so a message below the active level costs nothing.
+- A failure is logged by the **type** of its exception (`... failed (ConnectError)`), never by its message or its traceback, because those quote the full URL and may echo what the remote service received. The exception itself is still raised, with its evidence: see [Errors are exceptions, not log lines](#errors-are-exceptions-not-log-lines).
 
 ## Quick start
 
@@ -56,23 +57,114 @@ logging.getLogger("tractusx_sdk.dataspace.tools.dsp_tools").setLevel(logging.WAR
 
 | Level | What the SDK reports there | Examples |
 |-------|---------------------------|----------|
-| `DEBUG` | Diagnostic detail, **including request payloads** | `[CATALOG REQUEST]`, `[NEGOTIATION REQUEST]`, `[ASSET REQUEST]` bodies; cache hits and misses; why a policy did not match; the raw discovery response |
-| `INFO` | Lifecycle events you would want in an operations log | Asset, contract or policy created; negotiation and transfer state changes; "starting a new contract negotiation"; discovery cache updated |
-| `WARNING` | Something was recovered from, or is risky | A catalog could not be fetched from one of several connectors; a discovery refresh failed and the cached URL is used; `policies=None` (accept any policy) |
-| `ERROR` | A call failed (an exception is raised or returned as well) | Failed to create an asset; failed to send a notification; a database save or load failed |
+| `DEBUG` | Diagnostic detail: every HTTP request line and its outcome, state transitions and polling progress, cache hits and misses, the default or fallback used in place of a missing value, the **catalog and negotiation request bodies**, and the detail of every failure that is also raised or reported further up | `HTTP GET https://.../shell-descriptors -> 200 in 41 ms`; `HTTP POST https://.../catalog failed after 12 ms (ConnectError)`; `Polling the state of negotiation [...], attempt 10`; `Local cache miss`; why a policy did not match; a request rejected by an authentication manager; a base64 string that could not be decoded; a notification that could not be sent to one of several providers |
+| `INFO` | Lifecycle events you would want in an operations log | Asset, contract, policy created; negotiation started; negotiation and transfer state changes; DSP exchange completed; a notification sent to `n` of `m` providers; shell and submodel descriptors created, updated or deleted; adapters registered; services created |
+| `WARNING` | Something was recovered from, or is risky | A server failure (5xx); a catalog could not be fetched from one of several connectors; a discovery refresh failed and the cached URL is used; `policies=None` (accept any policy); a negotiation that cannot start (the call returns `None`); a state poll that keeps failing; a provider skipped for lacking its `bpn` or `dsp_url`; **TLS verification is off** (see [TLS verification](#tls-verification)) |
+| `ERROR` | A call failed and the SDK reports it here, or the SDK was configured or called wrongly | The failure of `negotiate_and_transfer`, of one of the parallel catalog requests, of a store or an identity provider; an unsupported dataspace version, an unsupported adapter type, a missing bucket name, a connector that was not given to a notification service |
+
+Three rules keep the levels honest:
+
+- **An expected outcome is never above `DEBUG`.** A `404` (for example when checking whether a submodel exists before creating it), a BPN that has no connector registered yet, an object missing from a store, a request rejected by an authentication manager or an undecodable input are normal answers, not alerts. The call returns or raises as it always did, and the caller decides whether it matters.
+- **A failure is one `ERROR`, not one per layer.** The inner layers of a call (the HTTP request, the controller, the state machine) log what they saw at `DEBUG` and let the exception travel. It is logged at `ERROR` once, where the SDK reports it: the outermost operation (for example `negotiate_and_transfer`), the wrapper of a thread whose failure would otherwise be lost, or the place where a wrong configuration or argument is detected. A failed negotiation is therefore one `ERROR` line, however deep in the SDK it failed, and an error that the caller handles does not page anyone. A failure that is kept in a result (one provider out of several) is `DEBUG` too, and the run is summarised at `INFO`.
+- **A polling loop does not log every iteration.** The first attempt and then one in ten are logged (`attempt 1`, `attempt 10`, `attempt 20`...), so a negotiation that polls once per second for a minute produces a handful of lines, not sixty. A *change* of state is always logged. A state poll that fails is a `WARNING` once in a while and `DEBUG` otherwise.
+
+### TLS verification
+
+The dataplane requests of the connector consumer (`do_get`, `do_post`, `do_put` and their `_by_asset_id` / `_by_dct_type` variants) do not verify the TLS certificate of the dataplane unless the caller says so. When a call gives no `verify`, the SDK logs this `WARNING`, **once per process**:
+
+```text
+[Connector Service] No 'verify' given: the TLS certificate of the dataplane is NOT verified by default. Pass verify=True (or the path of a CA bundle) to verify it. This is logged once per process
+```
+
+Pass `verify=True` (or the path of a CA bundle) to the call to verify the certificate, and the warning does not appear.
 
 ## Logger names
 
 | Logger | Covers |
 |--------|--------|
 | `tractusx_sdk` | The whole SDK |
-| `tractusx_sdk.dataspace.services.connector` | Connector consumer and provider services |
+| `tractusx_sdk.dataspace.tools.http_tools`, `tractusx_sdk.dataspace.adapters.adapter` | Every HTTP request of the SDK (request line and outcome) |
+| `tractusx_sdk.dataspace.services.connector` | Connector consumer and provider services, the DSP state machine |
 | `tractusx_sdk.dataspace.services.discovery`, `tractusx_sdk.industry.services.discovery` | Discovery finder, connector discovery, BPN discovery |
 | `tractusx_sdk.dataspace.managers.connection` | The EDR connection managers (memory, file system, Postgres) |
-| `tractusx_sdk.dataspace.tools` | Policy matching (`dsp_tools`), submodel validation, tracing |
+| `tractusx_sdk.dataspace.managers.oauth2_manager`, `...auth_manager` | Authentication (see [What is never logged](#what-is-never-logged)) |
+| `tractusx_sdk.dataspace.tools` | Policy matching (`dsp_tools`), submodel validation, tracing, cache, file and encoding helpers |
+| `tractusx_sdk.industry.services.aas_service` | The Digital Twin Registry service |
 | `tractusx_sdk.industry.services.notifications` | Notification services (`tractusx_sdk.extensions.notification_api` for the extension copy) |
-| `tractusx_sdk.industry.adapters` | Submodel adapters |
+| `tractusx_sdk.industry.adapters` | Submodel adapters (S3, file system, HTTP) and their factory |
 | `tractusx_sdk.extensions.semantics` | The SAMM to JSON-LD translator |
+| `tractusx_sdk.extensions.geometry` | The geometry validator |
+
+## Structured context (`extra`)
+
+Beyond the message, a record carries named fields, so a structured handler can filter and group on them (`transfer_id == "..."`) without parsing text. The message still states the key facts, so a plain-text handler loses nothing.
+
+The fields come from one fixed list. The SDK builds them through a single helper that accepts only these names, so a record never carries a field outside the table:
+
+| Field | Meaning |
+|-------|---------|
+| `asset_id` | An asset (connector asset, notification asset, dataset) |
+| `policy_id` | A policy (`@id` of an offer, or the id of a policy being created) |
+| `negotiation_id`, `agreement_id`, `transfer_id`, `edr_id` | The identifiers of the DSP exchange |
+| `bpn` | A Business Partner Number |
+| `counter_party_id`, `counter_party_address` | The counter party of an exchange and its DSP address |
+| `aas_id`, `submodel_id` | A shell and a submodel of the Digital Twin Registry |
+| `message_id` | A notification |
+| `dataspace_version` | `jupiter` or `saturn` |
+| `http_method`, `url`, `status_code`, `elapsed_ms` | An HTTP request and its outcome |
+| `adapter_type`, `model`, `schema_urn`, `operation` | The component or the model involved, the semantic id of a schema, and the operation (`consumer.get_transfer_id`, `aas.create_submodel_descriptor`...) |
+
+A field that does not apply to a record is left out, and the names do not collide with the attributes Python reserves on a log record (`name`, `module`, `message`...).
+
+The `operation` is `<area>.<step>` and comes from a fixed list (`LogOperations`, private to the SDK), so you can filter on it without fearing a variant spelling: `operation == "consumer.get_catalog"`.
+
+The values of the fields are safe to write to a log file: the URL fields go through `safe_url`, and the control characters (line breaks, escape sequences) of every value are escaped, so a value that comes from a remote party, such as the id of an asset, cannot forge a line of your log. In the same way, the free text a remote party sends is logged with `%r`, quoted and escaped.
+
+To see the fields, use a handler that renders them. This one writes JSON lines, which any log platform can index:
+
+```python
+import json
+import logging
+
+# The fields of the SDK (see the table above)
+SDK_FIELDS = (
+    "asset_id", "policy_id", "negotiation_id", "agreement_id", "transfer_id", "edr_id", "bpn",
+    "counter_party_id", "counter_party_address", "aas_id", "submodel_id", "message_id", "dataspace_version",
+    "http_method", "url", "status_code", "elapsed_ms", "adapter_type", "model", "schema_urn", "operation",
+)
+
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        entry = {"time": self.formatTime(record), "level": record.levelname, "logger": record.name, "message": record.getMessage()}
+        entry.update({field: getattr(record, field) for field in SDK_FIELDS if hasattr(record, field)})
+        if record.exc_info:
+            entry["exception"] = self.formatException(record.exc_info)
+        return json.dumps(entry)
+
+
+handler = logging.StreamHandler()
+handler.setFormatter(JsonFormatter())
+logging.getLogger("tractusx_sdk").addHandler(handler)
+```
+
+```json
+{"level": "INFO", "logger": "tractusx_sdk.dataspace.services.connector.base_connector_consumer", "message": "Contract negotiation [a1] started for asset [urn:uuid:...] with [BPNL000000000001]", "negotiation_id": "a1", "asset_id": "urn:uuid:...", "policy_id": "p1", "counter_party_id": "BPNL000000000001", "counter_party_address": "https://provider.example.com/dsp", "operation": "consumer.start_edr_negotiation"}
+```
+
+## What is never logged
+
+The SDK handles credentials and business data, and its logs are built so they cannot leak either. These guarantees hold for the library at **every** level, `DEBUG` included, and tests enforce them. The one exception is the Connector TCK command line runner, an application that prints what the connector under test answered: see [Command line tools](#command-line-tools).
+
+- **No credentials.** Request and response headers, API keys, access tokens, client secrets, the EDR `authorization` value, S3 access keys and the key the SDK itself is configured with are never logged. The `Authorization` header of a request is never part of a record. Where a service is configured with credentials (the OAuth2 manager, the API key manager, the S3 and HTTP submodel adapters, the adapter factory) the log says *what kind* of credential is used (`credentials from the environment or the IAM role`, `auth: bearer`), never its value, and the factory logs the *names* of the settings it receives, not their values.
+- **URLs are stripped.** Every URL is logged through `safe_url`: only the scheme, host, port and path are kept. The user information (`user:password@`), the query string, the fragment and path parameters (`;jsessionid=...`) are removed, because any of them can carry a token or a session id. `https://user:pw@host/api?token=abc` is logged as `https://host/api`.
+- **No payloads of stored or validated data.** The content of a submodel read from or written to S3, a file or an HTTP service is never logged, only its size. A validation reports *where* a document violates a schema (`path` and rule), never the offending value. The data address of an asset (which holds the headers and OAuth2 settings of your backend) is never logged: asset creation logs a one-line summary.
+- **No response bodies.** The library never logs the body of a response, whatever its status code: the status code is logged. When you need the body of an error, read `error.response_body` from the exception the call raises. (The TCK runner is the exception, see [Command line tools](#command-line-tools).)
+- **No exception text where it could echo a secret.** The identity provider, the object store, the connectors, the submodel services, the EDR databases and the Digital Twin Registry service may repeat details of the request or of the data in their errors: `requests` and `httpx` quote the URL with its query string, a failed SQL statement quotes its parameters (the EDRs, with their access tokens), and a model validation error quotes the values of the response. The SDK logs the *type* of the exception (`ConnectError`, `DBAPIError`) or the store's error code (`AccessDenied`), never its message nor its traceback. A test enforces it by default: a module may log a traceback only when it is on a short allow-list, whose reason is that what it catches holds nothing sensitive (for example the import errors of the factories).
+- **No forged lines.** A value that comes from a remote party cannot break out of its log line: its control characters are escaped.
+- **Cache keys** are not logged, because callers are free to build them from sensitive data.
+
+What can still appear at `DEBUG`, as described in [Production guidance](#production-guidance): the catalog and negotiation request bodies (policies, filters, BPNs) and the policy comparison details.
 
 ## Configuring with `dictConfig`
 
@@ -110,10 +202,12 @@ logging.config.dictConfig({
 ## Production guidance
 
 !!! danger "`DEBUG` logs request payloads"
-    At `DEBUG` the SDK logs the requests it sends (assets, policies, contract definitions, catalog and negotiation requests) and the body of a failed catalog response. These can contain business data, BPNs and policy details. Do not enable `DEBUG` for `tractusx_sdk` in production, or route it to a restricted log. Also note that the notification services log the body of a failed notification response at `ERROR`, so it is in your logs at the default levels.
+    At `DEBUG` the SDK logs the catalog and negotiation requests it sends (with their policies, filters and BPNs) and the details of why a policy did not match. These can contain business data. Do not enable `DEBUG` for `tractusx_sdk` in production, or route it to a restricted log. Response bodies, credentials, headers and the data of your submodels are not part of this, at any level: see [What is never logged](#what-is-never-logged).
 
-- Run the SDK at `INFO` or `WARNING` in production. Raise one logger to `DEBUG` temporarily to investigate a problem, rather than the whole SDK.
-- The SDK does not log request headers, API keys or access tokens.
+- Run the SDK at `INFO` or `WARNING` in production. Raise one logger to `DEBUG` temporarily to investigate a problem, rather than the whole SDK. To follow only the HTTP traffic, raise `tractusx_sdk.dataspace.tools.http_tools` and `tractusx_sdk.dataspace.adapters.adapter`.
+- The SDK does not log request headers, API keys or access tokens, at any level.
+- Alert on `ERROR`: it is one line per failed operation, not one per layer. A `WARNING` about TLS verification means the application never passed `verify` to a dataplane request: pass `verify=True` (or the path of a CA bundle).
+- Index the [structured fields](#structured-context-extra) rather than parsing messages: `transfer_id`, `negotiation_id` and `bpn` follow an exchange across the logs of a service.
 - To record the exact HTTP exchange of a call, with sensitive headers masked, use [Request Tracing](../core-concepts/sdk-architecture/request-tracing.md). It is separate from logging and is switched on with the `trace` flag.
 
 ## Errors are exceptions, not log lines
@@ -241,7 +335,7 @@ The arguments were removed in 0.9.0. Passing them raises a `TypeError`.
 | Before | Now |
 |--------|-----|
 | `verbose=True` | `logging.getLogger("tractusx_sdk").setLevel(logging.INFO)` |
-| `debug=True` (log request payloads) | `logging.getLogger("tractusx_sdk").setLevel(logging.DEBUG)` |
+| `debug=True` (detailed diagnostics; request and response payloads are never logged) | `logging.getLogger("tractusx_sdk").setLevel(logging.DEBUG)` |
 | `verbose=False` | Leave logging unconfigured, or `setLevel(logging.WARNING)` |
 | `logger=my_logger` | Configure handlers on the `tractusx_sdk` logger or on the root logger |
 | `Service.builder().verbose(True).logger(log)` | Remove both calls |
@@ -250,6 +344,8 @@ The arguments were removed in 0.9.0. Passing them raises a `TypeError`.
 ## Command line tools
 
 The Connector TCK and the geometry validator are applications, so they configure the logging of their own process. See the [TCK API Reference](../tck/connector/api-reference.md) (`--no-debug` switches `DEBUG` off).
+
+The guarantees of [What is never logged](#what-is-never-logged) are those of the library. The TCK runner is a test tool: it prints the answers of the connector it tests, response bodies included, so keep its output out of shared log platforms.
 
 ## NOTICE
 

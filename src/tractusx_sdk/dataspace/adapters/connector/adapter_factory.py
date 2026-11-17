@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,11 +21,16 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+import logging
 from enum import Enum
 from importlib import import_module
 from os import listdir, path
 
+from tractusx_sdk._logging_fields import log_extra, safe_url
+
 from ...tools.tracing import Tracer
+
+logger = logging.getLogger(__name__)
 
 
 class AdapterType(Enum):
@@ -69,6 +75,11 @@ class AdapterFactory:
 
         # Check if the requested version is supported for the given adapter type
         if dataspace_version not in AdapterFactory.SUPPORTED_VERSIONS:
+            logger.error(
+                "Unsupported dataspace version %s for the %s adapter, supported versions: %s",
+                dataspace_version, adapter_type.value, AdapterFactory.SUPPORTED_VERSIONS,
+                extra=log_extra(dataspace_version=dataspace_version, adapter_type=adapter_type.value),
+            )
             raise ValueError(f"Unsupported version {dataspace_version}")
 
         # Compute the adapter module path dynamically, depending on the connector version
@@ -82,12 +93,24 @@ class AdapterFactory:
             # Dynamically import the adapter class
             module = import_module(module_name)
             adapter_class = getattr(module, adapter_class_name)
+            logger.debug(
+                "Resolved %s from %s", adapter_class_name, module_name,
+                extra=log_extra(dataspace_version=dataspace_version, adapter_type=adapter_type.value),
+            )
             return adapter_class.builder()
         except AttributeError as attr_exception:
+            logger.exception(
+                "The adapter class %s was not found in %s", adapter_class_name, module_name,
+                extra=log_extra(dataspace_version=dataspace_version, adapter_type=adapter_type.value),
+            )
             raise AttributeError(
                 f"Failed to import adapter class {adapter_class_name} for module {module_name}"
             ) from attr_exception
         except (ModuleNotFoundError, ImportError) as import_exception:
+            logger.exception(
+                "The adapter module %s could not be imported", module_name,
+                extra=log_extra(dataspace_version=dataspace_version, adapter_type=adapter_type.value),
+            )
             raise ImportError(
                 f"Failed to import module {module_name}. Ensure that the required packages are installed and the PYTHONPATH is set correctly."
             ) from import_exception
@@ -113,6 +136,11 @@ class AdapterFactory:
         :return: An instance of the specified Adapter subclass
         """
 
+        logger.debug(
+            "Creating a DMA adapter for dataspace version %s at %s with DMA path %s",
+            dataspace_version, safe_url(base_url), dma_path,
+            extra=log_extra(dataspace_version=dataspace_version, url=base_url, adapter_type=AdapterType.DMA_ADAPTER.value),
+        )
         builder = AdapterFactory._get_adapter_builder(
             adapter_type=AdapterType.DMA_ADAPTER,
             dataspace_version=dataspace_version,
@@ -146,6 +174,11 @@ class AdapterFactory:
         :return: An instance of the specified Adapter subclass
         """
 
+        logger.debug(
+            "Creating a dataplane adapter for dataspace version %s at %s",
+            dataspace_version, safe_url(base_url),
+            extra=log_extra(dataspace_version=dataspace_version, url=base_url, adapter_type=AdapterType.DATAPLANE_ADAPTER.value),
+        )
         builder = AdapterFactory._get_adapter_builder(
             adapter_type=AdapterType.DATAPLANE_ADAPTER,
             dataspace_version=dataspace_version,
