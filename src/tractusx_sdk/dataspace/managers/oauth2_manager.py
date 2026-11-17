@@ -1,9 +1,9 @@
 #################################################################################
 # Tractus-X - Industry Flag Service
 #
-# Copyright (c) 2025 LKS NEXT
+# Copyright (c) 2025,2026 LKS NEXT
 # Copyright (c) 2025 CGI Deutschland B.V. & Co. KG
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -41,7 +41,7 @@ class OAuth2Manager(AuthManagerInterface):
     clientid:str
     clientsecret:str
 
-    def __init__(self, auth_url, realm, clientid, clientsecret):
+    def __init__(self, auth_url, realm, clientid, clientsecret) -> None:
 
         ## Connect to the server
         self.connect(auth_url=auth_url, realm=realm, clientid=clientid, clientsecret=clientsecret)

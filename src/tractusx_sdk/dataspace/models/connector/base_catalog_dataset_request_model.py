@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -22,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Union
+from typing import Optional, Self, Union
 from pydantic import Field
 
 from ..model import BaseModel
@@ -42,22 +42,22 @@ class BaseCatalogDatasetRequestModel(BaseModel, ABC):
     })
 
     class _Builder(BaseModel._Builder):
-        def id(self, oid: str):
+        def id(self, oid: str) -> Self:
             self._data["oid"] = oid
             return self
 
-        def context(self, context: dict):
+        def context(self, context: dict) -> Self:
             self._data["context"] = context
             return self
 
-        def counter_party_address(self, counter_party_address: str):
+        def counter_party_address(self, counter_party_address: str) -> Self:
             self._data["counter_party_address"] = counter_party_address
             return self
 
-        def counter_party_id(self, counter_party_id: str):
+        def counter_party_id(self, counter_party_id: str) -> Self:
             self._data["counter_party_id"] = counter_party_id
             return self
 
-        def protocol(self, protocol: str):
+        def protocol(self, protocol: str) -> Self:
             self._data["protocol"] = protocol
             return self

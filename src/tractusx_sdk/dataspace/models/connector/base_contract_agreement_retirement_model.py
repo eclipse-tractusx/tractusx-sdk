@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -22,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Union
+from typing import Optional, Self, Union
 from pydantic import Field
 
 from ..model import BaseModel
@@ -41,14 +41,14 @@ class BaseContractAgreementRetirementModel(BaseModel, ABC):
     })
 
     class _Builder(BaseModel._Builder):
-        def context(self, context: dict):
+        def context(self, context: dict) -> Self:
             self._data["context"] = context
             return self
 
-        def agreement_id(self, agreement_id: str):
+        def agreement_id(self, agreement_id: str) -> Self:
             self._data["agreement_id"] = agreement_id
             return self
 
-        def reason(self, reason: str):
+        def reason(self, reason: str) -> Self:
             self._data["reason"] = reason
             return self

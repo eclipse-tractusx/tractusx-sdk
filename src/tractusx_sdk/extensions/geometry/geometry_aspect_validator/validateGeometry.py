@@ -189,7 +189,7 @@ class GeometryValidator:
             self.schema_validator.add_error(f'Error loading {file_path}: {e}')
             return None
     
-    def build_catenax_id_map(self, directory: Path):
+    def build_catenax_id_map(self, directory: Path) -> None:
         if not directory.exists() or not directory.is_dir():
             self.schema_validator.add_warning(f'Cannot build map: invalid directory {directory}')
             return
@@ -213,7 +213,7 @@ class GeometryValidator:
                     referenced_ids.append(child['catenaXId'])
         return referenced_ids
     
-    def validate_file(self, file_path: Path, depth: int = 0):
+    def validate_file(self, file_path: Path, depth: int = 0) -> None:
         file_key = str(file_path)
         if file_key in self.validated_files:
             return

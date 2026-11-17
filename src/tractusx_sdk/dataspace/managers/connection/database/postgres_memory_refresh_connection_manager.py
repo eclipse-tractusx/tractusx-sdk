@@ -58,7 +58,7 @@ class PostgresMemoryRefreshConnectionManager(PostgresMemoryConnectionManager):
         logger.debug("[PostgresMemoryRefreshConnectionManager] Starting the background persistence every %s seconds.", self.persist_interval)
         threading.Thread(target=self._persistence_loop, daemon=True).start()
 
-    def _persistence_loop(self):
+    def _persistence_loop(self) -> None:
         """
         Periodically save current in-memory connections to DB and reload any changes.
         """
@@ -67,7 +67,7 @@ class PostgresMemoryRefreshConnectionManager(PostgresMemoryConnectionManager):
             self._save_to_db()
             self._load_from_db()
 
-    def stop(self):
+    def stop(self) -> None:
         """
         Stop the background thread and perform a final save to the DB.
         """

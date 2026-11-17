@@ -146,7 +146,7 @@ def submodel_schema_finder(
 
     return SchemaLookupResult(schema=schema, link=schema_link)
 
-def json_validator(schema, json_to_validate, validation_type = 'jsonschema', raise_on_error: bool = True) -> ValidationResult:
+def json_validator(schema, json_to_validate, validation_type: str = 'jsonschema', raise_on_error: bool = True) -> ValidationResult:
     """
     Validates a JSON object against a given schema.
 

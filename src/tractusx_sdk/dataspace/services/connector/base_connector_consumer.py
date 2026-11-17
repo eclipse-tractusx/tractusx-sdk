@@ -23,6 +23,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Self
+
 import hashlib
 import threading
 import logging
@@ -135,11 +137,11 @@ class BaseConnectorConsumerService(BaseService):
         self._init_tracing(trace=trace)
 
     class _Builder(BaseService._Builder):  # NOSONAR - used by ServiceFactory via BaseService._Builder pattern
-        def dma_path(self, dma_path: str):
+        def dma_path(self, dma_path: str) -> Self:
             self._data["dma_path"] = dma_path
             return self
 
-        def connector_manager(self, connection_manager: BaseConnectionManager):
+        def connector_manager(self, connection_manager: BaseConnectionManager) -> Self:
             self._data["connection_manager"] = connection_manager
             return self
 
@@ -447,7 +449,7 @@ class BaseConnectorConsumerService(BaseService):
         return catalogs
 
     def get_catalog_by_dct_type(self, counter_party_id: str, counter_party_address: str, dct_type: str,
-                                dct_type_key=DEFAULT_DCT_TYPE_KEY, operator="=", timeout=None, context=DEFAULT_CONTEXT, **kwargs):
+                                dct_type_key=DEFAULT_DCT_TYPE_KEY, operator: str = "=", timeout=None, context=DEFAULT_CONTEXT, **kwargs):
         return self.get_catalog_with_filter(counter_party_id=counter_party_id,
                                             counter_party_address=counter_party_address, filter_expression=[
                 self.get_filter_expression(key=dct_type_key, value=dct_type, operator=operator)],
@@ -664,7 +666,7 @@ class BaseConnectorConsumerService(BaseService):
         catalogs: dict = {}
         threads: list[threading.Thread] = []
 
-        def fetch_catalog(edc_url):
+        def fetch_catalog(edc_url) -> None:
             try:
                 catalogs[edc_url] = self.get_catalog_with_filter(counter_party_id=bpnl,
                                                                  counter_party_address=edc_url,
@@ -1343,7 +1345,7 @@ class BaseConnectorConsumerService(BaseService):
         dct_type: str,
         policies: Sequence[dict] | None = (),
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
-        operator="="
+        operator: str = "="
     ) -> tuple[str, str]:
         """
         Performs DSP (Dataspace Protocol) exchange filtered by DCT (Dublin Core Terms) type from the DCMI Metadata Terms.
@@ -1392,7 +1394,7 @@ class BaseConnectorConsumerService(BaseService):
         asset_id: str,
         policies: Sequence[dict] | None = (),
         asset_id_key=DEFAULT_ID_KEY,
-        operator="="
+        operator: str = "="
     ) -> tuple[str, str]:
         """
         Performs DSP (Dataspace Protocol) exchange filtered by specific asset ID.
@@ -1441,7 +1443,7 @@ class BaseConnectorConsumerService(BaseService):
         dct_type: str,
         policies: Sequence[dict] | None = (),
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
-        operator="=",
+        operator: str = "=",
         session=None,
         **kwargs,
     ):
@@ -1500,7 +1502,7 @@ class BaseConnectorConsumerService(BaseService):
         asset_id: str,
         policies: Sequence[dict] | None = (),
         asset_id_key=DEFAULT_ID_KEY,
-        operator="=",
+        operator: str = "=",
         session=None,
         **kwargs,
     ):
@@ -1562,7 +1564,7 @@ class BaseConnectorConsumerService(BaseService):
         data=None,
         policies: Sequence[dict] | None = (),
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
-        operator="=",
+        operator: str = "=",
         session=None,
         **kwargs,
     ) -> Response:
@@ -1629,7 +1631,7 @@ class BaseConnectorConsumerService(BaseService):
         data=None,
         policies: Sequence[dict] | None = (),
         asset_id_key=DEFAULT_ID_KEY,
-        operator="=",
+        operator: str = "=",
         session=None,
         **kwargs
     ) -> Response:
@@ -1729,7 +1731,7 @@ class BaseConnectorConsumerService(BaseService):
         return self.get_endpoint_with_token(transfer_id=transfer_id)
 
     def assets_exists(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
-                      timeout=10) -> bool:
+                      timeout: int = 10) -> bool:
 
         try:
             catalog = self.get_catalog_with_filter(counter_party_id=counter_party_id,

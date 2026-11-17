@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Union
+from typing import Optional, Self, Union
 from pydantic import Field
 
 from ..model import BaseModel
@@ -41,22 +42,22 @@ class BaseContractDefinitionModel(BaseModel, ABC):
     assets_selector: Optional[list[dict]] = Field(default_factory=list)
 
     class _Builder(BaseModel._Builder):
-        def id(self, oid: str):
+        def id(self, oid: str) -> Self:
             self._data["oid"] = oid
             return self
 
-        def context(self, context: dict):
+        def context(self, context: dict) -> Self:
             self._data["context"] = context
             return self
 
-        def access_policy_id(self, access_policy_id: str):
+        def access_policy_id(self, access_policy_id: str) -> Self:
             self._data["access_policy_id"] = access_policy_id
             return self
 
-        def contract_policy_id(self, contract_policy_id: str):
+        def contract_policy_id(self, contract_policy_id: str) -> Self:
             self._data["contract_policy_id"] = contract_policy_id
             return self
 
-        def assets_selector(self, assets_selector: list[dict]):
+        def assets_selector(self, assets_selector: list[dict]) -> Self:
             self._data["assets_selector"] = assets_selector
             return self

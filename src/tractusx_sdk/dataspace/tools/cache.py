@@ -88,11 +88,11 @@ class LocalCache(CacheProvider):
         """See CacheProvider.get"""
         return await FastAPICache.get_backend().get(key)
 
-    async def set(self, key: str, value, expire: int | None = None):
+    async def set(self, key: str, value, expire: int | None = None) -> None:
         """See CacheProvider.set"""
         await FastAPICache.get_backend().set(key, value, expire)
 
-    async def delete(self, key: str):
+    async def delete(self, key: str) -> None:
         """
         Delete the cached value for the given key.
 

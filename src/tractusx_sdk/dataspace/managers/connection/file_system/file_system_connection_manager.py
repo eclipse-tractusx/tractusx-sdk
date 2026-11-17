@@ -73,7 +73,7 @@ class FileSystemConnectionManager(MemoryConnectionManager):
         """
         threading.Thread(target=self._persistence_loop, daemon=True).start()
 
-    def _persistence_loop(self):
+    def _persistence_loop(self) -> None:
         """
         Background thread loop to periodically save to and load from the JSON file.
         """
@@ -121,7 +121,7 @@ class FileSystemConnectionManager(MemoryConnectionManager):
         """
         return hashlib.sha256(json.dumps(data, sort_keys=True, default=str).encode()).hexdigest()
 
-    def stop(self):
+    def stop(self) -> None:
         """
         Stop the background persistence thread.
         """

@@ -230,7 +230,7 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
             except SQLAlchemyError:
                 logger.exception("[PostgresMemoryConnectionManager] Error saving to db")
 
-    def stop(self):
+    def stop(self) -> None:
         """
         Stop the background thread and perform a final save to the database.
         """

@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -19,6 +20,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
+
+from typing import Self
 
 from abc import ABC, abstractmethod
 
@@ -84,26 +87,26 @@ class BaseService(TraceableMixin, ABC):
             self.cls = cls
             self._data: dict = {}
 
-        def dataspace_version(self, dataspace_version: str):
+        def dataspace_version(self, dataspace_version: str) -> Self:
             self._data["dataspace_version"] = dataspace_version
             return self
 
-        def base_url(self, base_url: dict):
+        def base_url(self, base_url: dict) -> Self:
             self._data["base_url"] = base_url
             return self
 
-        def headers(self, headers: dict):
+        def headers(self, headers: dict) -> Self:
             self._data["headers"] = headers
             return self
 
-        def trace(self, trace: bool):
+        def trace(self, trace: bool) -> Self:
             """
             Enables the tracing of the requests/responses of this service.
             """
             self._data["trace"] = trace
             return self
 
-        def data(self, data: dict):
+        def data(self, data: dict) -> Self:
             """
             This method is intended to set all the data of the services inheriting this class.
 

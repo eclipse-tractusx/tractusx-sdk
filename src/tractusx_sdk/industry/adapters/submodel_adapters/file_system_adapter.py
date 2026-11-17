@@ -28,7 +28,7 @@ import logging
 import os
 from pathlib import Path
 from tractusx_sdk.dataspace.tools import op
-from typing import Any, List, Mapping
+from typing import Any, List, Mapping, Self
 
 logger = logging.getLogger(__name__)
 
@@ -82,11 +82,11 @@ class FileSystemAdapter(SubmodelAdapter):
             self.cls = cls
             self._data: dict = {}
 
-        def root_path(self, path: str):
+        def root_path(self, path: str) -> Self:
             self._data["root_path"] = path
             return self
 
-        def path_pattern(self, pattern: str):
+        def path_pattern(self, pattern: str) -> Self:
             self._data["path_pattern"] = pattern
             return self
         

@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -19,6 +20,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
+
+from typing import Self
 
 import requests
 
@@ -78,22 +81,22 @@ class Adapter(TraceableMixin):
             self.cls = cls
             self._data: dict = {}
 
-        def base_url(self, base_url: str):
+        def base_url(self, base_url: str) -> Self:
             self._data["base_url"] = base_url
             return self
 
-        def headers(self, headers: dict):
+        def headers(self, headers: dict) -> Self:
             self._data["headers"] = headers
             return self
 
-        def tracer(self, tracer: Tracer):
+        def tracer(self, tracer: Tracer) -> Self:
             """
             Sets the tracer recording the requests/responses of this adapter.
             """
             self._data["tracer"] = tracer
             return self
 
-        def data(self, data: dict):
+        def data(self, data: dict) -> Self:
             """
             This method is intended to set all the data of the adapters inheriting this class.
 
@@ -111,7 +114,7 @@ class Adapter(TraceableMixin):
             """
             return self.cls(**self._data)
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the requests session
         """

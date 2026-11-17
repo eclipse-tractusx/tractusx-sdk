@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -19,6 +20,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
+
+from typing import Self
 
 from abc import abstractmethod, ABC
 from pydantic import BaseModel as PydanticBaseModel
@@ -58,7 +61,7 @@ class BaseModel(PydanticBaseModel, ABC):
             self.cls = cls
             self._data: dict = {}
 
-        def data(self, data: dict):
+        def data(self, data: dict) -> Self:
             """
             This method is intended to set all the data of the model inheriting this class.
 

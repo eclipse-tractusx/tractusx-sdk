@@ -50,17 +50,17 @@ class SchemaValidator:
         self.infos: List[str] = []
     
     # The findings are kept as data (see GeometryValidationReport); the log only echoes them.
-    def add_error(self, message: str):
+    def add_error(self, message: str) -> None:
         """Add an error message"""
         logger.debug("Validation error: %s", message)
         self.errors.append(message)
     
-    def add_warning(self, message: str):
+    def add_warning(self, message: str) -> None:
         """Add a warning message"""
         logger.debug("Validation warning: %s", message)
         self.warnings.append(message)
     
-    def add_info(self, message: str):
+    def add_info(self, message: str) -> None:
         """Add an info message"""
         logger.debug("Validation info: %s", message)
         self.infos.append(message)
@@ -108,7 +108,7 @@ class SchemaValidator:
             self.add_error(f"Failed to parse schema JSON from file: {e}")
             return False
     
-    def _check_field_presence(self, data: Dict[Any, Any], file_name: str):
+    def _check_field_presence(self, data: Dict[Any, Any], file_name: str) -> None:
         """
         Check which fields are present and report on optional fields.
         

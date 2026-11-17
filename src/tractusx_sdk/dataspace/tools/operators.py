@@ -74,7 +74,7 @@ class op:
         return json.dumps(obj=source_object,indent=indent,ensure_ascii=ensure_ascii)
     
     @staticmethod
-    def to_json_file(source_object,json_file_path:str,file_open_mode:str="w",indent:int=2):
+    def to_json_file(source_object,json_file_path:str,file_open_mode:str="w",indent:int=2) -> None:
         """
             Method to write a python object to a JSON file
                 Accepts: obj: Source object in serializable formats
@@ -117,7 +117,7 @@ class op:
         return os.path.exists(file_path)
 
     @ staticmethod
-    def make_dir(dir_name, permits=0o777) -> bool:
+    def make_dir(dir_name, permits: int = 0o777) -> bool:
         """
             Method to create a directory
                 Accepts: dir_name: Name of the directory
@@ -219,7 +219,7 @@ class op:
         return True
     
     @staticmethod
-    def timestamp(zone=timezone.utc, string=False):
+    def timestamp(zone=timezone.utc, string: bool = False):
         """
             Method to get the current timestamp according to the specified zone
                 Accepts: zone: The timezone to get the timestamp from
@@ -369,7 +369,7 @@ class op:
         return os.path.isfile(path=path)
     
     @staticmethod
-    def search_element_by_field(array, id, field="id") -> dict | None:
+    def search_element_by_field(array, id, field: str = "id") -> dict | None:
         """
         Searches for an element in a list of dictionaries by a specific field value.
         Args:
@@ -394,7 +394,7 @@ class op:
         return [x[key] for x in array if key in x]
 
     @staticmethod
-    def get_future_timestamp(minutes=0, zone=timezone.utc) -> float:
+    def get_future_timestamp(minutes: int = 0, zone=timezone.utc) -> float:
         """
         Calculates a future timestamp by adding minutes to the current time.
         Args:

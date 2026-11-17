@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Union
+from typing import Optional, Self, Union
 from pydantic import Field
 
 from .base_queryspec_model import BaseQuerySpecModel
@@ -43,19 +44,19 @@ class BaseCatalogModel(BaseModel, ABC):
     protocol: Optional[str] = Field(default="dataspace-protocol-http")
 
     class _Builder(BaseModel._Builder):
-        def context(self, context: dict):
+        def context(self, context: dict) -> Self:
             self._data["context"] = context
             return self
 
-        def counter_party_address(self, counter_party_address: str):
+        def counter_party_address(self, counter_party_address: str) -> Self:
             self._data["counter_party_address"] = counter_party_address
             return self
 
-        def counter_party_id(self, counter_party_id: str):
+        def counter_party_id(self, counter_party_id: str) -> Self:
             self._data["counter_party_id"] = counter_party_id
             return self
 
-        def additional_scopes(self, additional_scopes: str):
+        def additional_scopes(self, additional_scopes: str) -> Self:
             self._data["additional_scopes"] = additional_scopes
             return self
 
@@ -63,10 +64,10 @@ class BaseCatalogModel(BaseModel, ABC):
             queryspec_data = queryspec.to_data()
             return self.queryspec(queryspec_data)
 
-        def queryspec(self, queryspec: dict | str):
+        def queryspec(self, queryspec: dict | str) -> Self:
             self._data["queryspec"] = queryspec
             return self
 
-        def protocol(self, protocol: str):
+        def protocol(self, protocol: str) -> Self:
             self._data["protocol"] = protocol
             return self

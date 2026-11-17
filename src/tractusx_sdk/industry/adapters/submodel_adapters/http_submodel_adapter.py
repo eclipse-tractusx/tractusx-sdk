@@ -23,7 +23,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Dict, Any, Mapping, Optional
+from typing import Dict, Any, Mapping, Optional, Self
 import logging
 from uuid import UUID
 from urllib.parse import quote
@@ -54,39 +54,39 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
             self.cls = cls
             self._data: dict = {}
 
-        def base_url(self, base_url: str):
+        def base_url(self, base_url: str) -> Self:
             self._data["base_url"] = base_url
             return self
 
-        def api_path(self, api_path: str):
+        def api_path(self, api_path: str) -> Self:
             self._data["api_path"] = api_path
             return self
 
-        def url_pattern(self, url_pattern: str):
+        def url_pattern(self, url_pattern: str) -> Self:
             self._data["url_pattern"] = url_pattern
             return self
 
-        def auth_type(self, auth_type: str):
+        def auth_type(self, auth_type: str) -> Self:
             self._data["auth_type"] = auth_type
             return self
 
-        def auth_token(self, auth_token: Optional[str]):
+        def auth_token(self, auth_token: Optional[str]) -> Self:
             self._data["auth_token"] = auth_token
             return self
 
-        def auth_key_name(self, auth_key_name: Optional[str]):
+        def auth_key_name(self, auth_key_name: Optional[str]) -> Self:
             self._data["auth_key_name"] = auth_key_name
             return self
 
-        def timeout(self, timeout: int):
+        def timeout(self, timeout: int) -> Self:
             self._data["timeout"] = timeout
             return self
 
-        def verify_ssl(self, verify_ssl: bool):
+        def verify_ssl(self, verify_ssl: bool) -> Self:
             self._data["verify_ssl"] = verify_ssl
             return self
 
-        def tracer(self, tracer: Tracer):
+        def tracer(self, tracer: Tracer) -> Self:
             """
             Sets the tracer recording the requests/responses of this adapter.
             """
@@ -361,7 +361,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         except httpx.RequestError as request_error:
             raise ConnectionError(f"Connection error while checking submodel existence: {request_error}") from request_error
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Cleanup HTTP client on adapter destruction."""
         try:
             if hasattr(self, 'client'):

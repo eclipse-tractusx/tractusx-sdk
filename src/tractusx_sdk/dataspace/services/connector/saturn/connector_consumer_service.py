@@ -612,7 +612,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         catalogs: dict = {}
         threads: list[threading.Thread] = []
 
-        def fetch_catalog(counter_party_id, counter_party_address, filter_expression, timeout, catalogs, protocol, context):
+        def fetch_catalog(counter_party_id, counter_party_address, filter_expression, timeout, catalogs, protocol, context) -> None:
             try:
                 catalog_request = self.get_catalog_request_with_filter(
                     counter_party_id=counter_party_id,
@@ -658,7 +658,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return catalogs
 
     def get_catalog_by_dct_type(self, counter_party_id: str, counter_party_address: str, dct_type: str,
-                                dct_type_key=DEFAULT_DCT_TYPE_KEY, operator="=", timeout=None,
+                                dct_type_key=DEFAULT_DCT_TYPE_KEY, operator: str = "=", timeout=None,
                                 context=DEFAULT_CONTEXT, protocol: str = DSP_2025, **kwargs):
         filter_expr = [self.get_filter_expression(key=dct_type_key, value=dct_type, operator=operator)]
         catalog_request = self.get_catalog_request_with_filter(
@@ -671,7 +671,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return self.get_catalog(request=catalog_request, timeout=timeout)
 
     def get_catalog_by_dct_type_with_bpnl(self, bpnl: str, counter_party_address: str, dct_type: str,
-                                          dct_type_key=DEFAULT_DCT_TYPE_KEY, operator="=", timeout=None,
+                                          dct_type_key=DEFAULT_DCT_TYPE_KEY, operator: str = "=", timeout=None,
                                           context=DEFAULT_CONTEXT, namespace: str = EDC_NAMESPACE):
         filter_expr = [self.get_filter_expression(key=dct_type_key, value=dct_type, operator=operator)]
         return self._get_catalog_internal(bpnl=bpnl, counter_party_address=counter_party_address,
@@ -771,7 +771,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         catalogs = {}
         threads = []
 
-        def fetch_catalog(edc_url):
+        def fetch_catalog(edc_url) -> None:
             try:
                 catalogs[edc_url] = self._get_catalog_internal(bpnl=bpnl, counter_party_address=edc_url,
                                                              filter_expression=filter_expression, timeout=timeout,
@@ -1221,7 +1221,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         dct_type: str,
         policies: Sequence[dict] | None = (),
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
-        operator="=",
+        operator: str = "=",
         session=None,
         **kwargs,
     ):
@@ -1277,7 +1277,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         data=None,
         policies: Sequence[dict] | None = (),
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
-        operator="=",
+        operator: str = "=",
         session=None,
         **kwargs,
     ):

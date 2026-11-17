@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -19,6 +20,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
+
+from typing import Self
 
 from requests.structures import CaseInsensitiveDict
 
@@ -70,6 +73,6 @@ class BaseDmaAdapter(Adapter):
         return super().request(method, path, **kwargs)
 
     class _Builder(Adapter._Builder):
-        def dma_path(self, dma_path: str):
+        def dma_path(self, dma_path: str) -> Self:
             self._data["dma_path"] = dma_path
             return self

@@ -173,7 +173,7 @@ def setup_tck_logging(
     return logger, log_file
 
 
-def finalize_log(log_file: str, result: str):
+def finalize_log(log_file: str, result: str) -> None:
     """Flush and close the handlers of :func:`setup_tck_logging`, then rename the log file with PASS or FAIL result."""
     root = logging.getLogger()
     for handler in _tck_handlers[:]:
@@ -190,12 +190,12 @@ def finalize_log(log_file: str, result: str):
     sys.stdout.flush()
 
 
-def print_header(logger: logging.Logger, title: str):
+def print_header(logger: logging.Logger, title: str) -> None:
     """Log section header with 80-char ``=`` border (detailed style)."""
     logger.info("\n%s\n  %s\n%s", "=" * 80, title, "=" * 80)
 
 
-def print_separator(logger: logging.Logger, title: str = ""):
+def print_separator(logger: logging.Logger, title: str = "") -> None:
     """Log separator line with 70-char ``=`` border (simple style)."""
     if title:
         logger.info("\n%s\n  %s\n%s", "=" * 70, title, "=" * 70)
@@ -316,7 +316,7 @@ def upload_sample_data(
     sample_data: dict,
     header_fn: Optional[Callable] = None,
     verify: bool = True,
-):
+) -> None:
     """
     Upload sample aspect model data to backend storage.
 
@@ -452,7 +452,7 @@ def cleanup_provider_resources(
     provider_service,
     provision_ids: dict,
     header_fn: Optional[Callable] = None,
-):
+) -> None:
     """
     Delete all created resources from Provider (in reverse order of creation).
 
@@ -488,7 +488,7 @@ def cleanup_backend_data(
     backend_config: dict,
     header_fn: Optional[Callable] = None,
     verify: bool = False,
-):
+) -> None:
     """
     Delete test data from backend storage.
 
@@ -560,7 +560,7 @@ def run_step(steps: list, name: str, fn: Callable):
         raise
 
 
-def mark_skipped_phases(steps: list, all_phase_names: list):
+def mark_skipped_phases(steps: list, all_phase_names: list) -> None:
     """Mark any phases not yet recorded in *steps* as ``SKIP``."""
     completed = {s["name"] for s in steps}
     for phase in all_phase_names:
@@ -577,7 +577,7 @@ def print_summary(
     provision_ids: Optional[dict] = None,
     consumption_result: Optional[dict] = None,
     http_status: Optional[int] = None,
-):
+) -> None:
     """
     Print a formatted test summary table.
 
@@ -800,7 +800,7 @@ def apply_cli_overrides(
     return p_cfg, c_cfg, b_cfg
 
 
-def enable_debug_logging(logger: logging.Logger):
+def enable_debug_logging(logger: logging.Logger) -> None:
     """
     Lower the TCK output to DEBUG level.
 
@@ -814,7 +814,7 @@ def enable_debug_logging(logger: logging.Logger):
     logger.info("DEBUG logging enabled")
 
 
-def log_config_warning(logger: logging.Logger):
+def log_config_warning(logger: logging.Logger) -> None:
     """Log the standard configuration warning."""
     logger.warning(
         "\n⚠️  IMPORTANT: Update the PLACEHOLDER values before running!\n"

@@ -21,6 +21,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Self
+
 from .base_connector_consumer import BaseConnectorConsumerService
 from .base_connector_provider import BaseConnectorProviderService
 from ..service import BaseService
@@ -73,15 +75,15 @@ class BaseConnectorService(BaseService):
         self._init_tracing(trace=trace)
 
     class _Builder(BaseService._Builder):
-        def dma_path(self, dma_path: str):
+        def dma_path(self, dma_path: str) -> Self:
             self._data["dma_path"] = dma_path
             return self
 
-        def provider_service(self, provider_service: BaseConnectorProviderService):
+        def provider_service(self, provider_service: BaseConnectorProviderService) -> Self:
             self._data["provider_service"] = provider_service
             return self
 
-        def consumer_service(self, consumer_service: BaseConnectorConsumerService):
+        def consumer_service(self, consumer_service: BaseConnectorConsumerService) -> Self:
             self._data["consumer_service"] = consumer_service
             return self
 
