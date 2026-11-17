@@ -27,6 +27,7 @@ from tractusx_sdk.dataspace.controllers.connector.utils.mixins import (
     CreateControllerMixin,
     GetControllerMixin,
     UpdateControllerMixin,
+    UpdateByIdControllerMixin,
     DeleteControllerMixin,
     GetAllControllerMixin,
     GetStateControllerMixin,
@@ -88,6 +89,54 @@ class TestUpdateControllerMixin(TestCase, ControllerPropertiesMixin):
         mixin.update(self.model)
 
         mixin.adapter.request.assert_called_with("put", self.endpoint_url, data={})
+
+
+class TestUpdateByIdControllerMixin(TestCase, ControllerPropertiesMixin):
+    def setUp(self) -> None:
+        generic_controller_setup(self)
+
+        self.model = Mock(BaseModel)
+        self.model.oid = "test-id"
+        self.model.to_data = MagicMock(return_value={})
+
+        class CustomController(UpdateByIdControllerMixin, SampleController):
+            pass
+
+        self.mixin = CustomController(self.adapter)
+        self.mixin.adapter.request = MagicMock()
+
+    def test_mixin_update_puts_to_id(self):
+        self.mixin.update(self.model)
+
+        self.mixin.adapter.request.assert_called_with("put", f"{self.endpoint_url}/test-id", data={})
+
+    def test_mixin_update_encodes_id(self):
+        self.model.oid = "a/b?c#d e"
+
+        self.mixin.update(self.model)
+
+        self.mixin.adapter.request.assert_called_with(
+            "put", f"{self.endpoint_url}/a%2Fb%3Fc%23d%20e", data={}
+        )
+
+    def test_mixin_update_encodes_already_encoded_id_literally(self):
+        self.model.oid = "a%2Fb"
+
+        self.mixin.update(self.model)
+
+        self.mixin.adapter.request.assert_called_with("put", f"{self.endpoint_url}/a%252Fb", data={})
+
+    def test_mixin_update_rejects_missing_id(self):
+        no_oid = Mock(spec=["to_data"])
+        no_oid.to_data = MagicMock(return_value={})
+        with self.assertRaises(ValueError):
+            self.mixin.update(no_oid)
+        for oid in ("", "   ", ".", "..", 1):
+            with self.subTest(oid=oid):
+                self.model.oid = oid
+                with self.assertRaises(ValueError):
+                    self.mixin.update(self.model)
+        self.mixin.adapter.request.assert_not_called()
 
 
 class TestDeleteControllerMixin(TestCase, ControllerPropertiesMixin):

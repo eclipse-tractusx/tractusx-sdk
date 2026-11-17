@@ -68,7 +68,7 @@ Below are the main DTR models grouped by their purpose and relationship within t
 | `GetAllShellDescriptorsResponse`      | Response for querying all shell descriptors                      | `items`, `paging_metadata`                              |
 | `GetSubmodelDescriptorsByAssResponse` | Response for querying submodels by shell ID                      | `result`, `paging_metadata`                             |
 | `PagingMetadata`                      | Metadata for paginated responses                                 | `cursor`                                                |
-| `ServiceDescription`                  | Service description and metadata                                 | `profiles`                                              |
+| `ServiceDescription`                  | Service description and metadata                                 | `profiles` (`List[str]`, any AAS API version)           |
 | `Result`                              | Generic result object for error or non-standard responses        | `messages`                                              |
 
 ### Enumerations
@@ -80,7 +80,7 @@ Below are the main DTR models grouped by their purpose and relationship within t
 | `ReferenceKeyTypes`                        | Type of reference key                         | `GlobalReference`, `FragmentReference`, `Submodel`, `AssetAdministrationShell`, etc. |
 | `ProtocolInformationSecurityAttributesTypes` | Security attribute types                      | `NONE`, `RFC_TLSA`, `W3C_DID`                                             |
 | `MessageTypeEnum`                          | Type of result message                        | `Undefined`, `Info`, `Warning`, `Error`, `Exception`                      |
-| `ProfileEnum`                              | Service profile types                         | `AasxFileServerServiceSpecification`, `AssetAdministrationShellRepositoryServiceSpecification`, etc. |
+| `ProfileEnum`                              | Well-known AAS API 3.0 profile URIs, for comparison only. Not used to validate `ServiceDescription.profiles` | `AasxFileServerServiceSpecification`, `AssetAdministrationShellRepositoryServiceSpecification`, etc. |
 
 ## Model Details and Examples
 

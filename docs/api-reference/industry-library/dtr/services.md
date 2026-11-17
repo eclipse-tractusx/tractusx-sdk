@@ -376,6 +376,13 @@ service_desc = aas_service.get_description()
 print(f"Service Version: {service_desc}")
 ```
 
+!!! note
+    `ServiceDescription.profiles` is a list of plain strings. Servers may advertise profiles of any
+    AAS API version (3/0, 3/1, 3/2, ...) or proprietary ones, so unknown values are accepted and
+    should be ignored. Compare against `ProfileEnum` members only for the profiles you care about.
+    Items are `str`, not `ProfileEnum` members: `p == ProfileEnum.X` still works, but
+    `p.name` / `p.value` and `isinstance(p, ProfileEnum)` do not.
+
 ## Error Handling
 
 All methods return either the expected response model or a `Result` object on error.

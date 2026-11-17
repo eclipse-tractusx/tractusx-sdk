@@ -49,7 +49,11 @@ class MessageTypeEnum(str, Enum):
 
 class ProfileEnum(str, Enum):
     """
-    The Description object enables servers to present their capabilities to the clients, in particular which profiles they implement. At least one defined profile is required. AAS 3.0 specification.
+    Well-known AAS API 3.0 profile URIs.
+
+    Not used for validation: ``ServiceDescription.profiles`` accepts any string, since servers
+    may advertise profiles of other API versions or proprietary ones. Use these members only as
+    constants to compare against.
     """
 
     ASSETADMINISTRATIONSHELLSERVICESPECIFICATION_SSP_001 = "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-001"
