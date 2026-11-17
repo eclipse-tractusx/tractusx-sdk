@@ -38,7 +38,7 @@ from enum import Enum
 try:
     from .schemaValidator import SchemaValidator
 except ImportError:  # executed as a script from this directory
-    from schemaValidator import SchemaValidator
+    from schemaValidator import SchemaValidator # type: ignore[import-not-found, no-redef]
 
 logger = logging.getLogger(__name__)
 

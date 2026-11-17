@@ -102,42 +102,6 @@ warn_unused_ignores = true
 module = ["boto3.*", "botocore.*", "keycloak.*"]
 ignore_missing_imports = true
 
-[[tool.mypy.overrides]]
-# Legacy baseline: modules with known type errors, silenced so CI only catches regressions.
-# Entries must only ever be removed (fix the module, then delete it here); never add new ones.
-module = [
-    "tractusx_sdk.dataspace.adapters.adapter",
-    "tractusx_sdk.dataspace.adapters.connector.base_dma_adapter",
-    "tractusx_sdk.dataspace.controllers.connector.base_dma_controller",
-    "tractusx_sdk.dataspace.controllers.connector.jupiter.dma_controller",
-    "tractusx_sdk.dataspace.controllers.connector.saturn.dma_controller",
-    "tractusx_sdk.dataspace.managers.connection.database.postgres_connection_manager",
-    "tractusx_sdk.dataspace.managers.connection.database.postgres_memory_connection_manager",
-    "tractusx_sdk.dataspace.managers.connection.memory.memory_connection_manager",
-    "tractusx_sdk.dataspace.managers.oauth2_manager",
-    "tractusx_sdk.dataspace.services.connector.base_connector_consumer",
-    "tractusx_sdk.dataspace.services.connector.jupiter.connector_consumer_service",
-    "tractusx_sdk.dataspace.services.connector.saturn.connector_consumer_service",
-    "tractusx_sdk.dataspace.services.discovery.base_discovery_service",
-    "tractusx_sdk.dataspace.tools.cache",
-    "tractusx_sdk.dataspace.tools.dsp_tools",
-    "tractusx_sdk.dataspace.tools.tracing",
-    "tractusx_sdk.dataspace.tools.validate_submodels",
-    "tractusx_sdk.extensions.geometry.geometry_aspect_validator.validateGeometry",
-    "tractusx_sdk.extensions.notification_api.services.notification_consumer_service",
-    "tractusx_sdk.extensions.notification_api.services.notification_service",
-    "tractusx_sdk.extensions.semantics.schema_to_context_translator",
-    "tractusx_sdk.extensions.tck.connector.runners",
-    "tractusx_sdk.industry.adapters.submodel_adapters.file_system_adapter",
-    "tractusx_sdk.industry.adapters.submodel_adapters.s3_adapter",
-    "tractusx_sdk.industry.models.aas.v3.base",
-    "tractusx_sdk.industry.services.aas_service",
-    "tractusx_sdk.industry.services.discovery.bpn_discovery_service",
-    "tractusx_sdk.industry.services.notifications.notification_consumer_service",
-    "tractusx_sdk.industry.services.notifications.notification_service",
-]
-ignore_errors = true
-
 [tool.ruff]
 target-version = "py312"
 line-length = 120

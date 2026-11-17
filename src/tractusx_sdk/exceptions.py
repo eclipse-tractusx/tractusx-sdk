@@ -142,7 +142,7 @@ class PolicyMismatchError(CatalogError, ValueError):
     """
 
     def __init__(self, message: str = "", catalog: dict | None = None,
-                 allowed_policies: list | None = None, evaluations: Sequence[Any] = ()) -> None:
+                 allowed_policies: Sequence | None = None, evaluations: Sequence[Any] = ()) -> None:
         super().__init__(message)
         self.catalog = catalog
         self.allowed_policies = allowed_policies

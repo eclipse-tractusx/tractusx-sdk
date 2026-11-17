@@ -51,7 +51,7 @@ class MemoryConnectionManager(BaseConnectionManager):
         # Initialize the connection cache and thread lock for concurrency.
         self.provider_id_key = provider_id_key
         self.edrs_key = edrs_key
-        self.open_connections=dict()
+        self.open_connections: dict = dict()
         self._lock = threading.RLock()
         
     def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry:dict) -> str | None:
@@ -70,7 +70,7 @@ class MemoryConnectionManager(BaseConnectionManager):
         """
         # Verify the transfer process ID exists.
         with self._lock:
-            transfer_process_id: str = connection_entry.get(self.TRANSFER_ID_KEY, None)
+            transfer_process_id: str | None = connection_entry.get(self.TRANSFER_ID_KEY, None)
             if transfer_process_id is None or transfer_process_id == "":
                 raise ConnectionManagerError(
                     "[Memory Connection Manager] The transfer id key was not found or is empty! Not able to do the contract negotiation!")

@@ -61,7 +61,7 @@ class BaseDiscoveryService(BaseService, ABC):
         self.oauth = oauth
         self.discovery_finder_service = discovery_finder_service
         self.cache_timeout_seconds = cache_timeout_seconds
-        self.discovery_cache = {}
+        self.discovery_cache: dict = {}
 
         # Configured last: the trace is shared with the discovery finder service
         self._init_tracing(trace=trace)
@@ -105,7 +105,7 @@ class BaseDiscoveryService(BaseService, ABC):
             Exception: If no cached URL exists and the initial discovery fails.
         """
         current_time = time.time()
-        entry: dict = self.discovery_cache.get(discovery_key)
+        entry: dict | None = self.discovery_cache.get(discovery_key)
         
         # Check if the entry exists and if it is still valid
         if (

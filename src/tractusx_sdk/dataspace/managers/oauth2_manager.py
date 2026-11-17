@@ -102,7 +102,7 @@ class OAuth2Manager(AuthManagerInterface):
         if not self.connected:
             raise RuntimeError("Not connected. Please call the connect() method before checking authentication.")
         
-        authorization: str = request.headers.get("Authorization")
+        authorization: str | None = request.headers.get("Authorization")
         if not authorization or not authorization.startswith("Bearer "):
             raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Missing or invalid Authorization header.")
         token = authorization.split(" ")[1]

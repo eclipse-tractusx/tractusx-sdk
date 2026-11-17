@@ -32,7 +32,7 @@ class Adapter(TraceableMixin):
     """
 
     base_url: str
-    session = None
+    session: requests.Session
 
     def __init__(
             self,

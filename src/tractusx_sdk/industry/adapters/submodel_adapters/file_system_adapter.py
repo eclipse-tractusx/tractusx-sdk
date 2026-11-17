@@ -179,7 +179,7 @@ class FileSystemAdapter(SubmodelAdapter):
         total_path = op.join_paths(self.root_path, path)
         return op.path_exists(total_path)
 
-    def list_contents(self, directory_path: str) -> List[dict]:
+    def list_contents(self, directory_path: str) -> List[str]:
         """
         Return a list of files based in a directory
         """
