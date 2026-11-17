@@ -736,7 +736,7 @@ class DspTools:
         return None, rejections
 
     @staticmethod
-    def evaluate_policy(policy:dict, allowed_policies:list=None) -> PolicyEvaluation:
+    def evaluate_policy(policy:dict, allowed_policies:list | None=None) -> PolicyEvaluation:
         """
         Compares a catalog offer policy against an allow-list and reports the outcome.
 
@@ -787,7 +787,7 @@ class DspTools:
         return PolicyEvaluation(PolicyVerdict.NO_MATCH, policy_id=policy_id, mismatches=tuple(mismatches))
 
     @staticmethod
-    def is_policy_valid(policy:dict, allowed_policies:list=None) -> bool:
+    def is_policy_valid(policy:dict, allowed_policies:list | None=None) -> bool:
         """
         Checks whether a catalog offer policy is acceptable.
 

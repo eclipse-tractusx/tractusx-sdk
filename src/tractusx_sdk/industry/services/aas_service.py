@@ -55,7 +55,7 @@ class AasService(BaseService):
         base_url: str,
         base_lookup_url: str,
         api_path: str,
-        auth_service: OAuth2Manager = None,
+        auth_service: OAuth2Manager | None = None,
         verify_ssl: bool = True,
         session: requests.Session | None = None,
         trace: bool = False

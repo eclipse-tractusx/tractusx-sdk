@@ -55,7 +55,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
     base_path:str
     oauth:OAuth2Manager
     def __init__(self, oauth:OAuth2Manager, discovery_finder_service: DiscoveryFinderService, cache_timeout_seconds:int = 60 * 60 * 12,
-                 session:requests.Session = None, base_path:str="/api/v1.0/administration/connectors/bpnDiscovery",
+                 session:requests.Session | None = None, base_path:str="/api/v1.0/administration/connectors/bpnDiscovery",
                  trace: bool = False):
         """
         Initialize the BPN Discovery Service.

@@ -87,7 +87,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         """
         return self.get_discovery_url(self.discovery_finder_service, connector_discovery_key)
 
-    def _get_or_update_discovery_url(self, connector_discovery_key:str=None) -> str:
+    def _get_or_update_discovery_url(self, connector_discovery_key:str | None=None) -> str:
         """
         Wrapper method for backward compatibility.
         
@@ -103,7 +103,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         
         return super()._get_or_update_discovery_url(connector_discovery_key)
 
-    def invalidate_cache_entry(self, connector_discovery_key: str = None) -> bool:
+    def invalidate_cache_entry(self, connector_discovery_key: str | None = None) -> bool:
         """
         Invalidates a specific cache entry for a connector discovery key.
         

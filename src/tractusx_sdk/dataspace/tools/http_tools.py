@@ -123,7 +123,7 @@ class HttpTools:
 
     # prepare response
     @staticmethod
-    def json_response(data, status_code: int = 200, headers: dict = None):
+    def json_response(data, status_code: int = 200, headers: dict | None = None):
         response = JSONResponse(
             content=data,
             status_code=status_code,
