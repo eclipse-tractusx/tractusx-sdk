@@ -23,7 +23,10 @@
 from enum import Enum
 from importlib import import_module
 from os import listdir, path
+from typing import Any, cast
 
+from ..adapter import Adapter
+from .base_dma_adapter import BaseDmaAdapter
 from ...tools.tracing import Tracer
 
 
@@ -54,7 +57,7 @@ class AdapterFactory:
     def _get_adapter_builder(
             adapter_type: AdapterType,
             dataspace_version: str,
-    ):
+    ) -> Any:
         """
         Create an adapter, based on the specified adapter type and version.
 
@@ -99,8 +102,8 @@ class AdapterFactory:
             dma_path: str,
             headers: dict | None = None,
             tracer: Tracer | None = None,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaAdapter:
         """
         Create a (DMA) adapter instance, based a specific version.
 
@@ -125,7 +128,7 @@ class AdapterFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaAdapter, builder.build())
 
     @staticmethod
     def get_dataplane_adapter(
@@ -133,8 +136,8 @@ class AdapterFactory:
             base_url: str,
             headers: dict | None = None,
             tracer: Tracer | None = None,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> Adapter:
         """
         Create a dataplane adapter instance, based a specific version.
 
@@ -157,4 +160,4 @@ class AdapterFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(Adapter, builder.build())

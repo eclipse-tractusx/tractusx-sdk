@@ -66,7 +66,7 @@ class BaseContractNegotiationModel(BaseModel, ABC):
             self._data["provider_id"] = provider_id
             return self
 
-        def offer_policy_from_policy_model(self, policy_model: BasePolicyModel):
+        def offer_policy_from_policy_model(self, policy_model: BasePolicyModel) -> Self:
             # Remove unnecessary fields from a policy model's policy data
             # to_data() returns a JSON string, so we need to parse it first
             from json import loads as jloads

@@ -53,11 +53,11 @@ class S3Adapter(SubmodelAdapter):
     """
 
     @classmethod
-    def builder(cls):
+    def builder(cls) -> "S3Adapter._Builder":
         return cls._Builder(cls)
 
     class _Builder:
-        def __init__(self, cls: type) -> None:
+        def __init__(self, cls: "type[S3Adapter]") -> None:
             self.cls = cls
             self._data: dict = {}
 
@@ -85,7 +85,7 @@ class S3Adapter(SubmodelAdapter):
             self._data["aws_secret_access_key"] = aws_secret_access_key
             return self
 
-        def build(self):
+        def build(self) -> "S3Adapter":
             if "bucket_name" not in self._data:
                 raise ValueError("Missing required builder parameter: bucket_name")
             if "region_name" not in self._data:

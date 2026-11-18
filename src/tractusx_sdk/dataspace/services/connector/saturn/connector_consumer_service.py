@@ -35,6 +35,7 @@ from ....controllers.connector.controller_factory import ControllerType, Control
 from ....models.connector.saturn.catalog_model import CatalogModel
 import hashlib
 from collections.abc import Sequence
+from typing import cast
 from requests import Response
 from requests.exceptions import RequestException
 
@@ -246,7 +247,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         if (offer_id is None):
             raise ValueError("[Connector Service]: Policy offer id is not available!")
 
-        negotiation_request: ContractNegotiationModel = ModelFactory.get_contract_negotiation_model(
+        negotiation_request: ContractNegotiationModel = cast(ContractNegotiationModel, ModelFactory.get_contract_negotiation_model(
             dataspace_version=DataspaceVersionMapping.from_protocol(protocol).value,  # version is to be included in the BaseService class
             context=context,
             counter_party_address=counter_party_address,
@@ -255,7 +256,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             provider_id=counter_party_id,
             offer_policy=policy,
             protocol=protocol
-        )
+        ))
         return negotiation_request
     
     def start_edr_negotiation(self, counter_party_id: str, counter_party_address: str, target: str,
@@ -538,13 +539,13 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
     def get_catalog_request(self, counter_party_id: str, counter_party_address: str, context=DEFAULT_CONTEXT, protocol: str = DSP_2025) -> CatalogModel:
         ## Here it will autoselect the dataspace version based on the protocol
-        catalog_request: CatalogModel = ModelFactory.get_catalog_model(
+        catalog_request: CatalogModel = cast(CatalogModel, ModelFactory.get_catalog_model(
             dataspace_version=DataspaceVersionMapping.from_protocol(protocol).value,
             context=context,
             counter_party_id=counter_party_id,  ## bpn of the provider
             counter_party_address=counter_party_address,  ## dsp url from the provider,
             protocol=protocol
-        )
+        ))
         return catalog_request
         
     ## Get catalog request with filter

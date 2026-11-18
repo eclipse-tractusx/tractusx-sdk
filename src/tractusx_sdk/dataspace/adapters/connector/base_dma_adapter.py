@@ -21,8 +21,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Self
+from typing import Any, Self
 
+from requests import Response
 from requests.structures import CaseInsensitiveDict
 
 from ..adapter import Adapter
@@ -48,7 +49,7 @@ class BaseDmaAdapter(Adapter):
         dma_url = HttpTools.concat_into_url(base_url, dma_path)
         super().__init__(dma_url, headers, tracer=tracer)
 
-    def request(self, method: str, path: str = "", **kwargs):
+    def request(self, method: str, path: str = "", **kwargs: Any) -> Response:
         """
         Perform a request against the Connector Data Management API
 

@@ -21,7 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Self
+from typing import Any, Self
 
 import requests
 
@@ -62,7 +62,7 @@ class Adapter(TraceableMixin):
         self._init_tracing(tracer=tracer)
 
     @classmethod
-    def builder(cls):
+    def builder(cls) -> "Adapter._Builder":
         """
         This method is intended to return a builder for adapters inheriting this class.
         This means that such an adapter should implement its own `_Builder` inner class.
@@ -77,7 +77,7 @@ class Adapter(TraceableMixin):
         Default _Builder class for an Adapter.
         """
 
-        def __init__(self, cls: type) -> None:
+        def __init__(self, cls: "type[Adapter]") -> None:
             self.cls = cls
             self._data: dict = {}
 
@@ -108,7 +108,7 @@ class Adapter(TraceableMixin):
             self._data.update(data)
             return self
 
-        def build(self):
+        def build(self) -> "Adapter":
             """
             :return: an instance of the class inheriting the base adapter
             """
@@ -121,7 +121,7 @@ class Adapter(TraceableMixin):
 
         self.session.close()
 
-    def get(self, url: str, **kwargs) -> requests.Response:
+    def get(self, url: str, **kwargs: Any) -> requests.Response:
         """
         Perform a GET request
 
@@ -133,7 +133,7 @@ class Adapter(TraceableMixin):
 
         return self.request("get", url, **kwargs)
 
-    def post(self, url: str, **kwargs) -> requests.Response:
+    def post(self, url: str, **kwargs: Any) -> requests.Response:
         """
         Perform a POST request
 
@@ -145,7 +145,7 @@ class Adapter(TraceableMixin):
 
         return self.request("post", url, **kwargs)
 
-    def put(self, url: str, **kwargs) -> requests.Response:
+    def put(self, url: str, **kwargs: Any) -> requests.Response:
         """
         Perform a PUT request
 
@@ -157,7 +157,7 @@ class Adapter(TraceableMixin):
 
         return self.request("put", url, **kwargs)
 
-    def delete(self, url: str, **kwargs) -> requests.Response:
+    def delete(self, url: str, **kwargs: Any) -> requests.Response:
         """
         Perform a DELETE request
 
@@ -169,7 +169,7 @@ class Adapter(TraceableMixin):
 
         return self.request("delete", url, **kwargs)
 
-    def request(self, method: str, path: str = "", **kwargs) -> requests.Response:
+    def request(self, method: str, path: str = "", **kwargs: Any) -> requests.Response:
         """
         Main method for performing requests
 

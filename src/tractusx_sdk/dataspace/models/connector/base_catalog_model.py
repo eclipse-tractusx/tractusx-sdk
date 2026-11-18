@@ -60,7 +60,7 @@ class BaseCatalogModel(BaseModel, ABC):
             self._data["additional_scopes"] = additional_scopes
             return self
 
-        def queryspec_from_queryspec_model(self, queryspec: BaseQuerySpecModel):
+        def queryspec_from_queryspec_model(self, queryspec: BaseQuerySpecModel) -> Self:
             queryspec_data = queryspec.to_data()
             return self.queryspec(queryspec_data)
 

@@ -32,7 +32,7 @@ class SubmodelAdapter(ABC):
     """
 
     @abstractmethod
-    def read(self, submodel_metadata: Mapping[str, Any]):
+    def read(self, submodel_metadata: Mapping[str, Any]) -> Any:
         """
         Return the entire content of a file.
 

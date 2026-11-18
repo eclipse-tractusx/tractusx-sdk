@@ -23,16 +23,23 @@
 from enum import Enum
 from importlib import import_module
 from os import listdir, path
+from typing import Any, cast
 
+from .base_asset_model import BaseAssetModel
+from .base_catalog_model import BaseCatalogModel
+from .base_connector_discovery_model import BaseConnectorDiscoveryModel
+from .base_contract_definition_model import BaseContractDefinitionModel
+from .base_contract_negotiation_model import BaseContractNegotiationModel
 from .base_policy_model import BasePolicyModel
 from .base_queryspec_model import BaseQuerySpecModel
+from .base_transfer_process_model import BaseTransferProcessModel
 
 class DataspaceVersionMapping(Enum):
     DATASPACE_PROTOCOL_HTTP = "jupiter"
     DATASPACE_PROTOCOL_HTTP_2025_1 = "saturn"
     
     @classmethod
-    def from_protocol(cls, protocol: str):
+    def from_protocol(cls, protocol: str) -> "DataspaceVersionMapping":
         """Get enum value by protocol string"""
         mapping = {
             "dataspace-protocol-http": cls.DATASPACE_PROTOCOL_HTTP,
@@ -73,7 +80,7 @@ class ModelFactory:
     def _get_model_builder(
             model_type: ModelType,
             dataspace_version: str,
-    ):
+    ) -> Any:
         """
         Instantiates a model builder, based on the specified model type and version.
 
@@ -122,8 +129,8 @@ class ModelFactory:
             context: dict | list | str | None = None,
             properties: dict | None = None,
             private_properties: dict | None = None,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseAssetModel:
         """
         Create an Asset model instance for a specific version.
 
@@ -155,7 +162,7 @@ class ModelFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseAssetModel, builder.build())
 
     @staticmethod
     def get_catalog_model(
@@ -167,8 +174,8 @@ class ModelFactory:
             queryspec_model: BaseQuerySpecModel | None = None,
             queryspec: dict | None = None,
             protocol: str | None = None,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseCatalogModel:
         """
         Create a Catalog model instance for a specific version.
 
@@ -208,7 +215,7 @@ class ModelFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseCatalogModel, builder.build())
 
     @staticmethod
     def get_contract_definition_model(
@@ -218,8 +225,8 @@ class ModelFactory:
             contract_policy_id: str,
             context: dict | list | str | None = None,
             assets_selector: list | None = None,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseContractDefinitionModel:
         """
         Create a Contract Definition model instance for a specific version.
 
@@ -249,7 +256,7 @@ class ModelFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseContractDefinitionModel, builder.build())
 
     @staticmethod
     def get_contract_negotiation_model(
@@ -263,8 +270,8 @@ class ModelFactory:
             context: dict | list | str | None = None,
             callback_addresses: list | None = None,
             protocol: str | None = None,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseContractNegotiationModel:
         """
         Create a Contract Negotiation model instance for a specific version.
 
@@ -309,7 +316,7 @@ class ModelFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseContractNegotiationModel, builder.build())
 
     @staticmethod
     def get_policy_model(
@@ -319,8 +326,8 @@ class ModelFactory:
             permissions: dict | list[dict] | None = None,
             prohibitions: dict | list[dict] | None = None,
             obligations: dict | list[dict] | None = None,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BasePolicyModel:
         """
         Create a Policy model instance for a specific version.
 
@@ -354,7 +361,7 @@ class ModelFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BasePolicyModel, builder.build())
 
 
     @staticmethod
@@ -366,8 +373,8 @@ class ModelFactory:
             sort_order: str = "DESC",
             sort_field: str = "createdAt",
             filter_expression: list[dict] | None = None,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseQuerySpecModel:
         """
         Create a QuerySpec model instance for a specific version.
 
@@ -398,7 +405,7 @@ class ModelFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseQuerySpecModel, builder.build())
 
     @staticmethod
     def get_transfer_process_model(
@@ -410,8 +417,8 @@ class ModelFactory:
             private_properties: dict | None = None,
             callback_addresses: list[dict] | None = None,
             context: dict | list | str | None = None,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseTransferProcessModel:
         """
         Create a TransferProcess model instance for a specific version.
 
@@ -447,7 +454,7 @@ class ModelFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseTransferProcessModel, builder.build())
 
     @staticmethod
     def get_connector_discovery_model(
@@ -455,8 +462,8 @@ class ModelFactory:
             bpnl: str,
             counter_party_address: str | None,
             context: dict | list | str | None = None,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseConnectorDiscoveryModel:
         if(dataspace_version == "jupiter"):
             raise NotImplementedError("Connector Discovery model is not available for Jupiter!")
         
@@ -483,4 +490,4 @@ class ModelFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseConnectorDiscoveryModel, builder.build())

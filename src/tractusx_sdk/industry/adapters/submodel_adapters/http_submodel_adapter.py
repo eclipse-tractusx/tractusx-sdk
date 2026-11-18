@@ -23,13 +23,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from contextlib import AbstractContextManager
 from typing import Dict, Any, Mapping, Optional, Self
 import logging
 from uuid import UUID
 from urllib.parse import quote
 import httpx
 
-from tractusx_sdk.dataspace.tools.tracing import TraceableMixin, Tracer, trace_call
+from tractusx_sdk.dataspace.tools.tracing import TraceableMixin, TraceCall, Tracer, trace_call
 from tractusx_sdk.industry.adapters import SubmodelAdapter
 
 logger = logging.getLogger(__name__)
@@ -46,11 +47,11 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
     """
 
     @classmethod
-    def builder(cls):
+    def builder(cls) -> "HttpSubmodelAdapter._Builder":
         return cls._Builder(cls)
 
     class _Builder:
-        def __init__(self, cls: type) -> None:
+        def __init__(self, cls: "type[HttpSubmodelAdapter]") -> None:
             self.cls = cls
             self._data: dict = {}
 
@@ -93,7 +94,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
             self._data["tracer"] = tracer
             return self
 
-        def build(self):
+        def build(self) -> "HttpSubmodelAdapter":
             if "base_url" not in self._data:
                 raise ValueError("Missing required builder parameter: base_url")
             return self.cls(**self._data)
@@ -161,7 +162,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         if not isinstance(self.url_pattern, str) or not self.url_pattern.strip():
             raise ValueError("url_pattern must be a non-empty string")
 
-    def _trace_call(self, method: str, url: str, headers: dict | None = None, body: Any = None):
+    def _trace_call(self, method: str, url: str, headers: dict | None = None, body: Any = None) -> AbstractContextManager[TraceCall]:
         """
         Traces a single call to the external submodel service.
 

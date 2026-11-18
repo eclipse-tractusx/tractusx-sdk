@@ -42,7 +42,7 @@ class BaseModel(PydanticBaseModel, ABC):
         return not_implemented
 
     @classmethod
-    def builder(cls):
+    def builder(cls) -> "BaseModel._Builder":
         """
         This method is intended to return a builder for the model inheriting this class.
         This means that such a model should implement its own `_Builder` inner class.
@@ -57,7 +57,7 @@ class BaseModel(PydanticBaseModel, ABC):
         Default _Builder class for the BaseModel.
         """
 
-        def __init__(self, cls: type) -> None:
+        def __init__(self, cls: "type[BaseModel]") -> None:
             self.cls = cls
             self._data: dict = {}
 
@@ -73,7 +73,7 @@ class BaseModel(PydanticBaseModel, ABC):
             self._data.update(data)
             return self
 
-        def build(self):
+        def build(self) -> "BaseModel":
             """
             :return: an instance of the class inheriting the base model
             """
