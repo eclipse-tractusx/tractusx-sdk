@@ -72,7 +72,7 @@ class BaseDiscoveryService(BaseService, ABC):
         pass
 
     @abstractmethod
-    def get_discovery_url(self, discovery_finder_service,  discovery_key: str) -> str:
+    def get_discovery_url(self, discovery_finder_service: DiscoveryFinderService,  discovery_key: str) -> str:
         """
         Fetches the discovery URL for the given key.
         

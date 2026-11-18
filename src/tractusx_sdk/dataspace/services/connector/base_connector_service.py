@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,7 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Self
+from typing import Any, Self
 
 from .base_connector_consumer import BaseConnectorConsumerService
 from .base_connector_provider import BaseConnectorProviderService
@@ -87,14 +87,16 @@ class BaseConnectorService(BaseService):
             self._data["consumer_service"] = consumer_service
             return self
 
+    # The controller is version-specific (Jupiter/Saturn) and exposes operations beyond the
+    # BaseDmaController contract, hence `Any`.
     @property
-    def contract_agreements(self):
+    def contract_agreements(self) -> Any:
         return self._contract_agreement_controller
 
     @property
-    def consumer(self):
+    def consumer(self) -> BaseConnectorConsumerService:
         return self._consumer_service
 
     @property
-    def provider(self):
+    def provider(self) -> BaseConnectorProviderService:
         return self._provider_service

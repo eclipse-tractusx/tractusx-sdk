@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 Catena-X Automotive Network e.V.
 # Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
@@ -21,7 +22,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from requests import Response
+from typing import Any
+from requests import Response, Session
 from collections.abc import Sequence
 from ..base_connector_consumer import BaseConnectorConsumerService
 
@@ -102,7 +104,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         timeout: int | None = None,
         params: dict | None = None,
         allow_redirects: bool = False,
-        session=None,
+        session: Session | None = None,
         protocol: str = DSP_0_8,
         catalog_context: dict = DEFAULT_CONTEXT,
         negotiation_context: list = DEFAULT_NEGOTIATION_CONTEXT,
@@ -159,8 +161,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         filter_expression: list[dict],
         path: str = "/",
         content_type: str = "application/json",
-        json=None,
-        data=None,
+        json: Any = None,
+        data: Any = None,
         policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
@@ -168,7 +170,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         headers: dict | None = None,
         timeout: int | None = None,
         allow_redirects: bool = False,
-        session=None,
+        session: Session | None = None,
         protocol: str = DSP_0_8,
         catalog_context: dict = DEFAULT_CONTEXT,
         negotiation_context: list = DEFAULT_NEGOTIATION_CONTEXT,
@@ -229,8 +231,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         filter_expression: list[dict],
         path: str = "/",
         content_type: str = "application/json",
-        json=None,
-        data=None,
+        json: Any = None,
+        data: Any = None,
         policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
@@ -238,7 +240,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         headers: dict | None = None,
         timeout: int | None = None,
         allow_redirects: bool = False,
-        session=None,
+        session: Session | None = None,
         protocol: str = DSP_0_8,
         catalog_context: dict = DEFAULT_CONTEXT,
         negotiation_context: list = DEFAULT_NEGOTIATION_CONTEXT,

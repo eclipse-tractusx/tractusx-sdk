@@ -426,7 +426,7 @@ class ControllerFactory:
             adapter: BaseDmaAdapter,
             controller_types: list[ControllerType],
             **kwargs: Any
-    ):
+    ) -> dict[ControllerType, BaseDmaController]:
         """
         Create controllers of a specific connector version, for a list of controller types.
 
@@ -437,7 +437,7 @@ class ControllerFactory:
         :return: A dictionary of controller instances, keyed by controller type
         """
 
-        controllers = {}
+        controllers: dict[ControllerType, BaseDmaController] = {}
         for controller_type in controller_types:
             # For each controller type in ControllerType, call the corresponding get_controller method
             method_name = f"get_{controller_type.name.lower()}_controller"
@@ -460,7 +460,7 @@ class ControllerFactory:
             dataspace_version: str,
             adapter: BaseDmaAdapter,
             **kwargs: Any
-    ):
+    ) -> dict[ControllerType, BaseDmaController]:
         """
         Create all DMA controllers for a specific connector version.
 

@@ -21,7 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Self
+from typing import Any, Self
 
 from abc import ABC, abstractmethod
 
@@ -67,8 +67,9 @@ class BaseService(TraceableMixin, ABC):
         """
         raise NotImplementedError
 
+    # Subclasses define their own `_Builder` (not all derive from `BaseService._Builder`), hence `Any`.
     @classmethod
-    def builder(cls):
+    def builder(cls) -> Any:
         """
         This method is intended to return a builder for services inheriting this class.
         This means that such a service should implement its own `_Builder` inner class.
@@ -83,7 +84,7 @@ class BaseService(TraceableMixin, ABC):
         Default _Builder class for a Service.
         """
 
-        def __init__(self, cls: type) -> None:
+        def __init__(self, cls: "type[BaseService]") -> None:
             self.cls = cls
             self._data: dict = {}
 
@@ -118,7 +119,7 @@ class BaseService(TraceableMixin, ABC):
             self._data.update(data)
             return self
 
-        def build(self):
+        def build(self) -> "BaseService":
             """
             :return: an instance of the class inheriting the base service
             """

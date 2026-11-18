@@ -23,14 +23,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Self
+from typing import Any, Self, cast
 
 import hashlib
 import threading
 import logging
 from collections.abc import Sequence
 
-from requests import Response
+from requests import Response, Session
 
 from tractusx_sdk.exceptions import CatalogError, CatalogRequestError, NegotiationError, TransferError
 
@@ -126,10 +126,10 @@ class BaseConnectorConsumerService(BaseService):
             ]
         )
 
-        self._catalog_controller = self.controllers.get(ControllerType.CATALOG)
-        self._edr_controller = self.controllers.get(ControllerType.EDR)
-        self._contract_negotiation_controller = self.controllers.get(ControllerType.CONTRACT_NEGOTIATION)
-        self._transfer_process_controller = self.controllers.get(ControllerType.TRANSFER_PROCESS)
+        self._catalog_controller = cast(BaseDmaController, self.controllers.get(ControllerType.CATALOG))
+        self._edr_controller = cast(BaseDmaController, self.controllers.get(ControllerType.EDR))
+        self._contract_negotiation_controller = cast(BaseDmaController, self.controllers.get(ControllerType.CONTRACT_NEGOTIATION))
+        self._transfer_process_controller = cast(BaseDmaController, self.controllers.get(ControllerType.TRANSFER_PROCESS))
 
         self.connection_manager = connection_manager if connection_manager is not None else MemoryConnectionManager()
 
@@ -145,20 +145,22 @@ class BaseConnectorConsumerService(BaseService):
             self._data["connection_manager"] = connection_manager
             return self
 
+    # The controllers are version-specific (Jupiter/Saturn) and expose entity-specific operations
+    # (e.g. `get_catalog`, `get_data_address`) beyond the BaseDmaController contract, hence `Any`.
     @property
-    def catalogs(self):
+    def catalogs(self) -> Any:
         return self._catalog_controller
 
     @property
-    def edrs(self):
+    def edrs(self) -> Any:
         return self._edr_controller
 
     @property
-    def contract_negotiations(self):
+    def contract_negotiations(self) -> Any:
         return self._contract_negotiation_controller
 
     @property
-    def transfer_processes(self):
+    def transfer_processes(self) -> Any:
         return self._transfer_process_controller
 
     def get_data_plane_headers(self, access_token: str, content_type: str | None = None) -> dict[str, str]:
@@ -213,7 +215,7 @@ class BaseConnectorConsumerService(BaseService):
         return edr["endpoint"], edr["authorization"]
 
     def get_catalog(self, counter_party_id: str | None = None, counter_party_address: str | None = None,
-                    request: BaseCatalogModel | None = None, timeout=60, verify: bool | None = None, context:dict=DEFAULT_CONTEXT) -> dict | None:
+                    request: BaseCatalogModel | None = None, timeout: int | None = 60, verify: bool | None = None, context:dict=DEFAULT_CONTEXT) -> dict | None:
         """
         Retrieves the EDC DCAT catalog. Allows to get the catalog without specifying the request, which can be overridden
         
@@ -341,7 +343,7 @@ class BaseConnectorConsumerService(BaseService):
 
         ## Simple catalog request without filter
 
-    def get_catalog_request(self, counter_party_id: str, counter_party_address: str, context=None) -> BaseCatalogModel:
+    def get_catalog_request(self, counter_party_id: str, counter_party_address: str, context: dict | list | str | None = None) -> BaseCatalogModel:
         if context is None:
             context = {"edc": EDC_NAMESPACE, "odrl": "http://www.w3.org/ns/odrl/2/", "dct": "https://purl.org/dc/terms/"}
 
@@ -416,13 +418,13 @@ class BaseConnectorConsumerService(BaseService):
         return transfer_process_filter
 
     def get_catalogs_by_dct_type(self, counter_party_id: str, edcs: list, dct_type: str,
-                                 dct_type_key: str = DEFAULT_DCT_TYPE_KEY, timeout: int | None = None, **kwargs):
+                                 dct_type_key: str = DEFAULT_DCT_TYPE_KEY, timeout: int | None = None, **kwargs: Any) -> dict:
         return self.get_catalogs_with_filter(counter_party_id=counter_party_id, edcs=edcs, 
                                              filter_expression=[self.get_filter_expression(key=dct_type_key, value=dct_type, operator="=")],
                                              timeout=timeout, **kwargs)
 
     def get_catalogs_with_filter(self, counter_party_id: str, edcs: list, filter_expression: list[dict],
-                                 timeout: int | None = None, context: dict = DEFAULT_CONTEXT, **kwargs):
+                                 timeout: int | None = None, context: dict = DEFAULT_CONTEXT, **kwargs: Any) -> dict:
 
         ## Where the catalogs get stored
         catalogs: dict = {}
@@ -449,15 +451,16 @@ class BaseConnectorConsumerService(BaseService):
         return catalogs
 
     def get_catalog_by_dct_type(self, counter_party_id: str, counter_party_address: str, dct_type: str,
-                                dct_type_key=DEFAULT_DCT_TYPE_KEY, operator: str = "=", timeout=None, context=DEFAULT_CONTEXT, **kwargs):
-        return self.get_catalog_with_filter(counter_party_id=counter_party_id,
-                                            counter_party_address=counter_party_address, filter_expression=[
+                                dct_type_key: str = DEFAULT_DCT_TYPE_KEY, operator: str = "=", timeout: int | None = None, context: dict = DEFAULT_CONTEXT, **kwargs: Any) -> dict:
+        # get_catalog raises when the catalog cannot be retrieved, so no None reaches this point
+        return cast(dict, self.get_catalog_with_filter(counter_party_id=counter_party_id,
+                                                       counter_party_address=counter_party_address, filter_expression=[
                 self.get_filter_expression(key=dct_type_key, value=dct_type, operator=operator)],
-                                            timeout=timeout, context=context, **kwargs)
+                                                       timeout=timeout, context=context, **kwargs))
 
     def get_catalog_by_asset_id(self, counter_party_id: str, counter_party_address: str, asset_id: str,
                                 id_key: str = DEFAULT_ID_KEY, operator: str = "=", 
-                                timeout: int | None = None, verify: bool | None = None, context=DEFAULT_CONTEXT, **kwargs) -> dict | None:
+                                timeout: int | None = None, verify: bool | None = None, context: dict = DEFAULT_CONTEXT, **kwargs: Any) -> dict | None:
         """
         Retrieves a catalog filtered by a specific asset ID.
 
@@ -666,7 +669,7 @@ class BaseConnectorConsumerService(BaseService):
         catalogs: dict = {}
         threads: list[threading.Thread] = []
 
-        def fetch_catalog(edc_url) -> None:
+        def fetch_catalog(edc_url: str) -> None:
             try:
                 catalogs[edc_url] = self.get_catalog_with_filter(counter_party_id=bpnl,
                                                                  counter_party_address=edc_url,
@@ -748,7 +751,7 @@ class BaseConnectorConsumerService(BaseService):
 
     def get_catalog_with_filter_parallel(self, counter_party_id: str, counter_party_address: str,
                                          filter_expression: list[dict], catalogs: dict | None = None,
-                                         timeout: int | None = None, context: dict = DEFAULT_CONTEXT, **kwargs) -> None:
+                                         timeout: int | None = None, context: dict = DEFAULT_CONTEXT, **kwargs: Any) -> None:
         if catalogs is None:
             catalogs = {}
         catalogs[counter_party_address] = self.get_catalog_with_filter(counter_party_id=counter_party_id,
@@ -758,7 +761,7 @@ class BaseConnectorConsumerService(BaseService):
 
     ## Get catalog request with filter
     def get_catalog_with_filter(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict] | None,
-                                timeout: int | None = None, verify: bool | None = None, context: dict = DEFAULT_CONTEXT, **kwargs) -> dict | None:
+                                timeout: int | None = None, verify: bool | None = None, context: dict = DEFAULT_CONTEXT, **kwargs: Any) -> dict | None:
         """
         Retrieves a catalog from the EDC provider based on a specified filter.
 
@@ -923,7 +926,7 @@ class BaseConnectorConsumerService(BaseService):
 
     def _fetch_and_validate_catalog(self, counter_party_id: str, counter_party_address: str,
                                      filter_expression: list[dict] | None, policies: Sequence[dict] | None = (),
-                                     **catalog_kwargs) -> list:
+                                     **catalog_kwargs: Any) -> list:
         """
         Fetch catalog and validate that matching assets with acceptable policies exist.
         
@@ -966,7 +969,7 @@ class BaseConnectorConsumerService(BaseService):
         return valid_assets_policies
 
     def _start_negotiation_for_assets(self, counter_party_id: str, counter_party_address: str,
-                                       valid_assets_policies: list, **negotiation_kwargs) -> str:
+                                       valid_assets_policies: list, **negotiation_kwargs: Any) -> str:
         """
         Attempt to start negotiation for the first valid asset/policy pair.
         
@@ -1344,7 +1347,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         dct_type: str,
         policies: Sequence[dict] | None = (),
-        dct_type_key=DEFAULT_DCT_TYPE_KEY,
+        dct_type_key: str = DEFAULT_DCT_TYPE_KEY,
         operator: str = "="
     ) -> tuple[str, str]:
         """
@@ -1393,7 +1396,7 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         asset_id: str,
         policies: Sequence[dict] | None = (),
-        asset_id_key=DEFAULT_ID_KEY,
+        asset_id_key: str = DEFAULT_ID_KEY,
         operator: str = "="
     ) -> tuple[str, str]:
         """
@@ -1442,11 +1445,11 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         dct_type: str,
         policies: Sequence[dict] | None = (),
-        dct_type_key=DEFAULT_DCT_TYPE_KEY,
+        dct_type_key: str = DEFAULT_DCT_TYPE_KEY,
         operator: str = "=",
-        session=None,
-        **kwargs,
-    ):
+        session: Session | None = None,
+        **kwargs: Any,
+    ) -> Response:
         """
         Executes an HTTP GET request to an asset behind an EDC, filtered by DCT type.
         
@@ -1501,11 +1504,11 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         asset_id: str,
         policies: Sequence[dict] | None = (),
-        asset_id_key=DEFAULT_ID_KEY,
+        asset_id_key: str = DEFAULT_ID_KEY,
         operator: str = "=",
-        session=None,
-        **kwargs,
-    ):
+        session: Session | None = None,
+        **kwargs: Any,
+    ) -> Response:
         """
         Executes an HTTP GET request to a specific asset behind an EDC.
         
@@ -1560,13 +1563,13 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_id: str,
         counter_party_address: str,
         dct_type: str,
-        json=None,
-        data=None,
+        json: Any = None,
+        data: Any = None,
         policies: Sequence[dict] | None = (),
-        dct_type_key=DEFAULT_DCT_TYPE_KEY,
+        dct_type_key: str = DEFAULT_DCT_TYPE_KEY,
         operator: str = "=",
-        session=None,
-        **kwargs,
+        session: Session | None = None,
+        **kwargs: Any,
     ) -> Response:
         """
         Executes an HTTP POST request to an asset behind an EDC, filtered by DCT type.
@@ -1627,13 +1630,13 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_id: str,
         counter_party_address: str,
         asset_id: str,
-        json=None,
-        data=None,
+        json: Any = None,
+        data: Any = None,
         policies: Sequence[dict] | None = (),
-        asset_id_key=DEFAULT_ID_KEY,
+        asset_id_key: str = DEFAULT_ID_KEY,
         operator: str = "=",
-        session=None,
-        **kwargs
+        session: Session | None = None,
+        **kwargs: Any
     ) -> Response:
         """
         Executes an HTTP POST request to a specific asset behind an EDC.
@@ -1757,7 +1760,7 @@ class BaseConnectorConsumerService(BaseService):
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
         negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
-        **kwargs
+        **kwargs: Any
     ) -> Response:
         """
         Executes a HTTP GET request to a asset behind an EDC!
@@ -1843,14 +1846,14 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        json=None,
-        data=None,
+        json: Any = None,
+        data: Any = None,
         policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
         negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
-        **kwargs
+        **kwargs: Any
     ) -> Response:
         """
         Performs a HTTP POST request to a specific asset behind an EDC.
@@ -1942,14 +1945,14 @@ class BaseConnectorConsumerService(BaseService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        json=None,
-        data=None,
+        json: Any = None,
+        data: Any = None,
         policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
         negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
-        **kwargs
+        **kwargs: Any
     ) -> Response:
         """
         Performs a HTTP PUT request to a specific asset behind an EDC.

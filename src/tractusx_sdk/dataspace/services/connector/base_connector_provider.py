@@ -21,7 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Self
+from typing import Any, Self, cast
 
 from ..service import BaseService
 from ...adapters.connector.adapter_factory import AdapterFactory
@@ -70,9 +70,9 @@ class BaseConnectorProviderService(BaseService):
             ]
         )
 
-        self._asset_controller = controllers.get(ControllerType.ASSET)
-        self._contract_definition_controller = controllers.get(ControllerType.CONTRACT_DEFINITION)
-        self._policy_controller = controllers.get(ControllerType.POLICY)
+        self._asset_controller = cast(BaseDmaController, controllers.get(ControllerType.ASSET))
+        self._contract_definition_controller = cast(BaseDmaController, controllers.get(ControllerType.CONTRACT_DEFINITION))
+        self._policy_controller = cast(BaseDmaController, controllers.get(ControllerType.POLICY))
 
         # Configured last: the tracer is shared with the adapter and the controllers
         self._init_tracing(trace=trace)
@@ -82,16 +82,18 @@ class BaseConnectorProviderService(BaseService):
             self._data["dma_path"] = dma_path
             return self
 
+    # The controllers are version-specific (Jupiter/Saturn) and expose operations (e.g. `create`, `get_by_id`)
+    # beyond the BaseDmaController contract, hence `Any`.
     @property
-    def assets(self):
+    def assets(self) -> Any:
         return self._asset_controller
 
     @property
-    def contract_definitions(self):
+    def contract_definitions(self) -> Any:
         return self._contract_definition_controller
 
     @property
-    def policies(self):
+    def policies(self) -> Any:
         return self._policy_controller
 
     ############################# Short cut section
@@ -113,7 +115,7 @@ class BaseConnectorProviderService(BaseService):
         oauth2_config: dict | None = None,
         context: dict | list | str | None = None,
         data_address_type: str = "HttpData",
-        **kwargs
+        **kwargs: Any
     ) -> dict:
         logger.info("Creating asset %s at %s.", asset_id, base_url)
 
@@ -237,7 +239,7 @@ class BaseConnectorProviderService(BaseService):
         usage_policy_id: str,
         access_policy_id: str,
         asset_id: str,
-        **kwargs
+        **kwargs: Any
     ) -> dict:
         logger.info("Creating new contract with ID %s.", contract_id)
 
@@ -283,7 +285,7 @@ class BaseConnectorProviderService(BaseService):
         permissions: dict | list[dict] | None = None,
         prohibitions: dict | list[dict] | None = None,
         obligations: dict | list[dict] | None = None,
-        **kwargs
+        **kwargs: Any
     ) -> dict:
         logger.info("Creating new policy with ID %s.", policy_id)
 

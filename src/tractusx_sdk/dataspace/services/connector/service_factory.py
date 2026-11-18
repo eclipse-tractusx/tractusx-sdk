@@ -24,10 +24,15 @@
 from enum import Enum
 from importlib import import_module
 from os import listdir, path
+from typing import Any, cast
 import logging
 
 from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
 from tractusx_sdk.dataspace.tools.tracing import resolve_tracer
+
+from .base_connector_consumer import BaseConnectorConsumerService
+from .base_connector_provider import BaseConnectorProviderService
+from .base_connector_service import BaseConnectorService
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +64,7 @@ class ServiceFactory:
     def _get_service_builder(
             service_type: ServiceType,
             dataspace_version: str,
-    ):
+    ) -> Any:
         """
         Create a service, based on the specified service type and version.
 
@@ -106,8 +111,8 @@ class ServiceFactory:
             headers: dict | None = None,
             connection_manager: BaseConnectionManager | None = None,
             trace: bool = False,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseConnectorConsumerService:
         """
         Create a Connector consumer service instance, based a specific version.
 
@@ -135,7 +140,7 @@ class ServiceFactory:
 
         # Include any additional parameters
         builder.data({**kwargs, "trace": trace})
-        return builder.build()
+        return cast(BaseConnectorConsumerService, builder.build())
 
     @staticmethod
     def get_connector_provider_service(
@@ -144,8 +149,8 @@ class ServiceFactory:
             dma_path: str,
             headers: dict | None = None,
             trace: bool = False,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseConnectorProviderService:
         """
         Create a Connector provider service instance, based a specific version.
 
@@ -171,7 +176,7 @@ class ServiceFactory:
 
         # Include any additional parameters
         builder.data({**kwargs, "trace": trace})
-        return builder.build()
+        return cast(BaseConnectorProviderService, builder.build())
 
     @staticmethod
     def get_connector_service(
@@ -181,8 +186,8 @@ class ServiceFactory:
             headers: dict | None = None,
             connection_manager: BaseConnectionManager | None = None,
             trace: bool = False,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseConnectorService:
         """
         Create a complete Connector service instance, based a specific version.
 
@@ -231,7 +236,7 @@ class ServiceFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        service = builder.build()
+        service = cast(BaseConnectorService, builder.build())
 
         if tracer is not None:
             # Reaches this service, its adapter, and the consumer and provider
