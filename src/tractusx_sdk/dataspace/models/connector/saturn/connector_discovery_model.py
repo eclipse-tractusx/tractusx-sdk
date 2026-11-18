@@ -21,6 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
 from json import dumps as jdumps
 from pydantic import Field
 
@@ -29,7 +30,7 @@ from ..base_connector_discovery_model import BaseConnectorDiscoveryModel
 
 class ConnectorDiscoveryModel(BaseConnectorDiscoveryModel):
     TYPE: str = Field(default="tx:ConnectorParamsDiscoveryRequest", frozen=True)
-    CONTEXT: dict = Field({"tx": "https://w3id.org/tractusx/v0.0.1/ns/","edc": "https://w3id.org/edc/v0.0.1/ns/"}, frozen=True)
+    CONTEXT: dict[str, Any] = Field({"tx": "https://w3id.org/tractusx/v0.0.1/ns/","edc": "https://w3id.org/edc/v0.0.1/ns/"}, frozen=True)
 
     def to_data(self) -> str:
         """

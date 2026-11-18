@@ -21,7 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Generic, Self, TypeVar
+from typing import Generic, Self, TypeVar, Any
 
 from ..adapters.adapter import Adapter
 
@@ -56,13 +56,13 @@ class Controller:
 
         def __init__(self, cls: "type[Controller]") -> None:
             self.cls = cls
-            self._data: dict = {}
+            self._data: dict[str, Any] = {}
 
         def adapter(self, adapter: AdapterT) -> Self:
             self._data["adapter"] = adapter
             return self
 
-        def data(self, data: dict) -> Self:
+        def data(self, data: dict[str, Any]) -> Self:
             """
             This method is intended to set all the data of the controller inheriting this class.
 

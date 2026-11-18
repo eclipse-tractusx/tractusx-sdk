@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -125,10 +126,10 @@ class ModelFactory:
     def get_asset_model(
             dataspace_version: str,
             oid: str,
-            data_address: dict,
-            context: dict | list | str | None = None,
-            properties: dict | None = None,
-            private_properties: dict | None = None,
+            data_address: dict[str, Any],
+            context: dict[str, Any] | list[Any] | str | None = None,
+            properties: dict[str, Any] | None = None,
+            private_properties: dict[str, Any] | None = None,
             **kwargs: Any
     ) -> BaseAssetModel:
         """
@@ -169,10 +170,10 @@ class ModelFactory:
             dataspace_version: str,
             counter_party_address: str,
             counter_party_id: str,
-            context: dict | list | str | None = None,
-            additional_scopes: list | None = None,
+            context: dict[str, Any] | list[Any] | str | None = None,
+            additional_scopes: list[Any] | None = None,
             queryspec_model: BaseQuerySpecModel | None = None,
-            queryspec: dict | None = None,
+            queryspec: dict[str, Any] | None = None,
             protocol: str | None = None,
             **kwargs: Any
     ) -> BaseCatalogModel:
@@ -223,8 +224,8 @@ class ModelFactory:
             oid: str,
             access_policy_id: str,
             contract_policy_id: str,
-            context: dict | list | str | None = None,
-            assets_selector: list | None = None,
+            context: dict[str, Any] | list[Any] | str | None = None,
+            assets_selector: list[Any] | None = None,
             **kwargs: Any
     ) -> BaseContractDefinitionModel:
         """
@@ -266,9 +267,9 @@ class ModelFactory:
             asset_id: str,
             provider_id: str,
             offer_policy_model: BasePolicyModel | None = None,
-            offer_policy: dict | None = None,
-            context: dict | list | str | None = None,
-            callback_addresses: list | None = None,
+            offer_policy: dict[str, Any] | None = None,
+            context: dict[str, Any] | list[Any] | str | None = None,
+            callback_addresses: list[Any] | None = None,
             protocol: str | None = None,
             **kwargs: Any
     ) -> BaseContractNegotiationModel:
@@ -322,10 +323,10 @@ class ModelFactory:
     def get_policy_model(
             dataspace_version: str,
             oid: str,
-            context: dict | list | str | None = None,
-            permissions: dict | list[dict] | None = None,
-            prohibitions: dict | list[dict] | None = None,
-            obligations: dict | list[dict] | None = None,
+            context: dict[str, Any] | list[Any] | str | None = None,
+            permissions: dict[str, Any] | list[dict[str, Any]] | None = None,
+            prohibitions: dict[str, Any] | list[dict[str, Any]] | None = None,
+            obligations: dict[str, Any] | list[dict[str, Any]] | None = None,
             **kwargs: Any
     ) -> BasePolicyModel:
         """
@@ -367,12 +368,12 @@ class ModelFactory:
     @staticmethod
     def get_queryspec_model(
             dataspace_version: str,
-            context: dict | list | str | None = None,
+            context: dict[str, Any] | list[Any] | str | None = None,
             offset: int = 0,
             limit: int = 10,
             sort_order: str = "DESC",
             sort_field: str = "createdAt",
-            filter_expression: list[dict] | None = None,
+            filter_expression: list[dict[str, Any]] | None = None,
             **kwargs: Any
     ) -> BaseQuerySpecModel:
         """
@@ -413,10 +414,10 @@ class ModelFactory:
             counter_party_address: str,
             transfer_type: str,
             contract_id: str,
-            data_destination: dict,
-            private_properties: dict | None = None,
-            callback_addresses: list[dict] | None = None,
-            context: dict | list | str | None = None,
+            data_destination: dict[str, Any],
+            private_properties: dict[str, Any] | None = None,
+            callback_addresses: list[dict[str, Any]] | None = None,
+            context: dict[str, Any] | list[Any] | str | None = None,
             **kwargs: Any
     ) -> BaseTransferProcessModel:
         """
@@ -461,7 +462,7 @@ class ModelFactory:
             dataspace_version: str,
             bpnl: str,
             counter_party_address: str | None,
-            context: dict | list | str | None = None,
+            context: dict[str, Any] | list[Any] | str | None = None,
             **kwargs: Any
     ) -> BaseConnectorDiscoveryModel:
         if(dataspace_version == "jupiter"):

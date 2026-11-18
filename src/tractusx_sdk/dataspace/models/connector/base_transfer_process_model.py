@@ -22,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Self, Union
+from typing import Optional, Self, Union, Any
 from pydantic import Field
 
 from ..model import BaseModel
@@ -36,15 +36,15 @@ class BaseTransferProcessModel(BaseModel, ABC):
     counter_party_address: str
     transfer_type: str
     contract_id: str
-    data_destination: dict
-    private_properties: Optional[dict] = Field(default_factory=dict)
-    callback_addresses: Optional[list[dict]] = Field(default_factory=list)
-    context: Optional[Union[dict, list, str]] = Field(default={
+    data_destination: dict[str, Any]
+    private_properties: Optional[dict[str, Any]] = Field(default_factory=dict)
+    callback_addresses: Optional[list[dict[str, Any]]] = Field(default_factory=list)
+    context: Optional[Union[dict[str, Any], list[Any], str]] = Field(default={
         "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     })
 
     class _Builder(BaseModel._Builder):
-        def context(self, context: dict) -> Self:
+        def context(self, context: dict[str, Any]) -> Self:
             self._data["context"] = context
             return self
 
@@ -60,14 +60,14 @@ class BaseTransferProcessModel(BaseModel, ABC):
             self._data["contract_id"] = contract_id
             return self
 
-        def data_destination(self, data_destination: dict) -> Self:
+        def data_destination(self, data_destination: dict[str, Any]) -> Self:
             self._data["data_destination"] = data_destination
             return self
 
-        def private_properties(self, private_properties: dict) -> Self:
+        def private_properties(self, private_properties: dict[str, Any]) -> Self:
             self._data["private_properties"] = private_properties
             return self
 
-        def callback_addresses(self, callback_addresses: list[dict]) -> Self:
+        def callback_addresses(self, callback_addresses: list[dict[str, Any]]) -> Self:
             self._data["callback_addresses"] = callback_addresses
             return self

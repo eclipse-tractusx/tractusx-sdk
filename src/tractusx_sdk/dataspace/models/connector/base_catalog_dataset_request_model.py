@@ -22,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Self, Union
+from typing import Optional, Self, Union, Any
 from pydantic import Field
 
 from ..model import BaseModel
@@ -37,7 +37,7 @@ class BaseCatalogDatasetRequestModel(BaseModel, ABC):
     counter_party_address: str
     counter_party_id: str
     protocol: str = Field(default="dataspace-protocol-http")
-    context: Optional[Union[dict, list, str]] = Field(default={
+    context: Optional[Union[dict[str, Any], list[Any], str]] = Field(default={
         "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     })
 
@@ -46,7 +46,7 @@ class BaseCatalogDatasetRequestModel(BaseModel, ABC):
             self._data["oid"] = oid
             return self
 
-        def context(self, context: dict) -> Self:
+        def context(self, context: dict[str, Any]) -> Self:
             self._data["context"] = context
             return self
 

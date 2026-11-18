@@ -164,9 +164,9 @@ class GeometryValidator:
     def __init__(self, validation_level: ValidationLevel = ValidationLevel.ERROR):
         self.validation_level = validation_level
         self.catenax_id_map: Dict[str, Path] = {}
-        self.validated_files: set = set()
+        self.validated_files: set[Any] = set()
         self.schema_validator = SchemaValidator()
-        self.tree_structure: List[tuple] = []  # Stores (file_path, depth, catenaXId) for tree visualization
+        self.tree_structure: List[tuple[Any, ...]] = []  # Stores (file_path, depth, catenaXId) for tree visualization
     
     def load_schema(self, schema_file: Optional[Path] = None) -> bool:
         if schema_file:

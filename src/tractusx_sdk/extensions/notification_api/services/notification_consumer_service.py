@@ -171,7 +171,7 @@ class NotificationConsumerService(BaseService):
         self,
         provider_bpn: str,
         provider_dsp_url: str,
-        policies: Optional[List[Dict]] = None,
+        policies: Optional[List[Dict[str, Any]]] = None,
         max_retries: int = 6,
         retry_timeout: int = 10,
         dct_type: str = DIGITAL_TWIN_EVENT_API_TYPE,
@@ -236,7 +236,7 @@ class NotificationConsumerService(BaseService):
         self,
         provider_bpn: str,
         provider_dsp_url: str,
-        policies: Optional[List[Dict]] = None,
+        policies: Optional[List[Dict[str, Any]]] = None,
         dct_type: str = DIGITAL_TWIN_EVENT_API_TYPE,
     ) -> tuple[str, str]:
         """
@@ -284,7 +284,7 @@ class NotificationConsumerService(BaseService):
         provider_dsp_url: str,
         notification: Notification,
         endpoint_path: str = "",
-        policies: Optional[List[Dict]] = None,
+        policies: Optional[List[Dict[str, Any]]] = None,
         timeout: int = 30,
         verify_ssl: bool = True,
     ) -> Dict[str, Any]:
@@ -440,7 +440,7 @@ class NotificationConsumerService(BaseService):
         providers: List[Dict[str, str]],
         notification: Notification,
         endpoint_path: str = "",
-        policies: Optional[List[Dict]] = None,
+        policies: Optional[List[Dict[str, Any]]] = None,
         timeout: int = 30,
         verify_ssl: bool = True,
         stop_on_error: bool = False,

@@ -22,7 +22,7 @@
 #################################################################################
 
 import logging
-from typing import Optional
+from typing import Optional, Any
 
 from tractusx_sdk.dataspace.tools.http_tools import HttpTools
 from tractusx_sdk.dataspace.managers import OAuth2Manager
@@ -125,7 +125,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         """
         return self.get_discovery_url(self.discovery_finder_service, bpn_discovery_key)
 
-    def search_bpns(self, keys:list, identifier_type:str="manufacturerPartId") -> dict:
+    def search_bpns(self, keys:list[Any], identifier_type:str="manufacturerPartId") -> dict[str, Any]:
         """
         Sends a search request to the BPN discovery service.
 
@@ -144,7 +144,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         if(not discovery_url.endswith("/search")):
             discovery_url += "/search"
 
-        body:dict = {
+        body:dict[str, Any] = {
             "searchFilter": [
                 {
                     "type": identifier_type,
@@ -153,15 +153,15 @@ class BpnDiscoveryService(BaseDiscoveryService):
             ]
         }
         
-        headers:dict = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})
+        headers:dict[str, Any] = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})
 
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
         _ensure_response(response, 200, "[BPN Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
 
-        search_response: dict = response.json()
+        search_response: dict[str, Any] = response.json()
         return search_response
 
-    def search_bpns_multi_type(self, search_filters:list) -> dict:
+    def search_bpns_multi_type(self, search_filters:list[Any]) -> dict[str, Any]:
         """
         Sends a search request to the BPN discovery service with multiple identifier types and keys.
 
@@ -198,19 +198,19 @@ class BpnDiscoveryService(BaseDiscoveryService):
         primary_type = search_filters[0]["type"]
         discovery_url = self._get_or_update_discovery_url(bpn_discovery_key=primary_type)
 
-        body:dict = {
+        body:dict[str, Any] = {
             "searchFilter": search_filters
         }
         
-        headers:dict = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})
+        headers:dict[str, Any] = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})
 
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
         _ensure_response(response, 200, "[BPN Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
 
-        multi_type_response: dict = response.json()
+        multi_type_response: dict[str, Any] = response.json()
         return multi_type_response
 
-    def find_bpns(self, keys:list, identifier_type:str="manufacturerPartId") -> list | None:
+    def find_bpns(self, keys:list[Any], identifier_type:str="manufacturerPartId") -> list[Any] | None:
         """
         Finds and returns a list of unique BPNs corresponding to given identifier keys.
 
@@ -221,13 +221,13 @@ class BpnDiscoveryService(BaseDiscoveryService):
         Returns:
             list | None: A list of unique BPNs or None if none found.
         """
-        json_response:dict = self.search_bpns(keys=keys, identifier_type=identifier_type)
+        json_response:dict[str, Any] = self.search_bpns(keys=keys, identifier_type=identifier_type)
         bpns_data = json_response.get("bpns", [])
         bpns = op.extract_dict_values(array=bpns_data, key="value")
         logger.debug("[BPN Discovery Service] Resolved %d BPN(s) for %d identifier key(s) of type '%s'.", len(set(bpns)), len(keys), identifier_type)
         return list(set(bpns)) if bpns else None
 
-    def find_bpns_multi_type(self, search_filters:list) -> list | None:
+    def find_bpns_multi_type(self, search_filters:list[Any]) -> list[Any] | None:
         """
         Finds and returns a list of unique BPNs corresponding to multiple identifier types and keys.
 
@@ -245,7 +245,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         Returns:
             list | None: A list of unique BPNs or None if none found.
         """
-        json_response:dict = self.search_bpns_multi_type(search_filters=search_filters)
+        json_response:dict[str, Any] = self.search_bpns_multi_type(search_filters=search_filters)
         bpns_data = json_response.get("bpns", [])
         bpns = op.extract_dict_values(array=bpns_data, key="value")
         return list(set(bpns)) if bpns else None
@@ -262,7 +262,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         """
         return super()._get_or_update_discovery_url(bpn_discovery_key)
 
-    def set_identifier(self, identifier_key: str, identifier_type:str="manufacturerPartId") -> dict:
+    def set_identifier(self, identifier_key: str, identifier_type:str="manufacturerPartId") -> dict[str, Any]:
         """
         Registers a new identifier to the authenticated user's BPN.
 
@@ -277,7 +277,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
             Exception: If creation fails.
         """
         discovery_url = self._get_or_update_discovery_url(bpn_discovery_key=identifier_type)
-        headers: dict = self.oauth.add_auth_header(headers={'Content-Type': 'application/json'})
+        headers: dict[str, Any] = self.oauth.add_auth_header(headers={'Content-Type': 'application/json'})
         body = {
             "type": identifier_type,
             "key": identifier_key
@@ -286,10 +286,10 @@ class BpnDiscoveryService(BaseDiscoveryService):
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
         _ensure_response(response, 201, "[BPN Discovery Service] Failed to create BPN identifier.")
 
-        created_identifier: dict = response.json()
+        created_identifier: dict[str, Any] = response.json()
         return created_identifier
 
-    def set_multiple_identifiers(self, identifiers: list, identifier_type:str="manufacturerPartId") -> list:
+    def set_multiple_identifiers(self, identifiers: list[Any], identifier_type:str="manufacturerPartId") -> list[Any]:
         """
         Registers multiple identifiers in a batch to the authenticated user's BPN.
 
@@ -306,12 +306,12 @@ class BpnDiscoveryService(BaseDiscoveryService):
         body = [{"type": identifier_type, "key": key} for key in identifiers]
 
         discovery_url = self._get_or_update_discovery_url(bpn_discovery_key=identifier_type) + "/batch"
-        headers: dict = self.oauth.add_auth_header(headers={'Content-Type': 'application/json'})
+        headers: dict[str, Any] = self.oauth.add_auth_header(headers={'Content-Type': 'application/json'})
 
         response = HttpTools.do_post_with_session(url=discovery_url, headers=headers, json=body, session=self.session)
         _ensure_response(response, 201, "[BPN Discovery Service] Failed to create BPN identifiers batch.")
 
-        created_identifiers: list = response.json()
+        created_identifiers: list[Any] = response.json()
         return created_identifiers
 
     def delete_bpn_identifier_by_id(self, resource_id: str, identifier_type:str="manufacturerPartId") -> None:
@@ -326,7 +326,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
             Exception: If the deletion fails.
         """
         discovery_url = self._get_or_update_discovery_url(bpn_discovery_key=identifier_type) + f"/{resource_id}"
-        headers: dict = self.oauth.add_auth_header(headers={'Content-Type': 'application/json'})
+        headers: dict[str, Any] = self.oauth.add_auth_header(headers={'Content-Type': 'application/json'})
 
         response = HttpTools.do_delete_with_session(url=discovery_url, headers=headers, session=self.session)
         _ensure_response(response, 204, f"[BPN Discovery Service] Failed to delete BPN identifier with resourceId {resource_id}.")

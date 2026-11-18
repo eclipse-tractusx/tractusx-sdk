@@ -53,7 +53,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
     class _Builder:
         def __init__(self, cls: "type[HttpSubmodelAdapter]") -> None:
             self.cls = cls
-            self._data: dict = {}
+            self._data: dict[str, Any] = {}
 
         def base_url(self, base_url: str) -> Self:
             self._data["base_url"] = base_url
@@ -162,7 +162,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         if not isinstance(self.url_pattern, str) or not self.url_pattern.strip():
             raise ValueError("url_pattern must be a non-empty string")
 
-    def _trace_call(self, method: str, url: str, headers: dict | None = None, body: Any = None) -> AbstractContextManager[TraceCall]:
+    def _trace_call(self, method: str, url: str, headers: dict[str, Any] | None = None, body: Any = None) -> AbstractContextManager[TraceCall]:
         """
         Traces a single call to the external submodel service.
 

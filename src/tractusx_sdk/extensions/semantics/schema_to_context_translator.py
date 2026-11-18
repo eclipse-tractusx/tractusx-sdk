@@ -78,7 +78,7 @@ class SammSchemaContextTranslator:
         Returns:
             None
         """
-        self.baseSchema: dict = {}
+        self.baseSchema: dict[str, Any] = {}
         self.rootRef = "#"
         self.refKey = "$ref"
         self.path_sep = "#/"
@@ -540,11 +540,11 @@ class SammSchemaContextTranslator:
             
             ## If allOf keys is present then it will be required to create a context with multiple properties added
             if(self.allOfKey in property):
-                all_of: list = property[self.allOfKey]
+                all_of: list[Any] = property[self.allOfKey]
                 node[self.contextPrefix] = self.create_multiple_properties_context(all_of=all_of, property=property, actualref=actualref)
                 return node
 
-            properties: dict = property[self.propertiesKey]
+            properties: dict[str, Any] = property[self.propertiesKey]
 
             node[self.contextPrefix] = self.create_single_properties_context(properties=properties, actualref=actualref)
             return node

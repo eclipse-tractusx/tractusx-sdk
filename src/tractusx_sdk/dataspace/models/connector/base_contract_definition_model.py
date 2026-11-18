@@ -22,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Self, Union
+from typing import Optional, Self, Union, Any
 from pydantic import Field
 
 from ..model import BaseModel
@@ -36,17 +36,17 @@ class BaseContractDefinitionModel(BaseModel, ABC):
     oid: str
     access_policy_id: str
     contract_policy_id: str
-    context: Optional[Union[dict, list, str]] = Field(default={
+    context: Optional[Union[dict[str, Any], list[Any], str]] = Field(default={
         "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     })
-    assets_selector: Optional[list[dict]] = Field(default_factory=list)
+    assets_selector: Optional[list[dict[str, Any]]] = Field(default_factory=list)
 
     class _Builder(BaseModel._Builder):
         def id(self, oid: str) -> Self:
             self._data["oid"] = oid
             return self
 
-        def context(self, context: dict) -> Self:
+        def context(self, context: dict[str, Any]) -> Self:
             self._data["context"] = context
             return self
 
@@ -58,6 +58,6 @@ class BaseContractDefinitionModel(BaseModel, ABC):
             self._data["contract_policy_id"] = contract_policy_id
             return self
 
-        def assets_selector(self, assets_selector: list[dict]) -> Self:
+        def assets_selector(self, assets_selector: list[dict[str, Any]]) -> Self:
             self._data["assets_selector"] = assets_selector
             return self

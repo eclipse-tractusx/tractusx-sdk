@@ -20,6 +20,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
+from typing import Any
 import logging
 
 from tractusx_sdk.exceptions import DiscoveryEndpointNotFoundError, DiscoveryError
@@ -120,7 +121,7 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         
         return super().invalidate_cache_entry(connector_discovery_key)
 
-    def find_connector_by_bpn(self, bpn:str, bpn_key:str="bpn", connector_endpoint_key:str="connectorEndpoint") -> list | None:
+    def find_connector_by_bpn(self, bpn:str, bpn_key:str="bpn", connector_endpoint_key:str="connectorEndpoint") -> list[Any] | None:
         """
         Finds connector endpoints for a given BPN using the cached discovery URL.
 
@@ -138,22 +139,22 @@ class ConnectorDiscoveryService(BaseDiscoveryService):
         # Use cached discovery URL, refresh if necessary
         discovery_url = self._get_or_update_discovery_url()
 
-        body:list = [
+        body:list[Any] = [
             bpn
         ]
         
-        headers:dict = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})
+        headers:dict[str, Any] = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})
 
         response = HttpTools.do_post(url=discovery_url, headers=headers, json=body, **self._trace_kwargs())
         if(response is None or response.status_code != 200):
             raise DiscoveryError("[Connector Discovery Service] It was not possible to get the connector urls because the connector discovery service response was not successful!")
         
-        json_response:dict = response.json()
+        json_response:list[dict[str, Any]] = response.json()
 
         # Iterate over the json_response to find the connectorEndpoint for the specified BPN
         for item in json_response:
             if item.get(bpn_key) == bpn:
-                connector_endpoints: list | None = item.get(connector_endpoint_key, [])
+                connector_endpoints: list[Any] | None = item.get(connector_endpoint_key, [])
                 return connector_endpoints
         # If the BPN is not found, return None or an empty list
         logger.debug("[Connector Discovery Service] No connector endpoints were found for BPN '%s'.", bpn)

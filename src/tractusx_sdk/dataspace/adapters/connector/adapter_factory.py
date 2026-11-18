@@ -100,7 +100,7 @@ class AdapterFactory:
             dataspace_version: str,
             base_url: str,
             dma_path: str,
-            headers: dict | None = None,
+            headers: dict[str, Any] | None = None,
             tracer: Tracer | None = None,
             **kwargs: Any
     ) -> BaseDmaAdapter:
@@ -134,7 +134,7 @@ class AdapterFactory:
     def get_dataplane_adapter(
             dataspace_version: str,
             base_url: str,
-            headers: dict | None = None,
+            headers: dict[str, Any] | None = None,
             tracer: Tracer | None = None,
             **kwargs: Any
     ) -> Adapter:

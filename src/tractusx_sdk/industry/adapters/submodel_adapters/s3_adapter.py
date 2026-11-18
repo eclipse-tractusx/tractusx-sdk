@@ -59,7 +59,7 @@ class S3Adapter(SubmodelAdapter):
     class _Builder:
         def __init__(self, cls: "type[S3Adapter]") -> None:
             self.cls = cls
-            self._data: dict = {}
+            self._data: dict[str, Any] = {}
 
         def bucket_name(self, bucket_name: str) -> Self:
             self._data["bucket_name"] = bucket_name
@@ -130,7 +130,7 @@ class S3Adapter(SubmodelAdapter):
         self.client_error = ClientError
 
         # Build client kwargs, only including credentials if both are provided
-        client_kwargs: dict = {
+        client_kwargs: dict[str, Any] = {
             "region_name": region_name,
         }
         

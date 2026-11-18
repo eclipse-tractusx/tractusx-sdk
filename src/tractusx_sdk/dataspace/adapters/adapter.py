@@ -40,7 +40,7 @@ class Adapter(TraceableMixin):
     def __init__(
             self,
             base_url: str,
-            headers: dict | None = None,
+            headers: dict[str, Any] | None = None,
             tracer: Tracer | None = None
     ):
         """
@@ -79,13 +79,13 @@ class Adapter(TraceableMixin):
 
         def __init__(self, cls: "type[Adapter]") -> None:
             self.cls = cls
-            self._data: dict = {}
+            self._data: dict[str, Any] = {}
 
         def base_url(self, base_url: str) -> Self:
             self._data["base_url"] = base_url
             return self
 
-        def headers(self, headers: dict) -> Self:
+        def headers(self, headers: dict[str, Any]) -> Self:
             self._data["headers"] = headers
             return self
 
@@ -96,7 +96,7 @@ class Adapter(TraceableMixin):
             self._data["tracer"] = tracer
             return self
 
-        def data(self, data: dict) -> Self:
+        def data(self, data: dict[str, Any]) -> Self:
             """
             This method is intended to set all the data of the adapters inheriting this class.
 

@@ -34,12 +34,12 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     DSP_0_8: str = "dataspace-protocol-http"
     # Jupiter / legacy DSP uses Tractus-X v1.0.0 and W3C ODRL JSON-LD context URLs.
     # (Saturn replaces these with Catena-X 2025-9 URLs.)
-    DEFAULT_NEGOTIATION_CONTEXT: list = [
+    DEFAULT_NEGOTIATION_CONTEXT: list[Any] = [
         "https://w3id.org/tractusx/policy/v1.0.0",
         "http://www.w3.org/ns/odrl.jsonld",
         {"@vocab": EDC_NAMESPACE},
     ]
-    DEFAULT_CONTEXT: dict = {
+    DEFAULT_CONTEXT: dict[str, Any] = {
         "edc": EDC_NAMESPACE,
         "odrl": "http://www.w3.org/ns/odrl/2/",
         "dct": "http://purl.org/dc/terms/",
@@ -51,13 +51,13 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         self,
         counter_party_id: str,
         counter_party_address: str,
-        filter_expression: list[dict] | None,
-        policies: Sequence[dict] | None = (),
+        filter_expression: list[dict[str, Any]] | None,
+        policies: Sequence[dict[str, Any]] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         protocol: str | None = DSP_0_8,
-        catalog_context: dict | list | None = DEFAULT_CONTEXT,
-        negotiation_context: dict | list | None = DEFAULT_NEGOTIATION_CONTEXT,
+        catalog_context: dict[str, Any] | list[Any] | None = DEFAULT_CONTEXT,
+        negotiation_context: dict[str, Any] | list[Any] | None = DEFAULT_NEGOTIATION_CONTEXT,
     ) -> str:
         """
         Jupiter (legacy) override of :meth:`BaseConnectorConsumerService.get_transfer_id`.
@@ -94,20 +94,20 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         self,
         bpnl: str,
         counter_party_address: str,
-        filter_expression: list[dict],
+        filter_expression: list[dict[str, Any]],
         path: str = "/",
-        policies: Sequence[dict] | None = (),
+        policies: Sequence[dict[str, Any]] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         verify: bool = False,
-        headers: dict | None = None,
+        headers: dict[str, Any] | None = None,
         timeout: int | None = None,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
         allow_redirects: bool = False,
         session: Session | None = None,
         protocol: str = DSP_0_8,
-        catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: list = DEFAULT_NEGOTIATION_CONTEXT,
+        catalog_context: dict[str, Any] = DEFAULT_CONTEXT,
+        negotiation_context: list[Any] = DEFAULT_NEGOTIATION_CONTEXT,
     ) -> Response:
         """
         Executes a HTTP GET request to an asset behind an EDC using BPNL as counter party ID.
@@ -158,22 +158,22 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         self,
         bpnl: str,
         counter_party_address: str,
-        filter_expression: list[dict],
+        filter_expression: list[dict[str, Any]],
         path: str = "/",
         content_type: str = "application/json",
         json: Any = None,
         data: Any = None,
-        policies: Sequence[dict] | None = (),
+        policies: Sequence[dict[str, Any]] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         verify: bool = False,
-        headers: dict | None = None,
+        headers: dict[str, Any] | None = None,
         timeout: int | None = None,
         allow_redirects: bool = False,
         session: Session | None = None,
         protocol: str = DSP_0_8,
-        catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: list = DEFAULT_NEGOTIATION_CONTEXT,
+        catalog_context: dict[str, Any] = DEFAULT_CONTEXT,
+        negotiation_context: list[Any] = DEFAULT_NEGOTIATION_CONTEXT,
     ) -> Response:
         """
         Performs a HTTP POST request to an asset behind an EDC using BPNL as counter party ID.
@@ -228,22 +228,22 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         self,
         bpnl: str,
         counter_party_address: str,
-        filter_expression: list[dict],
+        filter_expression: list[dict[str, Any]],
         path: str = "/",
         content_type: str = "application/json",
         json: Any = None,
         data: Any = None,
-        policies: Sequence[dict] | None = (),
+        policies: Sequence[dict[str, Any]] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         verify: bool = False,
-        headers: dict | None = None,
+        headers: dict[str, Any] | None = None,
         timeout: int | None = None,
         allow_redirects: bool = False,
         session: Session | None = None,
         protocol: str = DSP_0_8,
-        catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: list = DEFAULT_NEGOTIATION_CONTEXT,
+        catalog_context: dict[str, Any] = DEFAULT_CONTEXT,
+        negotiation_context: list[Any] = DEFAULT_NEGOTIATION_CONTEXT,
     ) -> Response:
         """
         Performs a HTTP PUT request to an asset behind an EDC using BPNL as counter party ID.

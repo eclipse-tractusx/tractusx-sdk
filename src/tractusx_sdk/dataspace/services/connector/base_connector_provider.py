@@ -38,7 +38,7 @@ class BaseConnectorProviderService(BaseService):
     _contract_definition_controller: BaseDmaController
     _policy_controller: BaseDmaController
 
-    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict | None = None, verify_ssl: bool = True,
+    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict[str, Any] | None = None, verify_ssl: bool = True,
                  trace: bool = False):
         """
         :param trace: Flag enabling the tracing of the requests sent to (and the
@@ -108,15 +108,15 @@ class BaseConnectorProviderService(BaseService):
         dct_subject: str | None = None,
         version: str = "3.0",
         semantic_id: str | None = None,
-        proxy_params: dict | None = None,
-        headers: dict | None = None,
-        properties: dict | None = None,
-        private_properties: dict | None = None,
-        oauth2_config: dict | None = None,
-        context: dict | list | str | None = None,
+        proxy_params: dict[str, Any] | None = None,
+        headers: dict[str, Any] | None = None,
+        properties: dict[str, Any] | None = None,
+        private_properties: dict[str, Any] | None = None,
+        oauth2_config: dict[str, Any] | None = None,
+        context: dict[str, Any] | list[Any] | str | None = None,
         data_address_type: str = "HttpData",
         **kwargs: Any
-    ) -> dict:
+    ) -> dict[str, Any]:
         logger.info("Creating asset %s at %s.", asset_id, base_url)
 
         if proxy_params is None:
@@ -202,14 +202,14 @@ class BaseConnectorProviderService(BaseService):
 
         logger.info("Asset %s created successfully.", asset_id)
 
-        created_asset: dict = asset_response.json()
+        created_asset: dict[str, Any] = asset_response.json()
         return created_asset
 
     
     def build_properties(self, dct_type: str | None = None, dct_subject: str | None = None, version: str | None = None,
-                     semantic_id: str | None = None, properties: dict | None = None) -> dict:
+                     semantic_id: str | None = None, properties: dict[str, Any] | None = None) -> dict[str, Any]:
                          
-        _properties: dict = {}   # local — a fresh dict each call
+        _properties: dict[str, Any] = {}   # local — a fresh dict each call
     
         if dct_type is not None:
             _properties["dct:type"] = {
@@ -240,7 +240,7 @@ class BaseConnectorProviderService(BaseService):
         access_policy_id: str,
         asset_id: str,
         **kwargs: Any
-    ) -> dict:
+    ) -> dict[str, Any]:
         logger.info("Creating new contract with ID %s.", contract_id)
 
         context = {
@@ -275,18 +275,18 @@ class BaseConnectorProviderService(BaseService):
 
         logger.info("Contract %s created successfully.", contract_id)
 
-        created_contract_data: dict = created_contract.json()
+        created_contract_data: dict[str, Any] = created_contract.json()
         return created_contract_data
 
     def create_policy(
         self,
         policy_id: str,
-        context: dict | list[dict] | None = None,
-        permissions: dict | list[dict] | None = None,
-        prohibitions: dict | list[dict] | None = None,
-        obligations: dict | list[dict] | None = None,
+        context: dict[str, Any] | list[dict[str, Any]] | None = None,
+        permissions: dict[str, Any] | list[dict[str, Any]] | None = None,
+        prohibitions: dict[str, Any] | list[dict[str, Any]] | None = None,
+        obligations: dict[str, Any] | list[dict[str, Any]] | None = None,
         **kwargs: Any
-    ) -> dict:
+    ) -> dict[str, Any]:
         logger.info("Creating new policy with ID %s.", policy_id)
 
         policy = ModelFactory.get_policy_model(
@@ -309,5 +309,5 @@ class BaseConnectorProviderService(BaseService):
 
         logger.info("Policy %s created successfully.", policy_id)
 
-        created_policy_data: dict = created_policy.json()
+        created_policy_data: dict[str, Any] = created_policy.json()
         return created_policy_data

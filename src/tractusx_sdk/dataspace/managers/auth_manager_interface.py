@@ -21,6 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
 from fastapi import Request
 
 class AuthManagerInterface:
@@ -29,7 +30,7 @@ class AuthManagerInterface:
     Implementations should provide a method to return authentication headers.
     """
 
-    def add_auth_header(self, headers: dict={}) -> dict:
+    def add_auth_header(self, headers: dict[str, Any]={}) -> dict[str, Any]:
         """
         Adds authentication information to the provided HTTP headers.
 

@@ -22,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Self, Union
+from typing import Optional, Self, Union, Any
 from pydantic import Field
 
 from ..model import BaseModel
@@ -34,12 +34,12 @@ class BaseEvaluationPolicyModel(BaseModel, ABC):
     """
 
     policy_scope: str
-    context: Optional[Union[dict, list, str]] = Field(default={
+    context: Optional[Union[dict[str, Any], list[Any], str]] = Field(default={
         "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     })
 
     class _Builder(BaseModel._Builder):
-        def context(self, context: dict) -> Self:
+        def context(self, context: dict[str, Any]) -> Self:
             self._data["context"] = context
             return self
 

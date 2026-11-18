@@ -22,6 +22,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
 from keycloak.keycloak_openid import KeycloakOpenID
 from .auth_manager_interface import AuthManagerInterface
 from fastapi import Request, HTTPException
@@ -36,7 +37,7 @@ class OAuth2Manager(AuthManagerInterface):
     ## Declare variables
     keycloak_session:KeycloakOpenID
     connected:bool = False
-    token:dict
+    token:dict[str, Any]
 
     clientid:str
     clientsecret:str
@@ -74,7 +75,7 @@ class OAuth2Manager(AuthManagerInterface):
             raise RuntimeError("Not connected. Please call the connect() method before requesting a token.")
 
         ## Get the token from the keycloak instance
-        token:dict=self.keycloak_openid.token(self.clientid, self.clientsecret, grant_type=["client_credentials"], scope=scope)
+        token:dict[str, Any]=self.keycloak_openid.token(self.clientid, self.clientsecret, grant_type=["client_credentials"], scope=scope)
         if(token is None):
             raise ValueError("Failed to retrieve token from IAM instance. The credentials might be incorrect.")
         ## Store the token
@@ -82,7 +83,7 @@ class OAuth2Manager(AuthManagerInterface):
         access_token: str = self.token["access_token"]
         return access_token
     
-    def add_auth_header(self, headers:dict | None=None) -> dict:
+    def add_auth_header(self, headers:dict[str, Any] | None=None) -> dict[str, Any]:
         ## Check if connected
         if(not self.connected):
             raise RuntimeError("Not connected. Please call the connect() method before requesting an authorization header.")

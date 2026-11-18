@@ -22,6 +22,7 @@
 #################################################################################
 ## Code created partially using a LLM (GPT 4o) and reviewed by a human committer
 
+from typing import Any
 from sqlmodel import Session, select
 from tractusx_sdk.exceptions import ConnectionManagerError
 from ..base_connection_manager import BaseConnectionManager
@@ -56,7 +57,7 @@ class PostgresConnectionManager(BaseConnectionManager):
         # Ensure the database table exists based on the dynamic class definition
         DynamicEDRConnection.metadata.create_all(engine)
 
-    def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry: dict) -> str | None:
+    def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry: dict[str, Any]) -> str | None:
         """
         Adds a new EDR connection to the database if it doesn't already exist.
 
@@ -99,7 +100,7 @@ class PostgresConnectionManager(BaseConnectionManager):
                 logger.debug("[Postgres Connection Manager] A new EDR entry was saved in the database.")
         return transfer_process_id
 
-    def get_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str) -> dict | None:
+    def get_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str) -> dict[str, Any] | None:
         """
         Retrieves the EDR connection data for the given parameters.
 

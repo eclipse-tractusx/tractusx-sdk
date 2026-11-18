@@ -22,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Self, Union
+from typing import Optional, Self, Union, Any
 from pydantic import Field
 
 from .base_policy_model import BasePolicyModel
@@ -36,17 +36,17 @@ class BaseContractNegotiationModel(BaseModel, ABC):
 
     counter_party_address: str
     offer_id: str
-    offer_policy: dict
+    offer_policy: dict[str, Any]
     asset_id: str
     provider_id: str
-    context: Optional[Union[dict, list, str]] = Field(default={
+    context: Optional[Union[dict[str, Any], list[Any], str]] = Field(default={
         "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     })
-    callback_addresses: Optional[list[dict]] = Field(default_factory=list)
+    callback_addresses: Optional[list[dict[str, Any]]] = Field(default_factory=list)
     protocol: Optional[str] = Field(default="dataspace-protocol-http")
 
     class _Builder(BaseModel._Builder):
-        def context(self, context: dict) -> Self:
+        def context(self, context: dict[str, Any]) -> Self:
             self._data["context"] = context
             return self
 
@@ -77,11 +77,11 @@ class BaseContractNegotiationModel(BaseModel, ABC):
 
             return self.offer_policy(policy_data)
 
-        def offer_policy(self, offer_policy: dict) -> Self:
+        def offer_policy(self, offer_policy: dict[str, Any]) -> Self:
             self._data["offer_policy"] = offer_policy
             return self
 
-        def callback_addresses(self, callback_addresses: list[dict]) -> Self:
+        def callback_addresses(self, callback_addresses: list[dict[str, Any]]) -> Self:
             self._data["callback_addresses"] = callback_addresses
             return self
 

@@ -51,8 +51,8 @@ class HttpTools:
     # do get request without session
     @staticmethod
     @traced_http("GET")
-    def do_get(url: str, verify: bool = True, headers: dict | None = None, timeout: float | None = None,
-               params: dict | None = None, allow_redirects: bool = False) -> requests.Response:
+    def do_get(url: str, verify: bool = True, headers: dict[str, Any] | None = None, timeout: float | None = None,
+               params: dict[str, Any] | None = None, allow_redirects: bool = False) -> requests.Response:
         return requests.get(url=url,verify=verify,
                             timeout=timeout,headers=headers,
                             params=params,allow_redirects=allow_redirects)
@@ -61,8 +61,8 @@ class HttpTools:
     @staticmethod
     @traced_http("GET")
     def do_get_with_session(url: str, session: requests.Session | None = None, verify: bool = True,
-                            headers: dict | None = None, timeout: float | None = None,
-                            params: dict | None = None, allow_redirects: bool = False) -> requests.Response:
+                            headers: dict[str, Any] | None = None, timeout: float | None = None,
+                            params: dict[str, Any] | None = None, allow_redirects: bool = False) -> requests.Response:
         if session is None:
             session = requests.Session()
         return session.get(url=url,verify=verify,
@@ -72,7 +72,7 @@ class HttpTools:
     # do post request without session
     @staticmethod
     @traced_http("POST")
-    def do_post(url: str, data: Any = None, verify: bool = True, headers: dict | None = None,
+    def do_post(url: str, data: Any = None, verify: bool = True, headers: dict[str, Any] | None = None,
                 timeout: float | None = None, json: Any = None, allow_redirects: bool = False) -> requests.Response:
         return requests.post(url=url,verify=verify,
                              timeout=timeout,headers=headers,
@@ -83,7 +83,7 @@ class HttpTools:
     @staticmethod
     @traced_http("POST")
     def do_post_with_session(url: str, session: requests.Session | None = None, data: Any = None, verify: bool = True,
-                             headers: dict | None = None, timeout: float | None = None, json: Any = None,
+                             headers: dict[str, Any] | None = None, timeout: float | None = None, json: Any = None,
                              allow_redirects: bool = False) -> requests.Response:
         if session is None:
             session = requests.Session()
@@ -95,7 +95,7 @@ class HttpTools:
     # do put request without session
     @staticmethod
     @traced_http("PUT")
-    def do_put(url: str, data: Any = None, verify: bool = True, headers: dict | None = None,
+    def do_put(url: str, data: Any = None, verify: bool = True, headers: dict[str, Any] | None = None,
                timeout: float | None = None, json: Any = None, allow_redirects: bool = False) -> requests.Response:
         return requests.put(url=url, verify=verify,
                             timeout=timeout, headers=headers,
@@ -106,7 +106,7 @@ class HttpTools:
     @staticmethod
     @traced_http("PUT")
     def do_put_with_session(url: str, session: requests.Session | None = None, data: Any = None, verify: bool = True,
-                            headers: dict | None = None, timeout: float | None = None, json: Any = None,
+                            headers: dict[str, Any] | None = None, timeout: float | None = None, json: Any = None,
                             allow_redirects: bool = False) -> requests.Response:
         if session is None:
             session = requests.Session()
@@ -118,8 +118,8 @@ class HttpTools:
     # do delete request without session
     @staticmethod
     @traced_http("DELETE")
-    def do_delete(url: str, verify: bool = True, headers: dict | None = None, timeout: float | None = None,
-                  params: dict | None = None, allow_redirects: bool = False) -> requests.Response:
+    def do_delete(url: str, verify: bool = True, headers: dict[str, Any] | None = None, timeout: float | None = None,
+                  params: dict[str, Any] | None = None, allow_redirects: bool = False) -> requests.Response:
         return requests.delete(url=url, verify=verify,
                                timeout=timeout, headers=headers,
                                params=params, allow_redirects=allow_redirects)
@@ -128,8 +128,8 @@ class HttpTools:
     @staticmethod
     @traced_http("DELETE")
     def do_delete_with_session(url: str, session: requests.Session | None = None, verify: bool = True,
-                               headers: dict | None = None, timeout: float | None = None,
-                               params: dict | None = None, allow_redirects: bool = False) -> requests.Response:
+                               headers: dict[str, Any] | None = None, timeout: float | None = None,
+                               params: dict[str, Any] | None = None, allow_redirects: bool = False) -> requests.Response:
         if session is None:
             session = requests.Session()
         return session.delete(url=url, verify=verify,
@@ -138,7 +138,7 @@ class HttpTools:
 
     # prepare response
     @staticmethod
-    def json_response(data: Any, status_code: int = 200, headers: dict | None = None) -> JSONResponse:
+    def json_response(data: Any, status_code: int = 200, headers: dict[str, Any] | None = None) -> JSONResponse:
         response = JSONResponse(
             content=data,
             status_code=status_code,

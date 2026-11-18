@@ -29,6 +29,7 @@
 ## Source: https://github.com/eclipse-tractusx/digital-product-pass/blob/main/dpp-verification/simple-wallet/utilities/httpUtils.py
 ## Abstracted from the static method is_authorized
 
+from typing import Any
 from fastapi import Request
 from .auth_manager_interface import AuthManagerInterface
 
@@ -57,7 +58,7 @@ class AuthManager(AuthManagerInterface):
         
         return False
     
-    def add_auth_header(self, headers: dict={}) -> dict:
+    def add_auth_header(self, headers: dict[str, Any]={}) -> dict[str, Any]:
         if not self.auth_enabled:
             raise RuntimeError("Authentication is not enabled. Cannot get auth headers.")
         auth_header = {self.api_key_header: self.configured_api_key}

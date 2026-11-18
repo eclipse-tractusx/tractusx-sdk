@@ -49,7 +49,7 @@ class BaseService(TraceableMixin, ABC):
     dataspace_version: str
 
     @abstractmethod
-    def __init__(self, dataspace_version: str, base_url: str, headers: dict | None = None,
+    def __init__(self, dataspace_version: str, base_url: str, headers: dict[str, Any] | None = None,
                  trace: bool = False):
         """
         A base init method for services inheriting this class.
@@ -86,17 +86,17 @@ class BaseService(TraceableMixin, ABC):
 
         def __init__(self, cls: "type[BaseService]") -> None:
             self.cls = cls
-            self._data: dict = {}
+            self._data: dict[str, Any] = {}
 
         def dataspace_version(self, dataspace_version: str) -> Self:
             self._data["dataspace_version"] = dataspace_version
             return self
 
-        def base_url(self, base_url: dict) -> Self:
+        def base_url(self, base_url: dict[str, Any]) -> Self:
             self._data["base_url"] = base_url
             return self
 
-        def headers(self, headers: dict) -> Self:
+        def headers(self, headers: dict[str, Any]) -> Self:
             self._data["headers"] = headers
             return self
 
@@ -107,7 +107,7 @@ class BaseService(TraceableMixin, ABC):
             self._data["trace"] = trace
             return self
 
-        def data(self, data: dict) -> Self:
+        def data(self, data: dict[str, Any]) -> Self:
             """
             This method is intended to set all the data of the services inheriting this class.
 

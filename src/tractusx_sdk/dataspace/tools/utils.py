@@ -42,7 +42,7 @@ def get_arguments() -> argparse.Namespace:
     args = parser.parse_args()
     return args
 
-def get_log_config(path: str, type: str) -> dict:
+def get_log_config(path: str, type: str) -> dict[str, Any]:
     with open(path,'rt') as f:
         log_config = yaml.safe_load(f.read())
         current_date = op.get_filedate()
@@ -50,7 +50,7 @@ def get_log_config(path: str, type: str) -> dict:
         logging.config.dictConfig(log_config)
         return log_config
 
-def create_log(log_config: dict, current_date: str, type: str) -> dict:
+def create_log(log_config: dict[str, Any], current_date: str, type: str) -> dict[str, Any]:
     op.make_dir(dir_name="logs/"+current_date)
     log_config["handlers"]["file"]["filename"] = f'logs/{current_date}/{op.get_filedatetime()}-{type}.log'
     return log_config

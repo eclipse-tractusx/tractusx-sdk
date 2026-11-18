@@ -22,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Self, Union
+from typing import Optional, Self, Union, Any
 from pydantic import Field
 
 from ..model import BaseModel
@@ -34,30 +34,30 @@ class BaseAssetModel(BaseModel, ABC):
     """
 
     oid: str
-    data_address: dict
-    context: Optional[Union[dict, list, str]] = Field(default={
+    data_address: dict[str, Any]
+    context: Optional[Union[dict[str, Any], list[Any], str]] = Field(default={
         "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     })
-    properties: Optional[dict] = Field(default_factory=dict)
-    private_properties: Optional[dict] = Field(default_factory=dict)
+    properties: Optional[dict[str, Any]] = Field(default_factory=dict)
+    private_properties: Optional[dict[str, Any]] = Field(default_factory=dict)
 
     class _Builder(BaseModel._Builder):
         def id(self, oid: str) -> Self:
             self._data["oid"] = oid
             return self
 
-        def context(self, context: dict) -> Self:
+        def context(self, context: dict[str, Any]) -> Self:
             self._data["context"] = context
             return self
 
-        def data_address(self, data_address: dict) -> Self:
+        def data_address(self, data_address: dict[str, Any]) -> Self:
             self._data["data_address"] = data_address
             return self
 
-        def properties(self, properties: dict) -> Self:
+        def properties(self, properties: dict[str, Any]) -> Self:
             self._data["properties"] = properties
             return self
 
-        def private_properties(self, private_properties: dict) -> Self:
+        def private_properties(self, private_properties: dict[str, Any]) -> Self:
             self._data["private_properties"] = private_properties
             return self

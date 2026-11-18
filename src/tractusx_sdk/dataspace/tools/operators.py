@@ -293,7 +293,7 @@ class op:
         return time.sleep(seconds)
     
     @staticmethod
-    def get_attribute(source_object:dict,attr_path:str,default_value: Any = None,path_sep:str=".") -> Any:
+    def get_attribute(source_object:dict[str, Any],attr_path:str,default_value: Any = None,path_sep:str=".") -> Any:
         """
             Method to retrieve an attribute from a nested JSON object
                 Accepts: source_object: JSON object
@@ -334,7 +334,7 @@ class op:
         return os.path.join(path_one,path_two)
     
     @staticmethod
-    def list_directories(directory_path: str) -> list:
+    def list_directories(directory_path: str) -> list[Any]:
         """
         Lists all entries in the specified directory.
         Args:
@@ -371,7 +371,7 @@ class op:
         return os.path.isfile(path=path)
     
     @staticmethod
-    def search_element_by_field(array: list[dict], id: Any, field: str = "id") -> dict | None:
+    def search_element_by_field(array: list[dict[str, Any]], id: Any, field: str = "id") -> dict[str, Any] | None:
         """
         Searches for an element in a list of dictionaries by a specific field value.
         Args:
@@ -384,7 +384,7 @@ class op:
         return next((x for x in array if x[field] == id), None)
 
     @staticmethod
-    def extract_dict_values(array: list, key: str = "value") -> list:
+    def extract_dict_values(array: list[Any], key: str = "value") -> list[Any]:
         """
         Extracts values for a specified key from a list of dictionaries.
         Args:

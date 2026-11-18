@@ -22,6 +22,7 @@
 #################################################################################
 ## Code created partially using a LLM (GPT 4o) and reviewed by a human committer
 
+from typing import Any
 import threading
 import hashlib
 import json
@@ -73,7 +74,7 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
         DynamicEDRConnection.metadata.create_all(engine)
         self._load_from_db()
 
-    def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry: dict) -> str | None:
+    def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry: dict[str, Any]) -> str | None:
         """
         Add a new EDR connection and trigger database persistence.
 

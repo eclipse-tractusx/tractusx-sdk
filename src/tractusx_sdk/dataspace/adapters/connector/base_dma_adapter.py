@@ -34,7 +34,7 @@ from ...tools.tracing import Tracer
 class BaseDmaAdapter(Adapter):
     dma_path: str = ""
 
-    def __init__(self, base_url: str, dma_path: str, headers: dict | None = None, tracer: Tracer | None = None):
+    def __init__(self, base_url: str, dma_path: str, headers: dict[str, Any] | None = None, tracer: Tracer | None = None):
         """
         Create a new DMA adapter instance
 

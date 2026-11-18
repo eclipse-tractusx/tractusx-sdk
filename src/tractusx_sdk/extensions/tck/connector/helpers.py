@@ -127,7 +127,7 @@ _tck_original_root_level: Optional[int] = None
 def setup_tck_logging(
     test_case_name: str,
     script_dir: str,
-) -> tuple:
+) -> tuple[Any, ...]:
     """
     Set up TCK logging with console + timestamped file handlers.
 
@@ -212,8 +212,8 @@ def print_separator(logger: logging.Logger, title: str = "") -> None:
 
 def initialize_provider_service(
     logger: logging.Logger,
-    provider_config: dict,
-    header_fn: Optional[Callable] = None,
+    provider_config: dict[str, Any],
+    header_fn: Optional[Callable[..., Any]] = None,
 ) -> BaseConnectorProviderService:
     """
     Initialize the Provider Connector Service.
@@ -259,8 +259,8 @@ def initialize_provider_service(
 
 def initialize_consumer_service(
     logger: logging.Logger,
-    consumer_config: dict,
-    header_fn: Optional[Callable] = None,
+    consumer_config: dict[str, Any],
+    header_fn: Optional[Callable[..., Any]] = None,
     connection_manager: BaseConnectionManager | None = None,
 ) -> Any:  # Version-specific consumer (Jupiter/Saturn): do_get_with_bpnl & co. live on the subclasses
     """
@@ -314,9 +314,9 @@ def initialize_consumer_service(
 
 def upload_sample_data(
     logger: logging.Logger,
-    backend_config: dict,
-    sample_data: dict,
-    header_fn: Optional[Callable] = None,
+    backend_config: dict[str, Any],
+    sample_data: dict[str, Any],
+    header_fn: Optional[Callable[..., Any]] = None,
     verify: bool = True,
 ) -> None:
     """
@@ -377,7 +377,7 @@ def access_data_with_edr(
     logger: logging.Logger,
     dataplane_url: str,
     access_token: str,
-    header_fn: Optional[Callable] = None,
+    header_fn: Optional[Callable[..., Any]] = None,
     path: str = "/",
     verify: bool = False,
 ) -> requests.Response:
@@ -452,8 +452,8 @@ def access_data_with_edr(
 def cleanup_provider_resources(
     logger: logging.Logger,
     provider_service: BaseConnectorProviderService,
-    provision_ids: dict,
-    header_fn: Optional[Callable] = None,
+    provision_ids: dict[str, Any],
+    header_fn: Optional[Callable[..., Any]] = None,
 ) -> None:
     """
     Delete all created resources from Provider (in reverse order of creation).
@@ -487,8 +487,8 @@ def cleanup_provider_resources(
 
 def cleanup_backend_data(
     logger: logging.Logger,
-    backend_config: dict,
-    header_fn: Optional[Callable] = None,
+    backend_config: dict[str, Any],
+    header_fn: Optional[Callable[..., Any]] = None,
     verify: bool = False,
 ) -> None:
     """
@@ -507,7 +507,7 @@ def cleanup_backend_data(
     header_fn("CLEANUP: Deleting Backend Data")
 
     try:
-        headers: dict = {}
+        headers: dict[str, Any] = {}
         if backend_config.get("api_key"):
             headers[backend_config.get("api_key_header", "X-Api-Key")] = backend_config["api_key"]
 
@@ -537,7 +537,7 @@ def cleanup_backend_data(
 # ============================================================================
 
 
-def run_step(steps: list, name: str, fn: Callable) -> Any:
+def run_step(steps: list[Any], name: str, fn: Callable[..., Any]) -> Any:
     """
     Execute a test step function, record timing and PASS/FAIL.
 
@@ -562,7 +562,7 @@ def run_step(steps: list, name: str, fn: Callable) -> Any:
         raise
 
 
-def mark_skipped_phases(steps: list, all_phase_names: list) -> None:
+def mark_skipped_phases(steps: list[Any], all_phase_names: list[Any]) -> None:
     """Mark any phases not yet recorded in *steps* as ``SKIP``."""
     completed = {s["name"] for s in steps}
     for phase in all_phase_names:
@@ -572,12 +572,12 @@ def mark_skipped_phases(steps: list, all_phase_names: list) -> None:
 
 def print_summary(
     logger: logging.Logger,
-    steps: list,
+    steps: list[Any],
     overall_result: str,
     total_elapsed: float,
     title: str = "E2E TEST RUN SUMMARY",
-    provision_ids: Optional[dict] = None,
-    consumption_result: Optional[dict] = None,
+    provision_ids: Optional[dict[str, Any]] = None,
+    consumption_result: Optional[dict[str, Any]] = None,
     http_status: Optional[int] = None,
 ) -> None:
     """
@@ -754,10 +754,10 @@ def build_tck_cli_parser(
 
 def apply_cli_overrides(
     args: argparse.Namespace,
-    provider_config: dict,
-    consumer_config: dict,
-    backend_config: dict,
-) -> tuple:
+    provider_config: dict[str, Any],
+    consumer_config: dict[str, Any],
+    backend_config: dict[str, Any],
+) -> tuple[Any, ...]:
     """
     Apply CLI argument overrides to configuration dicts.
 
@@ -840,14 +840,14 @@ def log_config_warning(logger: logging.Logger) -> None:
 def provision_simple(
     logger: logging.Logger,
     provider: BaseConnectorProviderService,
-    access_policy_config: dict,
-    usage_policy_config: dict,
-    asset_config: dict,
-    backend_config: dict,
-    consumer_config: dict,
-    header_fn: Optional[Callable] = None,
+    access_policy_config: dict[str, Any],
+    usage_policy_config: dict[str, Any],
+    asset_config: dict[str, Any],
+    backend_config: dict[str, Any],
+    consumer_config: dict[str, Any],
+    header_fn: Optional[Callable[..., Any]] = None,
     id_prefix: str = "e2e",
-) -> dict:
+) -> dict[str, Any]:
     """
     Phase 1 (simple): Provider provisions data.
 
@@ -892,13 +892,13 @@ def provision_simple(
         constraint["rightOperand"] = consumer_config["bpn"]
 
     # Build optional policy kwargs (context / profile)
-    access_kwargs: dict = {}
+    access_kwargs: dict[str, Any] = {}
     if "context" in access_policy_config:
         access_kwargs["context"] = access_policy_config["context"]
     if "profile" in access_policy_config:
         access_kwargs["profile"] = access_policy_config["profile"]
 
-    usage_kwargs: dict = {}
+    usage_kwargs: dict[str, Any] = {}
     if "context" in usage_policy_config:
         usage_kwargs["context"] = usage_policy_config["context"]
     if "profile" in usage_policy_config:
@@ -957,9 +957,9 @@ def consume_simple_bpnl(
     logger: logging.Logger,
     consumer: Any,
     asset_id: str,
-    provider_config: dict,
-    accepted_policies: Sequence[dict] | None = None,
-    header_fn: Optional[Callable] = None,
+    provider_config: dict[str, Any],
+    accepted_policies: Sequence[dict[str, Any]] | None = None,
+    header_fn: Optional[Callable[..., Any]] = None,
     verify: bool = False,
 ) -> requests.Response:
     """
@@ -1016,9 +1016,9 @@ def consume_simple_did(
     logger: logging.Logger,
     consumer: Any,
     asset_id: str,
-    provider_config: dict,
-    accepted_policies: Sequence[dict] | None = None,
-    header_fn: Optional[Callable] = None,
+    provider_config: dict[str, Any],
+    accepted_policies: Sequence[dict[str, Any]] | None = None,
+    header_fn: Optional[Callable[..., Any]] = None,
     verify: bool = False,
 ) -> requests.Response:
     """

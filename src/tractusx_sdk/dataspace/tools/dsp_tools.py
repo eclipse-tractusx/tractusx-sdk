@@ -46,19 +46,19 @@ _DATASET_KEYS = (DSP2025_DATASET_KEY, DSP_DATASET_KEY)   # "dataset", "dcat:data
 _POLICY_KEYS  = (DSP2025_POLICY_KEY,  DSP_POLICY_KEY)    # "hasPolicy", "odrl:hasPolicy"
 
 
-def _get_datasets(catalog: dict) -> dict | list | None:
+def _get_datasets(catalog: dict[str, Any]) -> dict[str, Any] | list[Any] | None:
     """Return the ``dataset`` value from a catalog, trying DSP 2025-1 and legacy keys."""
     for key in _DATASET_KEYS:
-        value: dict | list | None = catalog.get(key)
+        value: dict[str, Any] | list[Any] | None = catalog.get(key)
         if value is not None:
             return value
     return None
 
 
-def _get_policies(dataset: dict) -> dict | list | None:
+def _get_policies(dataset: dict[str, Any]) -> dict[str, Any] | list[Any] | None:
     """Return the ``hasPolicy`` value from a dataset, trying DSP 2025-1 and legacy keys."""
     for key in _POLICY_KEYS:
-        value: dict | list | None = dataset.get(key)
+        value: dict[str, Any] | list[Any] | None = dataset.get(key)
         if value is not None:
             return value
     return None
@@ -184,7 +184,7 @@ _PERMISSION_REQUIRED_KEYS = {
 }
 
 
-def _get_constraint_parts(d: dict) -> tuple[str | None, str | None, str | None]:
+def _get_constraint_parts(d: dict[str, Any]) -> tuple[str | None, str | None, str | None]:
     """
     Extract (leftOperand, operator, rightOperand) from a constraint dict.
 
@@ -213,12 +213,12 @@ def _format_constraint(left: Any, op: Any, right: Any) -> str:
     return f"{_fmt(left)} {_fmt(op)} {_fmt(right)}"
 
 
-def _is_constraint_dict(d: dict) -> bool:
+def _is_constraint_dict(d: dict[str, Any]) -> bool:
     """Return ``True`` if *d* looks like an ODRL constraint (has at least leftOperand)."""
     return any(k in d for k in _CONSTRAINT_LEFT_KEYS)
 
 
-def _to_set(value: Any) -> set:
+def _to_set(value: Any) -> set[Any]:
     """Coerce a value (string or list) into a set for subset checks."""
     if isinstance(value, list):
         return set(value)
@@ -245,7 +245,7 @@ def _right_operand_matches(catalog_right: Any, allowed_right: Any) -> bool:
     return catalog_matches
 
 
-def _constraint_matches(cat_dict: dict, allow_dict: dict) -> bool:
+def _constraint_matches(cat_dict: dict[str, Any], allow_dict: dict[str, Any]) -> bool:
     """
     Compare two normalized constraint dicts.
 
@@ -325,7 +325,7 @@ def _policies_match(normalized_policy: Any, normalized_allowed: Any) -> bool:
     return policies_match
 
 
-def _explain_constraint_diff(cat_dict: dict, allow_dict: dict, path: str) -> list[str]:
+def _explain_constraint_diff(cat_dict: dict[str, Any], allow_dict: dict[str, Any], path: str) -> list[str]:
     """
     Compare two constraint dicts and produce a readable triplet-based diff.
 
@@ -420,7 +420,7 @@ def _explain_permission_diff(cat_val: Any, allow_val: Any, path: str) -> list[st
     return diffs
 
 
-def _check_policy_structure(normalized: dict, label: str) -> list[str]:
+def _check_policy_structure(normalized: dict[str, Any], label: str) -> list[str]:
     """
     Check that a normalized policy has the expected structural keys.
 
@@ -452,7 +452,7 @@ def _check_policy_structure(normalized: dict, label: str) -> list[str]:
     return issues
 
 
-def _explain_policy_diff(normalized_policy: dict, normalized_allowed: dict, path: str = "") -> list[str]:
+def _explain_policy_diff(normalized_policy: dict[str, Any], normalized_allowed: dict[str, Any], path: str = "") -> list[str]:
     """
     Recursively compare two normalized policy dicts and return
     human-readable descriptions of every difference found.
@@ -477,7 +477,7 @@ def _explain_policy_diff(normalized_policy: dict, normalized_allowed: dict, path
     return diffs + _policy_differences(normalized_policy, normalized_allowed, path)
 
 
-def _policy_differences(normalized_policy: dict, normalized_allowed: dict, path: str = "") -> list[str]:
+def _policy_differences(normalized_policy: dict[str, Any], normalized_allowed: dict[str, Any], path: str = "") -> list[str]:
     """The differences of :func:`_explain_policy_diff`, without the structural config checks."""
     diffs: list[str] = []
 
@@ -602,7 +602,7 @@ class AssetPolicySelection(NamedTuple):
     """
 
     asset_id: str | None
-    policy: dict
+    policy: dict[str, Any]
 
 
 def _log_evaluation(evaluation: PolicyEvaluation, allowed_count: int) -> None:
@@ -626,7 +626,7 @@ class DspTools:
     """
     
     @staticmethod
-    def filter_assets_and_policies(catalog:dict, allowed_policies:Sequence | None=[]) -> list[AssetPolicySelection]:
+    def filter_assets_and_policies(catalog:dict[str, Any], allowed_policies:Sequence[Any] | None=[]) -> list[AssetPolicySelection]:
         """
         Method to select a asset and policy from a DCAT Catalog.
 
@@ -639,7 +639,7 @@ class DspTools:
         if catalog is None:
             raise EmptyCatalogError("It was not possible to get the policy, because the catalog is empty!")
         
-        dataset:list|dict|None = _get_datasets(catalog)
+        dataset:list[Any]|dict[str, Any]|None = _get_datasets(catalog)
         ### Asset Evaluation
 
         valid_assets:list[AssetPolicySelection] = []
@@ -685,8 +685,8 @@ class DspTools:
         return valid_assets
     
     @staticmethod
-    def is_catalog_empty(catalog:dict) -> bool:
-        dataset:list|dict|None = _get_datasets(catalog)
+    def is_catalog_empty(catalog:dict[str, Any]) -> bool:
+        dataset:list[Any]|dict[str, Any]|None = _get_datasets(catalog)
         if(dataset is None):
             return False
         
@@ -697,14 +697,14 @@ class DspTools:
         return len(dataset) == 0
         
     @staticmethod
-    def get_dataset_policy(dataset:dict, allowed_policies:Sequence | None=[]) -> dict | None:
+    def get_dataset_policy(dataset:dict[str, Any], allowed_policies:Sequence[Any] | None=[]) -> dict[str, Any] | None:
         """
         Gets a valid policy from an dataset.
 
         @returns: dict: the selected policy or None if no valid policy was found
         """
         ### Policy Evaluation
-        policies: dict | list | None = _get_policies(dataset)
+        policies: dict[str, Any] | list[Any] | None = _get_policies(dataset)
 
         if policies is None:
             return None
@@ -712,14 +712,14 @@ class DspTools:
         return None
 
     @staticmethod
-    def _select_policy(dataset:dict, allowed_policies:Sequence | None) -> tuple[dict | None, list[PolicyEvaluation]]:
+    def _select_policy(dataset:dict[str, Any], allowed_policies:Sequence[Any] | None) -> tuple[dict[str, Any] | None, list[PolicyEvaluation]]:
         """
         Selects the first acceptable policy of a dataset.
 
         @returns: The selected policy (``None`` if there is none) and the evaluation of
             every policy that was rejected on the way, tagged with the dataset's id.
         """
-        policies: dict | list | None = _get_policies(dataset)
+        policies: dict[str, Any] | list[Any] | None = _get_policies(dataset)
         asset_id = dataset.get("@id")
         rejections:list[PolicyEvaluation] = []
 
@@ -741,7 +741,7 @@ class DspTools:
         return None, rejections
 
     @staticmethod
-    def evaluate_policy(policy:dict, allowed_policies:Sequence | None=None) -> PolicyEvaluation:
+    def evaluate_policy(policy:dict[str, Any], allowed_policies:Sequence[Any] | None=None) -> PolicyEvaluation:
         """
         Compares a catalog offer policy against an allow-list and reports the outcome.
 
@@ -792,7 +792,7 @@ class DspTools:
         return PolicyEvaluation(PolicyVerdict.NO_MATCH, policy_id=policy_id, mismatches=tuple(mismatches))
 
     @staticmethod
-    def is_policy_valid(policy:dict, allowed_policies:Sequence | None=None) -> bool:
+    def is_policy_valid(policy:dict[str, Any], allowed_policies:Sequence[Any] | None=None) -> bool:
         """
         Checks whether a catalog offer policy is acceptable.
 

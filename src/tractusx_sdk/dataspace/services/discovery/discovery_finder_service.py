@@ -21,6 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
 from requests import Response
 
 from tractusx_sdk.exceptions import DiscoveryEndpointNotFoundError, DiscoveryError
@@ -56,7 +57,7 @@ class DiscoveryFinderService(BaseService):
         self.return_type_key = return_type_key
         self._init_tracing(trace=trace)
 
-    def find_discovery_urls(self, keys:list=["bpn"]) -> dict:
+    def find_discovery_urls(self, keys:list[Any]=["bpn"]) -> dict[str, Any]:
         """
         Allows you to find a discovery service urls by key.
         
@@ -72,8 +73,8 @@ class DiscoveryFinderService(BaseService):
             raise ConnectionError("[EDC Discovery Service] The authentication service is not connected! Please execute the oauth.connect() method")
         
         ## Setup headers and body
-        headers:dict = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})
-        body:dict = {
+        headers:dict[str, Any] = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})
+        body:dict[str, Any] = {
             self.types_key: keys
         }
 

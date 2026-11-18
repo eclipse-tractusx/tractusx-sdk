@@ -63,7 +63,7 @@ class SchemaLookupResult(_DictAccess):
     :param link: Where it was retrieved from.
     """
 
-    schema: dict
+    schema: dict[str, Any]
     link: str = ""
     status: str = "ok"
     message: str = "Submodel validation schema retrieved successfully"
@@ -79,7 +79,7 @@ class ValidationIssue:
     expected: Any = "N/A"
     invalid_value: Any = None
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Any]:
         return {
             "path": self.path,
             "message": self.message,
@@ -146,7 +146,7 @@ def submodel_schema_finder(
 
     return SchemaLookupResult(schema=schema, link=schema_link)
 
-def json_validator(schema: dict, json_to_validate: Any, validation_type: str = 'jsonschema', raise_on_error: bool = True) -> ValidationResult:
+def json_validator(schema: dict[str, Any], json_to_validate: Any, validation_type: str = 'jsonschema', raise_on_error: bool = True) -> ValidationResult:
     """
     Validates a JSON object against a given schema.
 

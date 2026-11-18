@@ -80,7 +80,7 @@ class FileSystemAdapter(SubmodelAdapter):
     class _Builder:
         def __init__(self, cls: "type[FileSystemAdapter]") -> None:
             self.cls = cls
-            self._data: dict = {}
+            self._data: dict[str, Any] = {}
 
         def root_path(self, path: str) -> Self:
             self._data["root_path"] = path

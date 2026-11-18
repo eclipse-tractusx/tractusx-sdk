@@ -108,7 +108,7 @@ class ServiceFactory:
             dataspace_version: str,
             base_url: str,
             dma_path: str,
-            headers: dict | None = None,
+            headers: dict[str, Any] | None = None,
             connection_manager: BaseConnectionManager | None = None,
             trace: bool = False,
             **kwargs: Any
@@ -147,7 +147,7 @@ class ServiceFactory:
             dataspace_version: str,
             base_url: str,
             dma_path: str,
-            headers: dict | None = None,
+            headers: dict[str, Any] | None = None,
             trace: bool = False,
             **kwargs: Any
     ) -> BaseConnectorProviderService:
@@ -183,7 +183,7 @@ class ServiceFactory:
             dataspace_version: str,
             base_url: str,
             dma_path: str,
-            headers: dict | None = None,
+            headers: dict[str, Any] | None = None,
             connection_manager: BaseConnectionManager | None = None,
             trace: bool = False,
             **kwargs: Any

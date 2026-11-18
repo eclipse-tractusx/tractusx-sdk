@@ -21,7 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Self
+from typing import Self, Any
 
 from abc import abstractmethod, ABC
 from pydantic import BaseModel as PydanticBaseModel
@@ -59,9 +59,9 @@ class BaseModel(PydanticBaseModel, ABC):
 
         def __init__(self, cls: "type[BaseModel]") -> None:
             self.cls = cls
-            self._data: dict = {}
+            self._data: dict[str, Any] = {}
 
-        def data(self, data: dict) -> Self:
+        def data(self, data: dict[str, Any]) -> Self:
             """
             This method is intended to set all the data of the model inheriting this class.
 

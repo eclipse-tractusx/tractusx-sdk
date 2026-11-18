@@ -22,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Self, Union
+from typing import Optional, Self, Union, Any
 from pydantic import Field
 
 from .base_queryspec_model import BaseQuerySpecModel
@@ -36,15 +36,15 @@ class BaseCatalogModel(BaseModel, ABC):
 
     counter_party_address: str
     counter_party_id: str
-    context: Optional[Union[dict, list, str]] = Field(default={
+    context: Optional[Union[dict[str, Any], list[Any], str]] = Field(default={
         "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     })
     additional_scopes: Optional[list[str]] = Field(default_factory=list)
-    queryspec: Optional[dict] = Field(default_factory=dict)
+    queryspec: Optional[dict[str, Any]] = Field(default_factory=dict)
     protocol: Optional[str] = Field(default="dataspace-protocol-http")
 
     class _Builder(BaseModel._Builder):
-        def context(self, context: dict) -> Self:
+        def context(self, context: dict[str, Any]) -> Self:
             self._data["context"] = context
             return self
 
@@ -64,7 +64,7 @@ class BaseCatalogModel(BaseModel, ABC):
             queryspec_data = queryspec.to_data()
             return self.queryspec(queryspec_data)
 
-        def queryspec(self, queryspec: dict | str) -> Self:
+        def queryspec(self, queryspec: dict[str, Any] | str) -> Self:
             self._data["queryspec"] = queryspec
             return self
 

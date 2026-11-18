@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -39,7 +40,7 @@ class PolicyModel(BasePolicyModel):
     ]
     
     # Default @vocab context for EDC namespace
-    DEFAULT_VOCAB_CONTEXT: ClassVar[dict] = {
+    DEFAULT_VOCAB_CONTEXT: ClassVar[dict[str, Any]] = {
         "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     }
 
@@ -103,7 +104,7 @@ class PolicyModel(BasePolicyModel):
         
         return normalized
     
-    def _normalize_constraint_dict(self, constraint: dict) -> dict:
+    def _normalize_constraint_dict(self, constraint: dict[str, Any]) -> dict[str, Any]:
         """
         Normalize a constraint dictionary, handling 'and'/'or' operators and rightOperand arrays.
         
@@ -122,7 +123,7 @@ class PolicyModel(BasePolicyModel):
         
         return result
     
-    def _build_context(self) -> list:
+    def _build_context(self) -> list[Any]:
         """
         Builds the @context for the policy according to Tractus-X EDC specification.
         
