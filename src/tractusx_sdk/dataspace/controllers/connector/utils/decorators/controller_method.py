@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,10 +22,16 @@
 #################################################################################
 
 
+from collections.abc import Callable
+from typing import ParamSpec, TypeVar
+
 from tractusx_sdk.dataspace.controllers.controller import Controller
 
+P = ParamSpec("P")
+R = TypeVar("R")
 
-def controller_method(func):
+
+def controller_method(func: Callable[P, R]) -> Callable[P, R]:
     """
     This function can be used as a decorator for controller mixins, in order to ensure that
     they are used only alongside a controller class (that have an adapter and an endpoint URL)
@@ -33,7 +40,7 @@ def controller_method(func):
     :return: None, if the required attributes do not exist, otherwise the applied function's result
     """
 
-    def inner_func(*args, **kwargs):
+    def inner_func(*args: P.args, **kwargs: P.kwargs) -> R:
         self = args[0]
 
         class_name = type(self).__name__

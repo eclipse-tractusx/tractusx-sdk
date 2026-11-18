@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,12 +21,16 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
+
+import requests
+
 from .dma_controller import DmaController
 from tractusx_sdk.dataspace.controllers.connector.utils.mixins import CrudDmaController, UpdateByIdControllerMixin
 from tractusx_sdk.dataspace.models.connector.jupiter import PolicyModel
 
 
-class PolicyController(UpdateByIdControllerMixin, CrudDmaController, DmaController):
+class PolicyController(UpdateByIdControllerMixin[PolicyModel], CrudDmaController[PolicyModel], DmaController):
     """
     Concrete implementation of the PolicyController for the Connector jupiter Data Management API.
 
@@ -35,8 +40,8 @@ class PolicyController(UpdateByIdControllerMixin, CrudDmaController, DmaControll
 
     endpoint_url = "/v3/policydefinitions"
 
-    def create(self, obj: PolicyModel, **kwargs):
+    def create(self, obj: PolicyModel, **kwargs: Any) -> requests.Response:
         return super().create(obj, **kwargs)
 
-    def update(self, obj: PolicyModel, **kwargs):
+    def update(self, obj: PolicyModel, **kwargs: Any) -> requests.Response:
         return super().update(obj, **kwargs)

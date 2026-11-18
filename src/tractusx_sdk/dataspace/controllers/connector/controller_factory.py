@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -24,8 +24,12 @@
 from enum import Enum
 from importlib import import_module
 from os import listdir, path
+from typing import Any, cast
 
+from ...adapters.adapter import Adapter
 from ...adapters.connector.base_dma_adapter import BaseDmaAdapter
+from ..controller import Controller
+from .base_dma_controller import BaseDmaController
 
 
 class ControllerType(Enum):
@@ -65,7 +69,7 @@ class ControllerFactory:
     def _get_controller_builder(
             controller_type: ControllerType,
             dataspace_version: str,
-    ):
+    ) -> Controller._Builder[Adapter]:
         """
         Create a controller, based on the specified controller type and version.
 
@@ -93,7 +97,8 @@ class ControllerFactory:
             # Dynamically import the controller class
             module = import_module(module_name)
             controller_class = getattr(module, controller_class_name)
-            return controller_class.builder()
+            builder: Controller._Builder[Adapter] = controller_class.builder()
+            return builder
         except AttributeError as attr_exception:
             raise AttributeError(
                 f"Failed to import controller class {controller_class_name} for module {module_name}"
@@ -107,8 +112,8 @@ class ControllerFactory:
     def get_asset_controller(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaController:
         """
         Create an asset controller instance, based a specific version.
 
@@ -127,14 +132,14 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaController, builder.build())
 
     @staticmethod
     def get_catalog_controller(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaController:
         """
         Create a catalog controller instance, based a specific version.
 
@@ -153,14 +158,14 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaController, builder.build())
 
     @staticmethod
     def get_contract_agreement_controller(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaController:
         """
         Create a contract_agreement controller instance, based a specific version.
 
@@ -179,14 +184,14 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaController, builder.build())
 
     @staticmethod
     def get_contract_definition_controller(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaController:
         """
         Create a contract_definition controller instance, based a specific version.
 
@@ -205,14 +210,14 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaController, builder.build())
 
     @staticmethod
     def get_contract_negotiation_controller(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaController:
         """
         Create a contract_negotiation controller instance, based a specific version.
 
@@ -231,14 +236,14 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaController, builder.build())
 
     @staticmethod
     def get_edr_controller(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaController:
         """
         Create an EDR controller instance, based a specific version.
 
@@ -257,14 +262,14 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaController, builder.build())
 
     @staticmethod
     def get_policy_controller(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaController:
         """
         Create a policy controller instance, based a specific version.
 
@@ -283,14 +288,14 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaController, builder.build())
 
     @staticmethod
     def get_transfer_process_controller(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaController:
         """
         Create a transfer_process controller instance, based a specific version.
 
@@ -309,14 +314,14 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaController, builder.build())
     
     @staticmethod
     def get_dataplane_selector_controller(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaController:
         """
         Create a dataplane_selector controller instance, based a specific version.
 
@@ -335,14 +340,14 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaController, builder.build())
     
     @staticmethod
     def get_application_observability_controller(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaController:
         """
         Create an application_observability controller instance, based a specific version.
 
@@ -361,14 +366,14 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaController, builder.build())
 
     @staticmethod
     def get_connector_discovery_controller(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaController:
         """
         Create a connector_discovery controller instance, based a specific version.
 
@@ -387,14 +392,14 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaController, builder.build())
 
     @staticmethod
     def get_protocol_version_controller(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaController:
         """
         Create a protocol_version controller instance, based a specific version.
 
@@ -413,14 +418,14 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaController, builder.build())
 
     @staticmethod
     def get_dma_controllers_for_version(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
             controller_types: list[ControllerType],
-            **kwargs
+            **kwargs: Any
     ):
         """
         Create controllers of a specific connector version, for a list of controller types.
@@ -454,7 +459,7 @@ class ControllerFactory:
     def get_all_dma_controllers_for_version(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
-            **kwargs
+            **kwargs: Any
     ):
         """
         Create all DMA controllers for a specific connector version.

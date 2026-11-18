@@ -32,11 +32,11 @@ class Controller:
     adapter: Adapter
     endpoint_url: str
 
-    def __init__(self, adapter: Adapter):
+    def __init__(self, adapter: Adapter) -> None:
         self.adapter = adapter
 
     @classmethod
-    def builder(cls):
+    def builder(cls) -> "Controller._Builder[Adapter]":
         """
         This method is intended to return a builder for the controller inheriting this class.
         This means that such a controller should implement its own `_Builder` inner class.
@@ -54,7 +54,7 @@ class Controller:
         the adapter their builder accepts without breaking the base builder contract.
         """
 
-        def __init__(self, cls: type) -> None:
+        def __init__(self, cls: "type[Controller]") -> None:
             self.cls = cls
             self._data: dict = {}
 
@@ -74,7 +74,7 @@ class Controller:
             self._data.update(data)
             return self
 
-        def build(self):
+        def build(self) -> "Controller":
             """
             :return: an instance of the class inheriting the base controller
             """

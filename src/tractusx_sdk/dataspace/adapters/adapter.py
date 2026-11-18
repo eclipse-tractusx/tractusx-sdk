@@ -121,7 +121,7 @@ class Adapter(TraceableMixin):
 
         self.session.close()
 
-    def get(self, url: str, **kwargs):
+    def get(self, url: str, **kwargs) -> requests.Response:
         """
         Perform a GET request
 
@@ -133,7 +133,7 @@ class Adapter(TraceableMixin):
 
         return self.request("get", url, **kwargs)
 
-    def post(self, url: str, **kwargs):
+    def post(self, url: str, **kwargs) -> requests.Response:
         """
         Perform a POST request
 
@@ -145,7 +145,7 @@ class Adapter(TraceableMixin):
 
         return self.request("post", url, **kwargs)
 
-    def put(self, url: str, **kwargs):
+    def put(self, url: str, **kwargs) -> requests.Response:
         """
         Perform a PUT request
 
@@ -157,7 +157,7 @@ class Adapter(TraceableMixin):
 
         return self.request("put", url, **kwargs)
 
-    def delete(self, url: str, **kwargs):
+    def delete(self, url: str, **kwargs) -> requests.Response:
         """
         Perform a DELETE request
 
@@ -169,7 +169,7 @@ class Adapter(TraceableMixin):
 
         return self.request("delete", url, **kwargs)
 
-    def request(self, method: str, path: str = "", **kwargs):
+    def request(self, method: str, path: str = "", **kwargs) -> requests.Response:
         """
         Main method for performing requests
 
