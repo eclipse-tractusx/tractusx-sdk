@@ -36,19 +36,19 @@ from tractusx_sdk.industry.models.aas import (
 # these implementations are the AAS version specific classes
 TMultiLanguage = TypeVar("TMultiLanguage", bound="AbstractMultiLanguage")
 TReferenceKey = TypeVar("TReferenceKey", bound="AbstractReferenceKey")
-TReference = TypeVar("TReference", bound="AbstractReference")
+TReference = TypeVar("TReference", bound="AbstractReference[Any]")
 TProtocolInfoSecAttr = TypeVar(
     "TProtocolInfoSecAttr", bound="AbstractProtocolInformationSecurityAttributes"
 )
-TProtocolInfo = TypeVar("TProtocolInfo", bound="AbstractProtocolInformation")
+TProtocolInfo = TypeVar("TProtocolInfo", bound="AbstractProtocolInformation[Any]")
 TEmbeddedDataSpec = TypeVar(
-    "TEmbeddedDataSpec", bound="AbstractEmbeddedDataSpecification"
+    "TEmbeddedDataSpec", bound="AbstractEmbeddedDataSpecification[Any]"
 )
-TAdminInfo = TypeVar("TAdminInfo", bound="AbstractAdministrativeInformation")
-TEndpoint = TypeVar("TEndpoint", bound="AbstractEndpoint")
-TSubModelDesc = TypeVar("TSubModelDesc", bound="AbstractSubModelDescriptor")
-TSpecificAssetId = TypeVar("TSpecificAssetId", bound="AbstractSpecificAssetId")
-TShellDescriptor = TypeVar("TShellDescriptor", bound="AbstractShellDescriptor")
+TAdminInfo = TypeVar("TAdminInfo", bound="AbstractAdministrativeInformation[Any, Any]")
+TEndpoint = TypeVar("TEndpoint", bound="AbstractEndpoint[Any]")
+TSubModelDesc = TypeVar("TSubModelDesc", bound="AbstractSubModelDescriptor[Any, Any, Any, Any]")
+TSpecificAssetId = TypeVar("TSpecificAssetId", bound="AbstractSpecificAssetId[Any]")
+TShellDescriptor = TypeVar("TShellDescriptor", bound="AbstractShellDescriptor[Any, Any, Any, Any, Any]")
 
 
 class BaseAbstractModel(BaseModel, ABC):

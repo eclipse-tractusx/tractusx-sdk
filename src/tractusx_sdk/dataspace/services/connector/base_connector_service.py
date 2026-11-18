@@ -29,7 +29,7 @@ from ..service import BaseService
 from ...adapters.connector.adapter_factory import AdapterFactory
 from ...controllers.connector.base_dma_controller import BaseDmaController
 from ...controllers.connector.controller_factory import ControllerFactory
-from ...managers.auth_manager import AuthManagerInterface
+from ...managers.auth_manager_interface import AuthManagerInterface
 
 
 class BaseConnectorService(BaseService):

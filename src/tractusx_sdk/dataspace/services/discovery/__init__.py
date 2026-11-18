@@ -27,3 +27,5 @@ __license__ = "Apache License, Version 2.0"
 from .discovery_finder_service import DiscoveryFinderService
 from .connector_discovery_service import ConnectorDiscoveryService
 from .base_discovery_service import BaseDiscoveryService
+
+__all__ = ["DiscoveryFinderService", "ConnectorDiscoveryService", "BaseDiscoveryService"]
