@@ -39,6 +39,9 @@ class ContractDefinitionController(CrudDmaController[ContractDefinitionModel], D
 
     endpoint_url = "/v3/contractdefinitions"
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
     def create(self, obj: ContractDefinitionModel, **kwargs: Any) -> requests.Response:
         return super().create(obj, **kwargs)
 

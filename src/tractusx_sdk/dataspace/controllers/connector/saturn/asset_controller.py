@@ -40,6 +40,9 @@ class AssetController(CrudDmaController[AssetModel], DmaController):
 
     endpoint_url = "/v3/assets"
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
     def create(self, obj: AssetModel, **kwargs: Any) -> requests.Response:
         return super().create(obj, **kwargs)
 

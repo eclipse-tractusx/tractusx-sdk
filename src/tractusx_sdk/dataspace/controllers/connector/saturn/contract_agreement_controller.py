@@ -38,6 +38,9 @@ class ContractAgreementController(GetControllerMixin, GetAllControllerMixin, Dma
 
     endpoint_url = "/contractagreements"
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
     def get_negotiation_by_id(self, oid: str, **kwargs: Any) -> requests.Response:
         return self.adapter.get(url=f"{V3}/{self.endpoint_url}/{oid}/negotiation", **kwargs)
 

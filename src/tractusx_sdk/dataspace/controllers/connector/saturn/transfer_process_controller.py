@@ -39,6 +39,9 @@ class TransferProcessController(StatefulEntityDmaController[TransferProcessModel
 
     endpoint_url = "/v3/transferprocesses"
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
     def create(self, obj: TransferProcessModel, **kwargs: Any) -> requests.Response:
         return super().create(obj, **kwargs)
 

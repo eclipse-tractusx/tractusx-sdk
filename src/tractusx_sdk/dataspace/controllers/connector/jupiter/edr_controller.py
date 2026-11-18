@@ -38,6 +38,9 @@ class EdrController(CreateControllerMixin[ContractNegotiationModel], GetAllContr
     """
 
     endpoint_url = "/v3/edrs"
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
     
     def get_data_address(self, oid: str, **kwargs: Any) -> requests.Response:
         return self.adapter.get(url=f"{self.endpoint_url}/{oid}/dataaddress", **kwargs)

@@ -39,6 +39,9 @@ class ContractNegotiationController(StatefulEntityDmaController[ContractNegotiat
 
     endpoint_url = "/v3/contractnegotiations"
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
     def create(self, obj: ContractNegotiationModel, **kwargs: Any) -> requests.Response:
         return super().create(obj, **kwargs)
 

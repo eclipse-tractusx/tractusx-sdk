@@ -40,6 +40,9 @@ class PolicyController(UpdateByIdControllerMixin[PolicyModel], CrudDmaController
 
     endpoint_url = "/v3/policydefinitions"
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
     def create(self, obj: PolicyModel, **kwargs: Any) -> requests.Response:
         return super().create(obj, **kwargs)
 
