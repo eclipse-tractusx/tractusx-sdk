@@ -36,7 +36,7 @@ class BaseConnectorProviderService(BaseService):
     _contract_definition_controller: BaseDmaController
     _policy_controller: BaseDmaController
 
-    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None, verify_ssl: bool = True,
+    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict | None = None, verify_ssl: bool = True,
                  trace: bool = False):
         """
         :param trace: Flag enabling the tracing of the requests sent to (and the
@@ -46,6 +46,9 @@ class BaseConnectorProviderService(BaseService):
         """
         self.dataspace_version = dataspace_version
         self.verify_ssl = verify_ssl
+
+        if headers is None:
+            headers = {}
 
         self.dma_adapter = AdapterFactory.get_dma_adapter(
             dataspace_version=dataspace_version,
@@ -97,25 +100,28 @@ class BaseConnectorProviderService(BaseService):
         self,
         asset_id: str,
         base_url: str,
-        dct_type: str = None,
-        dct_subject: str = None,
+        dct_type: str | None = None,
+        dct_subject: str | None = None,
         version: str = "3.0",
-        semantic_id: str = None,
-        proxy_params: dict = {
-            "proxyQueryParams": "false",
-            "proxyPath": "true",
-            "proxyMethod": "true",
-            "proxyBody": "false"
-        },
-        headers: dict = None,
-        properties: dict = None,
-        private_properties: dict = None,
-        oauth2_config: dict = None,
-        context: dict = None,
+        semantic_id: str | None = None,
+        proxy_params: dict | None = None,
+        headers: dict | None = None,
+        properties: dict | None = None,
+        private_properties: dict | None = None,
+        oauth2_config: dict | None = None,
+        context: dict | list | str | None = None,
         data_address_type: str = "HttpData",
         **kwargs
     ):
         logger.info("Creating asset %s at %s.", asset_id, base_url)
+
+        if proxy_params is None:
+            proxy_params = {
+                "proxyQueryParams": "false",
+                "proxyPath": "true",
+                "proxyMethod": "true",
+                "proxyBody": "false"
+            }
 
         # Use provided context or default
         if context is None:
@@ -127,7 +133,15 @@ class BaseConnectorProviderService(BaseService):
             }
 
         if semantic_id is not None:
-            context = {**context, "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/"}
+            semantic_context = {
+                "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/"
+            }
+            if isinstance(context, dict):
+                context = {**context, **semantic_context}
+            elif isinstance(context, list):
+                context = [*context, semantic_context]
+            elif isinstance(context, str):
+                context = [context, semantic_context]
 
         data_address = {
             "@type": "DataAddress",
@@ -261,10 +275,10 @@ class BaseConnectorProviderService(BaseService):
     def create_policy(
         self,
         policy_id: str,
-        context: dict | list[dict] = None,
-        permissions: dict | list[dict] = [],
-        prohibitions: dict | list[dict] = [],
-        obligations: dict | list[dict] = [],
+        context: dict | list[dict] | None = None,
+        permissions: dict | list[dict] | None = None,
+        prohibitions: dict | list[dict] | None = None,
+        obligations: dict | list[dict] | None = None,
         **kwargs
     ) -> dict:
         logger.info("Creating new policy with ID %s.", policy_id)

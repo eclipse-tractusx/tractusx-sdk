@@ -46,7 +46,7 @@ class BaseService(TraceableMixin, ABC):
     dataspace_version: str
 
     @abstractmethod
-    def __init__(self, dataspace_version: str, base_url: str, headers: dict = None,
+    def __init__(self, dataspace_version: str, base_url: str, headers: dict | None = None,
                  trace: bool = False):
         """
         A base init method for services inheriting this class.

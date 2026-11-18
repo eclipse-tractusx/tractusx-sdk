@@ -145,7 +145,8 @@ class AbstractReferenceKey(BaseAbstractModel):
     Extending classes can add additional version-specific configuration.
     """
 
-    type: ReferenceKeyTypes
+    ## Version-specific implementations narrow this to their own enum
+    type: Enum
     value: str = Field(min_length=1, max_length=2000)
 
 
@@ -157,7 +158,8 @@ class AbstractReference(BaseAbstractModel, Generic[TReferenceKey]):
     Extending classes can add additional version-specific configuration.
     """
 
-    type: ReferenceTypes
+    ## Version-specific implementations narrow this to their own enum
+    type: Enum
     keys: List[TReferenceKey] | None = None
 
     def add_key(self, key: TReferenceKey) -> None:
@@ -175,7 +177,8 @@ class AbstractProtocolInformationSecurityAttributes(BaseAbstractModel):
     Extending classes can add additional version-specific configuration.
     """
 
-    type: ProtocolInformationSecurityAttributesTypes | None
+    ## Version-specific implementations narrow this to their own enum
+    type: Enum | None
     key: str | None
     value: str | None
 

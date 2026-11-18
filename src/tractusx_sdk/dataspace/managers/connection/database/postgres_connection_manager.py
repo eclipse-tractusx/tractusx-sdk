@@ -27,19 +27,18 @@ from tractusx_sdk.exceptions import ConnectionManagerError
 from ..base_connection_manager import BaseConnectionManager
 from ....models.connection.database.edr_base import EDRBase
 from sqlalchemy.engine import Engine as E
-from sqlalchemy.orm import Session as S
 from ....constants import JSONLDKeys
 import logging
 
 logger = logging.getLogger(__name__)
 
 class PostgresConnectionManager(BaseConnectionManager):
-    def __init__(self, engine: E | S, provider_id_key: str = "providerId", table_name: str = "edr_connections"):
+    def __init__(self, engine: E, provider_id_key: str = "providerId", table_name: str = "edr_connections"):
         """
         Initialize the PostgresConnectionManager.
 
         Args:
-            engine (Engine | Session): SQLAlchemy engine or session to interact with the database.
+            engine (Engine): SQLAlchemy engine to interact with the database.
             provider_id_key (str): The key used to identify the provider ID in the connection data.
             table_name (str): The name of the table to store EDR connections.
         """
@@ -72,7 +71,7 @@ class PostgresConnectionManager(BaseConnectionManager):
             str | None: The transfer process ID of the added connection, or None if not added.
         """
         # Extract transfer process ID from the EDR entry and validate it exists
-        transfer_process_id: str = connection_entry.get(JSONLDKeys.AT_ID, None)
+        transfer_process_id: str | None = connection_entry.get(JSONLDKeys.AT_ID, None)
         if not transfer_process_id:
             raise ConnectionManagerError("[Postgres Connection Manager] The transfer id key was not found or is empty! Not able to do the contract negotiation!")
 

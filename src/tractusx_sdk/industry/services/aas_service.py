@@ -55,7 +55,7 @@ class AasService(BaseService):
         base_url: str,
         base_lookup_url: str,
         api_path: str,
-        auth_service: OAuth2Manager = None,
+        auth_service: OAuth2Manager | None = None,
         verify_ssl: bool = True,
         session: requests.Session | None = None,
         trace: bool = False
@@ -153,7 +153,7 @@ class AasService(BaseService):
             ValidationError: If the JSON response does not match the expected model.
         """
         # Prepare query parameters
-        params = {}
+        params: dict = {}
         if limit is not None:
             params["limit"] = limit
         if cursor is not None:
@@ -354,7 +354,7 @@ class AasService(BaseService):
             raise ValueError("Limit must be a positive integer")
 
         # Construct query parameters
-        params = {}
+        params: dict = {}
         if limit is not None:
             params["limit"] = limit
         if cursor:
@@ -740,12 +740,12 @@ class AasService(BaseService):
         encoded_aas_identifier = encode_as_base64_url_safe(aas_identifier)
 
         # Transform list of asset IDs to JSON
-        list_of_asset_ids = [asset_id.to_dict() for asset_id in list_of_asset_ids]
+        asset_ids_json = [asset_id.to_dict() for asset_id in list_of_asset_ids]
 
         # Make the request
         url = f"{self.aas_lookup_url}/lookup/shells/{encoded_aas_identifier}"
         response = HttpTools.do_post_with_session(
-            url=url, headers=headers, json=list_of_asset_ids, verify=self.verify_ssl, session=self.session
+            url=url, headers=headers, json=asset_ids_json, verify=self.verify_ssl, session=self.session
         )
 
         try:

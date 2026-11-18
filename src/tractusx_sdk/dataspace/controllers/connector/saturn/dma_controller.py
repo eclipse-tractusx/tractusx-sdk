@@ -33,6 +33,6 @@ class DmaController(BaseDmaController):
     to ensure the correct Adapter class types are used, instead of the generic ones.
     """
 
-    class _Builder(BaseDmaController._Builder):
+    class _Builder(BaseDmaController._Builder[DmaAdapter]):
         def adapter(self, adapter: DmaAdapter):
             return super().adapter(adapter)

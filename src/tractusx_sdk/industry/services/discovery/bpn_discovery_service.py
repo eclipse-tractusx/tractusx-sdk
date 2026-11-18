@@ -55,7 +55,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
     base_path:str
     oauth:OAuth2Manager
     def __init__(self, oauth:OAuth2Manager, discovery_finder_service: DiscoveryFinderService, cache_timeout_seconds:int = 60 * 60 * 12,
-                 session:requests.Session = None, base_path:str="/api/v1.0/administration/connectors/bpnDiscovery",
+                 session:requests.Session | None = None, base_path:str="/api/v1.0/administration/connectors/bpnDiscovery",
                  trace: bool = False):
         """
         Initialize the BPN Discovery Service.
@@ -70,10 +70,8 @@ class BpnDiscoveryService(BaseDiscoveryService):
                 `set_tracer()` shares it with other services.
         """
         self.oauth = oauth
-        self.session = session
         self.base_path = base_path
-        if(not self.session):
-            self.session = requests.Session()
+        self.session = session if session else requests.Session()
 
         # The session is set beforehand, so that the trace configured by the base
         # service covers every call made with it
@@ -127,7 +125,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         """
         return self.get_discovery_url(self.discovery_finder_service, bpn_discovery_key)
 
-    def search_bpns(self, keys:list, identifier_type:str="manufacturerPartId") -> list | None:
+    def search_bpns(self, keys:list, identifier_type:str="manufacturerPartId") -> dict:
         """
         Sends a search request to the BPN discovery service.
 

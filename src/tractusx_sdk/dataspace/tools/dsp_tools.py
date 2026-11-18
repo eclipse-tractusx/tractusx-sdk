@@ -29,6 +29,7 @@ import json
 import logging
 from dataclasses import dataclass, replace
 from enum import Enum
+from collections.abc import Sequence
 from typing import NamedTuple
 
 from tractusx_sdk.exceptions import EmptyCatalogError, PolicyMismatchError
@@ -125,6 +126,52 @@ _ODRL_RULE_KEYS = {
     "obligation",  "odrl:obligation",
     "prohibition", "odrl:prohibition",
 }
+
+## ODRL properties that bind a rule to an asset or a party rather than state a
+## term of use: ``target`` (the asset), ``assigner`` (the provider) and
+## ``assignee`` (the consumer). Their values differ per asset and per
+## participant, so an allow-list cannot spell them in advance.
+_RULE_BINDING_KEYS = frozenset({
+    "target",   "odrl:target",
+    "assigner", "odrl:assigner",
+    "assignee", "odrl:assignee",
+})
+
+
+def _policy_rules(policy):
+    """
+    Return the terms of *policy*: its ``permission``, ``prohibition`` and
+    ``obligation`` values (Saturn or Jupiter spelling), and nothing else.
+
+    Everything else a policy carries describes the offer rather than its terms
+    of use: its ``@id``/``@type``, the ``target`` DSP 2025-1 lets a catalog Offer
+    carry ("Offers MAY contain any target attributes. The value of the target
+    attribute MUST be the Dataset identifier."), an ``assigner``, a ``profile``,
+    an ``@context``, or any attribute a connector adds in the future. None of it
+    decides whether an offer is acceptable, so none of it is compared.
+
+    Inside each rule the asset and party bindings (``_RULE_BINDING_KEYS``) are
+    dropped as well; the action, the constraints and any duty are kept.
+
+    A policy that carries no rule at all is returned unchanged, so a malformed
+    allow-list entry (e.g. a policy still wrapped in a ``PolicyDefinition``)
+    keeps failing visibly instead of matching every offer without rules.
+    The input is not modified.
+    """
+    if not isinstance(policy, dict) or not any(key in policy for key in _ODRL_RULE_KEYS):
+        return policy
+
+    def _unbound(rule):
+        if not isinstance(rule, dict):
+            return rule
+        return {k: v for k, v in rule.items() if k not in _RULE_BINDING_KEYS}
+
+    return {
+        key: [_unbound(rule) for rule in value] if isinstance(value, list) else _unbound(value)
+        for key, value in policy.items()
+        if key in _ODRL_RULE_KEYS
+    }
+
 
 ## Required structural keys in a well-formed policy.
 _POLICY_REQUIRED_KEYS = {
@@ -577,7 +624,7 @@ class DspTools:
     """
     
     @staticmethod
-    def filter_assets_and_policies(catalog:dict, allowed_policies:list=[]) -> list[AssetPolicySelection]:
+    def filter_assets_and_policies(catalog:dict, allowed_policies:Sequence | None=[]) -> list[AssetPolicySelection]:
         """
         Method to select a asset and policy from a DCAT Catalog.
 
@@ -648,7 +695,7 @@ class DspTools:
         return len(dataset) == 0
         
     @staticmethod
-    def get_dataset_policy(dataset:dict, allowed_policies:list=[]) -> dict | None:
+    def get_dataset_policy(dataset:dict, allowed_policies:Sequence | None=[]) -> dict | None:
         """
         Gets a valid policy from an dataset.
 
@@ -660,8 +707,10 @@ class DspTools:
         if policies is None:
             return None
 
+        return None
+
     @staticmethod
-    def _select_policy(dataset:dict, allowed_policies:list) -> tuple[dict | None, list[PolicyEvaluation]]:
+    def _select_policy(dataset:dict, allowed_policies:Sequence | None) -> tuple[dict | None, list[PolicyEvaluation]]:
         """
         Selects the first acceptable policy of a dataset.
 
@@ -690,14 +739,15 @@ class DspTools:
         return None, rejections
 
     @staticmethod
-    def evaluate_policy(policy:dict, allowed_policies:list=None) -> PolicyEvaluation:
+    def evaluate_policy(policy:dict, allowed_policies:Sequence | None=None) -> PolicyEvaluation:
         """
         Compares a catalog offer policy against an allow-list and reports the outcome.
 
         allowed_policies semantics:
           None  – any policy is valid (no filtering applied).
           []    – no policy is valid.
-          [...] – the policy (stripped of ``@id`` / ``@type``) must appear in the list.
+          [...] – the policy's permission / prohibition / obligation must match one in the list;
+                  any other attribute of the policy (``@id``, ``target``, ...) is ignored.
 
         The returned ``PolicyEvaluation`` is complete: when the policy is rejected it holds,
         for every allowed policy, the structural issues and the differences found. Nothing
@@ -715,9 +765,10 @@ class DspTools:
         if len(allowed_policies) == 0:
             return PolicyEvaluation(PolicyVerdict.EMPTY_ALLOW_LIST, policy_id=policy_id)
 
-        ## Normalize the catalog policy (strips @id/@type, unwraps
-        ## single-element lists, removes empty lists, sorts constraints).
-        normalized_policy = _normalize_policy_value(policy)
+        ## Compare the terms only (permission / prohibition / obligation), then
+        ## normalize them (strips @id/@type, unwraps single-element lists,
+        ## removes empty lists, sorts constraints).
+        normalized_policy = _normalize_policy_value(_policy_rules(policy))
 
         ## Compare against every allowed policy (also normalized).
         ## Uses _policies_match which applies subset semantics for
@@ -725,7 +776,7 @@ class DspTools:
         ## in the catalog, order-insensitive, extras tolerated).
         mismatches: list[PolicyMismatch] = []
         for idx, allowed in enumerate(allowed_policies):
-            normalized_allowed = _normalize_policy_value(allowed)
+            normalized_allowed = _normalize_policy_value(_policy_rules(allowed))
             if _policies_match(normalized_policy, normalized_allowed):
                 return PolicyEvaluation(
                     PolicyVerdict.MATCHED, policy_id=policy_id, matched_index=idx, mismatches=tuple(mismatches),
@@ -739,7 +790,7 @@ class DspTools:
         return PolicyEvaluation(PolicyVerdict.NO_MATCH, policy_id=policy_id, mismatches=tuple(mismatches))
 
     @staticmethod
-    def is_policy_valid(policy:dict, allowed_policies:list=None) -> bool:
+    def is_policy_valid(policy:dict, allowed_policies:Sequence | None=None) -> bool:
         """
         Checks whether a catalog offer policy is acceptable.
 

@@ -22,6 +22,7 @@
 #################################################################################
 
 from requests import Response
+from collections.abc import Sequence
 from ..base_connector_consumer import BaseConnectorConsumerService
 
 
@@ -48,13 +49,13 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         self,
         counter_party_id: str,
         counter_party_address: str,
-        filter_expression: list[dict],
-        policies: list = None,
+        filter_expression: list[dict] | None,
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
-        protocol: str = DSP_0_8,
-        catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: list = DEFAULT_NEGOTIATION_CONTEXT,
+        protocol: str | None = DSP_0_8,
+        catalog_context: dict | list | None = DEFAULT_CONTEXT,
+        negotiation_context: dict | list | None = DEFAULT_NEGOTIATION_CONTEXT,
     ) -> str:
         """
         Jupiter (legacy) override of :meth:`BaseConnectorConsumerService.get_transfer_id`.
@@ -93,13 +94,13 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         verify: bool = False,
-        headers: dict = {},
-        timeout: int = None,
-        params: dict = None,
+        headers: dict | None = None,
+        timeout: int | None = None,
+        params: dict | None = None,
         allow_redirects: bool = False,
         session=None,
         protocol: str = DSP_0_8,
@@ -160,12 +161,12 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         content_type: str = "application/json",
         json=None,
         data=None,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         verify: bool = False,
-        headers: dict = None,
-        timeout: int = None,
+        headers: dict | None = None,
+        timeout: int | None = None,
         allow_redirects: bool = False,
         session=None,
         protocol: str = DSP_0_8,
@@ -230,12 +231,12 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         content_type: str = "application/json",
         json=None,
         data=None,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         verify: bool = False,
-        headers: dict = None,
-        timeout: int = None,
+        headers: dict | None = None,
+        timeout: int | None = None,
         allow_redirects: bool = False,
         session=None,
         protocol: str = DSP_0_8,

@@ -20,11 +20,19 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from urllib.parse import quote
 
 from tractusx_sdk.dataspace.controllers.connector.utils.decorators import controller_method
 from tractusx_sdk.dataspace.adapters.adapter import Adapter
 from tractusx_sdk.dataspace.models.model import BaseModel
 from tractusx_sdk.dataspace.models.connector.base_queryspec_model import BaseQuerySpecModel
+
+
+def _id_path(endpoint_url: str, oid: object) -> str:
+    """Build the URL of a single resource; the id is URL-encoded as one path segment."""
+    if not isinstance(oid, str) or not oid.strip() or oid in (".", ".."):
+        raise ValueError("A non-empty id other than '.' or '..' is required to build the resource URL")
+    return f"{endpoint_url}/{quote(oid, safe='')}"
 
 
 class CreateControllerMixin:
@@ -71,6 +79,23 @@ class UpdateControllerMixin:
         return self.adapter.put(url=self.endpoint_url, **kwargs)
 
 
+class UpdateByIdControllerMixin:
+    """
+    This mixin injects a method to allow "update" requests
+    to any class that inherits from the Controller class.
+    It updates the resource at its own URL: PUT {endpoint}/{id}.
+    """
+
+    adapter: Adapter
+    endpoint_url: str
+
+    @controller_method
+    def update(self, obj: BaseModel, **kwargs):
+        url = _id_path(self.endpoint_url, getattr(obj, "oid", None))
+        kwargs["data"] = obj.to_data()
+        return self.adapter.put(url=url, **kwargs)
+
+
 class DeleteControllerMixin:
     """
     This mixin injects a method to allow "delete" requests
@@ -95,7 +120,7 @@ class QueryControllerMixin:
     endpoint_url: str
 
     @controller_method
-    def query(self, obj: BaseQuerySpecModel = None, **kwargs):
+    def query(self, obj: BaseQuerySpecModel | None = None, **kwargs):
         if obj:
             kwargs["data"] = obj.to_data()
 

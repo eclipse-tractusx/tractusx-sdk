@@ -45,7 +45,7 @@ pypi/pypi/-/jmespath/1.1.0, MIT, approved, #28692
 pypi/pypi/-/jsonschema-specifications/2025.9.1, MIT, approved, #23323
 pypi/pypi/-/jsonschema/4.26.0, MIT, approved, #26727
 pypi/pypi/-/jwcrypto/1.6.1, LGPL-3.0-only AND LGPL-3.0-or-later, approved, #32476
-pypi/pypi/-/librt/0.16.0, BSD-2-Clause AND MIT AND Python-2.0.1 AND 0BSD, restricted, #32855
+pypi/pypi/-/librt/0.16.0, BSD-2-Clause AND MIT AND PSF-2.0 AND 0BSD, approved, #32855
 pypi/pypi/-/mando/0.7.1, MIT AND BSD-3-Clause, approved, #32852
 pypi/pypi/-/markdown-it-py/4.0.0, MIT, approved, clearlydefined
 pypi/pypi/-/mdurl/0.1.2, MIT, approved, clearlydefined
@@ -59,7 +59,7 @@ pypi/pypi/-/mkdocs/1.6.1, BSD-3-Clause AND BSD-2-Clause AND MIT AND CC-BY-4.0 AN
 pypi/pypi/-/mkdocstrings-python/2.0.3, ISC, approved, #26571
 pypi/pypi/-/mkdocstrings/0.30.1, ISC, approved, #23870
 pypi/pypi/-/moto/5.2.1, Apache-2.0 AND CC-BY-3.0 AND MIT AND MIT-0 AND PostgreSQL AND BSD-3-Clause, approved, #28688
-pypi/pypi/-/mypy/2.4.1, BSD-2-Clause AND MIT AND Python-2.0.1 AND (Apache-2.0 AND MIT) AND BSD-3-Clause AND 0BSD, restricted, #32853
+pypi/pypi/-/mypy/2.4.1, 0BSD AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND MIT AND PSF-2.0, approved, #32853
 pypi/pypi/-/mypy_extensions/1.1.0, MIT, approved, #31048
 pypi/pypi/-/opentelemetry-api/1.45.1, Apache-2.0, approved, #32474
 pypi/pypi/-/packaging/26.0, (Apache-2.0 OR BSD-2-Clause) AND MIT, approved, #26697

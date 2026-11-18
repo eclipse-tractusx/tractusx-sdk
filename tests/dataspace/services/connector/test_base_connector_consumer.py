@@ -158,15 +158,15 @@ class TestBaseConsumerConnectorService(unittest.TestCase):
         """policies=None means accept any policy: it must stay None for the catalog filter, with or without a logger."""
         service = self._service_for_transfer_id()
         with self.assertLogs(bcc.logger, level="WARNING") as logs:
-            result = service.get_transfer_id("bpn", "http://provider", filter_expression=[])
+            result = service.get_transfer_id("bpn", "http://provider", filter_expression=[], policies=None)
         self.assertEqual(result, "transfer-1")
         self.assertIsNone(service.negotiate_and_transfer.call_args.kwargs["policies"])
         self.assertIn("policies=None DETECTED", logs.output[0])
 
     def test_get_transfer_id_without_policies_uses_an_own_cache_identity(self):
         service = self._service_for_transfer_id()
-        service.get_transfer_id("bpn", "http://provider", filter_expression=[])
-        service.get_transfer_id("bpn", "http://provider", filter_expression=[])
+        service.get_transfer_id("bpn", "http://provider", filter_expression=[], policies=None)
+        service.get_transfer_id("bpn", "http://provider", filter_expression=[], policies=None)
         checksums = [c.kwargs["policy_checksum"] for c in service.connection_manager.add_connection.call_args_list]
         self.assertEqual(len(set(checksums)), 2)
 

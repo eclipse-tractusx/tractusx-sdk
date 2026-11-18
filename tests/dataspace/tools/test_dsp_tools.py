@@ -2937,3 +2937,105 @@ class TestJupiterWrongPolicyRejection:
         }]
         with pytest.raises(ValueError, match="No valid"):
             DspTools.filter_assets_and_policies(catalog=JUPITER_CATALOG, allowed_policies=wrong)
+
+
+class TestOnlyTheRulesAreCompared:
+    """
+    Only ``permission``, ``prohibition`` and ``obligation`` decide a match.
+
+    DSP 2025-1 lets a catalog Offer carry ``target`` (its value is the Dataset
+    id), and some connectors send it; others add an ``assigner``, a ``profile``
+    or attributes of their own. An allow-list cannot know them in advance, so
+    none of them may decide whether an offer is acceptable.
+    """
+
+    #: The CCMAPI offer of a DSP 2025-1 connector that sets ``target`` on the Offer.
+    OFFER_WITH_TARGET = {
+        "@id": "NzNkNTgzYmQ:Q0NNQVBJLWE2MjI3ZjRj:OGI3MTk3MmM",
+        "@type": "Offer",
+        "target": "CCMAPI-a6227f4c",
+        "permission": [{
+            "action": "use",
+            "constraint": [{
+                "and": [
+                    {"operator": "eq", "leftOperand": "FrameworkAgreement",
+                     "rightOperand": "DataExchangeGovernance:1.0"},
+                    {"operator": "isAnyOf", "leftOperand": "UsagePurpose", "rightOperand": "cx.ccm.base:1"},
+                ],
+            }],
+        }],
+    }
+
+    ALLOWED = {
+        "permission": [{
+            "action": "use",
+            "constraint": {
+                "and": [
+                    {"leftOperand": "FrameworkAgreement", "operator": "eq",
+                     "rightOperand": "DataExchangeGovernance:1.0"},
+                    {"leftOperand": "UsagePurpose", "operator": "isAnyOf", "rightOperand": ["cx.ccm.base:1"]},
+                ],
+            },
+        }],
+    }
+
+    def test_an_offer_with_a_target_matches(self):
+        assert DspTools.is_policy_valid(self.OFFER_WITH_TARGET, [self.ALLOWED])
+
+    def test_a_target_written_as_a_node_reference_matches(self):
+        offer = copy.deepcopy(self.OFFER_WITH_TARGET)
+        offer["target"] = {"@id": "CCMAPI-a6227f4c"}
+        assert DspTools.is_policy_valid(offer, [self.ALLOWED])
+
+    @pytest.mark.parametrize("extra", [
+        {"odrl:target": {"@id": "CCMAPI-a6227f4c"}},
+        {"assigner": "did:web:provider"},
+        {"profile": "cx-policy:profile2405"},
+        {"@context": "http://www.w3.org/ns/odrl.jsonld"},
+        {"x-vendor:anything": {"nested": ["values"]}},
+    ])
+    def test_any_other_policy_attribute_is_ignored(self, extra):
+        offer = {**copy.deepcopy(self.OFFER_WITH_TARGET), **extra}
+        assert DspTools.is_policy_valid(offer, [self.ALLOWED])
+
+    @pytest.mark.parametrize("key", ["target", "odrl:target", "assigner", "odrl:assigner", "assignee", "odrl:assignee"])
+    def test_a_binding_on_a_rule_is_ignored(self, key):
+        offer = copy.deepcopy(self.OFFER_WITH_TARGET)
+        offer["permission"][0][key] = "CCMAPI-a6227f4c"
+        assert DspTools.is_policy_valid(offer, [self.ALLOWED])
+
+    def test_an_attribute_of_the_allow_list_entry_is_ignored_too(self):
+        allowed = {**copy.deepcopy(self.ALLOWED), "target": "some-other-asset", "policy_id": "mine"}
+        assert DspTools.is_policy_valid(self.OFFER_WITH_TARGET, [allowed])
+
+    def test_the_rules_still_decide(self):
+        allowed = copy.deepcopy(self.ALLOWED)
+        allowed["permission"][0]["constraint"]["and"][1]["rightOperand"] = ["cx.core.legalRequirementForThirdparty:1"]
+        evaluation = DspTools.evaluate_policy(self.OFFER_WITH_TARGET, [allowed])
+        assert not evaluation.accepted
+        differences = "\n".join(evaluation.mismatches[0].differences)
+        assert "rightOperand" in differences
+        assert "target" not in differences
+
+    def test_a_prohibition_the_allow_list_lacks_still_rejects(self):
+        offer = copy.deepcopy(self.OFFER_WITH_TARGET)
+        offer["prohibition"] = [{"action": "use", "constraint": {
+            "leftOperand": "AffiliatesRegion", "operator": "eq", "rightOperand": "cx.region.europe:1"}}]
+        assert not DspTools.is_policy_valid(offer, [self.ALLOWED])
+
+    def test_an_allow_list_entry_without_rules_matches_nothing(self):
+        wrapped = {"@type": "PolicyDefinition", "policy": copy.deepcopy(self.ALLOWED)}
+        assert not DspTools.is_policy_valid(self.OFFER_WITH_TARGET, [wrapped])
+        assert not DspTools.is_policy_valid({"@id": "x", "@type": "Offer"}, [wrapped])
+
+    def test_the_offer_itself_is_not_modified(self):
+        offer = copy.deepcopy(self.OFFER_WITH_TARGET)
+        DspTools.is_policy_valid(offer, [self.ALLOWED])
+        assert offer == self.OFFER_WITH_TARGET
+
+    def test_the_whole_catalog_selects_the_offer(self):
+        catalog = {"@type": "Catalog", "dataset": [{"@id": "CCMAPI-a6227f4c", "@type": "Dataset",
+                                                    "hasPolicy": [self.OFFER_WITH_TARGET]}]}
+        selections = DspTools.filter_assets_and_policies(catalog=catalog, allowed_policies=[self.ALLOWED])
+        assert [s.asset_id for s in selections] == ["CCMAPI-a6227f4c"]
+        assert selections[0].policy is self.OFFER_WITH_TARGET

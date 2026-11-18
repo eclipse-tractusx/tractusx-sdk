@@ -32,13 +32,13 @@ class Adapter(TraceableMixin):
     """
 
     base_url: str
-    session = None
+    session: requests.Session
 
     def __init__(
             self,
             base_url: str,
-            headers: dict = None,
-            tracer: Tracer = None
+            headers: dict | None = None,
+            tracer: Tracer | None = None
     ):
         """
         Create a new adapter instance

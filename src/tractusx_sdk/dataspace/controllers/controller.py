@@ -20,7 +20,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Generic, TypeVar
+
 from ..adapters.adapter import Adapter
+
+AdapterT = TypeVar("AdapterT", bound=Adapter)
 
 
 class Controller:
@@ -41,16 +45,19 @@ class Controller:
         """
         return cls._Builder(cls)
 
-    class _Builder:
+    class _Builder(Generic[AdapterT]):
         """
         Default _Builder class for the Controller.
+
+        Generic over the adapter type, so that controllers inheriting this class can narrow
+        the adapter their builder accepts without breaking the base builder contract.
         """
 
         def __init__(self, cls):
             self.cls = cls
             self._data = {}
 
-        def adapter(self, adapter: Adapter):
+        def adapter(self, adapter: AdapterT):
             self._data["adapter"] = adapter
             return self
 

@@ -98,7 +98,7 @@ class BackendConfig:
 
     base_url: str
     api_key_header: str = "X-Api-Key"
-    api_key: str = ""
+    api_key: str | None = ""
 
     def to_dict(self) -> dict:
         """Convert to dict."""

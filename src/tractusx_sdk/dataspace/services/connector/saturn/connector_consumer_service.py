@@ -34,7 +34,9 @@ from ....controllers.connector.base_dma_controller import BaseDmaController
 from ....controllers.connector.controller_factory import ControllerType, ControllerFactory
 from ....models.connector.saturn.catalog_model import CatalogModel
 import hashlib
+from collections.abc import Sequence
 from requests import Response
+from requests.exceptions import RequestException
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +52,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     DEFAULT_ID_KEY: str = "https://w3id.org/edc/v0.0.1/ns/id"
     ERROR_NO_DATAPLANE_OR_TOKEN: str = "[Connector Service]: No dataplane URL or access_token was able to be retrieved!"
     APPLICATION_JSON_CONTENT_TYPE: str = "application/json"
-    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict = None,
-                 connection_manager: BaseConnectionManager = None,
+    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict | None = None,
+                 connection_manager: BaseConnectionManager | None = None,
                  verify_ssl: bool = True, trace: bool = False):
         """
         :param trace: Flag enabling the tracing of the requests sent to (and the
@@ -101,8 +103,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     def connector_discovery(self):
         return self._connector_discovery_controller
     
-    def _resolve_counter_party_info(self, counter_party_id: str = None, counter_party_address: str = None, 
-                                   bpnl: str = None, protocol: str = DSP_2025, namespace: str = EDC_NAMESPACE, verify: bool = None) -> tuple[str, str, str]:
+    def _resolve_counter_party_info(self, counter_party_id: str | None = None, counter_party_address: str | None = None, 
+                                   bpnl: str | None = None, protocol: str = DSP_2025, namespace: str = EDC_NAMESPACE, verify: bool | None = None) -> tuple[str, str, str]:
         """
         Internal helper to resolve counter party information from either direct parameters or BPNL discovery.
         
@@ -126,12 +128,15 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 counter_party_address, counter_party_id, protocol
             )
             # Use provided values and protocol
+            if counter_party_address is None or counter_party_id is None:
+                raise ValueError(
+                    "[Connector Service]: Either a bpnl or both counter_party_id and counter_party_address must be provided!")
             return counter_party_address, counter_party_id, protocol
     
     def _execute_http_request(self, method: str, dataplane_url: str, access_token: str, path: str = "/",
                             content_type: str = APPLICATION_JSON_CONTENT_TYPE, json=None, data=None, 
-                            verify: bool = False, headers: dict = None, timeout: int = None,
-                            params: dict = None, allow_redirects: bool = False, session=None) -> Response:
+                            verify: bool = False, headers: dict | None = None, timeout: int | None = None,
+                            params: dict | None = None, allow_redirects: bool = False, session=None) -> Response:
         """
         Internal helper to execute HTTP requests with common logic.
         
@@ -182,10 +187,12 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 timeout=timeout, allow_redirects=allow_redirects, **self._trace_kwargs()
             )
 
-    def _get_catalog_internal(self, counter_party_id: str = None, counter_party_address: str = None,
-                            bpnl: str = None, filter_expression: list[dict] = None, timeout: int = None,
+        raise ValueError(f"HTTP method '{method}' is not supported. Only {', '.join(allowed_methods)} are allowed.")
+
+    def _get_catalog_internal(self, counter_party_id: str | None = None, counter_party_address: str | None = None,
+                            bpnl: str | None = None, filter_expression: list[dict] | None = None, timeout: int | None = None,
                             protocol: str = DSP_2025, context: dict = DEFAULT_CONTEXT, 
-                            namespace: str = EDC_NAMESPACE, verify: bool = None) -> dict:
+                            namespace: str = EDC_NAMESPACE, verify: bool | None = None) -> dict | None:
         """
         Internal method to get catalog with optional BPNL resolution and filtering.
         """
@@ -220,7 +227,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return self.get_catalog(request=catalog_request, timeout=timeout, verify=verify)
     
     def get_edr_negotiation_request(self, counter_party_id: str, counter_party_address: str, target: str,
-                                    policy: dict, protocol: str = DSP_2025, context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> ContractNegotiationModel:
+                                    policy: dict, protocol: str = DSP_2025, context: dict | list | None = DEFAULT_NEGOTIATION_CONTEXT) -> ContractNegotiationModel:
         """
         Builds the EDR Negotiation Request.
 
@@ -251,7 +258,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         )
     
     def start_edr_negotiation(self, counter_party_id: str, counter_party_address: str, target: str,
-                              policy: dict, protocol: str = DSP_2025, context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> str | None:
+                              policy: dict, verify: bool | None = None, protocol: str = DSP_2025,
+                              context: dict | list | None = DEFAULT_NEGOTIATION_CONTEXT) -> str | None:
         """
         Starts the edr negotiation and gives the negotiation id.
 
@@ -259,6 +267,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         @param counter_party_address: The URL of the EDC provider.
         @param target: The target asset for the negotiation.
         @param policy: The policy to be used for the negotiation.
+        @param verify: Whether to verify SSL certificates. If None, the adapter default is used.
         @param protocol: DSP protocol version. Defaults to DSP_2025.
         @param context: JSON-LD context for the negotiation request. Defaults to DEFAULT_NEGOTIATION_CONTEXT.
         @returns: negotiation_id:str or if Fail -> None
@@ -279,7 +288,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             )
 
         ## Build catalog api url
-        response: Response = self.edrs.create(request)
+        ## Only forward verify when it was explicitly provided, so the adapter default stays untouched
+        create_kwargs = {} if verify is None else {"verify": verify}
+        response: Response = self.edrs.create(request, **create_kwargs)
         ## In case the response code is not successfull or the response is null
         if (response is None or response.status_code != 200):
             return None
@@ -292,8 +303,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return content.get("@id", None)
     
     def _resolve_policies_from_catalog(self, counter_party_id: str, counter_party_address: str,
-                                        filter_expression: list[dict], protocol: str,
-                                        catalog_context: dict) -> list:
+                                        filter_expression: list[dict] | None, protocol: str,
+                                        catalog_context: dict | list) -> list:
         """
         Auto-discovers and selects a policy from the provider's catalog when policies=None.
 
@@ -345,10 +356,10 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             counter_party_address, policies)
         return policies
 
-    def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
-                        policies: list = [], max_wait: int = 60, poll_interval: int = 1,
-                        protocol: str = DSP_2025, catalog_context: dict = DEFAULT_CONTEXT,
-                        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> str:
+    def get_transfer_id(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict] | None,
+                        policies: Sequence[dict] | None = (), max_wait: int = 60, poll_interval: int = 1,
+                        protocol: str | None = DSP_2025, catalog_context: dict | list | None = DEFAULT_CONTEXT,
+                        negotiation_context: dict | list | None = DEFAULT_NEGOTIATION_CONTEXT) -> str:
 
         """
         Checks if the transfer is already available at the location or not...
@@ -357,10 +368,10 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
         filter_expression (list[dict]): A list of filter conditions for the catalog request.
-        policies (list | None, optional): Allow-list of accepted usage policies (each entry is the
-            policy body without ``@id`` / ``@type``). Pass ``None`` to auto-select the first
-            available policy from the provider's catalog (test-only; avoid in production).
-            An empty list ``[]`` raises a ``ValueError`` immediately. Defaults to ``[]``.
+        policies (Sequence[dict] | None, optional): Allow-list of accepted usage policies (each entry is the
+            policy body without ``@id`` / ``@type``). The default empty tuple raises a ``ValueError``
+            immediately. Pass ``None`` explicitly to auto-select the first available policy from the
+            provider's catalog (test-only; avoid in production).
         max_wait (int, optional): Maximum seconds to wait for negotiation / EDR. Defaults to 60.
         poll_interval (int, optional): Seconds between status-poll attempts. Defaults to 1.
         protocol (str, optional): DSP protocol version. Defaults to DSP_2025.
@@ -373,6 +384,14 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         Raises:
         Exception: If the EDR entry is not found or the transfer ID is not available.
         """
+
+        ## None means "not provided": fall back to the Saturn defaults, as the base class does
+        if protocol is None:
+            protocol = self.DSP_2025
+        if catalog_context is None:
+            catalog_context = self.DEFAULT_CONTEXT
+        if negotiation_context is None:
+            negotiation_context = self.DEFAULT_NEGOTIATION_CONTEXT
 
         ## Fail immediately if policies is an empty list — means no policy has been selected.
         if policies is not None and len(policies) == 0:
@@ -395,7 +414,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         current_policies_checksum = hashlib.sha3_256(str(policies).encode('utf-8')).hexdigest()
         filter_expression_checksum = hashlib.sha3_256(str(filter_expression).encode('utf-8')).hexdigest()
         ## If the counter party id is already available and also the dct type is in the counter_party_id and the transfer key is also present
-        transfer_process_id: str = self.connection_manager.get_connection_transfer_id(counter_party_id=counter_party_id,
+        transfer_process_id: str | None = self.connection_manager.get_connection_transfer_id(counter_party_id=counter_party_id,
                                                                                       counter_party_address=counter_party_address,
                                                                                       query_checksum=filter_expression_checksum,
                                                                                       policy_checksum=current_policies_checksum)
@@ -430,27 +449,37 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                                       query_checksum=filter_expression_checksum,
                                                                       policy_checksum=current_policies_checksum,
                                                                       connection_entry=edr_entry)
+        if transfer_process_id is None:
+            raise RuntimeError("[Connector Service]: The EDR connection could not be stored! No transfer process id was returned!")
         logger.info("[Connector Service]: The EDR Entry was found! Transfer Process ID: [%s]", transfer_process_id)
 
         return transfer_process_id
         
-    def discover_connector_protocol(self, bpnl: str, counter_party_address: str = None, verify: bool = None) -> dict | None:
+    def discover_connector_protocol(self, bpnl: str, counter_party_address: str | None = None, verify: bool | None = None) -> dict | None:
 
         if verify is None:
             verify = getattr(self, 'verify_ssl', True)
-        response: Response = self.connector_discovery.get_discover(
-            ModelFactory.get_connector_discovery_model(dataspace_version=self.dataspace_version,
-                                                       bpnl=bpnl,
-                                                       counter_party_address=counter_party_address),
-            verify=verify
-        )
-        if response is None or response.status_code != 200:
+        try:
+            response: Response = self.connector_discovery.get_discover(
+                ModelFactory.get_connector_discovery_model(dataspace_version=self.dataspace_version,
+                                                           bpnl=bpnl,
+                                                           counter_party_address=counter_party_address),
+                verify=verify
+            )
+        except RequestException as exc:
             raise ConnectionError(
-                f"[Connector Service]: It was not possible to get the catalog from the EDC provider! Response code: [{response.status_code}]")
+                f"[Connector Service]: It was not possible to perform connector discovery with the EDC provider! Network error: {exc}"
+            ) from exc
+        if response is None:
+            raise ConnectionError(
+                "[Connector Service]: It was not possible to perform connector discovery with the EDC provider! No response received")
+        if response.status_code != 200:
+            raise ConnectionError(
+                f"[Connector Service]: It was not possible to perform connector discovery with the EDC provider! Response code: [{response.status_code}]")
         return response.json()
 
 
-    def get_discovery_info(self, bpnl: str, counter_party_address: str = None, namespace: str = EDC_NAMESPACE, verify: bool = None) -> tuple[str, str, str]:
+    def get_discovery_info(self, bpnl: str, counter_party_address: str | None = None, namespace: str = EDC_NAMESPACE, verify: bool | None = None) -> tuple[str, str, str]:
         """
         Retrieves the discovery information for the specified connector protocol.
         
@@ -467,6 +496,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         discovery_info = self.discover_connector_protocol(bpnl=bpnl, counter_party_address=counter_party_address, verify=verify)
         logger.debug("[get_discovery_info] Raw discovery response: %s", discovery_info)
 
+        if discovery_info is None:
+            raise TypeError(f"[Connector Service]: Connector discovery for BPNL [{bpnl}] returned an empty response!")
+
         def _get(key: str):
             namespaced = f"{namespace}{key}"
             if namespaced in discovery_info:
@@ -480,7 +512,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         protocol = _get("protocol")
         return counter_party_address, counter_party_id, protocol
 
-    def get_catalog_with_bpnl(self, bpnl: str, counter_party_address: str = None, filter_expression: list[dict] = None, namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT, verify: bool = None) -> dict | None:
+    def get_catalog_with_bpnl(self, bpnl: str, counter_party_address: str | None = None, filter_expression: list[dict] | None = None, context=DEFAULT_CONTEXT, timeout: int | None = None, verify: bool | None = None, namespace: str = EDC_NAMESPACE) -> dict | None:
         """
         Retrieves the Connector DCAT catalog using the BPNL to discover the connector protocol and address.
 
@@ -488,18 +520,21 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         bpnl (str): The Business Partner Number (BPN) of the counterparty.
         counter_party_address (str, optional): The URL of the EDC provider. If not provided, it will be discovered using the BPNL.
         filter_expression (list[dict], optional): A list of filter criteria to apply to the catalog request. Each entry is a dict with keys like "operandLeft", "operator", "operandRight".
-        namespace (str): The namespace for the returned keys. Default is "https://w3id.org/edc/v0.0.1/ns/".
         context (dict, optional): The JSON-LD context to use in the catalog request.
+        timeout (int, optional): Request timeout in seconds. Defaults to None.
         verify (bool, optional): Whether to verify SSL certificates. If None, uses service default.
+        namespace (str): The namespace for the returned keys. Default is "https://w3id.org/edc/v0.0.1/ns/".
         
         Returns:
         dict | None: The EDC catalog as a dictionary, or None if the request fails.
         """
+        ## Only forward timeout when provided, so the internal call stays unchanged for existing callers
+        timeout_kwargs: dict = {} if timeout is None else {"timeout": timeout}
         return self._get_catalog_internal(bpnl=bpnl, counter_party_address=counter_party_address,
                                         filter_expression=filter_expression,
-                                        context=context, namespace=namespace, verify=verify)
+                                        context=context, namespace=namespace, verify=verify, **timeout_kwargs)
 
-    def get_catalog_request(self, counter_party_id: str, counter_party_address: str, protocol: str = DSP_2025, context=DEFAULT_CONTEXT) -> CatalogModel:
+    def get_catalog_request(self, counter_party_id: str, counter_party_address: str, context=DEFAULT_CONTEXT, protocol: str = DSP_2025) -> CatalogModel:
         ## Here it will autoselect the dataspace version based on the protocol
         return ModelFactory.get_catalog_model(
             dataspace_version=DataspaceVersionMapping.from_protocol(protocol).value,
@@ -510,8 +545,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         )
         
     ## Get catalog request with filter
-    def get_catalog_with_filter(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict],
-                                timeout: int = None, protocol: str = DSP_2025, context=DEFAULT_CONTEXT) -> dict:
+    def get_catalog_with_filter(self, counter_party_id: str, counter_party_address: str, filter_expression: list[dict] | None,
+                                timeout: int | None = None, verify: bool | None = None, context=DEFAULT_CONTEXT,
+                                protocol: str = DSP_2025, **kwargs) -> dict | None:
         """
         Retrieves a catalog from the EDC provider based on a specified filter.
 
@@ -520,17 +556,20 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address (str): The URL of the EDC provider.
         filter_expression (list[dict]): A list of filter conditions, each represented as a dictionary.
         timeout (int, optional): Request timeout in seconds. Defaults to None.
-        protocol (str, optional): DSP protocol version. Defaults to DSP_2025.
+        verify (bool, optional): Whether to verify SSL certificates. If None, uses service default.
         context (dict, optional): JSON-LD context for the catalog request. Defaults to DEFAULT_CONTEXT.
+        protocol (str, optional): DSP protocol version. Defaults to DSP_2025.
+        **kwargs: Accepted for compatibility with the base class signature; not used by this implementation.
 
         Returns:
         dict | None: The EDC catalog as a dictionary, or None if the request fails.
         """
         return self._get_catalog_internal(counter_party_id=counter_party_id, counter_party_address=counter_party_address,
-                                        filter_expression=filter_expression, timeout=timeout, protocol=protocol, context=context)
+                                        filter_expression=filter_expression, timeout=timeout, protocol=protocol, context=context,
+                                        verify=verify)
         
     def get_catalog_request_with_filter(self, counter_party_id: str, counter_party_address: str,
-                                        filter_expression: list[dict], protocol: str = DSP_2025, context=DEFAULT_CONTEXT) -> CatalogModel:
+                                        filter_expression: list[dict] | None, context=DEFAULT_CONTEXT, protocol: str = DSP_2025) -> CatalogModel:
         """
         Prepares a catalog request with a filter for a specific key-value pair.
 
@@ -538,8 +577,8 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_id (str): The identifier of the counterparty (Business Partner Number [BPN]).
         counter_party_address (str): The URL of the EDC provider.
         filter_expression (list[dict]): A list of filter conditions, each represented as a dictionary.
-        protocol (str, optional): DSP protocol version. Defaults to DSP_2025.
         context (dict, optional): JSON-LD context for the catalog request. Defaults to DEFAULT_CONTEXT.
+        protocol (str, optional): DSP protocol version. Defaults to DSP_2025.
 
         Returns:
         CatalogModel: A catalog request with the filter condition included.
@@ -552,20 +591,20 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     
 
     def get_catalogs_by_dct_type(self, counter_party_id: str, edcs: list, dct_type: str,
-                                 dct_type_key: str = DEFAULT_DCT_TYPE_KEY, timeout: int = None,
-                                 protocol: str = DSP_2025, context=DEFAULT_CONTEXT):
+                                 dct_type_key: str = DEFAULT_DCT_TYPE_KEY, timeout: int | None = None,
+                                 context=DEFAULT_CONTEXT, protocol: str = DSP_2025, **kwargs):
         filter_expr = [self.get_filter_expression(key=dct_type_key, value=dct_type, operator="=")]
-        return self.get_catalogs_with_filter(counter_party_id=counter_party_id, edcs=edcs, filter_expression=filter_expr, timeout=timeout, protocol=protocol, context=context)
+        return self.get_catalogs_with_filter(counter_party_id=counter_party_id, edcs=edcs, filter_expression=filter_expr, timeout=timeout, protocol=protocol, context=context, **kwargs)
 
     def get_catalogs_by_dct_type_with_bpnl(self, bpnl: str, edcs: list, dct_type: str,
-                                           dct_type_key: str = DEFAULT_DCT_TYPE_KEY, timeout: int = None,
-                                           namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT):
+                                           dct_type_key: str = DEFAULT_DCT_TYPE_KEY, timeout: int | None = None,
+                                           context=DEFAULT_CONTEXT, namespace: str = EDC_NAMESPACE):
         filter_expr = [self.get_filter_expression(key=dct_type_key, value=dct_type, operator="=")]
         return self.get_catalogs_with_filter_with_bpnl(bpnl=bpnl, edcs=edcs, filter_expression=filter_expr, 
                                                       timeout=timeout, namespace=namespace, context=context)
 
     def get_catalogs_with_filter(self, counter_party_id: str, edcs: list, filter_expression: list[dict],
-                                 timeout: int = None, protocol: str = DSP_2025, context=DEFAULT_CONTEXT):
+                                 timeout: int | None = None, context=DEFAULT_CONTEXT, protocol: str = DSP_2025, **kwargs):
         import threading
         catalogs: dict = {}
         threads: list[threading.Thread] = []
@@ -603,7 +642,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         return catalogs
 
     def get_catalogs_with_filter_with_bpnl(self, bpnl: str, edcs: list, filter_expression: list[dict],
-                                           timeout: int = None, namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT):
+                                           timeout: int | None = None, context=DEFAULT_CONTEXT, namespace: str = EDC_NAMESPACE):
         catalogs = {}
         for edc_url in edcs:
             try:
@@ -617,7 +656,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
     def get_catalog_by_dct_type(self, counter_party_id: str, counter_party_address: str, dct_type: str,
                                 dct_type_key=DEFAULT_DCT_TYPE_KEY, operator="=", timeout=None,
-                                protocol: str = DSP_2025, context=DEFAULT_CONTEXT):
+                                context=DEFAULT_CONTEXT, protocol: str = DSP_2025, **kwargs):
         filter_expr = [self.get_filter_expression(key=dct_type_key, value=dct_type, operator=operator)]
         catalog_request = self.get_catalog_request_with_filter(
             counter_party_id=counter_party_id,
@@ -630,15 +669,15 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
     def get_catalog_by_dct_type_with_bpnl(self, bpnl: str, counter_party_address: str, dct_type: str,
                                           dct_type_key=DEFAULT_DCT_TYPE_KEY, operator="=", timeout=None,
-                                          namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT):
+                                          context=DEFAULT_CONTEXT, namespace: str = EDC_NAMESPACE):
         filter_expr = [self.get_filter_expression(key=dct_type_key, value=dct_type, operator=operator)]
         return self._get_catalog_internal(bpnl=bpnl, counter_party_address=counter_party_address,
                                         filter_expression=filter_expr, timeout=timeout,
                                         context=context, namespace=namespace)
 
     def get_catalog_by_asset_id(self, counter_party_id: str, counter_party_address: str, asset_id: str,
-                          id_key: str = DEFAULT_ID_KEY, operator: str = "=", timeout: int = None,
-                          protocol: str = DSP_2025, context=DEFAULT_CONTEXT) -> dict:
+                          id_key: str = DEFAULT_ID_KEY, operator: str = "=", timeout: int | None = None,
+                          verify: bool | None = None, context=DEFAULT_CONTEXT, protocol: str = DSP_2025, **kwargs) -> dict | None:
         """
         Retrieves a catalog filtered by a specific asset ID.
 
@@ -649,8 +688,10 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         id_key (str): The operand key used to match the asset ID. Defaults to the EDC id namespace key.
         operator (str): The filter operator. Defaults to "=".
         timeout (int, optional): Request timeout in seconds.
-        protocol (str): DSP protocol version.
+        verify (bool, optional): Whether to verify SSL certificates. If None, uses service default.
         context (dict): JSON-LD context.
+        protocol (str): DSP protocol version.
+        **kwargs: Accepted for compatibility with the base class signature; not used by this implementation.
 
         Returns:
         dict | None: The filtered EDC catalog.
@@ -663,11 +704,11 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             protocol=protocol,
             context=context
         )
-        return self.get_catalog(request=catalog_request, timeout=timeout)
+        return self.get_catalog(request=catalog_request, timeout=timeout, verify=verify)
 
     def get_catalog_by_asset_id_with_bpnl(self, bpnl: str, counter_party_address: str, asset_id: str,
-                                    id_key: str = DEFAULT_ID_KEY, operator: str = "=", timeout: int = None,
-                                    namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT) -> dict:
+                                    id_key: str = DEFAULT_ID_KEY, operator: str = "=", timeout: int | None = None,
+                                    verify: bool | None = None, context=DEFAULT_CONTEXT, namespace: str = EDC_NAMESPACE) -> dict | None:
         """
         Retrieves a catalog filtered by a specific asset ID, discovering the connector via BPNL.
 
@@ -678,8 +719,9 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         id_key (str): The operand key used to match the asset ID. Defaults to the EDC id namespace key.
         operator (str): The filter operator. Defaults to "=".
         timeout (int, optional): Request timeout in seconds.
-        namespace (str): The namespace for returned keys.
+        verify (bool, optional): Whether to verify SSL certificates. If None, uses service default.
         context (dict): JSON-LD context.
+        namespace (str): The namespace for returned keys.
 
         Returns:
         dict | None: The filtered EDC catalog.
@@ -687,11 +729,12 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         filter_expr = [self.get_filter_expression(key=id_key, value=asset_id, operator=operator)]
         return self._get_catalog_internal(bpnl=bpnl, counter_party_address=counter_party_address,
                                         filter_expression=filter_expr, timeout=timeout,
-                                        context=context, namespace=namespace)
+                                        context=context, namespace=namespace, verify=verify)
 
     def get_catalog_with_filter_parallel(self, counter_party_id: str, counter_party_address: str,
-                                         filter_expression: list[dict], catalogs: dict = None,
-                                         timeout: int = None, protocol: str = DSP_2025, context=DEFAULT_CONTEXT) -> None:
+                                         filter_expression: list[dict], catalogs: dict | None = None,
+                                         timeout: int | None = None, context=DEFAULT_CONTEXT,
+                                         protocol: str = DSP_2025, **kwargs) -> None:
         catalog_request = self.get_catalog_request_with_filter(
             counter_party_id=counter_party_id,
             counter_party_address=counter_party_address,
@@ -699,11 +742,13 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
             protocol=protocol,
             context=context
         )
+        if catalogs is None:
+            catalogs = {}
         catalogs[counter_party_address] = self.get_catalog(request=catalog_request, timeout=timeout)
 
     def get_catalog_with_filter_parallel_with_bpnl(self, bpnl: str, counter_party_address: str,
-                                                  filter_expression: list[dict], catalogs: dict = None,
-                                                  timeout: int = None, namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT) -> None:
+                                                  filter_expression: list[dict], catalogs: dict | None = None,
+                                                  timeout: int | None = None, context=DEFAULT_CONTEXT, namespace: str = EDC_NAMESPACE) -> None:
         if catalogs is None:
             catalogs = {}
         catalogs[counter_party_address] = self._get_catalog_internal(bpnl=bpnl, counter_party_address=counter_party_address,
@@ -711,14 +756,14 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                                                                    context=context, namespace=namespace)
     
     def get_catalogs_by_dct_type_with_bpnl_parallel(self, bpnl: str, edcs: list, dct_type: str,
-                                                    dct_type_key: str = DEFAULT_DCT_TYPE_KEY, timeout: int = None,
-                                                    namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT):
+                                                    dct_type_key: str = DEFAULT_DCT_TYPE_KEY, timeout: int | None = None,
+                                                    context=DEFAULT_CONTEXT, namespace: str = EDC_NAMESPACE):
         filter_expr = [self.get_filter_expression(key=dct_type_key, value=dct_type, operator="=")]
         return self.get_catalogs_with_filter_with_bpnl_parallel(bpnl=bpnl, edcs=edcs, filter_expression=filter_expr,
                                                                timeout=timeout, namespace=namespace, context=context)
 
     def get_catalogs_with_filter_with_bpnl_parallel(self, bpnl: str, edcs: list, filter_expression: list[dict],
-                                                   timeout: int = None, namespace: str = EDC_NAMESPACE, context=DEFAULT_CONTEXT):
+                                                   timeout: int | None = None, context=DEFAULT_CONTEXT, namespace: str = EDC_NAMESPACE):
         import threading
         catalogs = {}
         threads = []
@@ -742,12 +787,12 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
 
         return catalogs
     
-    def do_dsp_with_bpnl(self, bpnl: str, counter_party_address: str = None, filter_expression: list[dict] = None,
-                        policies: list = [],
+    def do_dsp_with_bpnl(self, bpnl: str, counter_party_address: str | None = None, filter_expression: list[dict] | None = None,
+                        policies: Sequence[dict] | None = (),
                         max_wait: int = 60, poll_interval: int = 1,
-                        namespace: str = EDC_NAMESPACE,
                         catalog_context: dict = DEFAULT_CONTEXT,
-                        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT) -> tuple[str, str]:
+                        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
+                        namespace: str = EDC_NAMESPACE) -> tuple[str, str]:
         """
         Does all the dsp necessary operations until getting the edr.
         Giving you all the necessary data to request data to the edc dataplane.
@@ -776,12 +821,12 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         self,
         counter_party_id: str,
         counter_party_address: str,
-        filter_expression: list[dict],
-        policies: list,
+        filter_expression: list[dict] | None,
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
-        catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        catalog_context: dict | list | None = DEFAULT_CONTEXT,
+        negotiation_context: dict | list | None = DEFAULT_NEGOTIATION_CONTEXT,
         protocol: str = DSP_2025
     ) -> tuple[str, str]:
         """
@@ -821,11 +866,11 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        policies: list = [],
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """
@@ -891,11 +936,11 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         counter_party_address: str,
         filter_expression: list[dict],
         path: str = "/",
-        policies: list = [],
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """
@@ -960,11 +1005,11 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list = [],
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """
@@ -1030,11 +1075,11 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list = [],
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """
@@ -1103,11 +1148,11 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list = [],
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """
@@ -1171,7 +1216,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         bpnl: str,
         counter_party_address: str,
         dct_type: str,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
         operator="=",
         session=None,
@@ -1227,7 +1272,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         dct_type: str,
         json=None,
         data=None,
-        policies: list = None,
+        policies: Sequence[dict] | None = (),
         dct_type_key=DEFAULT_DCT_TYPE_KEY,
         operator="=",
         session=None,
@@ -1288,11 +1333,11 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
         path: str = "/",
         json=None,
         data=None,
-        policies: list = [],
+        policies: Sequence[dict] | None = (),
         max_wait: int = 60,
         poll_interval: int = 1,
         catalog_context: dict = DEFAULT_CONTEXT,
-        negotiation_context: dict = DEFAULT_NEGOTIATION_CONTEXT,
+        negotiation_context: dict | list = DEFAULT_NEGOTIATION_CONTEXT,
         **kwargs
     ) -> Response:
         """

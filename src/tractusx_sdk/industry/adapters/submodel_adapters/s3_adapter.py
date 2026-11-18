@@ -129,7 +129,7 @@ class S3Adapter(SubmodelAdapter):
         self.client_error = ClientError
 
         # Build client kwargs, only including credentials if both are provided
-        client_kwargs = {
+        client_kwargs: dict = {
             "region_name": region_name,
         }
         
@@ -244,7 +244,7 @@ class S3Adapter(SubmodelAdapter):
         try:
             paginator = self.client.get_paginator("list_objects_v2")
             page_iterator = paginator.paginate(Bucket=self.bucket_name, Prefix=prefix or "")
-            keys = []
+            keys: list[str] = []
             for page in page_iterator:
                 contents = page.get("Contents", [])
                 keys.extend(obj["Key"] for obj in contents)
