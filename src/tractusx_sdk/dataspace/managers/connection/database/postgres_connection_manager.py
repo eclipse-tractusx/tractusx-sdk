@@ -22,7 +22,7 @@
 #################################################################################
 ## Code created partially using a LLM (GPT 4o) and reviewed by a human committer
 
-from sqlmodel import Session, select
+from sqlmodel import Session, col, delete, select
 from tractusx_sdk.exceptions import ConnectionManagerError
 from ..base_connection_manager import BaseConnectionManager
 from ....models.connection.database.edr_base import EDRBase
@@ -181,3 +181,37 @@ class PostgresConnectionManager(BaseConnectionManager):
             else:
                 logger.debug("[Postgres Connection Manager] No EDR found to delete for the provided keys.")
                 return False
+
+    def clear_connections_by_party(self, counter_party_id_substring: str) -> int:
+        """
+        Deletes all stored EDR connections whose ``counter_party_id`` contains
+        ``counter_party_id_substring``.
+
+        Useful when the stored ``counter_party_id`` is the full counterparty DID
+        (e.g. ``did:web:wallet.example.com:BPNL000000000065``) but the caller only
+        knows the short BPN form.  The match is a literal substring match: SQL
+        wildcard characters (``%``, ``_``) in the argument are escaped.
+
+        Args:
+            counter_party_id_substring (str): Substring to match against each
+                ``counter_party_id`` (e.g. ``"BPNL000000000065"``).
+
+        Returns:
+            int: Number of distinct counter party entries removed from the database.
+        """
+        party_column = col(self.EDRConnection.counter_party_id)
+        matches_party = party_column.contains(counter_party_id_substring, autoescape=True)
+
+        with Session(self.engine) as session:
+            matched_parties = session.exec(select(party_column).where(matches_party).distinct()).all()
+            if not matched_parties:
+                return 0
+            session.execute(delete(self.EDRConnection).where(matches_party))
+            session.commit()
+
+        removed = len(matched_parties)
+        logger.info(
+            "[Postgres Connection Manager] Cleared %d party entries matching substring '%s'.",
+            removed, counter_party_id_substring
+        )
+        return removed
