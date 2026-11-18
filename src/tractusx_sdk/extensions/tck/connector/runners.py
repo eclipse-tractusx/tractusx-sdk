@@ -71,12 +71,16 @@ from .helpers import (
 )
 
 if TYPE_CHECKING:
+    import argparse
     import logging
 
+    import requests
+
     from tractusx_sdk.dataspace.models.connector.model_factory import ModelFactory
+    from tractusx_sdk.dataspace.services.connector.base_connector_provider import BaseConnectorProviderService
     from tractusx_sdk.dataspace.services.connector.saturn import ConnectorConsumerService
 
-    from .models import DetailedTckConfig, SimpleTckConfig
+    from .models import BackendConfig, ConnectorConfig, DetailedTckConfig, PolicyConfig, SimpleTckConfig
 
 
 # ============================================================================
@@ -139,8 +143,10 @@ def _load_yaml_section(yaml_path: str, section: str) -> dict:
     return section_data
 
 
-def _yaml_section_to_config(raw: dict, cfg_provider, cfg_consumer, cfg_backend,
-                             cfg_access_policy, cfg_usage_policy):
+def _yaml_section_to_config(raw: dict, cfg_provider: ConnectorConfig, cfg_consumer: ConnectorConfig,
+                            cfg_backend: BackendConfig, cfg_access_policy: PolicyConfig,
+                            cfg_usage_policy: PolicyConfig,
+                            ) -> tuple[ConnectorConfig, ConnectorConfig, BackendConfig, PolicyConfig, PolicyConfig, Any, Any]:
     """Apply a raw YAML section dict onto existing config field objects in-place."""
     from .models import ConnectorConfig, BackendConfig, PolicyConfig
 
@@ -182,7 +188,7 @@ def _yaml_section_to_config(raw: dict, cfg_provider, cfg_consumer, cfg_backend,
 
 
 def _apply_cli_to_simple_config(
-    args,
+    args: argparse.Namespace,
     config: SimpleTckConfig,
 ) -> SimpleTckConfig:
     """Apply CLI argument overrides to a :class:`SimpleTckConfig`.
@@ -258,7 +264,7 @@ def _apply_cli_to_simple_config(
 
 
 def _apply_cli_to_detailed_config(
-    args,
+    args: argparse.Namespace,
     config: DetailedTckConfig,
 ) -> DetailedTckConfig:
     """Apply CLI argument overrides to a :class:`DetailedTckConfig`.
@@ -667,7 +673,7 @@ def run_detailed_test(config: DetailedTckConfig, script_dir: str) -> str:
         )
 
         # ── Phase 3: Access data with EDR ─────────────────────────────
-        def _access_and_validate():
+        def _access_and_validate() -> requests.Response:
             resp = access_data_with_edr(
                 logger,
                 dataplane_url=consumption_result["dataplane_url"],
@@ -745,14 +751,14 @@ def _extract_policy_kwargs(policy_config: dict) -> dict:
 
 
 def _provision_detailed(
-    logger,
-    provider,
+    logger: logging.Logger,
+    provider: BaseConnectorProviderService,
     access_policy_config: dict,
     usage_policy_config: dict,
     asset_config: dict,
     backend_config: dict,
     consumer_config: dict,
-    header_fn,
+    header_fn: Callable[[str], None],
 ) -> dict:
     """Phase 1 (detailed): Provision data with verbose step-by-step logging."""
     import time as _time
@@ -1316,16 +1322,16 @@ def _step_wait_for_edr(
 
 
 def _consume_detailed(
-    logger,
-    consumer_service,
+    logger: logging.Logger,
+    consumer_service: ConnectorConsumerService,
     asset_id: str,
     provider_config: dict,
     consumer_config: dict,
     protocol: str,
     negotiation_context: list,
     is_did: bool,
-    model_factory,
-    header_fn,
+    model_factory: type[ModelFactory],
+    header_fn: Callable[[str], None],
 ) -> dict:
     """Phase 2 (detailed): Consumer discovers and consumes data (step-by-step).
 

@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -29,6 +30,7 @@
 
 import requests
 from typing import Any
+from fastapi import Request
 from fastapi.responses import JSONResponse, Response
 from io import BytesIO
 import urllib.parse
@@ -179,29 +181,29 @@ class HttpTools:
         
     
     @staticmethod
-    def file_response(buffer: BytesIO, filename: str, status: int = 200, content_type: str = 'application/pdf'):
+    def file_response(buffer: BytesIO, filename: str, status: int = 200, content_type: str = 'application/pdf') -> Response:
         headers = {'Content-Disposition': f'inline; filename="{filename}"'}
         return Response(buffer.getvalue(), status_code=status,headers=headers, media_type=content_type)
     
     # Generates a error response with message
     @staticmethod
-    def get_error_response(status: int = 500,message: str = "It was not possible to process/execute this request!"):
+    def get_error_response(status: int = 500,message: str = "It was not possible to process/execute this request!") -> JSONResponse:
         return HttpTools.json_response({
             "message": message,
             "status": status 
         }, status)
     
     @staticmethod
-    async def get_body(request):
+    async def get_body(request: Request) -> Any:
         return await request.json()
     
     @staticmethod
-    def get_not_authorized():
+    def get_not_authorized() -> JSONResponse:
         return HttpTools.json_response({
             "message": "Not Authorized",
             "status": 401
         }, 401)
     
     @staticmethod
-    def join_path(url, path):
+    def join_path(url: str, path: str) -> str:
         return urllib.parse.urljoin(base=url, url=path)

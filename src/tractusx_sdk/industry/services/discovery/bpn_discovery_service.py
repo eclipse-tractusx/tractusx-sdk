@@ -119,7 +119,7 @@ class BpnDiscoveryService(BaseDiscoveryService):
         
         return full_url
 
-    def get_bpn_discovery_url(self, bpn_discovery_key:str="manufacturerPartId"):
+    def get_bpn_discovery_url(self, bpn_discovery_key:str="manufacturerPartId") -> str:
         """
         Legacy method for backward compatibility. Use get_discovery_url instead.
         """

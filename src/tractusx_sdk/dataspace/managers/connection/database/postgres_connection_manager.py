@@ -124,7 +124,7 @@ class PostgresConnectionManager(BaseConnectionManager):
             result = session.exec(stmt).first()
         return result.edr_data if result else {}
 
-    def get_connection_transfer_id(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
+    def get_connection_transfer_id(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str) -> str | None:
         """
         Retrieves the transfer process ID for the given parameters.
 

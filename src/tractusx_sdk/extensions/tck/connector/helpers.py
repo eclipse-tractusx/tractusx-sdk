@@ -36,11 +36,13 @@ import logging
 import os
 import sys
 import time
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 import requests
 
+from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
 from tractusx_sdk.dataspace.services.connector import ServiceFactory
 from tractusx_sdk.dataspace.services.connector.base_connector_provider import (
     BaseConnectorProviderService,
@@ -212,7 +214,7 @@ def initialize_provider_service(
     logger: logging.Logger,
     provider_config: dict,
     header_fn: Optional[Callable] = None,
-):
+) -> BaseConnectorProviderService:
     """
     Initialize the Provider Connector Service.
 
@@ -259,8 +261,8 @@ def initialize_consumer_service(
     logger: logging.Logger,
     consumer_config: dict,
     header_fn: Optional[Callable] = None,
-    connection_manager=None,
-):
+    connection_manager: BaseConnectionManager | None = None,
+) -> Any:  # Version-specific consumer (Jupiter/Saturn): do_get_with_bpnl & co. live on the subclasses
     """
     Initialize the Consumer Connector Service.
 
@@ -378,7 +380,7 @@ def access_data_with_edr(
     header_fn: Optional[Callable] = None,
     path: str = "/",
     verify: bool = False,
-):
+) -> requests.Response:
     """
     Access data using EDR (Endpoint Data Reference).
 
@@ -449,7 +451,7 @@ def access_data_with_edr(
 
 def cleanup_provider_resources(
     logger: logging.Logger,
-    provider_service,
+    provider_service: BaseConnectorProviderService,
     provision_ids: dict,
     header_fn: Optional[Callable] = None,
 ) -> None:
@@ -535,7 +537,7 @@ def cleanup_backend_data(
 # ============================================================================
 
 
-def run_step(steps: list, name: str, fn: Callable):
+def run_step(steps: list, name: str, fn: Callable) -> Any:
     """
     Execute a test step function, record timing and PASS/FAIL.
 
@@ -751,7 +753,7 @@ def build_tck_cli_parser(
 
 
 def apply_cli_overrides(
-    args,
+    args: argparse.Namespace,
     provider_config: dict,
     consumer_config: dict,
     backend_config: dict,
@@ -953,13 +955,13 @@ def provision_simple(
 
 def consume_simple_bpnl(
     logger: logging.Logger,
-    consumer,
+    consumer: Any,
     asset_id: str,
     provider_config: dict,
-    accepted_policies=None,
+    accepted_policies: Sequence[dict] | None = None,
     header_fn: Optional[Callable] = None,
     verify: bool = False,
-):
+) -> requests.Response:
     """
     Phase 2 (simple / BPNL): Consumer calls ``do_get_with_bpnl`` — SDK handles everything.
 
@@ -997,7 +999,7 @@ def consume_simple_bpnl(
         provider_config["bpn"],
         asset_id,
     )
-    response = consumer.do_get_with_bpnl(
+    response: requests.Response = consumer.do_get_with_bpnl(
         bpnl=provider_config["bpn"],
         counter_party_address=provider_config["dsp_url"],
         filter_expression=filter_expression,
@@ -1012,13 +1014,13 @@ def consume_simple_bpnl(
 
 def consume_simple_did(
     logger: logging.Logger,
-    consumer,
+    consumer: Any,
     asset_id: str,
     provider_config: dict,
-    accepted_policies=None,
+    accepted_policies: Sequence[dict] | None = None,
     header_fn: Optional[Callable] = None,
     verify: bool = False,
-):
+) -> requests.Response:
     """
     Phase 2 (simple / DID): Consumer calls ``do_get`` with DID — SDK handles everything.
 
@@ -1057,7 +1059,7 @@ def consume_simple_did(
         provider_config["did"],
         asset_id,
     )
-    response = consumer.do_get(
+    response: requests.Response = consumer.do_get(
         counter_party_id=provider_config["did"],
         counter_party_address=provider_config["dsp_url"],
         filter_expression=filter_expression,

@@ -481,7 +481,7 @@ class TraceOperation:
             "entries": [entry.to_dict() for entry in entries],
         }
 
-    def to_json(self, indent: int = 2, **kwargs) -> str:
+    def to_json(self, indent: int = 2, **kwargs: Any) -> str:
         """
         Returns the operation as a JSON string, ready to be parsed.
 
@@ -746,7 +746,7 @@ class Tracer:
             and _entry_matches_operation(entry, operation_part, operation_id)
         ]
 
-    def to_list(self, **filters) -> list:
+    def to_list(self, **filters: Any) -> list:
         """
         Returns the recorded entries as a list of dictionaries.
 
@@ -766,7 +766,7 @@ class Tracer:
             "entries": [entry.to_dict() for entry in entries],
         }
 
-    def to_json(self, indent: int = 2, **kwargs) -> str:
+    def to_json(self, indent: int = 2, **kwargs: Any) -> str:
         """
         Returns the complete trace as a JSON string, ready to be parsed.
 
@@ -818,7 +818,7 @@ class Tracer:
         return session
 
     @contextmanager
-    def activate(self, name: Optional[str] = None):
+    def activate(self, name: Optional[str] = None) -> Iterator[TraceOperation]:
         """
         Records every SDK call performed inside the block, as one operation.
 
@@ -868,7 +868,7 @@ def get_active_operation() -> Optional[TraceOperation]:
 
 
 @contextmanager
-def _operation_scope(name: Optional[str] = None):
+def _operation_scope(name: Optional[str] = None) -> Iterator[TraceOperation]:
     """
     Opens a new operation, nested inside the ones already active.
 
@@ -886,7 +886,7 @@ def _operation_scope(name: Optional[str] = None):
 
 
 @contextmanager
-def tracing_context(*tracers: Tracer, context: Optional[str] = None):
+def tracing_context(*tracers: Tracer, context: Optional[str] = None) -> Iterator[None]:
     """
     Activates one or more tracers (and an optional label) for a block of code.
 
@@ -955,7 +955,7 @@ def trace_call(
     params: Any = None,
     body: Any = None,
     context: Optional[str] = None,
-):
+) -> Iterator[TraceCall]:
     """
     Traces a single call to an external service.
 
@@ -1300,7 +1300,7 @@ class TraceableMixin:
             self._tracer.disable()
 
     @contextmanager
-    def trace_operation(self, name: Optional[str] = None):
+    def trace_operation(self, name: Optional[str] = None) -> Iterator[TraceOperation]:
         """
         Records the calls performed inside the block, as one named operation.
 
@@ -1326,7 +1326,7 @@ class TraceableMixin:
         with tracer.activate(name) as operation:
             yield operation
 
-    def get_trace(self, **filters) -> list:
+    def get_trace(self, **filters: Any) -> list:
         """
         Returns the recorded requests and responses.
 
@@ -1336,7 +1336,7 @@ class TraceableMixin:
         """
         return [] if self._tracer is None else self._tracer.to_list(**filters)
 
-    def get_trace_entries(self, **filters) -> list:
+    def get_trace_entries(self, **filters: Any) -> list:
         """
         Returns the recorded requests and responses as `TraceEntry` objects.
 
@@ -1356,7 +1356,7 @@ class TraceableMixin:
         """Returns the complete trace (metadata included) as a dictionary."""
         return {"enabled": False, "count": 0, "entries": []} if self._tracer is None else self._tracer.to_dict()
 
-    def get_trace_json(self, indent: int = 2, **kwargs) -> str:
+    def get_trace_json(self, indent: int = 2, **kwargs: Any) -> str:
         """
         Returns the complete trace as a JSON string, ready to be parsed.
 

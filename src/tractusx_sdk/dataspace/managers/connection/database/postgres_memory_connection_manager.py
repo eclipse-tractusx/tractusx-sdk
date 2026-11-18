@@ -73,7 +73,7 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
         DynamicEDRConnection.metadata.create_all(engine)
         self._load_from_db()
 
-    def add_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum, connection_entry) -> str | None:
+    def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry: dict) -> str | None:
         """
         Add a new EDR connection and trigger database persistence.
 
@@ -92,7 +92,7 @@ class PostgresMemoryConnectionManager(MemoryConnectionManager):
         self._trigger_save()
         return response
 
-    def delete_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum) -> bool:
+    def delete_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str) -> bool:
         """
         Delete an EDR connection and trigger database persistence.
 

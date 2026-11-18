@@ -1,7 +1,7 @@
 #################################################################################
 # Tractus-X - Industry Flag Service
 #
-# Copyright (c) 2025,2026 LKS NEXT
+# Copyright (c) 2025,2026 LKS Next
 # Copyright (c) 2025 CGI Deutschland B.V. & Co. KG
 # Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
@@ -41,7 +41,7 @@ class OAuth2Manager(AuthManagerInterface):
     clientid:str
     clientsecret:str
 
-    def __init__(self, auth_url, realm, clientid, clientsecret) -> None:
+    def __init__(self, auth_url: str, realm: str, clientid: str, clientsecret: str) -> None:
 
         ## Connect to the server
         self.connect(auth_url=auth_url, realm=realm, clientid=clientid, clientsecret=clientsecret)
@@ -68,7 +68,7 @@ class OAuth2Manager(AuthManagerInterface):
         self.connected=True
     
 
-    def get_token(self, scope:str="openid profile email"):
+    def get_token(self, scope:str="openid profile email") -> str:
         ## Check if connected
         if(not self.connected):
             raise RuntimeError("Not connected. Please call the connect() method before requesting a token.")
@@ -79,9 +79,10 @@ class OAuth2Manager(AuthManagerInterface):
             raise ValueError("Failed to retrieve token from IAM instance. The credentials might be incorrect.")
         ## Store the token
         self.token = token
-        return self.token["access_token"]
+        access_token: str = self.token["access_token"]
+        return access_token
     
-    def add_auth_header(self, headers:dict | None=None):
+    def add_auth_header(self, headers:dict | None=None) -> dict:
         ## Check if connected
         if(not self.connected):
             raise RuntimeError("Not connected. Please call the connect() method before requesting an authorization header.")

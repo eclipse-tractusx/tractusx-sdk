@@ -23,7 +23,7 @@
 
 import logging
 from dataclasses import dataclass, fields
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from requests import get
 import jsonschema
@@ -109,8 +109,8 @@ class ValidationResult(_DictAccess):
 ## Source: https://github.com/eclipse-tractusx/tractusx-sdk-services/blob/cfd73933ad7871891bee9f117b32643bc9abad40/test-orchestrator/test_orchestrator/utils.py#L176-L217
 
 def submodel_schema_finder(
-        semantic_id,
-        link_core: Optional[str] = 'https://raw.githubusercontent.com/eclipse-tractusx/sldt-semantic-models/main/') -> SchemaLookupResult:
+        semantic_id: str,
+        link_core: str = 'https://raw.githubusercontent.com/eclipse-tractusx/sldt-semantic-models/main/') -> SchemaLookupResult:
     """
     Function to facilitate the validation of the submodel output by retrieving the correct schema
     based on the semantic_id provided by the user
@@ -146,7 +146,7 @@ def submodel_schema_finder(
 
     return SchemaLookupResult(schema=schema, link=schema_link)
 
-def json_validator(schema, json_to_validate, validation_type: str = 'jsonschema', raise_on_error: bool = True) -> ValidationResult:
+def json_validator(schema: dict, json_to_validate: Any, validation_type: str = 'jsonschema', raise_on_error: bool = True) -> ValidationResult:
     """
     Validates a JSON object against a given schema.
 

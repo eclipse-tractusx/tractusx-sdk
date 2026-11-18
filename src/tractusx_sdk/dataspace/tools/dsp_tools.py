@@ -55,10 +55,10 @@ def _get_datasets(catalog: dict) -> dict | list | None:
     return None
 
 
-def _get_policies(dataset: dict):
+def _get_policies(dataset: dict) -> dict | list | None:
     """Return the ``hasPolicy`` value from a dataset, trying DSP 2025-1 and legacy keys."""
     for key in _POLICY_KEYS:
-        value = dataset.get(key)
+        value: dict | list | None = dataset.get(key)
         if value is not None:
             return value
     return None
@@ -208,7 +208,7 @@ def _get_constraint_parts(d: dict) -> tuple[str | None, str | None, str | None]:
     return (None, None, None)
 
 
-def _format_constraint(left, op, right) -> str:
+def _format_constraint(left: Any, op: Any, right: Any) -> str:
     """Format a constraint as ``leftOperand OPERATOR rightOperand``."""
     return f"{_fmt(left)} {_fmt(op)} {_fmt(right)}"
 
@@ -218,7 +218,7 @@ def _is_constraint_dict(d: dict) -> bool:
     return any(k in d for k in _CONSTRAINT_LEFT_KEYS)
 
 
-def _to_set(value) -> set:
+def _to_set(value: Any) -> set:
     """Coerce a value (string or list) into a set for subset checks."""
     if isinstance(value, list):
         return set(value)
@@ -227,7 +227,7 @@ def _to_set(value) -> set:
     return {value} if value is not None else set()
 
 
-def _right_operand_matches(catalog_right, allowed_right) -> bool:
+def _right_operand_matches(catalog_right: Any, allowed_right: Any) -> bool:
     """
     Check whether the allowed rightOperand is satisfied by the catalog rightOperand.
 
@@ -259,7 +259,7 @@ def _constraint_matches(cat_dict: dict, allow_dict: dict) -> bool:
     return _right_operand_matches(cat_right, allow_right)
 
 
-def _permission_matches(catalog_perm, allowed_perm) -> bool:
+def _permission_matches(catalog_perm: Any, allowed_perm: Any) -> bool:
     """
     Check whether the catalog's permission(s) satisfy the allowed permission(s).
 
@@ -279,7 +279,7 @@ def _permission_matches(catalog_perm, allowed_perm) -> bool:
     return True
 
 
-def _policies_match(normalized_policy, normalized_allowed) -> bool:
+def _policies_match(normalized_policy: Any, normalized_allowed: Any) -> bool:
     """
     Deep-compare two normalized policy structures.
 
@@ -369,7 +369,7 @@ def _explain_constraint_diff(cat_dict: dict, allow_dict: dict, path: str) -> lis
     return ["\n".join(lines)]
 
 
-def _explain_permission_diff(cat_val, allow_val, path: str) -> list[str]:
+def _explain_permission_diff(cat_val: Any, allow_val: Any, path: str) -> list[str]:
     """
     Produce diff output for the ``permission`` key, applying the same
     "any match" semantics used by ``_permission_matches``.
@@ -524,7 +524,7 @@ def _policy_differences(normalized_policy: dict, normalized_allowed: dict, path:
     return diffs
 
 
-def _fmt(value) -> str:
+def _fmt(value: Any) -> str:
     """Return a compact string representation for log messages."""
     if isinstance(value, str):
         return f"'{value}'"

@@ -27,7 +27,7 @@ class BaseConnectionManager(ABC):
     TRANSFER_ID_KEY = "transferProcessId"
     
     @abstractmethod
-    def __init__(self):
+    def __init__(self) -> None:
         raise NotImplementedError
     
     @abstractmethod
