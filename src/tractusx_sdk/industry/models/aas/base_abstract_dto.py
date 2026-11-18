@@ -35,9 +35,9 @@ from tractusx_sdk.industry.models.aas import (
 # By bounding the Generic types to the specific class
 # , we can ensure that it only accepts implementations of the abstract classes
 # these implementations are the AAS version specific classes
-TSubModelDesc = TypeVar("TSubModelDesc", bound="AbstractSubModelDescriptor[Any, Any, Any, Any]")
+TSubModelDesc = TypeVar("TSubModelDesc", bound=AbstractSubModelDescriptor[Any, Any, Any, Any])
 TPagingMetadata = TypeVar("TPagingMetadata", bound="AbstractPagingMetadata")
-TShellDescriptor = TypeVar("TShellDescriptor", bound="AbstractShellDescriptor[Any, Any, Any, Any, Any]")
+TShellDescriptor = TypeVar("TShellDescriptor", bound=AbstractShellDescriptor[Any, Any, Any, Any, Any])
 TMessage = TypeVar("TMessage", bound="AbstractMessage")
 
 

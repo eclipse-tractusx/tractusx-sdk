@@ -364,8 +364,6 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
 
     def __del__(self) -> None:
         """Cleanup HTTP client on adapter destruction."""
-        try:
-            if hasattr(self, 'client'):
-                self.client.close()
-        except Exception:
-            pass
+        client = getattr(self, 'client', None)
+        if client is not None:
+            client.close()
