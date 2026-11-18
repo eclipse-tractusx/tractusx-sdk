@@ -227,7 +227,7 @@ class Notification(BaseModel):
     class _Builder:
         """Builder class for fluent Notification construction following Industry Core schema."""
         
-        def __init__(self, cls):
+        def __init__(self, cls: "type[Notification]") -> None:
             self.cls = cls
             self._header_data: Dict[str, Any] = {}
             self._content_data: Dict[str, Any] = {}

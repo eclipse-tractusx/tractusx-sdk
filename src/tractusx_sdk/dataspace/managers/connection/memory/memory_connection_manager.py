@@ -26,6 +26,7 @@ Memory-based connection manager for storing EDR connections in an in-memory cach
 Provides thread-safe methods for adding, retrieving, and deleting EDR connections.
 """
 
+from typing import Any
 import copy
 from tractusx_sdk.exceptions import ConnectionManagerError
 from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
@@ -51,10 +52,10 @@ class MemoryConnectionManager(BaseConnectionManager):
         # Initialize the connection cache and thread lock for concurrency.
         self.provider_id_key = provider_id_key
         self.edrs_key = edrs_key
-        self.open_connections: dict = dict()
+        self.open_connections: dict[str, Any] = dict()
         self._lock = threading.RLock()
         
-    def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry:dict) -> str | None:
+    def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry:dict[str, Any]) -> str | None:
         """
         Adds a new EDR connection to the in-memory cache.
 
@@ -111,7 +112,7 @@ class MemoryConnectionManager(BaseConnectionManager):
                 self.open_connections[self.edrs_key])
             return transfer_process_id
     
-    def get_connection(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
+    def get_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str) -> dict[str, Any]:
         """
         Retrieves a specific EDR connection from the cache.
 
@@ -126,14 +127,14 @@ class MemoryConnectionManager(BaseConnectionManager):
         """
         # Safely navigate the nested dictionaries to retrieve the stored connection.
         with self._lock:
-            counterparty_data: dict = self.open_connections.get(counter_party_id, {})
-            edc_data: dict = counterparty_data.get(counter_party_address, {})
-            oid_data: dict = edc_data.get(query_checksum, {})
-            cached_entry: dict = oid_data.get(policy_checksum, {})
+            counterparty_data: dict[str, Any] = self.open_connections.get(counter_party_id, {})
+            edc_data: dict[str, Any] = counterparty_data.get(counter_party_address, {})
+            oid_data: dict[str, Any] = edc_data.get(query_checksum, {})
+            cached_entry: dict[str, Any] = oid_data.get(policy_checksum, {})
         
         return cached_entry
     
-    def get_connection_transfer_id(self, counter_party_id, counter_party_address, query_checksum, policy_checksum):
+    def get_connection_transfer_id(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str) -> str | None:
         """
         Retrieves the transfer process ID for a given EDR connection.
 
@@ -147,7 +148,7 @@ class MemoryConnectionManager(BaseConnectionManager):
             str | None: The transfer process ID if found, else None.
         """
         with self._lock:
-            cached_entry: dict = self.get_connection(counter_party_id, counter_party_address, query_checksum, policy_checksum)
+            cached_entry: dict[str, Any] = self.get_connection(counter_party_id, counter_party_address, query_checksum, policy_checksum)
             transfer_id: str | None = cached_entry.get(self.TRANSFER_ID_KEY, None)
         
         return transfer_id

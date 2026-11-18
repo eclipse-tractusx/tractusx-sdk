@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,6 +21,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
+
+import requests
+
 from .dma_controller import DmaController
 from tractusx_sdk.dataspace.models.connector.jupiter import CatalogModel
 
@@ -31,7 +36,7 @@ class CatalogController(DmaController):
 
     endpoint_url = "/v3/catalog"
 
-    def get_catalog(self, obj: CatalogModel, **kwargs):
+    def get_catalog(self, obj: CatalogModel, **kwargs: Any) -> requests.Response:
         kwargs["data"] = obj.to_data()
         return self.adapter.post(url=f"{self.endpoint_url}/request", **kwargs)
 

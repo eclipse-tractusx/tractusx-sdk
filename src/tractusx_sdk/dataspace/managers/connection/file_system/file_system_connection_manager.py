@@ -31,6 +31,7 @@ import logging
 import os
 import threading
 import time
+from typing import Any
 from filelock import FileLock
 from ..memory import MemoryConnectionManager
 import hashlib
@@ -62,17 +63,17 @@ class FileSystemConnectionManager(MemoryConnectionManager):
         self.lock = FileLock(f"{self.file_path}.lock")
         self.persist_interval = persist_interval
         self._stop_event = threading.Event()
-        self._last_loaded_hash = None
+        self._last_loaded_hash: str | None = None
         self._load_if_updated()
         self._start_background_tasks()
 
-    def _start_background_tasks(self):
+    def _start_background_tasks(self) -> None:
         """
         Start the background thread for periodic persistence.
         """
         threading.Thread(target=self._persistence_loop, daemon=True).start()
 
-    def _persistence_loop(self):
+    def _persistence_loop(self) -> None:
         """
         Background thread loop to periodically save to and load from the JSON file.
         """
@@ -81,7 +82,7 @@ class FileSystemConnectionManager(MemoryConnectionManager):
             self._save_to_file()
             self._load_if_updated()
 
-    def _save_to_file(self):
+    def _save_to_file(self) -> None:
         """
         Save current in-memory connections to a JSON file with file locking if it differs from the last saved state.
         """
@@ -97,7 +98,7 @@ class FileSystemConnectionManager(MemoryConnectionManager):
         except Exception:
             logger.exception("[FileSystemConnectionManager] Error saving to file '%s'", self.file_path)
 
-    def _load_if_updated(self):
+    def _load_if_updated(self) -> None:
         """
         Load connections from the JSON file if the content differs from the current in-memory state.
         """
@@ -114,13 +115,13 @@ class FileSystemConnectionManager(MemoryConnectionManager):
         except Exception:
             logger.exception("[FileSystemConnectionManager] Error loading from file '%s'", self.file_path)
 
-    def _calculate_hash(self, data):
+    def _calculate_hash(self, data: Any) -> str:
         """
         Generate a hash from the current connections data for change detection.
         """
         return hashlib.sha256(json.dumps(data, sort_keys=True, default=str).encode()).hexdigest()
 
-    def stop(self):
+    def stop(self) -> None:
         """
         Stop the background persistence thread.
         """

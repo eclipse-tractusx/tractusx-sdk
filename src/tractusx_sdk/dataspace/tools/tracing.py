@@ -77,7 +77,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from time import perf_counter
 from types import FrameType
-from typing import Any, Iterable, Iterator, Optional
+from typing import Any, Callable, Iterable, Iterator, Optional, TypeVar, cast
 
 import requests
 
@@ -88,7 +88,7 @@ logger = logging.getLogger(__name__)
 TRACER_ATTRIBUTE: str = "__tractusx_sdk_tracer__"
 
 # Header names replaced by `REDACTED_VALUE` when `redact_headers` is enabled.
-DEFAULT_REDACTED_HEADERS: frozenset = frozenset({
+DEFAULT_REDACTED_HEADERS: frozenset[Any] = frozenset({
     "authorization",
     "proxy-authorization",
     "x-api-key",
@@ -110,7 +110,7 @@ TRUNCATED_MARKER: str = "...[truncated {count} {unit}]"
 TRUNCATED_KEY: str = "..."
 
 # Modules skipped when guessing the "context" (the caller) of a traced call.
-_CONTEXT_SKIPPED_MODULES: tuple = (
+_CONTEXT_SKIPPED_MODULES: tuple[Any, ...] = (
     "contextlib",
     "tractusx_sdk.dataspace.tools.tracing",
     "tractusx_sdk.dataspace.tools.http_tools",
@@ -118,11 +118,11 @@ _CONTEXT_SKIPPED_MODULES: tuple = (
 )
 
 # Stack of tracers activated with `Tracer.activate()` / `tracing_context()`.
-_active_tracers: ContextVar[tuple] = ContextVar("tractusx_sdk_active_tracers", default=())
+_active_tracers: ContextVar[tuple[Any, ...]] = ContextVar("tractusx_sdk_active_tracers", default=())
 # Optional label describing the operation currently being executed.
 _active_context: ContextVar[Optional[str]] = ContextVar("tractusx_sdk_trace_context", default=None)
 # Stack of operations opened with `trace_operation()` / `Tracer.activate()`.
-_active_operations: ContextVar[tuple] = ContextVar("tractusx_sdk_active_operations", default=())
+_active_operations: ContextVar[tuple[Any, ...]] = ContextVar("tractusx_sdk_active_operations", default=())
 
 
 def _utc_now() -> str:
@@ -172,7 +172,7 @@ def _shrink(value: Any, max_chars: int) -> Any:
     return _shrink_value(value, [max_chars])
 
 
-def _shrink_value(value: Any, budget: list) -> Any:
+def _shrink_value(value: Any, budget: list[Any]) -> Any:
     """
     Trims `value` against a shared, mutable character `budget`.
 
@@ -200,7 +200,7 @@ def _shrink_value(value: Any, budget: list) -> Any:
         return shrunk
 
     if isinstance(value, (list, tuple)):
-        shrunk_items: list = []
+        shrunk_items: list[Any] = []
         items = list(value)
         for position, item in enumerate(items):
             if budget[0] <= 0:
@@ -258,7 +258,7 @@ def _truncate(value: str, max_chars: int | None) -> str:
     return value[:max_chars] + TRUNCATED_MARKER.format(count=len(value) - max_chars, unit="chars")
 
 
-def _headers_to_dict(headers: Any, redact: bool, redacted_headers: frozenset) -> Optional[dict]:
+def _headers_to_dict(headers: Any, redact: bool, redacted_headers: frozenset[Any]) -> Optional[dict[str, Any]]:
     """Normalizes headers into a plain dict, optionally redacting secrets."""
     if headers is None:
         return None
@@ -268,7 +268,7 @@ def _headers_to_dict(headers: Any, redact: bool, redacted_headers: frozenset) ->
     except AttributeError:
         return {"headers": str(headers)}
 
-    result: dict = {}
+    result: dict[str, Any] = {}
     for key, value in items:
         if redact and str(key).lower() in redacted_headers:
             result[str(key)] = REDACTED_VALUE
@@ -282,7 +282,8 @@ def _content_type(headers: Any) -> Optional[str]:
     if headers is None:
         return None
     try:
-        return headers.get("Content-Type") or headers.get("content-type")
+        content_type: Optional[str] = headers.get("Content-Type") or headers.get("content-type")
+        return content_type
     except (AttributeError, TypeError):
         return None
 
@@ -332,9 +333,9 @@ class TraceEntry:
     started_at: str = field(default_factory=_utc_now)
     finished_at: Optional[str] = None
     duration_ms: Optional[float] = None
-    request: dict = field(default_factory=dict)
-    response: Optional[dict] = None
-    error: Optional[dict] = None
+    request: dict[str, Any] = field(default_factory=dict)
+    response: Optional[dict[str, Any]] = None
+    error: Optional[dict[str, Any]] = None
 
     @property
     def status_code(self) -> Optional[int]:
@@ -350,7 +351,7 @@ class TraceEntry:
         status_code = self.status_code
         return status_code is not None and status_code >= 400
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Returns the entry as a plain, JSON serializable dictionary."""
         return {
             "id": self.id,
@@ -377,7 +378,7 @@ class TraceCall:
 
     __slots__ = ("entry", "_tracers", "_started")
 
-    def __init__(self, entry: Optional[TraceEntry] = None, tracers: tuple = ()):
+    def __init__(self, entry: Optional[TraceEntry] = None, tracers: tuple[Any, ...] = ()):
         self.entry = entry
         self._tracers = tracers
         self._started = perf_counter()
@@ -443,7 +444,7 @@ class TraceOperation:
         self.name = name
         self.started_at = _utc_now()
         self.finished_at: Optional[str] = None
-        self._entries: list = []
+        self._entries: list[Any] = []
         self._lock = threading.RLock()
 
     def add(self, entry: TraceEntry) -> TraceEntry:
@@ -453,7 +454,7 @@ class TraceOperation:
         return entry
 
     @property
-    def entries(self) -> list:
+    def entries(self) -> list[Any]:
         """Returns a copy of the recorded entries, in execution order."""
         with self._lock:
             return list(self._entries)
@@ -463,11 +464,11 @@ class TraceOperation:
         """Whether any call of the operation raised, or returned a 4xx/5xx."""
         return any(entry.failed for entry in self.entries)
 
-    def to_list(self) -> list:
+    def to_list(self) -> list[Any]:
         """Returns the recorded entries as a list of dictionaries."""
         return [entry.to_dict() for entry in self.entries]
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Returns the operation, including its metadata, as a dictionary."""
         entries = self.entries
         return {
@@ -480,7 +481,7 @@ class TraceOperation:
             "entries": [entry.to_dict() for entry in entries],
         }
 
-    def to_json(self, indent: int = 2, **kwargs) -> str:
+    def to_json(self, indent: int = 2, **kwargs: Any) -> str:
         """
         Returns the operation as a JSON string, ready to be parsed.
 
@@ -493,7 +494,7 @@ class TraceOperation:
     def __len__(self) -> int:
         return len(self.entries)
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Iterator[Any]:
         return iter(self.entries)
 
     def __repr__(self) -> str:
@@ -518,7 +519,7 @@ class Tracer:
         capture_headers: bool = True,
         max_body_chars: Optional[int] = DEFAULT_MAX_BODY_CHARS,
         redact_headers: bool = True,
-        redacted_headers: Optional[set] = None,
+        redacted_headers: Optional[set[Any]] = None,
     ):
         """
         Create a new tracer.
@@ -545,7 +546,7 @@ class Tracer:
         )
         self.created_at = _utc_now()
 
-        self._entries: list = []
+        self._entries: list[Any] = []
         self._counter: int = 0
         self._lock = threading.RLock()
 
@@ -631,10 +632,10 @@ class Tracer:
                 del self._entries[0:len(self._entries) - self.max_entries]
         return entry
 
-    def _describe_response(self, response: Any) -> dict:
+    def _describe_response(self, response: Any) -> dict[str, Any]:
         """Extracts the relevant information out of a response object."""
         headers = _safe_getattr(response, "headers")
-        description: dict = {
+        description: dict[str, Any] = {
             "status_code": _safe_getattr(response, "status_code"),
             "reason": _safe_getattr(response, "reason") or _safe_getattr(response, "reason_phrase"),
             "content_type": _content_type(headers),
@@ -690,13 +691,13 @@ class Tracer:
     ############################# Consumption
 
     @property
-    def entries(self) -> list:
+    def entries(self) -> list[Any]:
         """Returns a copy of the recorded entries, in execution order."""
         with self._lock:
             return list(self._entries)
 
     @property
-    def failures(self) -> list:
+    def failures(self) -> list[Any]:
         """Returns the entries that raised, or came back with a 4xx/5xx status."""
         return self.filter(failed=True)
 
@@ -710,7 +711,7 @@ class Tracer:
         operation_id: str | None = None,
         failed: bool | None = None,
         min_duration_ms: float | None = None,
-    ) -> list:
+    ) -> list[Any]:
         """
         Returns the entries matching every given criterion.
 
@@ -745,7 +746,7 @@ class Tracer:
             and _entry_matches_operation(entry, operation_part, operation_id)
         ]
 
-    def to_list(self, **filters) -> list:
+    def to_list(self, **filters: Any) -> list[Any]:
         """
         Returns the recorded entries as a list of dictionaries.
 
@@ -754,7 +755,7 @@ class Tracer:
         entries = self.filter(**filters) if filters else self.entries
         return [entry.to_dict() for entry in entries]
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Returns the complete trace, including its metadata, as a dictionary."""
         entries = self.entries
         return {
@@ -765,7 +766,7 @@ class Tracer:
             "entries": [entry.to_dict() for entry in entries],
         }
 
-    def to_json(self, indent: int = 2, **kwargs) -> str:
+    def to_json(self, indent: int = 2, **kwargs: Any) -> str:
         """
         Returns the complete trace as a JSON string, ready to be parsed.
 
@@ -817,7 +818,7 @@ class Tracer:
         return session
 
     @contextmanager
-    def activate(self, name: Optional[str] = None):
+    def activate(self, name: Optional[str] = None) -> Iterator[TraceOperation]:
         """
         Records every SDK call performed inside the block, as one operation.
 
@@ -839,7 +840,7 @@ class Tracer:
     def __len__(self) -> int:
         return len(self.entries)
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Iterator[Any]:
         return iter(self.entries)
 
     def __bool__(self) -> bool:
@@ -850,7 +851,7 @@ class Tracer:
         return f"<Tracer name={self.name!r} enabled={self.enabled} entries={len(self.entries)}>"
 
 
-def get_active_tracers() -> tuple:
+def get_active_tracers() -> tuple[Any, ...]:
     """Returns the tracers activated for the current execution context."""
     return _active_tracers.get()
 
@@ -867,7 +868,7 @@ def get_active_operation() -> Optional[TraceOperation]:
 
 
 @contextmanager
-def _operation_scope(name: Optional[str] = None):
+def _operation_scope(name: Optional[str] = None) -> Iterator[TraceOperation]:
     """
     Opens a new operation, nested inside the ones already active.
 
@@ -885,7 +886,7 @@ def _operation_scope(name: Optional[str] = None):
 
 
 @contextmanager
-def tracing_context(*tracers: Tracer, context: Optional[str] = None):
+def tracing_context(*tracers: Tracer, context: Optional[str] = None) -> Iterator[None]:
     """
     Activates one or more tracers (and an optional label) for a block of code.
 
@@ -913,12 +914,12 @@ def tracing_context(*tracers: Tracer, context: Optional[str] = None):
             _active_context.reset(context_token)
 
 
-def _contains(tracers: tuple, tracer: Tracer) -> bool:
+def _contains(tracers: tuple[Any, ...], tracer: Tracer) -> bool:
     """Identity based membership check (tracers are not comparable by value)."""
     return any(item is tracer for item in tracers)
 
 
-def resolve_tracers(tracer: Any = None, session: Any = None, extra: Any = None) -> tuple:
+def resolve_tracers(tracer: Any = None, session: Any = None, extra: Any = None) -> tuple[Any, ...]:
     """
     Collects, without duplicates, every tracer that should record a call.
 
@@ -927,7 +928,7 @@ def resolve_tracers(tracer: Any = None, session: Any = None, extra: Any = None) 
     :param extra: Any other object that may have a tracer bound to it
     :return: The tuple of enabled tracers, empty when tracing is off
     """
-    resolved: list = []
+    resolved: list[Any] = []
 
     for candidate in (
         tracer,
@@ -954,7 +955,7 @@ def trace_call(
     params: Any = None,
     body: Any = None,
     context: Optional[str] = None,
-):
+) -> Iterator[TraceCall]:
     """
     Traces a single call to an external service.
 
@@ -1035,14 +1036,17 @@ def resolve_tracer(
     return None
 
 
-def _has_bound_tracer(args: tuple, kwargs: dict) -> bool:
+def _has_bound_tracer(args: tuple[Any, ...], kwargs: dict[str, Any]) -> bool:
     """Cheap check for a tracer bound to one of the arguments (i.e. a session)."""
     if getattr(kwargs.get("session"), TRACER_ATTRIBUTE, None) is not None:
         return True
     return any(getattr(argument, TRACER_ATTRIBUTE, None) is not None for argument in args)
 
 
-def traced_http(method: str):
+F = TypeVar("F", bound=Callable[..., Any])
+
+
+def traced_http(method: str) -> Callable[[F], F]:
     """
     Instruments an HTTP helper function, so that its calls can be traced.
 
@@ -1058,11 +1062,11 @@ def traced_http(method: str):
     :param method: The HTTP method performed by the decorated function
     """
 
-    def decorator(func):
-        signature = None
+    def decorator(func: F) -> F:
+        signature: Optional[inspect.Signature] = None
 
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             tracer = kwargs.pop("tracer", None)
             context = kwargs.pop("trace_context", None)
 
@@ -1097,12 +1101,12 @@ def traced_http(method: str):
             ) as call:
                 return call.set_response(func(*args, **kwargs))
 
-        return wrapper
+        return cast(F, wrapper)
 
     return decorator
 
 
-def _as_lookup(value: Any, upper: bool = False) -> Optional[set]:
+def _as_lookup(value: Any, upper: bool = False) -> Optional[set[Any]]:
     """Normalizes a filter value (a scalar or a list of them) into a set."""
     if value is None:
         return None
@@ -1113,8 +1117,8 @@ def _as_lookup(value: Any, upper: bool = False) -> Optional[set]:
 
 def _entry_matches(
     entry: TraceEntry,
-    methods: Optional[set],
-    status_codes: Optional[set],
+    methods: Optional[set[Any]],
+    status_codes: Optional[set[Any]],
     url_part: Optional[str],
     context_part: Optional[str],
     failed: Optional[bool],
@@ -1149,7 +1153,7 @@ def _entry_matches_operation(
     return True
 
 
-def _traceable_components(value: Any) -> Iterator:
+def _traceable_components(value: Any) -> Iterator[Any]:
     """
     Yields the traceable components held by an attribute value.
 
@@ -1235,7 +1239,7 @@ class TraceableMixin:
         """
         return self._apply_tracer(tracer, set())
 
-    def _apply_tracer(self, tracer: Optional[Tracer], visited: set) -> Optional[Tracer]:
+    def _apply_tracer(self, tracer: Optional[Tracer], visited: set[Any]) -> Optional[Tracer]:
         """
         Sets the tracer of this instance and of its components, only once each.
 
@@ -1262,7 +1266,7 @@ class TraceableMixin:
 
         return self._tracer
 
-    def _traceable_targets(self) -> Iterator:
+    def _traceable_targets(self) -> Iterator[Any]:
         """
         The components whose calls belong to the trace of this instance.
 
@@ -1296,7 +1300,7 @@ class TraceableMixin:
             self._tracer.disable()
 
     @contextmanager
-    def trace_operation(self, name: Optional[str] = None):
+    def trace_operation(self, name: Optional[str] = None) -> Iterator[TraceOperation]:
         """
         Records the calls performed inside the block, as one named operation.
 
@@ -1322,7 +1326,7 @@ class TraceableMixin:
         with tracer.activate(name) as operation:
             yield operation
 
-    def get_trace(self, **filters) -> list:
+    def get_trace(self, **filters: Any) -> list[Any]:
         """
         Returns the recorded requests and responses.
 
@@ -1332,7 +1336,7 @@ class TraceableMixin:
         """
         return [] if self._tracer is None else self._tracer.to_list(**filters)
 
-    def get_trace_entries(self, **filters) -> list:
+    def get_trace_entries(self, **filters: Any) -> list[Any]:
         """
         Returns the recorded requests and responses as `TraceEntry` objects.
 
@@ -1348,11 +1352,11 @@ class TraceableMixin:
         """
         return [] if self._tracer is None else self._tracer.filter(**filters)
 
-    def get_trace_dict(self) -> dict:
+    def get_trace_dict(self) -> dict[str, Any]:
         """Returns the complete trace (metadata included) as a dictionary."""
         return {"enabled": False, "count": 0, "entries": []} if self._tracer is None else self._tracer.to_dict()
 
-    def get_trace_json(self, indent: int = 2, **kwargs) -> str:
+    def get_trace_json(self, indent: int = 2, **kwargs: Any) -> str:
         """
         Returns the complete trace as a JSON string, ready to be parsed.
 
@@ -1366,7 +1370,7 @@ class TraceableMixin:
         if self._tracer is not None:
             self._tracer.clear()
 
-    def _trace_kwargs(self, context: Optional[str] = None) -> dict:
+    def _trace_kwargs(self, context: Optional[str] = None) -> dict[str, Any]:
         """
         Extra keyword arguments forwarding this instance's tracer to `HttpTools`.
 
@@ -1381,7 +1385,7 @@ class TraceableMixin:
         if self._tracer is None:
             return {}
 
-        kwargs: dict = {"tracer": self._tracer}
+        kwargs: dict[str, Any] = {"tracer": self._tracer}
         if context is not None:
             kwargs["trace_context"] = context
         return kwargs

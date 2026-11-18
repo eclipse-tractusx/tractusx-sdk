@@ -1,9 +1,9 @@
 #################################################################################
 # Tractus-X - Industry Flag Service
 #
-# Copyright (c) 2025 LKS NEXT
+# Copyright (c) 2025,2026 LKS Next
 # Copyright (c) 2025 CGI Deutschland B.V. & Co. KG
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -22,6 +22,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
 from keycloak.keycloak_openid import KeycloakOpenID
 from .auth_manager_interface import AuthManagerInterface
 from fastapi import Request, HTTPException
@@ -36,18 +37,18 @@ class OAuth2Manager(AuthManagerInterface):
     ## Declare variables
     keycloak_session:KeycloakOpenID
     connected:bool = False
-    token:dict
+    token:dict[str, Any]
 
     clientid:str
     clientsecret:str
 
-    def __init__(self, auth_url, realm, clientid, clientsecret):
+    def __init__(self, auth_url: str, realm: str, clientid: str, clientsecret: str) -> None:
 
         ## Connect to the server
         self.connect(auth_url=auth_url, realm=realm, clientid=clientid, clientsecret=clientsecret)
 
 
-    def connect(self, auth_url, realm, clientid, clientsecret):
+    def connect(self, auth_url: str, realm: str, clientid: str, clientsecret: str) -> None:
 
         self.connected=False
         
@@ -68,20 +69,21 @@ class OAuth2Manager(AuthManagerInterface):
         self.connected=True
     
 
-    def get_token(self, scope:str="openid profile email"):
+    def get_token(self, scope:str="openid profile email") -> str:
         ## Check if connected
         if(not self.connected):
             raise RuntimeError("Not connected. Please call the connect() method before requesting a token.")
 
         ## Get the token from the keycloak instance
-        token:dict=self.keycloak_openid.token(self.clientid, self.clientsecret, grant_type=["client_credentials"], scope=scope)
+        token:dict[str, Any]=self.keycloak_openid.token(self.clientid, self.clientsecret, grant_type=["client_credentials"], scope=scope)
         if(token is None):
             raise ValueError("Failed to retrieve token from IAM instance. The credentials might be incorrect.")
         ## Store the token
         self.token = token
-        return self.token["access_token"]
+        access_token: str = self.token["access_token"]
+        return access_token
     
-    def add_auth_header(self, headers:dict | None=None):
+    def add_auth_header(self, headers:dict[str, Any] | None=None) -> dict[str, Any]:
         ## Check if connected
         if(not self.connected):
             raise RuntimeError("Not connected. Please call the connect() method before requesting an authorization header.")

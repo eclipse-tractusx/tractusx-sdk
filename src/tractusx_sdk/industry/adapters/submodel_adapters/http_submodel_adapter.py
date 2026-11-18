@@ -23,13 +23,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Dict, Any, Mapping, Optional
+from contextlib import AbstractContextManager
+from typing import Dict, Any, Mapping, Optional, Self
 import logging
 from uuid import UUID
 from urllib.parse import quote
 import httpx
 
-from tractusx_sdk.dataspace.tools.tracing import TraceableMixin, Tracer, trace_call
+from tractusx_sdk.dataspace.tools.tracing import TraceableMixin, TraceCall, Tracer, trace_call
 from tractusx_sdk.industry.adapters import SubmodelAdapter
 
 logger = logging.getLogger(__name__)
@@ -46,54 +47,54 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
     """
 
     @classmethod
-    def builder(cls):
+    def builder(cls) -> "HttpSubmodelAdapter._Builder":
         return cls._Builder(cls)
 
     class _Builder:
-        def __init__(self, cls):
+        def __init__(self, cls: "type[HttpSubmodelAdapter]") -> None:
             self.cls = cls
-            self._data = {}
+            self._data: dict[str, Any] = {}
 
-        def base_url(self, base_url: str):
+        def base_url(self, base_url: str) -> Self:
             self._data["base_url"] = base_url
             return self
 
-        def api_path(self, api_path: str):
+        def api_path(self, api_path: str) -> Self:
             self._data["api_path"] = api_path
             return self
 
-        def url_pattern(self, url_pattern: str):
+        def url_pattern(self, url_pattern: str) -> Self:
             self._data["url_pattern"] = url_pattern
             return self
 
-        def auth_type(self, auth_type: str):
+        def auth_type(self, auth_type: str) -> Self:
             self._data["auth_type"] = auth_type
             return self
 
-        def auth_token(self, auth_token: Optional[str]):
+        def auth_token(self, auth_token: Optional[str]) -> Self:
             self._data["auth_token"] = auth_token
             return self
 
-        def auth_key_name(self, auth_key_name: Optional[str]):
+        def auth_key_name(self, auth_key_name: Optional[str]) -> Self:
             self._data["auth_key_name"] = auth_key_name
             return self
 
-        def timeout(self, timeout: int):
+        def timeout(self, timeout: int) -> Self:
             self._data["timeout"] = timeout
             return self
 
-        def verify_ssl(self, verify_ssl: bool):
+        def verify_ssl(self, verify_ssl: bool) -> Self:
             self._data["verify_ssl"] = verify_ssl
             return self
 
-        def tracer(self, tracer: Tracer):
+        def tracer(self, tracer: Tracer) -> Self:
             """
             Sets the tracer recording the requests/responses of this adapter.
             """
             self._data["tracer"] = tracer
             return self
 
-        def build(self):
+        def build(self) -> "HttpSubmodelAdapter":
             if "base_url" not in self._data:
                 raise ValueError("Missing required builder parameter: base_url")
             return self.cls(**self._data)
@@ -161,7 +162,7 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         if not isinstance(self.url_pattern, str) or not self.url_pattern.strip():
             raise ValueError("url_pattern must be a non-empty string")
 
-    def _trace_call(self, method: str, url: str, headers: dict | None = None, body: Any = None):
+    def _trace_call(self, method: str, url: str, headers: dict[str, Any] | None = None, body: Any = None) -> AbstractContextManager[TraceCall]:
         """
         Traces a single call to the external submodel service.
 
@@ -279,7 +280,8 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         try:
             with self._trace_call("GET", url, headers=headers) as call:
                 response = call.set_response(self.client.get(url, headers=headers))
-            return self._handle_response(response, "GET")
+            result: dict[str, Any] = self._handle_response(response, "GET")
+            return result
         except httpx.RequestError as request_error:
             raise ConnectionError(f"Connection error while reading submodel: {request_error}") from request_error
 
@@ -360,10 +362,8 @@ class HttpSubmodelAdapter(TraceableMixin, SubmodelAdapter):
         except httpx.RequestError as request_error:
             raise ConnectionError(f"Connection error while checking submodel existence: {request_error}") from request_error
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Cleanup HTTP client on adapter destruction."""
-        try:
-            if hasattr(self, 'client'):
-                self.client.close()
-        except Exception:
-            pass
+        client = getattr(self, 'client', None)
+        if client is not None:
+            client.close()

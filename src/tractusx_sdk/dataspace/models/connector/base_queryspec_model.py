@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Union
+from typing import Optional, Self, Union, Any
 from pydantic import Field
 
 from ..model import BaseModel
@@ -32,34 +33,34 @@ class BaseQuerySpecModel(BaseModel, ABC):
     Base model class for representing a connector's query spec.
     """
 
-    context: Optional[Union[dict, list, str]] = Field(default={"@vocab": "https://w3id.org/edc/v0.0.1/ns/"})
+    context: Optional[Union[dict[str, Any], list[Any], str]] = Field(default={"@vocab": "https://w3id.org/edc/v0.0.1/ns/"})
     offset: Optional[int] = Field(default=0)
     limit: Optional[int] = Field(default=10)
     sort_order: Optional[str] = Field(default="DESC", pattern="^(ASC|DESC)$")
     sort_field: Optional[str] = Field(default="createdAt")
-    filter_expression: Optional[list[dict]] = Field(default_factory=list)
+    filter_expression: Optional[list[dict[str, Any]]] = Field(default_factory=list)
 
     class _Builder(BaseModel._Builder):
-        def context(self, context: dict):
+        def context(self, context: dict[str, Any]) -> Self:
             self._data["context"] = context
             return self
 
-        def offset(self, offset: int):
+        def offset(self, offset: int) -> Self:
             self._data["offset"] = offset
             return self
 
-        def limit(self, limit: int):
+        def limit(self, limit: int) -> Self:
             self._data["limit"] = limit
             return self
 
-        def sort_order(self, sort_order: str):
+        def sort_order(self, sort_order: str) -> Self:
             self._data["sort_order"] = sort_order
             return self
 
-        def sort_field(self, sort_field: str):
+        def sort_field(self, sort_field: str) -> Self:
             self._data["sort_field"] = sort_field
             return self
 
-        def filter_expression(self, filter_expression: list[dict]):
+        def filter_expression(self, filter_expression: list[dict[str, Any]]) -> Self:
             self._data["filter_expression"] = filter_expression
             return self

@@ -32,3 +32,5 @@ __author__ = 'Eclipse Tractus-X Contributors'
 __license__ = "Apache License, Version 2.0"
 
 from .file_system_connection_manager import FileSystemConnectionManager
+
+__all__ = ["FileSystemConnectionManager"]

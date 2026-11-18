@@ -30,7 +30,7 @@ from ..base_catalog_dataset_request_model import BaseCatalogDatasetRequestModel
 class CatalogDatasetRequestModel(BaseCatalogDatasetRequestModel):
     TYPE: str = Field(default="DatasetRequest", frozen=True)
 
-    def to_data(self):
+    def to_data(self) -> str:
         """
         Converts the model to a JSON representing the data that will
         be sent to a saturn connector when using a catalog dataset request model.

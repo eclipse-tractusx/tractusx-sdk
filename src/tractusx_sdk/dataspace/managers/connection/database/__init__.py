@@ -34,3 +34,9 @@ __license__ = "Apache License, Version 2.0"
 from .postgres_connection_manager import PostgresConnectionManager
 from .postgres_memory_refresh_connection_manager import PostgresMemoryRefreshConnectionManager
 from .postgres_memory_connection_manager import PostgresMemoryConnectionManager
+
+__all__ = [
+    "PostgresConnectionManager",
+    "PostgresMemoryRefreshConnectionManager",
+    "PostgresMemoryConnectionManager",
+]

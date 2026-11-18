@@ -29,7 +29,7 @@ from ..base_contract_definition_model import BaseContractDefinitionModel
 class ContractDefinitionModel(BaseContractDefinitionModel):
     TYPE: str = Field(default="ContractDefinition", frozen=True)
 
-    def to_data(self):
+    def to_data(self) -> str:
         """
         Converts the model to a JSON representing the data that will
         be sent to a jupiter connector when using a contract definition model.

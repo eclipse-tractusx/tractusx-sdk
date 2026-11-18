@@ -30,7 +30,7 @@ class TransferProcessModel(BaseTransferProcessModel):
     TYPE: str = Field(default="TransferRequest", frozen=True)
     protocol: str = Field(default="dataspace-protocol-http:2025-1")
 
-    def to_data(self):
+    def to_data(self) -> str:
         """
         Converts the model to a JSON representing the data that will
         be sent to a saturn connector when using a transfer process model.

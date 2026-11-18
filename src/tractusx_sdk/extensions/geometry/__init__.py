@@ -28,6 +28,14 @@ from .geometry_aspect_validator import (
     SchemaValidator,
 )
 
+__all__ = [
+    "GeometryValidator",
+    "GeometryValidationReport",
+    "SceneTreeNode",
+    "ValidationLevel",
+    "SchemaValidator",
+]
+
 # Package-level variables
 __author__ = 'Threedy GmbH'
 __license__ = "Apache License, Version 2.0"

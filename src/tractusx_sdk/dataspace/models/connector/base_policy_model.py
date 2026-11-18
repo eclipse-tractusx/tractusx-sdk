@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Union
+from typing import Optional, Self, Union, Any
 from pydantic import Field
 
 from ..model import BaseModel
@@ -33,30 +34,30 @@ class BasePolicyModel(BaseModel, ABC):
     """
 
     oid: str
-    context: Optional[Union[dict, list, str]] = Field(default={
+    context: Optional[Union[dict[str, Any], list[Any], str]] = Field(default={
         "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     })
-    permissions: Optional[dict | list[dict]] = Field(default_factory=list)
-    prohibitions: Optional[dict | list[dict]] = Field(default_factory=list)
-    obligations: Optional[dict | list[dict]] = Field(default_factory=list)
+    permissions: Optional[dict[str, Any] | list[dict[str, Any]]] = Field(default_factory=list)
+    prohibitions: Optional[dict[str, Any] | list[dict[str, Any]]] = Field(default_factory=list)
+    obligations: Optional[dict[str, Any] | list[dict[str, Any]]] = Field(default_factory=list)
 
     class _Builder(BaseModel._Builder):
-        def id(self, oid: str):
+        def id(self, oid: str) -> Self:
             self._data["oid"] = oid
             return self
 
-        def context(self, context: dict):
+        def context(self, context: dict[str, Any]) -> Self:
             self._data["context"] = context
             return self
 
-        def permissions(self, permissions: dict | list[dict]):
+        def permissions(self, permissions: dict[str, Any] | list[dict[str, Any]]) -> Self:
             self._data["permissions"] = permissions
             return self
 
-        def prohibitions(self, prohibitions: dict | list[dict]):
+        def prohibitions(self, prohibitions: dict[str, Any] | list[dict[str, Any]]) -> Self:
             self._data["prohibitions"] = prohibitions
             return self
 
-        def obligations(self, obligations: dict | list[dict]):
+        def obligations(self, obligations: dict[str, Any] | list[dict[str, Any]]) -> Self:
             self._data["obligations"] = obligations
             return self

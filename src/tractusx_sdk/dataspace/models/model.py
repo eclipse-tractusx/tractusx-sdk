@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,13 +21,15 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Self, Any
+
 from abc import abstractmethod, ABC
 from pydantic import BaseModel as PydanticBaseModel
 
 
 class BaseModel(PydanticBaseModel, ABC):
     @abstractmethod
-    def to_data(self):
+    def to_data(self) -> str:
         """
         This method is intended to convert the model inheriting this class to a JSON
         representing the data that will be sent to the connector when using a policy model.
@@ -34,10 +37,12 @@ class BaseModel(PydanticBaseModel, ABC):
         :return: a JSON representation of the model
         """
 
-        return NotImplemented
+        ## Abstract placeholder: concrete models must override this method
+        not_implemented: str = NotImplemented
+        return not_implemented
 
     @classmethod
-    def builder(cls):
+    def builder(cls) -> "BaseModel._Builder":
         """
         This method is intended to return a builder for the model inheriting this class.
         This means that such a model should implement its own `_Builder` inner class.
@@ -52,11 +57,11 @@ class BaseModel(PydanticBaseModel, ABC):
         Default _Builder class for the BaseModel.
         """
 
-        def __init__(self, cls):
+        def __init__(self, cls: "type[BaseModel]") -> None:
             self.cls = cls
-            self._data = {}
+            self._data: dict[str, Any] = {}
 
-        def data(self, data: dict):
+        def data(self, data: dict[str, Any]) -> Self:
             """
             This method is intended to set all the data of the model inheriting this class.
 
@@ -68,7 +73,7 @@ class BaseModel(PydanticBaseModel, ABC):
             self._data.update(data)
             return self
 
-        def build(self):
+        def build(self) -> "BaseModel":
             """
             :return: an instance of the class inheriting the base model
             """

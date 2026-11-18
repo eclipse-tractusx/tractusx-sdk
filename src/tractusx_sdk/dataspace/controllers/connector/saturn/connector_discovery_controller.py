@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,6 +21,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
+
+import requests
+
 from .dma_controller import DmaController
 from tractusx_sdk.dataspace.models.connector.saturn import ConnectorDiscoveryModel
 
@@ -34,7 +38,7 @@ class ConnectorDiscoveryController(DmaController):
 
     endpoint_url = "/v4alpha/connectordiscovery/dspversionparams"
 
-    def get_discover(self, obj: ConnectorDiscoveryModel, **kwargs):
+    def get_discover(self, obj: ConnectorDiscoveryModel, **kwargs: Any) -> requests.Response:
         kwargs["data"] = obj.to_data()
         response = self.adapter.post(url=self.endpoint_url, **kwargs)
         return response

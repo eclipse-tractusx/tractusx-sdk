@@ -30,7 +30,7 @@ from ..base_evaluation_policy_model import BaseEvaluationPolicyModel
 class EvaluationPolicyModel(BaseEvaluationPolicyModel):
     TYPE: str = Field(default="PolicyEvaluationPlanRequest", frozen=True)
 
-    def to_data(self):
+    def to_data(self) -> str:
         """
         Converts the model to a JSON representing the data that will
         be sent to a saturn connector when using an evaluation policy model.

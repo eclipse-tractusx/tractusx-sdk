@@ -21,6 +21,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any, Self, cast
+
 from ..service import BaseService
 from ...adapters.connector.adapter_factory import AdapterFactory
 from ...controllers.connector.base_dma_controller import BaseDmaController
@@ -36,7 +38,7 @@ class BaseConnectorProviderService(BaseService):
     _contract_definition_controller: BaseDmaController
     _policy_controller: BaseDmaController
 
-    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict | None = None, verify_ssl: bool = True,
+    def __init__(self, dataspace_version: str, base_url: str, dma_path: str, headers: dict[str, Any] | None = None, verify_ssl: bool = True,
                  trace: bool = False):
         """
         :param trace: Flag enabling the tracing of the requests sent to (and the
@@ -68,28 +70,30 @@ class BaseConnectorProviderService(BaseService):
             ]
         )
 
-        self._asset_controller = controllers.get(ControllerType.ASSET)
-        self._contract_definition_controller = controllers.get(ControllerType.CONTRACT_DEFINITION)
-        self._policy_controller = controllers.get(ControllerType.POLICY)
+        self._asset_controller = cast(BaseDmaController, controllers.get(ControllerType.ASSET))
+        self._contract_definition_controller = cast(BaseDmaController, controllers.get(ControllerType.CONTRACT_DEFINITION))
+        self._policy_controller = cast(BaseDmaController, controllers.get(ControllerType.POLICY))
 
         # Configured last: the tracer is shared with the adapter and the controllers
         self._init_tracing(trace=trace)
 
     class _Builder(BaseService._Builder):
-        def dma_path(self, dma_path: str):
+        def dma_path(self, dma_path: str) -> Self:
             self._data["dma_path"] = dma_path
             return self
 
+    # The controllers are version-specific (Jupiter/Saturn) and expose operations (e.g. `create`, `get_by_id`)
+    # beyond the BaseDmaController contract, hence `Any`.
     @property
-    def assets(self):
+    def assets(self) -> Any:
         return self._asset_controller
 
     @property
-    def contract_definitions(self):
+    def contract_definitions(self) -> Any:
         return self._contract_definition_controller
 
     @property
-    def policies(self):
+    def policies(self) -> Any:
         return self._policy_controller
 
     ############################# Short cut section
@@ -104,15 +108,15 @@ class BaseConnectorProviderService(BaseService):
         dct_subject: str | None = None,
         version: str = "3.0",
         semantic_id: str | None = None,
-        proxy_params: dict | None = None,
-        headers: dict | None = None,
-        properties: dict | None = None,
-        private_properties: dict | None = None,
-        oauth2_config: dict | None = None,
-        context: dict | list | str | None = None,
+        proxy_params: dict[str, Any] | None = None,
+        headers: dict[str, Any] | None = None,
+        properties: dict[str, Any] | None = None,
+        private_properties: dict[str, Any] | None = None,
+        oauth2_config: dict[str, Any] | None = None,
+        context: dict[str, Any] | list[Any] | str | None = None,
         data_address_type: str = "HttpData",
-        **kwargs
-    ):
+        **kwargs: Any
+    ) -> dict[str, Any]:
         logger.info("Creating asset %s at %s.", asset_id, base_url)
 
         if proxy_params is None:
@@ -198,13 +202,14 @@ class BaseConnectorProviderService(BaseService):
 
         logger.info("Asset %s created successfully.", asset_id)
 
-        return asset_response.json()
+        created_asset: dict[str, Any] = asset_response.json()
+        return created_asset
 
     
-    def build_properties(self, dct_type=None, dct_subject=None, version=None,
-                     semantic_id=None, properties=None):
+    def build_properties(self, dct_type: str | None = None, dct_subject: str | None = None, version: str | None = None,
+                     semantic_id: str | None = None, properties: dict[str, Any] | None = None) -> dict[str, Any]:
                          
-        _properties: dict = {}   # local — a fresh dict each call
+        _properties: dict[str, Any] = {}   # local — a fresh dict each call
     
         if dct_type is not None:
             _properties["dct:type"] = {
@@ -234,8 +239,8 @@ class BaseConnectorProviderService(BaseService):
         usage_policy_id: str,
         access_policy_id: str,
         asset_id: str,
-        **kwargs
-    ) -> dict:
+        **kwargs: Any
+    ) -> dict[str, Any]:
         logger.info("Creating new contract with ID %s.", contract_id)
 
         context = {
@@ -270,17 +275,18 @@ class BaseConnectorProviderService(BaseService):
 
         logger.info("Contract %s created successfully.", contract_id)
 
-        return created_contract.json()
+        created_contract_data: dict[str, Any] = created_contract.json()
+        return created_contract_data
 
     def create_policy(
         self,
         policy_id: str,
-        context: dict | list[dict] | None = None,
-        permissions: dict | list[dict] | None = None,
-        prohibitions: dict | list[dict] | None = None,
-        obligations: dict | list[dict] | None = None,
-        **kwargs
-    ) -> dict:
+        context: dict[str, Any] | list[dict[str, Any]] | None = None,
+        permissions: dict[str, Any] | list[dict[str, Any]] | None = None,
+        prohibitions: dict[str, Any] | list[dict[str, Any]] | None = None,
+        obligations: dict[str, Any] | list[dict[str, Any]] | None = None,
+        **kwargs: Any
+    ) -> dict[str, Any]:
         logger.info("Creating new policy with ID %s.", policy_id)
 
         policy = ModelFactory.get_policy_model(
@@ -303,4 +309,5 @@ class BaseConnectorProviderService(BaseService):
 
         logger.info("Policy %s created successfully.", policy_id)
 
-        return created_policy.json()
+        created_policy_data: dict[str, Any] = created_policy.json()
+        return created_policy_data

@@ -1,9 +1,9 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
+# Copyright (c) 2025,2026 LKS Next
 # Copyright (c) 2025 CGI Deutschland B.V. & Co. KG
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -29,6 +29,7 @@
 ## Source: https://github.com/eclipse-tractusx/digital-product-pass/blob/main/dpp-verification/simple-wallet/utilities/httpUtils.py
 ## Abstracted from the static method is_authorized
 
+from typing import Any
 from fastapi import Request
 from .auth_manager_interface import AuthManagerInterface
 
@@ -42,7 +43,7 @@ class AuthManager(AuthManagerInterface):
         self.api_key_header = api_key_header
         self.auth_enabled = auth_enabled
     
-    def is_authenticated(self, request: Request):
+    def is_authenticated(self, request: Request) -> bool:
         
         if(not self.auth_enabled):
             return True
@@ -57,7 +58,7 @@ class AuthManager(AuthManagerInterface):
         
         return False
     
-    def add_auth_header(self, headers: dict={}) -> dict:
+    def add_auth_header(self, headers: dict[str, Any]={}) -> dict[str, Any]:
         if not self.auth_enabled:
             raise RuntimeError("Authentication is not enabled. Cannot get auth headers.")
         auth_header = {self.api_key_header: self.configured_api_key}

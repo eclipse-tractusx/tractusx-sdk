@@ -164,9 +164,9 @@ class GeometryValidator:
     def __init__(self, validation_level: ValidationLevel = ValidationLevel.ERROR):
         self.validation_level = validation_level
         self.catenax_id_map: Dict[str, Path] = {}
-        self.validated_files: set = set()
+        self.validated_files: set[Any] = set()
         self.schema_validator = SchemaValidator()
-        self.tree_structure: List[tuple] = []  # Stores (file_path, depth, catenaXId) for tree visualization
+        self.tree_structure: List[tuple[Any, ...]] = []  # Stores (file_path, depth, catenaXId) for tree visualization
     
     def load_schema(self, schema_file: Optional[Path] = None) -> bool:
         if schema_file:
@@ -177,7 +177,7 @@ class GeometryValidator:
     def load_json_file(self, file_path: Path) -> Optional[Dict[Any, Any]]:
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+                data: Optional[Dict[Any, Any]] = json.load(f)
                 return data
         except FileNotFoundError:
             self.schema_validator.add_error(f'File not found: {file_path}')
@@ -189,7 +189,7 @@ class GeometryValidator:
             self.schema_validator.add_error(f'Error loading {file_path}: {e}')
             return None
     
-    def build_catenax_id_map(self, directory: Path):
+    def build_catenax_id_map(self, directory: Path) -> None:
         if not directory.exists() or not directory.is_dir():
             self.schema_validator.add_warning(f'Cannot build map: invalid directory {directory}')
             return
@@ -213,7 +213,7 @@ class GeometryValidator:
                     referenced_ids.append(child['catenaXId'])
         return referenced_ids
     
-    def validate_file(self, file_path: Path, depth: int = 0):
+    def validate_file(self, file_path: Path, depth: int = 0) -> None:
         file_key = str(file_path)
         if file_key in self.validated_files:
             return
@@ -253,7 +253,7 @@ class GeometryValidator:
         return self.report().render(self.validation_level)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description='Validate geometry nodes from SingleLevelSceneNode JSON files',
         epilog='''

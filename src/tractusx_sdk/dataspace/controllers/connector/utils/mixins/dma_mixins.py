@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -22,6 +23,7 @@
 
 from tractusx_sdk.dataspace.controllers.connector.base_dma_controller import BaseDmaController
 from .base_mixins import (
+    ModelT,
     CreateControllerMixin,
     GetControllerMixin,
     UpdateControllerMixin,
@@ -33,9 +35,9 @@ from .base_mixins import (
 
 
 class BaseCrudDmaController(
-    CreateControllerMixin,
+    CreateControllerMixin[ModelT],
     GetControllerMixin,
-    UpdateControllerMixin,
+    UpdateControllerMixin[ModelT],
     DeleteControllerMixin,
     BaseDmaController
 ):
@@ -44,17 +46,17 @@ class BaseCrudDmaController(
 
 class CrudDmaController(
     GetAllControllerMixin,
-    BaseCrudDmaController
+    BaseCrudDmaController[ModelT]
 ):
     pass
 
 
 class StatefulEntityDmaController(
-    CreateControllerMixin,
+    CreateControllerMixin[ModelT],
     GetControllerMixin,
     GetAllControllerMixin,
     GetStateControllerMixin,
-    TerminateControllerMixin,
+    TerminateControllerMixin[ModelT],
     BaseDmaController
 ):
     pass

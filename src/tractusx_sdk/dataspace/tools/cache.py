@@ -53,7 +53,7 @@ class CacheProvider(ABC):
         """
 
     @abstractmethod
-    async def set(self, key: str, value: Any, expire: int | None = None):
+    async def set(self, key: str, value: Any, expire: int | None = None) -> None:
         """
         Store a value in the cache under the given key.
 
@@ -64,7 +64,7 @@ class CacheProvider(ABC):
         """
 
     @abstractmethod
-    async def delete(self, key: str):
+    async def delete(self, key: str) -> None:
         """
         Delete a cached value for the given key.
 
@@ -80,19 +80,19 @@ class LocalCache(CacheProvider):
     It initializes an in-memory backend and proxies calls to FastAPI-Cache.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the in-memory cache backend."""
         FastAPICache.init(InMemoryBackend())
 
-    async def get(self, key: str):
+    async def get(self, key: str) -> Optional[Any]:
         """See CacheProvider.get"""
         return await FastAPICache.get_backend().get(key)
 
-    async def set(self, key: str, value, expire: int | None = None):
+    async def set(self, key: str, value: Any, expire: int | None = None) -> None:
         """See CacheProvider.set"""
         await FastAPICache.get_backend().set(key, value, expire)
 
-    async def delete(self, key: str):
+    async def delete(self, key: str) -> None:
         """
         Delete the cached value for the given key.
 
@@ -137,4 +137,5 @@ def get_cache_provider(request: Request) -> CacheProvider:
         The cache provider instance stored in `app.state.cache_provider`.
     """
 
-    return request.app.state.cache_provider
+    cache_provider: CacheProvider = request.app.state.cache_provider
+    return cache_provider

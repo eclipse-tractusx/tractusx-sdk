@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -19,6 +20,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
+
+from typing import Any, Self
 
 from abc import ABC, abstractmethod
 
@@ -46,7 +49,7 @@ class BaseService(TraceableMixin, ABC):
     dataspace_version: str
 
     @abstractmethod
-    def __init__(self, dataspace_version: str, base_url: str, headers: dict | None = None,
+    def __init__(self, dataspace_version: str, base_url: str, headers: dict[str, Any] | None = None,
                  trace: bool = False):
         """
         A base init method for services inheriting this class.
@@ -64,8 +67,9 @@ class BaseService(TraceableMixin, ABC):
         """
         raise NotImplementedError
 
+    # Subclasses define their own `_Builder` (not all derive from `BaseService._Builder`), hence `Any`.
     @classmethod
-    def builder(cls):
+    def builder(cls) -> Any:
         """
         This method is intended to return a builder for services inheriting this class.
         This means that such a service should implement its own `_Builder` inner class.
@@ -80,30 +84,30 @@ class BaseService(TraceableMixin, ABC):
         Default _Builder class for a Service.
         """
 
-        def __init__(self, cls):
+        def __init__(self, cls: "type[BaseService]") -> None:
             self.cls = cls
-            self._data = {}
+            self._data: dict[str, Any] = {}
 
-        def dataspace_version(self, dataspace_version: str):
+        def dataspace_version(self, dataspace_version: str) -> Self:
             self._data["dataspace_version"] = dataspace_version
             return self
 
-        def base_url(self, base_url: dict):
+        def base_url(self, base_url: dict[str, Any]) -> Self:
             self._data["base_url"] = base_url
             return self
 
-        def headers(self, headers: dict):
+        def headers(self, headers: dict[str, Any]) -> Self:
             self._data["headers"] = headers
             return self
 
-        def trace(self, trace: bool):
+        def trace(self, trace: bool) -> Self:
             """
             Enables the tracing of the requests/responses of this service.
             """
             self._data["trace"] = trace
             return self
 
-        def data(self, data: dict):
+        def data(self, data: dict[str, Any]) -> Self:
             """
             This method is intended to set all the data of the services inheriting this class.
 
@@ -115,7 +119,7 @@ class BaseService(TraceableMixin, ABC):
             self._data.update(data)
             return self
 
-        def build(self):
+        def build(self) -> "BaseService":
             """
             :return: an instance of the class inheriting the base service
             """

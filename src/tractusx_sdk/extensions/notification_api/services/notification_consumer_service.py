@@ -155,7 +155,7 @@ class NotificationConsumerService(BaseService):
             )
             
             # Extract datasets from catalog
-            datasets = catalog.get("dcat:dataset", [])
+            datasets: List[Dict[str, Any]] = catalog.get("dcat:dataset", [])
             if isinstance(datasets, dict):
                 datasets = [datasets]
             
@@ -171,7 +171,7 @@ class NotificationConsumerService(BaseService):
         self,
         provider_bpn: str,
         provider_dsp_url: str,
-        policies: Optional[List[Dict]] = None,
+        policies: Optional[List[Dict[str, Any]]] = None,
         max_retries: int = 6,
         retry_timeout: int = 10,
         dct_type: str = DIGITAL_TWIN_EVENT_API_TYPE,
@@ -236,7 +236,7 @@ class NotificationConsumerService(BaseService):
         self,
         provider_bpn: str,
         provider_dsp_url: str,
-        policies: Optional[List[Dict]] = None,
+        policies: Optional[List[Dict[str, Any]]] = None,
         dct_type: str = DIGITAL_TWIN_EVENT_API_TYPE,
     ) -> tuple[str, str]:
         """
@@ -284,7 +284,7 @@ class NotificationConsumerService(BaseService):
         provider_dsp_url: str,
         notification: Notification,
         endpoint_path: str = "",
-        policies: Optional[List[Dict]] = None,
+        policies: Optional[List[Dict[str, Any]]] = None,
         timeout: int = 30,
         verify_ssl: bool = True,
     ) -> Dict[str, Any]:
@@ -423,7 +423,8 @@ class NotificationConsumerService(BaseService):
                 return {"status": "sent", "message_id": notification.header.message_id}
             
             try:
-                return response.json()
+                sent_response: Dict[str, Any] = response.json()
+                return sent_response
             except Exception:
                 # Response is not JSON, return status info
                 return {"status": "sent", "message_id": notification.header.message_id}
@@ -439,7 +440,7 @@ class NotificationConsumerService(BaseService):
         providers: List[Dict[str, str]],
         notification: Notification,
         endpoint_path: str = "",
-        policies: Optional[List[Dict]] = None,
+        policies: Optional[List[Dict[str, Any]]] = None,
         timeout: int = 30,
         verify_ssl: bool = True,
         stop_on_error: bool = False,
@@ -553,7 +554,7 @@ class NotificationConsumerService(BaseService):
     class _Builder:
         """Builder class for fluent NotificationConsumerService construction."""
         
-        def __init__(self, cls):
+        def __init__(self, cls: "type[NotificationConsumerService]") -> None:
             self.cls = cls
             self._data: Dict[str, Any] = {}
         

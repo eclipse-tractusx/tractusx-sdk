@@ -28,7 +28,7 @@ import logging
 import os
 from pathlib import Path
 from tractusx_sdk.dataspace.tools import op
-from typing import Any, List, Mapping
+from typing import Any, List, Mapping, Self
 
 logger = logging.getLogger(__name__)
 
@@ -74,23 +74,23 @@ class FileSystemAdapter(SubmodelAdapter):
         logger.debug("FileSystem submodel adapter initialized at '%s' with path pattern '%s'", self.root_path, self.path_pattern)
 
     @classmethod
-    def builder(cls):
+    def builder(cls) -> "FileSystemAdapter._Builder":
         return cls._Builder(cls)
 
     class _Builder:
-        def __init__(self, cls):
+        def __init__(self, cls: "type[FileSystemAdapter]") -> None:
             self.cls = cls
-            self._data = {}
+            self._data: dict[str, Any] = {}
 
-        def root_path(self, path: str):
+        def root_path(self, path: str) -> Self:
             self._data["root_path"] = path
             return self
 
-        def path_pattern(self, pattern: str):
+        def path_pattern(self, pattern: str) -> Self:
             self._data["path_pattern"] = pattern
             return self
         
-        def build(self):
+        def build(self) -> "FileSystemAdapter":
             if "root_path" not in self._data:
                 raise ValueError("Missing required buider parameter: root_path")
             return self.cls(**self._data)
@@ -129,7 +129,7 @@ class FileSystemAdapter(SubmodelAdapter):
             current = current.parent
     
 
-    def read(self, submodel_metadata: Mapping[str, Any]):
+    def read(self, submodel_metadata: Mapping[str, Any]) -> Any:
         """
         Return the entire content of a file
         """

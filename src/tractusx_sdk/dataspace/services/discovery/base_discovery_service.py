@@ -21,6 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
 import time
 import datetime
 import logging
@@ -61,7 +62,7 @@ class BaseDiscoveryService(BaseService, ABC):
         self.oauth = oauth
         self.discovery_finder_service = discovery_finder_service
         self.cache_timeout_seconds = cache_timeout_seconds
-        self.discovery_cache: dict = {}
+        self.discovery_cache: dict[str, Any] = {}
 
         # Configured last: the trace is shared with the discovery finder service
         self._init_tracing(trace=trace)
@@ -72,7 +73,7 @@ class BaseDiscoveryService(BaseService, ABC):
         pass
 
     @abstractmethod
-    def get_discovery_url(self, discovery_finder_service,  discovery_key: str) -> str:
+    def get_discovery_url(self, discovery_finder_service: DiscoveryFinderService,  discovery_key: str) -> str:
         """
         Fetches the discovery URL for the given key.
         
@@ -105,7 +106,7 @@ class BaseDiscoveryService(BaseService, ABC):
             Exception: If no cached URL exists and the initial discovery fails.
         """
         current_time = time.time()
-        entry: dict | None = self.discovery_cache.get(discovery_key)
+        entry: dict[str, Any] | None = self.discovery_cache.get(discovery_key)
         
         # Check if the entry exists and if it is still valid
         if (
@@ -148,7 +149,8 @@ class BaseDiscoveryService(BaseService, ABC):
                 if entry:
                     # Log the error but continue with cached URL
                     logger.warning("[%s] Failed to refresh discovery URL, using cached version. Error: %s", self.get_service_name(), e)
-                    return entry["url"]
+                    cached_url: str = entry["url"]
+                    return cached_url
                 else:
                     # No cached entry available, re-raise the exception
                     raise
@@ -160,7 +162,8 @@ class BaseDiscoveryService(BaseService, ABC):
                 logger.debug("[%s] Using cached discovery URL for key '%s': %s", service_name, discovery_key, entry['url'])
                 logger.debug("[%s] Cache status: %d URL(s) cached, this entry valid until %s", service_name, len(self.discovery_cache), valid_until.strftime('%Y-%m-%d %H:%M:%S'))
             
-        return self.discovery_cache[discovery_key]["url"]
+        discovery_url: str = self.discovery_cache[discovery_key]["url"]
+        return discovery_url
 
     def flush_cache(self) -> int:
         """
@@ -196,7 +199,7 @@ class BaseDiscoveryService(BaseService, ABC):
         
         return entry_existed
 
-    def get_cache_status(self) -> dict:
+    def get_cache_status(self) -> dict[str, Any]:
         """
         Returns detailed information about the current cache state.
         

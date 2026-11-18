@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,6 +21,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any, Self
+
 import requests
 
 from ..tools import HttpTools
@@ -37,7 +40,7 @@ class Adapter(TraceableMixin):
     def __init__(
             self,
             base_url: str,
-            headers: dict | None = None,
+            headers: dict[str, Any] | None = None,
             tracer: Tracer | None = None
     ):
         """
@@ -59,7 +62,7 @@ class Adapter(TraceableMixin):
         self._init_tracing(tracer=tracer)
 
     @classmethod
-    def builder(cls):
+    def builder(cls) -> "Adapter._Builder":
         """
         This method is intended to return a builder for adapters inheriting this class.
         This means that such an adapter should implement its own `_Builder` inner class.
@@ -74,26 +77,26 @@ class Adapter(TraceableMixin):
         Default _Builder class for an Adapter.
         """
 
-        def __init__(self, cls):
+        def __init__(self, cls: "type[Adapter]") -> None:
             self.cls = cls
-            self._data = {}
+            self._data: dict[str, Any] = {}
 
-        def base_url(self, base_url: str):
+        def base_url(self, base_url: str) -> Self:
             self._data["base_url"] = base_url
             return self
 
-        def headers(self, headers: dict):
+        def headers(self, headers: dict[str, Any]) -> Self:
             self._data["headers"] = headers
             return self
 
-        def tracer(self, tracer: Tracer):
+        def tracer(self, tracer: Tracer) -> Self:
             """
             Sets the tracer recording the requests/responses of this adapter.
             """
             self._data["tracer"] = tracer
             return self
 
-        def data(self, data: dict):
+        def data(self, data: dict[str, Any]) -> Self:
             """
             This method is intended to set all the data of the adapters inheriting this class.
 
@@ -105,20 +108,20 @@ class Adapter(TraceableMixin):
             self._data.update(data)
             return self
 
-        def build(self):
+        def build(self) -> "Adapter":
             """
             :return: an instance of the class inheriting the base adapter
             """
             return self.cls(**self._data)
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the requests session
         """
 
         self.session.close()
 
-    def get(self, url: str, **kwargs):
+    def get(self, url: str, **kwargs: Any) -> requests.Response:
         """
         Perform a GET request
 
@@ -130,7 +133,7 @@ class Adapter(TraceableMixin):
 
         return self.request("get", url, **kwargs)
 
-    def post(self, url: str, **kwargs):
+    def post(self, url: str, **kwargs: Any) -> requests.Response:
         """
         Perform a POST request
 
@@ -142,7 +145,7 @@ class Adapter(TraceableMixin):
 
         return self.request("post", url, **kwargs)
 
-    def put(self, url: str, **kwargs):
+    def put(self, url: str, **kwargs: Any) -> requests.Response:
         """
         Perform a PUT request
 
@@ -154,7 +157,7 @@ class Adapter(TraceableMixin):
 
         return self.request("put", url, **kwargs)
 
-    def delete(self, url: str, **kwargs):
+    def delete(self, url: str, **kwargs: Any) -> requests.Response:
         """
         Perform a DELETE request
 
@@ -166,7 +169,7 @@ class Adapter(TraceableMixin):
 
         return self.request("delete", url, **kwargs)
 
-    def request(self, method: str, path: str = "", **kwargs):
+    def request(self, method: str, path: str = "", **kwargs: Any) -> requests.Response:
         """
         Main method for performing requests
 

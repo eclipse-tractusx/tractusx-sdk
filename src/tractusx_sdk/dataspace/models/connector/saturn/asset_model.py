@@ -29,7 +29,7 @@ from ..base_asset_model import BaseAssetModel
 class AssetModel(BaseAssetModel):
     TYPE: str = Field(default="Asset", frozen=True)
 
-    def to_data(self):
+    def to_data(self) -> str:
         """
         Converts the model to a JSON representing the data that will
         be sent to a jupiter connector when using an asset model.

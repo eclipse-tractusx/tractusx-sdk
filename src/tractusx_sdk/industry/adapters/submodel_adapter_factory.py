@@ -1,9 +1,10 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 DRÄXLMAIER Group
 # (represented by Lisa Dräxlmaier GmbH)
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -25,8 +26,11 @@
 from enum import StrEnum
 import inspect
 from importlib import import_module
-from typing import Any, Callable, Mapping, Union, get_args, get_origin
+from typing import Any, Callable, Mapping, Union, cast, get_args, get_origin
 import types
+
+from .submodel_adapter import SubmodelAdapter
+
 
 class SubmodelAdapterType(StrEnum):
     """
@@ -221,7 +225,7 @@ class SubmodelAdapterFactory:
     @staticmethod
     def _get_adapter_builder(
             adapter_type: str | SubmodelAdapterType,
-    ):
+    ) -> Any:
         """
         Resolve and return a builder for a built-in or registered adapter type.
 
@@ -302,12 +306,13 @@ class SubmodelAdapterFactory:
             return "Any"
 
         try:
-            return annotation.__name__
+            annotation_name: str = annotation.__name__
+            return annotation_name
         except AttributeError:
             return str(annotation)
 
     @staticmethod
-    def from_config(adapter_type: str | SubmodelAdapterType, config: Mapping[str, Any]):
+    def from_config(adapter_type: str | SubmodelAdapterType, config: Mapping[str, Any]) -> SubmodelAdapter:
         """
         Create a submodel adapter from key-value configuration.
 
@@ -352,7 +357,7 @@ class SubmodelAdapterFactory:
 
             builder_method(value)
 
-        return builder.build()
+        return cast(SubmodelAdapter, builder.build())
     
     @staticmethod
     def get_file_system(root_path: str = "./submodel", path_pattern: str = "{asset_path}") -> Any:
