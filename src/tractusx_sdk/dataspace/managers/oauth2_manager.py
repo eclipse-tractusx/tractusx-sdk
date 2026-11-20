@@ -91,7 +91,7 @@ class OAuth2Manager(AuthManagerInterface):
             raise AuthServiceUnavailableError("Unable to access the Keycloak instance. Check the server URL, realm, and network connectivity.") from e
 
 
-    def connect(self, auth_url, realm, clientid, clientsecret, timeout:int=60):
+    def connect(self, auth_url, realm, clientid, clientsecret, *, timeout:int=60):
 
         ## Build into locals and only publish the state once Keycloak has answered, so a
         ## failed or concurrent attempt never flips `connected` or swaps a working client.

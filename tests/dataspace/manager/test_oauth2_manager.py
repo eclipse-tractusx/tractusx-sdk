@@ -439,11 +439,11 @@ class TestOAuth2Manager(unittest.TestCase):
         mock_keycloak.well_known.assert_called_once()
 
     def test_subclass_without_super_init_raises_not_connected(self):
-        class NoInitManager(OAuth2Manager):
-            def __init__(self):
-                pass
+        class SubManager(OAuth2Manager):
+            pass
 
-        manager = NoInitManager()
+        # Built without running OAuth2Manager.__init__, as when a subclass skips super().__init__().
+        manager = SubManager.__new__(SubManager)
 
         with self.assertRaises(RuntimeError) as exc:
             manager.get_token()
@@ -467,6 +467,14 @@ class TestOAuth2Manager(unittest.TestCase):
             client_secret_key=self.clientsecret,
             timeout=5
         )
+
+    @patch("tractusx_sdk.dataspace.managers.oauth2_manager.KeycloakOpenID")
+    def test_connect_timeout_is_keyword_only(self, mock_keycloak_cls):
+        manager = OAuth2Manager(self.auth_url, self.realm, self.clientid, self.clientsecret)
+
+        with self.assertRaises(TypeError):
+            manager.connect(self.auth_url, self.realm, self.clientid, self.clientsecret, 5)
+        mock_keycloak_cls.assert_not_called()
 
     @patch("tractusx_sdk.dataspace.managers.oauth2_manager.KeycloakOpenID")
     def test_default_timeout_is_60(self, mock_keycloak_cls):
