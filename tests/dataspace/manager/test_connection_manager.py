@@ -28,6 +28,7 @@ from unittest.mock import patch
 from sqlalchemy import create_engine
 
 from tractusx_sdk.dataspace.managers.connection.memory.memory_connection_manager import MemoryConnectionManager
+from tractusx_sdk.dataspace.managers.connection.database.postgres_connection_manager import PostgresConnectionManager
 from tractusx_sdk.dataspace.managers.connection.database.postgres_memory_connection_manager import PostgresMemoryConnectionManager
 
 
@@ -338,6 +339,74 @@ class TestPostgresMemoryConnectionManagerClearByParty(unittest.TestCase):
 
         self.assertTrue(deleted)
         mock_save.assert_called_once()
+
+
+class TestPostgresConnectionManager(unittest.TestCase):
+    """Tests for PostgresConnectionManager verifying instantiation and interface methods."""
+
+    def setUp(self):
+        self.engine = create_engine("sqlite:///:memory:")
+        self.cm = PostgresConnectionManager(
+            engine=self.engine,
+            provider_id_key=PROVIDER_ID_KEY,
+            table_name="test_edr_connections",
+        )
+
+    def test_instantiation_succeeds(self):
+        """Verifies PostgresConnectionManager instantiates without raising TypeError."""
+        self.assertIsInstance(self.cm, PostgresConnectionManager)
+
+    def test_add_and_get_connection(self):
+        did = "did:web:wallet.example.com:BPNL000000000001"
+        entry = _make_entry("tp-1", did)
+        tp_id = self.cm.add_connection(
+            counter_party_id=did,
+            counter_party_address="https://provider.example.com/api",
+            query_checksum="qchk",
+            policy_checksum="pchk",
+            connection_entry=entry,
+        )
+        self.assertEqual(tp_id, "tp-1")
+
+        result = self.cm.get_connection(
+            counter_party_id=did,
+            counter_party_address="https://provider.example.com/api",
+            query_checksum="qchk",
+            policy_checksum="pchk",
+        )
+        self.assertEqual(result.get("transferProcessId"), "tp-1")
+
+    def test_clear_connections_by_party(self):
+        did_a = "did:web:wallet.example.com:BPNL000000000065"
+        did_b = "did:web:wallet.example.com:BPNL000000000099"
+        self.cm.add_connection(did_a, "https://provider.example.com/a", "q1", "p1", _make_entry("tp-a", did_a))
+        self.cm.add_connection(did_b, "https://provider.example.com/b", "q2", "p2", _make_entry("tp-b", did_b))
+
+        removed = self.cm.clear_connections_by_party("BPNL000000000065")
+        self.assertEqual(removed, 1)
+
+        # Matched entry is deleted
+        result_a = self.cm.get_connection(did_a, "https://provider.example.com/a", "q1", "p1")
+        self.assertEqual(result_a, {})
+
+        # Unmatched entry remains
+        result_b = self.cm.get_connection(did_b, "https://provider.example.com/b", "q2", "p2")
+        self.assertEqual(result_b.get("transferProcessId"), "tp-b")
+
+    def test_clear_connections_by_party_no_match_returns_zero(self):
+        removed = self.cm.clear_connections_by_party("NON_EXISTENT_PARTY")
+        self.assertEqual(removed, 0)
+
+    def test_delete_connection(self):
+        did = "did:web:wallet.example.com:BPNL000000000001"
+        self.cm.add_connection(did, "https://provider.example.com/api", "qchk", "pchk", _make_entry("tp-1", did))
+
+        deleted = self.cm.delete_connection(did, "https://provider.example.com/api", "qchk", "pchk")
+        self.assertTrue(deleted)
+
+        # Deleting again returns False
+        deleted_again = self.cm.delete_connection(did, "https://provider.example.com/api", "qchk", "pchk")
+        self.assertFalse(deleted_again)
 
 
 if __name__ == "__main__":
