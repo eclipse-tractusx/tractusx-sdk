@@ -56,12 +56,12 @@ class DiscoveryFinderService(BaseService):
         self.return_type_key = return_type_key
         self._init_tracing(trace=trace)
 
-    def find_discovery_urls(self, keys:list=["bpn"]) -> dict:
+    def find_discovery_urls(self, keys: list | None = None) -> dict:
         """
         Allows you to find a discovery service urls by key.
         
         Args:
-            keys (list): List of keys to search for (default: ["bpn"]).
+            keys (list, optional): List of keys to search for (default: ["bpn"]).
             
         Returns:
             dict: Dictionary mapping discovery types to their endpoint URLs.
@@ -70,6 +70,9 @@ class DiscoveryFinderService(BaseService):
         ## Check if IAM is connected
         if(not self.oauth.connected):
             raise ConnectionError("[EDC Discovery Service] The authentication service is not connected! Please execute the oauth.connect() method")
+        
+        if keys is None:
+            keys = ["bpn"]
         
         ## Setup headers and body
         headers:dict = self.oauth.add_auth_header(headers={'Content-Type' : 'application/json'})

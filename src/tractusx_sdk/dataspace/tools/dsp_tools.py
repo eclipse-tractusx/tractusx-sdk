@@ -624,7 +624,7 @@ class DspTools:
     """
     
     @staticmethod
-    def filter_assets_and_policies(catalog:dict, allowed_policies:Sequence | None=[]) -> list[AssetPolicySelection]:
+    def filter_assets_and_policies(catalog:dict, allowed_policies:Sequence | None=None) -> list[AssetPolicySelection]:
         """
         Method to select a asset and policy from a DCAT Catalog.
 
@@ -636,6 +636,9 @@ class DspTools:
 
         if catalog is None:
             raise EmptyCatalogError("It was not possible to get the policy, because the catalog is empty!")
+        
+        if allowed_policies is None:
+            allowed_policies = []
         
         dataset:list|dict = _get_datasets(catalog)
         ### Asset Evaluation
@@ -695,12 +698,15 @@ class DspTools:
         return len(dataset) == 0
         
     @staticmethod
-    def get_dataset_policy(dataset:dict, allowed_policies:Sequence | None=[]) -> dict | None:
+    def get_dataset_policy(dataset:dict, allowed_policies:Sequence | None=None) -> dict | None:
         """
         Gets a valid policy from an dataset.
 
         @returns: dict: the selected policy or None if no valid policy was found
         """
+        if allowed_policies is None:
+            allowed_policies = []
+
         ### Policy Evaluation
         policies: dict | list | None = _get_policies(dataset)
 

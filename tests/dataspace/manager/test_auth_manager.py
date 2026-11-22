@@ -87,6 +87,22 @@ class TestAuthManager(unittest.TestCase):
         expected = {"X-Api-Key": "test_key"}
         self.assertEqual(result, expected)
 
+    def test_add_auth_header_with_none_headers(self):
+        """Test add_auth_header explicitly passing None creates fresh headers."""
+        result1 = self.auth_manager.add_auth_header(None)
+        result1["Mutated-Header"] = "mutated"
+        result2 = self.auth_manager.add_auth_header(None)
+        self.assertNotIn("Mutated-Header", result2)
+        self.assertEqual(result2, {"X-Api-Key": "test_key"})
+
+    def test_add_auth_header_default_does_not_leak_mutations(self):
+        """Test add_auth_header default arguments do not share state across calls."""
+        result1 = self.auth_manager.add_auth_header()
+        result1["Leaked-Header"] = "leaked"
+        result2 = self.auth_manager.add_auth_header()
+        self.assertNotIn("Leaked-Header", result2)
+        self.assertEqual(result2, {"X-Api-Key": "test_key"})
+
     def test_add_auth_header_raises_when_auth_disabled(self):
         """Test add_auth_header raises RuntimeError when auth is disabled."""
         self.auth_manager.auth_enabled = False
