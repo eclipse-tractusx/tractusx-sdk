@@ -24,7 +24,7 @@
 from enum import Enum
 from importlib import import_module
 from os import listdir, path
-from typing import Any, cast
+from typing import Any
 
 from ...adapters.adapter import Adapter
 from ...adapters.connector.base_dma_adapter import BaseDmaAdapter
@@ -109,6 +109,15 @@ class ControllerFactory:
             ) from import_exception
 
     @staticmethod
+    def _build_dma_controller(builder: Controller._Builder[Adapter]) -> BaseDmaController:
+        controller = builder.build()
+        if not isinstance(controller, BaseDmaController):
+            raise TypeError(
+                f"Expected a {BaseDmaController.__name__}, got {type(controller).__name__}"
+            )
+        return controller
+
+    @staticmethod
     def get_asset_controller(
             dataspace_version: str,
             adapter: BaseDmaAdapter,
@@ -132,7 +141,7 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return cast(BaseDmaController, builder.build())
+        return ControllerFactory._build_dma_controller(builder)
 
     @staticmethod
     def get_catalog_controller(
@@ -158,7 +167,7 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return cast(BaseDmaController, builder.build())
+        return ControllerFactory._build_dma_controller(builder)
 
     @staticmethod
     def get_contract_agreement_controller(
@@ -184,7 +193,7 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return cast(BaseDmaController, builder.build())
+        return ControllerFactory._build_dma_controller(builder)
 
     @staticmethod
     def get_contract_definition_controller(
@@ -210,7 +219,7 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return cast(BaseDmaController, builder.build())
+        return ControllerFactory._build_dma_controller(builder)
 
     @staticmethod
     def get_contract_negotiation_controller(
@@ -236,7 +245,7 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return cast(BaseDmaController, builder.build())
+        return ControllerFactory._build_dma_controller(builder)
 
     @staticmethod
     def get_edr_controller(
@@ -262,7 +271,7 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return cast(BaseDmaController, builder.build())
+        return ControllerFactory._build_dma_controller(builder)
 
     @staticmethod
     def get_policy_controller(
@@ -288,7 +297,7 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return cast(BaseDmaController, builder.build())
+        return ControllerFactory._build_dma_controller(builder)
 
     @staticmethod
     def get_transfer_process_controller(
@@ -314,7 +323,7 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return cast(BaseDmaController, builder.build())
+        return ControllerFactory._build_dma_controller(builder)
     
     @staticmethod
     def get_dataplane_selector_controller(
@@ -340,7 +349,7 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return cast(BaseDmaController, builder.build())
+        return ControllerFactory._build_dma_controller(builder)
     
     @staticmethod
     def get_application_observability_controller(
@@ -366,7 +375,7 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return cast(BaseDmaController, builder.build())
+        return ControllerFactory._build_dma_controller(builder)
 
     @staticmethod
     def get_connector_discovery_controller(
@@ -392,7 +401,7 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return cast(BaseDmaController, builder.build())
+        return ControllerFactory._build_dma_controller(builder)
 
     @staticmethod
     def get_protocol_version_controller(
@@ -418,7 +427,7 @@ class ControllerFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return cast(BaseDmaController, builder.build())
+        return ControllerFactory._build_dma_controller(builder)
 
     @staticmethod
     def get_dma_controllers_for_version(

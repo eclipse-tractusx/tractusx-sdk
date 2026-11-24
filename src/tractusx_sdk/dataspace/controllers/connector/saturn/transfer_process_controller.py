@@ -26,6 +26,7 @@ from typing import Any
 import requests
 
 from .dma_controller import DmaController
+from tractusx_sdk.dataspace.adapters.connector.base_dma_adapter import BaseDmaAdapter
 from tractusx_sdk.dataspace.controllers.connector.utils.mixins import StatefulEntityDmaController
 from tractusx_sdk.dataspace.models.connector.saturn import TransferProcessModel
 
@@ -39,8 +40,8 @@ class TransferProcessController(StatefulEntityDmaController[TransferProcessModel
 
     endpoint_url = "/v3/transferprocesses"
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, adapter: BaseDmaAdapter) -> None:
+        super().__init__(adapter)
 
     def create(self, obj: TransferProcessModel, **kwargs: Any) -> requests.Response:
         return super().create(obj, **kwargs)

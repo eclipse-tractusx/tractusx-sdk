@@ -126,10 +126,10 @@ class BaseConnectorConsumerService(BaseService):
             ]
         )
 
-        self._catalog_controller = cast(BaseDmaController, self.controllers.get(ControllerType.CATALOG))
-        self._edr_controller = cast(BaseDmaController, self.controllers.get(ControllerType.EDR))
-        self._contract_negotiation_controller = cast(BaseDmaController, self.controllers.get(ControllerType.CONTRACT_NEGOTIATION))
-        self._transfer_process_controller = cast(BaseDmaController, self.controllers.get(ControllerType.TRANSFER_PROCESS))
+        self._catalog_controller = self.controllers[ControllerType.CATALOG]
+        self._edr_controller = self.controllers[ControllerType.EDR]
+        self._contract_negotiation_controller = self.controllers[ControllerType.CONTRACT_NEGOTIATION]
+        self._transfer_process_controller = self.controllers[ControllerType.TRANSFER_PROCESS]
 
         self.connection_manager = connection_manager if connection_manager is not None else MemoryConnectionManager()
 

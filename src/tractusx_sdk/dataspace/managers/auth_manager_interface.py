@@ -30,12 +30,12 @@ class AuthManagerInterface:
     Implementations should provide a method to return authentication headers.
     """
 
-    def add_auth_header(self, headers: dict[str, Any]={}) -> dict[str, Any]:
+    def add_auth_header(self, headers: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Adds authentication information to the provided HTTP headers.
 
         Args:
-            headers (dict, optional): A dictionary of existing HTTP headers to which authentication information will be added. Defaults to an empty dictionary.
+            headers (dict, optional): Existing HTTP headers. Defaults to None.
 
         Returns:
             dict: The updated headers dictionary including authentication information.

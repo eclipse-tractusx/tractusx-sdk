@@ -66,6 +66,13 @@ class TestControllerFactory(unittest.TestCase):
                     dataspace_version="v0_0_0"
                 )
 
+    def test_build_dma_controller_rejects_wrong_builder_result(self):
+        builder = Mock()
+        builder.build.return_value = object()
+
+        with self.assertRaises(TypeError):
+            ControllerFactory._build_dma_controller(builder)
+
     def test_get_asset_controller(self):
         controller = ControllerFactory.get_asset_controller(
             dataspace_version=self.dataspace_version,

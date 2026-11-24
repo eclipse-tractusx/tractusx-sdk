@@ -26,6 +26,7 @@ from typing import Any
 import requests
 
 from .dma_controller import DmaController
+from tractusx_sdk.dataspace.adapters.connector.base_dma_adapter import BaseDmaAdapter
 from tractusx_sdk.dataspace.controllers.connector.utils.mixins import GetControllerMixin, GetAllControllerMixin
 from tractusx_sdk.dataspace.models.connector.saturn import ContractAgreementRetirementModel
 from tractusx_sdk.dataspace.constants import V3, V4_ALPHA
@@ -38,8 +39,8 @@ class ContractAgreementController(GetControllerMixin, GetAllControllerMixin, Dma
 
     endpoint_url = "/contractagreements"
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, adapter: BaseDmaAdapter) -> None:
+        super().__init__(adapter)
 
     def get_negotiation_by_id(self, oid: str, **kwargs: Any) -> requests.Response:
         return self.adapter.get(url=f"{V3}/{self.endpoint_url}/{oid}/negotiation", **kwargs)
@@ -55,10 +56,10 @@ class ContractAgreementController(GetControllerMixin, GetAllControllerMixin, Dma
         return self.adapter.delete(url=f"{V3}/{self.endpoint_url}/retirements/{oid}", **kwargs)
     
     def get_all_v4alpha(self, **kwargs: Any) -> requests.Response:
-        return super().get_all(url=f"{V4_ALPHA}/{self.endpoint_url}", **kwargs)
+        return self.adapter.post(url=f"{V4_ALPHA}{self.endpoint_url}/request", **kwargs)
     
     def get_by_id_v4alpha(self, oid: str, **kwargs: Any) -> requests.Response:
-        return super().get_by_id(oid, url=f"{V4_ALPHA}/{self.endpoint_url}", **kwargs)
+        return self.adapter.get(url=f"{V4_ALPHA}{self.endpoint_url}/{oid}", **kwargs)
     
     def get_negotiation_by_id_v4alpha(self, oid: str, **kwargs: Any) -> requests.Response:
         return self.adapter.get(url=f"{V4_ALPHA}/{self.endpoint_url}/{oid}/negotiation", **kwargs)

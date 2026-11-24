@@ -26,6 +26,7 @@ from typing import Any
 import requests
 
 from .dma_controller import DmaController
+from tractusx_sdk.dataspace.adapters.connector.base_dma_adapter import BaseDmaAdapter
 from tractusx_sdk.dataspace.controllers.connector.utils.mixins import GetControllerMixin, GetAllControllerMixin
 
 
@@ -36,8 +37,8 @@ class ContractAgreementController(GetControllerMixin, GetAllControllerMixin, Dma
 
     endpoint_url = "/v3/contractagreements"
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, adapter: BaseDmaAdapter) -> None:
+        super().__init__(adapter)
 
     def get_negotiation_by_id(self, oid: str, **kwargs: Any) -> requests.Response:
         return self.adapter.get(url=f"{self.endpoint_url}/{oid}/negotiation", **kwargs)

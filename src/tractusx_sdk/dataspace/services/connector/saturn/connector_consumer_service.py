@@ -90,7 +90,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
                 ControllerType.CONNECTOR_DISCOVERY
             ]
         )
-        self._connector_discovery_controller = cast(BaseDmaController, self.controllers.get(ControllerType.CONNECTOR_DISCOVERY))
+        self._connector_discovery_controller = self.controllers[ControllerType.CONNECTOR_DISCOVERY]
         super().__init__(
             dataspace_version=self.dataspace_version,
             base_url=base_url,

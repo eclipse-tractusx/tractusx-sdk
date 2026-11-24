@@ -23,6 +23,7 @@
 
 
 from collections.abc import Callable
+from functools import wraps
 from typing import ParamSpec, TypeVar
 
 from tractusx_sdk.dataspace.controllers.controller import Controller
@@ -37,9 +38,11 @@ def controller_method(func: Callable[P, R]) -> Callable[P, R]:
     they are used only alongside a controller class (that have an adapter and an endpoint URL)
 
     :param func: The function to which the decorator will be applied
-    :return: None, if the required attributes do not exist, otherwise the applied function's result
+    :return: The result of the decorated function.
+    :raises ValueError: If the instance is not a Controller or has no endpoint_url.
     """
 
+    @wraps(func)
     def inner_func(*args: P.args, **kwargs: P.kwargs) -> R:
         self = args[0]
 

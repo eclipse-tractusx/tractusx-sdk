@@ -26,6 +26,7 @@ from typing import Any
 import requests
 
 from .dma_controller import DmaController
+from tractusx_sdk.dataspace.adapters.connector.base_dma_adapter import BaseDmaAdapter
 from tractusx_sdk.dataspace.controllers.connector.utils.mixins import CreateControllerMixin, GetAllControllerMixin, DeleteControllerMixin
 from tractusx_sdk.dataspace.models.connector.jupiter import ContractNegotiationModel
 
@@ -39,8 +40,8 @@ class EdrController(CreateControllerMixin[ContractNegotiationModel], GetAllContr
 
     endpoint_url = "/v3/edrs"
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, adapter: BaseDmaAdapter) -> None:
+        super().__init__(adapter)
     
     def get_data_address(self, oid: str, **kwargs: Any) -> requests.Response:
         return self.adapter.get(url=f"{self.endpoint_url}/{oid}/dataaddress", **kwargs)

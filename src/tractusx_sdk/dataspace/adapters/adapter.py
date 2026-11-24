@@ -85,11 +85,11 @@ class Adapter(TraceableMixin):
             self._data["base_url"] = base_url
             return self
 
-        def headers(self, headers: dict[str, Any]) -> Self:
+        def headers(self, headers: dict[str, Any] | None) -> Self:
             self._data["headers"] = headers
             return self
 
-        def tracer(self, tracer: Tracer) -> Self:
+        def tracer(self, tracer: Tracer | None) -> Self:
             """
             Sets the tracer recording the requests/responses of this adapter.
             """

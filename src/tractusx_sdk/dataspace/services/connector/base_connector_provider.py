@@ -21,7 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Any, Self, cast
+from typing import Any, Self
 
 from ..service import BaseService
 from ...adapters.connector.adapter_factory import AdapterFactory
@@ -70,9 +70,9 @@ class BaseConnectorProviderService(BaseService):
             ]
         )
 
-        self._asset_controller = cast(BaseDmaController, controllers.get(ControllerType.ASSET))
-        self._contract_definition_controller = cast(BaseDmaController, controllers.get(ControllerType.CONTRACT_DEFINITION))
-        self._policy_controller = cast(BaseDmaController, controllers.get(ControllerType.POLICY))
+        self._asset_controller = controllers[ControllerType.ASSET]
+        self._contract_definition_controller = controllers[ControllerType.CONTRACT_DEFINITION]
+        self._policy_controller = controllers[ControllerType.POLICY]
 
         # Configured last: the tracer is shared with the adapter and the controllers
         self._init_tracing(trace=trace)
