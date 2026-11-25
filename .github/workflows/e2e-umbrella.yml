@@ -97,7 +97,11 @@ env:
   # tag is a hash of TestLab's own files, so it is computed from the pinned
   # checkout; when it cannot be pulled the job falls back to a cold node.
   KIND_NODE_CACHE_REPO: ghcr.io/eclipse-tractusx/tractusx-testlab/e2e-kind-node
-  SUBMODEL_SERVER_URL: http://tck-submodel.local
+  SUBMODEL_SERVER_HOST: tck-submodel.local
+  # Where tests/e2e/settings.py expects the Digital Twin Registry by default;
+  # the workflow checks the chart's ingress against it.
+  DTR_HOST: provider-dtr.local
+  DTR_PREFIX: /semantics/registry
   E2E_RESULTS: e2e-results
   # Single source of truth for the dataspace hostnames, used for both the
   # runner's /etc/hosts and the cluster's CoreDNS. All are fixed by the
@@ -709,53 +713,56 @@ jobs:
           fi
           echo "::add-mask::${super_user_key}"
 
+          # The helper's default issuer URL is the IssuerService ingress.
           poetry run python "${TESTLAB_CI}/issue_credentials.py" \
-            --issuer-url "http://issuerservice.local" \
             --super-user-key "${super_user_key}"
 
       # ------------------------------------------------------------------
-      # 5. Discover what the chart didn't pin, then check reachability
+      # 5. Check the chart's DTR ingress, then check reachability
       # ------------------------------------------------------------------
-      - name: Discover DTR ingress host and base URL
+      # The runner reaches every ingress on 127.0.0.1 (kind's host port), so
+      # the preflights address it there directly and route by Host header.
+      - name: Check the DTR ingress host and prefix
         run: |
           set -euo pipefail
-          DTR_HOST="$(kubectl get ingress provider-dtr \
+          host="$(kubectl get ingress provider-dtr \
             -n "${UMBRELLA_NAMESPACE}" \
             -o jsonpath='{.spec.rules[0].host}')"
           # The registry sits under a rewritten prefix
           # (`/semantics/registry(/|$)(.*)`), so the base URL is host + prefix.
-          DTR_PATH="$(kubectl get ingress provider-dtr \
+          path="$(kubectl get ingress provider-dtr \
             -n "${UMBRELLA_NAMESPACE}" \
             -o jsonpath='{.spec.rules[0].http.paths[0].path}')"
-          if [ -z "${DTR_HOST}" ] || [ -z "${DTR_PATH}" ]; then
-            echo "::error::Could not read the Digital Twin Registry ingress in namespace ${UMBRELLA_NAMESPACE}."
+          prefix="${path%%(*}"
+          prefix="${prefix%/}"
+          echo "DTR ingress: host=${host} path=${path}"
+          if [ "${host}" != "${DTR_HOST}" ] || [ "${prefix}" != "${DTR_PREFIX}" ]; then
+            echo "::error::Expected the DTR ingress at host=${DTR_HOST} prefix=${DTR_PREFIX}, found host='${host}' prefix='${prefix}'. Update DTR_HOST/DTR_PREFIX here and E2E_DTR_BASE_URL for the tests."
             kubectl get ingress -n "${UMBRELLA_NAMESPACE}"
             exit 1
           fi
-          DTR_PREFIX="${DTR_PATH%%(*}"
-          DTR_PREFIX="${DTR_PREFIX%/}"
-          DTR_BASE_URL="http://${DTR_HOST}${DTR_PREFIX}"
-          echo "Discovered DTR ingress: host=${DTR_HOST} path=${DTR_PATH}"
-          echo "DTR base URL: ${DTR_BASE_URL}"
-          echo "DTR_BASE_URL=${DTR_BASE_URL}" >> "$GITHUB_ENV"
-          grep -qE "[[:space:]]${DTR_HOST}\$" /etc/hosts \
-            || echo "127.0.0.1 ${DTR_HOST}" | sudo tee -a /etc/hosts >/dev/null
 
       - name: Preflight - check the submodel server is reachable both ways
         run: |
           set -euo pipefail
           curl --fail-with-body --silent --show-error --retry 10 --retry-delay 3 \
-            --retry-all-errors "${SUBMODEL_SERVER_URL}/health"
+            --retry-all-errors --header "Host: ${SUBMODEL_SERVER_HOST}" \
+            "http://127.0.0.1/health"
           echo
           # From a pod, on the same hostname: the address the provider's data
-          # plane fetches from. A failure here would surface later as a
-          # transfer that negotiates cleanly and then answers 502.
-          status="$(bash "${TESTLAB_CI}/probe_from_pod.sh" tck-submodel-reach "${UMBRELLA_NAMESPACE}" "${SUBMODEL_SERVER_URL}/health")"
-          if [ "${status}" != "200" ]; then
-            echo "::error::A pod could not reach the submodel server at ${SUBMODEL_SERVER_URL} (got '${status}')."
+          # plane fetches from must resolve to the ingress controller. A
+          # failure here would surface later as a transfer that negotiates
+          # cleanly and then answers 502.
+          ingress_ip="$(kubectl -n ingress-nginx get svc ingress-nginx-controller \
+            -o jsonpath='{.spec.clusterIP}')"
+          resolved="$(kubectl exec --namespace "${UMBRELLA_NAMESPACE}" pod/tck-submodel -- \
+            python -c 'import socket, sys; print(socket.gethostbyname(sys.argv[1]))' \
+            "${SUBMODEL_SERVER_HOST}" || true)"
+          if [ "${resolved}" != "${ingress_ip}" ]; then
+            echo "::error::In the cluster, ${SUBMODEL_SERVER_HOST} resolves to '${resolved}', not the ingress controller ${ingress_ip}."
             exit 1
           fi
-          echo "submodel server: reachable at ${SUBMODEL_SERVER_URL}, from the runner and from a pod"
+          echo "submodel server: ${SUBMODEL_SERVER_HOST} reachable from the runner and resolved to the ingress from a pod"
 
       - name: Preflight - check connector and DTR reachability
         run: |
@@ -765,20 +772,22 @@ jobs:
           query='{"@context":{"edc":"https://w3id.org/edc/v0.0.1/ns/"},"@type":"QuerySpec","offset":0,"limit":1}'
           for participant in provider consumer; do
             curl --fail-with-body --silent --show-error \
+              --header "Host: ${participant}-management.local" \
               --header "X-Api-Key: password" \
               --header "Content-Type: application/json" \
               --request POST --data "${query}" \
-              "http://${participant}-management.local/management/v3/assets/request" \
+              "http://127.0.0.1/management/v3/assets/request" \
               > /dev/null
             echo "${participant} management API: reachable"
           done
-          if ! dtr_body="$(curl --fail-with-body --location --silent --show-error \
-            "${DTR_BASE_URL}/api/v3/shell-descriptors" 2>&1)"; then
-            echo "::error::DTR API not reachable at ${DTR_BASE_URL}/api/v3/shell-descriptors"
+          if ! dtr_body="$(curl --fail-with-body --silent --show-error \
+            --header "Host: ${DTR_HOST}" \
+            "http://127.0.0.1${DTR_PREFIX}/api/v3/shell-descriptors" 2>&1)"; then
+            echo "::error::DTR API not reachable at ${DTR_HOST}${DTR_PREFIX}/api/v3/shell-descriptors"
             printf '%s\n' "${dtr_body}"
             exit 1
           fi
-          echo "provider DTR API: reachable at ${DTR_BASE_URL}"
+          echo "provider DTR API: reachable at ${DTR_HOST}${DTR_PREFIX}"
 
       # ------------------------------------------------------------------
       # 6. The SDK E2E suite
@@ -788,7 +797,6 @@ jobs:
           TX_SDK_E2E: "1"
           E2E_PROVIDER_API_KEY: password
           E2E_CONSUMER_API_KEY: password
-          E2E_DTR_BASE_URL: ${{ env.DTR_BASE_URL }}
           E2E_TIMEOUT_SECONDS: "180"
         run: |
           mkdir -p "${E2E_RESULTS}"
