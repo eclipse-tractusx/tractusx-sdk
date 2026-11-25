@@ -159,7 +159,12 @@ jobs:
 
       - name: Install the SDK
         # httpx and pyyaml, which the helpers below need, are SDK dependencies.
-        run: poetry install --no-interaction --with test
+        # Wheels only: no dependency's setup script runs at install time.
+        env:
+          POETRY_INSTALLER_ONLY_BINARY: ":all:"
+        run: |
+          poetry config installer.only-binary ":all:"
+          poetry install --no-interaction --with test
 
       # ------------------------------------------------------------------
       # 2. Ephemeral Kubernetes cluster (kind, in the runner)
@@ -214,7 +219,7 @@ jobs:
         env:
           KIND_NODE_IMAGE: ${{ steps.kind-node-cache.outputs.image }}
         run: |
-          curl -Lo ./kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
+          curl --proto '=https' --tlsv1.2 -Lo ./kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
           chmod +x ./kind
           cat <<'EOF' > "${RUNNER_TEMP}/kind-config.yaml"
           kind: Cluster
@@ -402,7 +407,7 @@ jobs:
           ih_charts="${RUNNER_TEMP}/identityhub-charts"
           mkdir -p "${ih_charts}"
           for chart in tractusx-identityhub-memory tractusx-issuerservice; do
-            curl --fail --location --silent --show-error \
+            curl --proto '=https' --tlsv1.2 --fail --location --silent --show-error \
               "${ih_release}/${chart}-${IDENTITYHUB_CHART_VERSION}/${chart}-${IDENTITYHUB_CHART_VERSION}.tgz" \
               --output "${ih_charts}/${chart}.tgz"
             tar -xzf "${ih_charts}/${chart}.tgz" -C "${ih_charts}"
