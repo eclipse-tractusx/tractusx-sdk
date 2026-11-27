@@ -29,6 +29,7 @@ from sqlalchemy import create_engine
 
 from tractusx_sdk.dataspace.managers.connection.memory.memory_connection_manager import MemoryConnectionManager
 from tractusx_sdk.dataspace.managers.connection.database.postgres_memory_connection_manager import PostgresMemoryConnectionManager
+from tractusx_sdk.dataspace.managers.connection.database.postgres_connection_manager import PostgresConnectionManager
 
 
 # ---------------------------------------------------------------------------
@@ -338,6 +339,138 @@ class TestPostgresMemoryConnectionManagerClearByParty(unittest.TestCase):
 
         self.assertTrue(deleted)
         mock_save.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# PostgresConnectionManager – clear_connections_by_party
+# ---------------------------------------------------------------------------
+
+class TestPostgresConnectionManagerClearByParty(unittest.TestCase):
+    """
+    Uses an in-memory SQLite database so no real Postgres is required.
+    PostgresConnectionManager reads and writes the database directly (no
+    in-memory cache), so every assertion checks the stored rows.
+    The table name matches the one used above: the EDRBase ``edr_data`` column
+    object can only be bound to a single table name per process.
+    """
+
+    def setUp(self):
+        self.engine = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+        )
+        self.cm = PostgresConnectionManager(
+            engine=self.engine,
+            provider_id_key=PROVIDER_ID_KEY,
+            table_name="test_edr_connections",
+        )
+
+    def _transfer_id(self, counter_party_id: str, address: str = "https://provider.example.com/api") -> str | None:
+        return self.cm.get_connection_transfer_id(counter_party_id, address, "qchk", "pchk")
+
+    # --- instantiation (issue #256) ----------------------------------------
+
+    def test_can_be_instantiated(self):
+        """The class implements every abstract method of BaseConnectionManager."""
+        self.assertIsInstance(self.cm, PostgresConnectionManager)
+
+    # --- match scenarios ---------------------------------------------------
+
+    def test_bpn_key_match(self):
+        """Stored counter_party_id IS the raw BPN -> it is removed."""
+        _add(self.cm, "BPNL000000000065")
+
+        removed = self.cm.clear_connections_by_party("BPNL000000000065")
+
+        self.assertEqual(removed, 1)
+        self.assertIsNone(self._transfer_id("BPNL000000000065"))
+
+    def test_did_key_match_with_bpn_substring(self):
+        """Stored counter_party_id is the full DID, caller only knows the BPN."""
+        did = "did:web:ssi-dim-wallet-stub.example.com:BPNL000000000065"
+        _add(self.cm, did)
+
+        removed = self.cm.clear_connections_by_party("BPNL000000000065")
+
+        self.assertEqual(removed, 1)
+        self.assertIsNone(self._transfer_id(did))
+
+    def test_exact_did_passed_as_substring(self):
+        did = "did:web:ssi-dim-wallet-stub.example.com:BPNL000000000065"
+        _add(self.cm, did)
+
+        removed = self.cm.clear_connections_by_party(did)
+
+        self.assertEqual(removed, 1)
+        self.assertIsNone(self._transfer_id(did))
+
+    def test_multiple_parties_with_same_bpn_substring(self):
+        did_a = "did:web:wallet-a.example.com:BPNL000000000065"
+        did_b = "did:web:wallet-b.example.com:BPNL000000000065"
+        _add(self.cm, did_a, transfer_id="tp-a")
+        _add(self.cm, did_b, transfer_id="tp-b")
+
+        removed = self.cm.clear_connections_by_party("BPNL000000000065")
+
+        self.assertEqual(removed, 2)
+        self.assertIsNone(self._transfer_id(did_a))
+        self.assertIsNone(self._transfer_id(did_b))
+
+    def test_returns_party_count_not_row_count(self):
+        """Several EDRs for one party count as one removed party entry, like the memory manager."""
+        did = "did:web:wallet.example.com:BPNL000000000065"
+        _add(self.cm, did, address="https://provider-1.example.com/api", transfer_id="tp-1")
+        _add(self.cm, did, address="https://provider-2.example.com/api", transfer_id="tp-2")
+
+        removed = self.cm.clear_connections_by_party("BPNL000000000065")
+
+        self.assertEqual(removed, 1)
+        self.assertIsNone(self._transfer_id(did, "https://provider-1.example.com/api"))
+        self.assertIsNone(self._transfer_id(did, "https://provider-2.example.com/api"))
+
+    # --- non-match / isolation scenarios -----------------------------------
+
+    def test_no_match_returns_zero(self):
+        _add(self.cm, "BPNL000000000065")
+
+        removed = self.cm.clear_connections_by_party("BPNL999999999999")
+
+        self.assertEqual(removed, 0)
+        self.assertEqual(self._transfer_id("BPNL000000000065"), "tp-1")
+
+    def test_unrelated_parties_are_not_removed(self):
+        _add(self.cm, "did:web:wallet.example.com:BPNL000000000065", transfer_id="tp-1")
+        _add(self.cm, "did:web:wallet.example.com:BPNL000000000099", transfer_id="tp-2")
+
+        self.cm.clear_connections_by_party("BPNL000000000065")
+
+        self.assertEqual(self._transfer_id("did:web:wallet.example.com:BPNL000000000099"), "tp-2")
+
+    def test_sql_wildcards_in_substring_are_literal(self):
+        """'%' and '_' are matched literally, as Python's ``in`` does in the memory manager."""
+        _add(self.cm, "BPNL000000000065", transfer_id="tp-1")
+        _add(self.cm, "BPNL_00000000099", transfer_id="tp-2")
+
+        self.assertEqual(self.cm.clear_connections_by_party("%"), 0)
+        self.assertEqual(self.cm.clear_connections_by_party("BPNL_"), 1)
+
+        self.assertEqual(self._transfer_id("BPNL000000000065"), "tp-1")
+        self.assertIsNone(self._transfer_id("BPNL_00000000099"))
+
+    # --- return value and idempotency --------------------------------------
+
+    def test_returns_int_on_empty_table(self):
+        removed = self.cm.clear_connections_by_party("BPNL000000000001")
+        self.assertIsInstance(removed, int)
+        self.assertEqual(removed, 0)
+
+    def test_idempotent_second_call_returns_zero(self):
+        _add(self.cm, "BPNL000000000065")
+        self.cm.clear_connections_by_party("BPNL000000000065")
+
+        removed = self.cm.clear_connections_by_party("BPNL000000000065")
+
+        self.assertEqual(removed, 0)
 
 
 if __name__ == "__main__":
