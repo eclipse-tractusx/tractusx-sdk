@@ -138,6 +138,37 @@ Code that read the DEBUG logs of `DspTools.is_policy_valid` to learn why a polic
 
 With `policies=None` ("accept any policy"), the base consumer's `get_transfer_id` replaced the policies with a random UUID and then used it as the allow-list, which failed with `TypeError`. The UUID is now only the cache identity of that selection and `None` is what reaches the catalog filter.
 
+### 6. TLS certificates are verified by default
+
+Requests now check the server certificate unless you turn it off ([#317](https://github.com/eclipse-tractusx/tractusx-sdk/issues/317)). Before, `verify` / `verify_ssl` defaulted to `False` in the Jupiter and Saturn consumer services' data-plane requests, the TCK helpers and the TCK config models, and the TCK ignored its own `verify_ssl` when it created the connector services.
+
+Nothing changes if your endpoints have valid certificates. If you talk to an endpoint with a self-signed or private certificate (a local or test cluster), turn verification off explicitly:
+
+=== "Before (0.8.x)"
+
+    ```python
+    # verification was off without asking
+    consumer.do_get(counter_party_id=bpn, counter_party_address=dsp_url, filter_expression=flt)
+    ```
+
+    ```yaml
+    # TCK configuration: verify_ssl could be left out
+    ```
+
+=== "After (0.9.0)"
+
+    ```python
+    consumer.do_get(counter_party_id=bpn, counter_party_address=dsp_url, filter_expression=flt,
+                    verify=False)   # only for self-signed test endpoints
+    ```
+
+    ```yaml
+    # TCK configuration
+    verify_ssl: false   # only for self-signed test endpoints
+    ```
+
+Prefer adding your test CA to the trust store (for example with `REQUESTS_CA_BUNDLE`) over disabling verification.
+
 ## Migrating from Jupiter to Saturn
 
 The `jupiter` and `saturn` dataspace versions are **not wire-compatible**. Migration is required when upgrading from EDC 0.8.x–0.10.x to EDC 0.11.x+.
