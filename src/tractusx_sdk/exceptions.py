@@ -112,6 +112,14 @@ class ConnectionManagerError(TractusXSDKError):
     """A connection manager could not store, load or reach its backend."""
 
 
+class AuthServiceUnavailableError(TractusXSDKError, ConnectionError):
+    """
+    The authentication service (Keycloak) could not be reached.
+
+    Also a ``ConnectionError``, so callers that already catch one keep working.
+    """
+
+
 class ConnectorError(TractusXSDKError, RuntimeError):
     """A call to an EDC connector failed."""
 

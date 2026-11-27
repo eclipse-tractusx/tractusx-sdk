@@ -28,6 +28,7 @@ from requests import HTTPError
 
 from tractusx_sdk import exceptions
 from tractusx_sdk.exceptions import (
+    AuthServiceUnavailableError,
     CatalogError,
     CatalogRequestError,
     ConnectionManagerError,
@@ -100,12 +101,13 @@ class TestHierarchy:
         (ConnectorError, RuntimeError),
         (CatalogError, RuntimeError),
         (CatalogRequestError, ConnectionError),
+        (AuthServiceUnavailableError, ConnectionError),
     ])
     def test_builtin_compatibility_is_kept(self, cls, builtin):
         with pytest.raises(builtin):
             raise cls("boom")
 
-    @pytest.mark.parametrize("cls", [DiscoveryError, ConnectionManagerError, SchemaError, ConnectorError])
+    @pytest.mark.parametrize("cls", [DiscoveryError, ConnectionManagerError, SchemaError, ConnectorError, AuthServiceUnavailableError])
     def test_single_clause_catches_everything(self, cls):
         with pytest.raises(TractusXSDKError):
             raise cls("boom")

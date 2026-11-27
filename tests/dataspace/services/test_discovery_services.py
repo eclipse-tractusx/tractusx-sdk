@@ -23,6 +23,7 @@
 import pytest
 from unittest import mock
 from tractusx_sdk.dataspace.services.discovery.discovery_finder_service import DiscoveryFinderService
+from tractusx_sdk.exceptions import AuthServiceUnavailableError
 from tractusx_sdk.dataspace.services.discovery.connector_discovery_service import ConnectorDiscoveryService
 
 @pytest.fixture
@@ -90,16 +91,17 @@ class TestDiscoveryFinderService:
             "manufacturerPartId": "https://part-discovery.example.com"
         }
 
-    def test_find_discovery_urls_not_connected(self, mock_oauth):
-        """Test discovery URL finding when OAuth is not connected."""
+    def test_find_discovery_urls_auth_service_unreachable(self, mock_oauth):
+        """Test discovery URL finding when the OAuth manager cannot reach the IAM on first use."""
         mock_oauth.connected = False
+        mock_oauth.add_auth_header.side_effect = AuthServiceUnavailableError("Unable to access the Keycloak instance")
         
         discovery_finder = DiscoveryFinderService(
             url="https://discovery.example.com",
             oauth=mock_oauth
         )
         
-        with pytest.raises(ConnectionError, match="authentication service is not connected"):
+        with pytest.raises(AuthServiceUnavailableError, match="Unable to access the Keycloak instance"):
             discovery_finder.find_discovery_urls(keys=["bpn"])
 
     @mock.patch("tractusx_sdk.dataspace.services.discovery.discovery_finder_service.HttpTools")
