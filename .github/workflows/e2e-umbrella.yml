@@ -1,0 +1,904 @@
+###############################################################
+# Eclipse Tractus-X - Software Development KIT
+#
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+###############################################################
+
+## This code was partially generated using artificial intelligence (AI) (Tool: Claude Code, Model: Claude Opus 5.5).
+## It was reviewed and tested by a human committer.
+
+# E2E: the SDK's own methods against a REAL, ephemeral Eclipse Tractus-X
+# dataspace (tests/e2e, see tests/e2e/README.md).
+#
+# The dataspace is brought up exactly the way Tractus-X TestLab's
+# `E2E - Umbrella Dataspace` workflow does it, so both projects test against
+# the same thing:
+#   https://github.com/eclipse-tractusx/tractusx-testlab/blob/main/.github/workflows/e2e-umbrella.yml
+#
+#   - a `kind` cluster inside the runner, torn down at the end of the job
+#   - Tractus-X Umbrella, profile "decentralized identityhub"
+#     https://github.com/eclipse-tractusx/tractus-x-umbrella/blob/umbrella-26.03.00/charts/umbrella/values-adopter-decentralized-identityhub.yaml
+#     -> provider (BPNL000000000001) and consumer (BPNL000000000002) EDCs,
+#        one IdentityHub each, the provider's Digital Twin Registry, BDRS and
+#        an IssuerService
+#   - TestLab's CI helpers (values overrides, credential issuance, the
+#     submodel payload server, the wedged-runtime watchdog), checked out at
+#     one pinned commit rather than copied, so a fix there is picked up by
+#     moving one SHA here
+#
+# Then, instead of TestLab's engine, `pytest tests/e2e` drives the dataspace
+# with the SDK: provider services publish an offer, consumer services find it
+# in the catalog, negotiate, transfer and pull it (step by step and through
+# `do_get`), and `AasService` runs a shell-descriptor lifecycle on the DTR.
+#
+# Everything the chart does not do itself (in-cluster DNS for the *.local
+# hostnames, a default IngressClass, credential issuance) is done below; the
+# TestLab workflow explains each one at length.
+
+name: E2E - Umbrella Dataspace
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *" # nightly: this job is heavy (kind + a full Helm deploy)
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "src/**"
+      - "tests/e2e/**"
+      - ".github/workflows/e2e-umbrella.yml"
+      - "pyproject.toml"
+      - "poetry.lock"
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  UMBRELLA_NAMESPACE: umbrella
+  UMBRELLA_CHART_VERSION: "26.03.00"
+  UMBRELLA_VALUES_REF: "umbrella-26.03.00"
+  # The IdentityHub repository releases each chart under its own tag.
+  IDENTITYHUB_CHART_VERSION: "v0.4.0"
+  KIND_VERSION: "v0.24.0"
+  KUBECTL_VERSION: "v1.29.0"
+  # 3.16+ for `--qps`: `--wait` polls ~125 resources, and the default
+  # client-side rate limit would expire first.
+  HELM_VERSION: "3.16.4"
+  # A stall detector, not a budget: a healthy release settles in minutes.
+  HELM_TIMEOUT: "25m"
+  # TestLab's CI helpers, at the commit this workflow was written against.
+  TESTLAB_REPOSITORY: eclipse-tractusx/tractusx-testlab
+  TESTLAB_REF: e75ebb96ee3793fab2372213868df3296094da1c
+  TESTLAB_CI: .testlab/tests/e2e/connector-dtr-smoke/ci
+  # TestLab publishes a kind node with the release's images pre-pulled. Its
+  # tag is a hash of TestLab's own files, so it is computed from the pinned
+  # checkout; when it cannot be pulled the job falls back to a cold node.
+  KIND_NODE_CACHE_REPO: ghcr.io/eclipse-tractusx/tractusx-testlab/e2e-kind-node
+  SUBMODEL_SERVER_HOST: tck-submodel.local
+  # Where tests/e2e/settings.py expects the Digital Twin Registry by default;
+  # the workflow checks the chart's ingress against it.
+  DTR_HOST: provider-dtr.local
+  DTR_PREFIX: /semantics/registry
+  E2E_RESULTS: e2e-results
+  # Single source of truth for the dataspace hostnames, used for both the
+  # runner's /etc/hosts and the cluster's CoreDNS. All are fixed by the
+  # Umbrella profile plus TestLab's ci/umbrella.values.yaml.
+  DATASPACE_HOSTS: >-
+    provider.local
+    provider.intranet
+    provider-dsp.local
+    provider-management.local
+    provider-dtr.local
+    consumer.local
+    consumer.intranet
+    consumer-dsp.local
+    consumer-management.local
+    bdrs-server.tx.test
+    issuerservice.local
+    tck-submodel.local
+
+jobs:
+  e2e-umbrella:
+    name: SDK E2E against Tractus-X Umbrella
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+
+    steps:
+      # ------------------------------------------------------------------
+      # 1. The SDK, and TestLab's CI helpers
+      # ------------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Checkout TestLab CI helpers
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: ${{ env.TESTLAB_REPOSITORY }}
+          ref: ${{ env.TESTLAB_REF }}
+          path: .testlab
+          persist-credentials: false
+          sparse-checkout: |
+            tests/e2e/connector-dtr-smoke/ci
+            .github/workflows
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip and Poetry downloads
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/pypoetry
+          key: ${{ runner.os }}-e2e-poetry-${{ hashFiles('poetry.lock') }}
+          restore-keys: ${{ runner.os }}-e2e-poetry-
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Install the SDK
+        # httpx and pyyaml, which the helpers below need, are SDK dependencies.
+        # Wheels only: no dependency's setup script runs at install time.
+        env:
+          POETRY_INSTALLER_ONLY_BINARY: ":all:"
+        run: |
+          poetry config installer.only-binary ":all:"
+          poetry install --no-interaction --with test
+
+      # ------------------------------------------------------------------
+      # 2. Ephemeral Kubernetes cluster (kind, in the runner)
+      # ------------------------------------------------------------------
+      - name: Reclaim runner disk space
+        run: |
+          # ~15 images land in the kind node; without this the kubelet hits
+          # disk pressure and evicts pods mid-deploy. Detached: nothing before
+          # the deploy needs the space.
+          df -h /
+          sudo nohup bash -c 'rm -rf \
+            /usr/local/lib/android \
+            /usr/share/dotnet \
+            /opt/ghc \
+            /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL' >/dev/null 2>&1 &
+          echo "Reclaim started in the background."
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@776406bce94f63e41d621b960d78ee25c8b76ede # v4.0.1
+        with:
+          version: "${{ env.KUBECTL_VERSION }}"
+
+      - name: Set up Helm
+        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
+        with:
+          version: "${{ env.HELM_VERSION }}"
+
+      - name: Resolve the cached Kind node tag
+        env:
+          CACHE_TAG: ${{ hashFiles('.testlab/tests/e2e/connector-dtr-smoke/ci/umbrella.values.yaml', '.testlab/.github/workflows/build-kind-node-cache.yml', '.testlab/.github/workflows/e2e-umbrella.yml') }}
+        run: echo "KIND_NODE_CACHE_IMAGE=${KIND_NODE_CACHE_REPO}:${CACHE_TAG}" >> "${GITHUB_ENV}"
+
+      - name: Pull cached Umbrella Kind node
+        id: kind-node-cache
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${GITHUB_TOKEN}" | docker login ghcr.io \
+            --username "${GITHUB_ACTOR}" --password-stdin || true
+          if docker pull "${KIND_NODE_CACHE_IMAGE}"; then
+            echo "image=${KIND_NODE_CACHE_IMAGE}" >> "${GITHUB_OUTPUT}"
+            echo "hit=true" >> "${GITHUB_OUTPUT}"
+            echo "Using cached Umbrella Kind node ${KIND_NODE_CACHE_IMAGE}"
+          else
+            echo "image=kindest/node:v1.31.0" >> "${GITHUB_OUTPUT}"
+            echo "hit=false" >> "${GITHUB_OUTPUT}"
+            echo "::warning::Umbrella Kind node cache is unavailable; using a cold node."
+          fi
+
+      - name: Create kind cluster
+        env:
+          KIND_NODE_IMAGE: ${{ steps.kind-node-cache.outputs.image }}
+        run: |
+          curl --proto '=https' --tlsv1.2 -Lo ./kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
+          chmod +x ./kind
+          cat <<'EOF' > "${RUNNER_TEMP}/kind-config.yaml"
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          nodes:
+            - role: control-plane
+              kubeadmConfigPatches:
+                - |
+                  kind: InitConfiguration
+                  nodeRegistration:
+                    kubeletExtraArgs:
+                      node-labels: "ingress-ready=true"
+              extraPortMappings:
+                - containerPort: 80
+                  hostPort: 80
+                  protocol: TCP
+                - containerPort: 443
+                  hostPort: 443
+                  protocol: TCP
+          EOF
+          ./kind create cluster --name tck-e2e \
+            --image "${KIND_NODE_IMAGE}" \
+            --config "${RUNNER_TEMP}/kind-config.yaml" --wait 5m
+
+      - name: Install ingress-nginx and make it the default IngressClass
+        run: |
+          set -euo pipefail
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+          kubectl wait --namespace ingress-nginx \
+            --for=condition=ready pod \
+            --selector=app.kubernetes.io/component=controller \
+            --timeout=300s
+          # The IdentityHub, data-plane and IssuerService ingresses render with
+          # no ingressClassName; without a default class nothing serves them.
+          kubectl patch ingressclass nginx \
+            -p '{"metadata":{"annotations":{"ingressclass.kubernetes.io/is-default-class":"true"}}}'
+
+      - name: Point dataspace hostnames at the runner
+        run: |
+          set -euo pipefail
+          for host in ${DATASPACE_HOSTS}; do
+            echo "127.0.0.1 ${host}"
+          done | sudo tee -a /etc/hosts >/dev/null
+          echo "Added to /etc/hosts:"
+          printf '  %s\n' ${DATASPACE_HOSTS}
+
+      - name: Point in-cluster DNS at the ingress controller
+        run: |
+          set -euo pipefail
+          # Participants reach each other by these hostnames (did:web, STS,
+          # DSP); pods don't read /etc/hosts, so CoreDNS has to know them.
+          ingress_ip="$(kubectl -n ingress-nginx get svc ingress-nginx-controller \
+            -o jsonpath='{.spec.clusterIP}')"
+          if [ -z "${ingress_ip}" ]; then
+            echo "::error::ingress-nginx-controller has no ClusterIP."
+            exit 1
+          fi
+          echo "Resolving the dataspace hostnames to ${ingress_ip} inside the cluster."
+
+          python3 - "${ingress_ip}" ${DATASPACE_HOSTS} <<'PY'
+          import json
+          import subprocess
+          import sys
+
+          ingress_ip, *hosts = sys.argv[1:]
+
+          configmap = json.loads(
+              subprocess.run(
+                  ["kubectl", "-n", "kube-system", "get", "configmap", "coredns", "-o", "json"],
+                  check=True,
+                  capture_output=True,
+                  text=True,
+              ).stdout
+          )
+          corefile = configmap["data"]["Corefile"]
+
+          marker = "dataspace-hosts"
+          if marker in corefile:
+              print("CoreDNS already carries the dataspace hosts block.")
+              raise SystemExit(0)
+
+          block_lines = [f"    # {marker}", "    hosts {"]
+          block_lines += [f"        {ingress_ip} {host}" for host in hosts]
+          block_lines += ["        fallthrough", "    }", ""]
+          block = "\n".join(block_lines)
+
+          lines = corefile.splitlines()
+          for index, line in enumerate(lines):
+              if line.strip().startswith("forward "):
+                  break
+          else:
+              raise SystemExit("::error::No 'forward' directive found in the CoreDNS Corefile.")
+
+          patched = "\n".join([*lines[:index], block, *lines[index:]]) + "\n"
+          subprocess.run(
+              [
+                  "kubectl", "-n", "kube-system", "patch", "configmap", "coredns",
+                  "--type", "merge",
+                  "-p", json.dumps({"data": {"Corefile": patched}}),
+              ],
+              check=True,
+          )
+          print(patched)
+          PY
+
+          kubectl -n kube-system rollout restart deployment/coredns
+          kubectl -n kube-system rollout status deployment/coredns --timeout=120s
+
+      # ------------------------------------------------------------------
+      # 3. Deploy the dataspace
+      # ------------------------------------------------------------------
+      - name: Add Tractus-X Helm repo
+        run: |
+          helm repo add tractusx-dev https://eclipse-tractusx.github.io/charts/dev
+          helm repo update
+
+      - name: Generate the connectors' in-memory vault secrets
+        run: |
+          set -euo pipefail
+          # The in-memory EDC vault is seeded once from TX_EDC_VAULT_SECRETS:
+          # a fresh EDR signing keypair per run (never a committed key) and
+          # the STS client secret alias the profile configures.
+          secrets="${RUNNER_TEMP}/umbrella-vault-secrets.values.yaml"
+          key="$(openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 2>/dev/null)"
+          pub="$(printf '%s\n' "${key}" | openssl pkey -pubout)"
+          KEY="${key}" PUB="${pub}" poetry run python - "${secrets}" <<'PY'
+          import os
+          import sys
+
+          import yaml
+
+          def participant(alias: str, secret: str) -> dict:
+              """One participant's two runtimes, seeded identically."""
+              seed = ";".join(
+                  (
+                      f"tokenSignerPrivateKey:{os.environ['KEY']}",
+                      f"tokenSignerPublicKey:{os.environ['PUB']}",
+                      f"{alias}:{secret}",
+                  )
+              )
+              runtime = {"env": {"TX_EDC_VAULT_SECRETS": seed}}
+              return {
+                  "tx-data-provider": {
+                      "dataspace-connector-bundle": {
+                          "tractusx-connector": {
+                              "controlplane": dict(runtime),
+                              "dataplane": dict(runtime),
+                          }
+                      }
+                  }
+              }
+
+          with open(sys.argv[1], "w", encoding="utf-8") as handle:
+              yaml.safe_dump(
+                  {
+                      "edc-provider": participant("provider-secret", "provider"),
+                      "edc-consumer": participant("consumer-secret", "consumer"),
+                  },
+                  handle,
+              )
+          PY
+          echo "UMBRELLA_VAULT_SECRETS=${secrets}" >> "${GITHUB_ENV}"
+
+      - name: Prepare and validate pinned Umbrella chart
+        run: |
+          set -euo pipefail
+          chart_dir="${RUNNER_TEMP}/umbrella"
+          helm pull tractusx-dev/umbrella \
+            --version "${UMBRELLA_CHART_VERSION}" \
+            --untar --untardir "${RUNNER_TEMP}"
+
+          # Umbrella 26.03.00 omits the tx-data-provider bundles from
+          # decentralized-identity-connector's nested tx-data-provider.
+          source_bundles="${chart_dir}/charts/tx-data-provider/charts"
+          nested_provider="${chart_dir}/charts/decentralized-identity-connector/charts/tx-data-provider"
+          test -d "${source_bundles}"
+          test -d "${nested_provider}"
+          mkdir -p "${nested_provider}/charts"
+          cp -R "${source_bundles}/." "${nested_provider}/charts/"
+
+          # IdentityHub and IssuerService 0.4.0 (EDC 0.17.0) over the pinned
+          # v0.3.2, with the dependency declarations bumped to match: helm
+          # resolves an aliased dependency by name and version.
+          ih_release="https://github.com/eclipse-tractusx/tractusx-identityhub/releases/download"
+          ih_charts="${RUNNER_TEMP}/identityhub-charts"
+          mkdir -p "${ih_charts}"
+          for chart in tractusx-identityhub-memory tractusx-issuerservice; do
+            curl --proto '=https' --tlsv1.2 --fail --location --silent --show-error \
+              "${ih_release}/${chart}-${IDENTITYHUB_CHART_VERSION}/${chart}-${IDENTITYHUB_CHART_VERSION}.tgz" \
+              --output "${ih_charts}/${chart}.tgz"
+            tar -xzf "${ih_charts}/${chart}.tgz" -C "${ih_charts}"
+          done
+
+          identityhub_slot="${chart_dir}/charts/decentralized-identity-connector/charts/tractusx-identityhub"
+          rm -rf "${identityhub_slot}" "${chart_dir}/charts/tractusx-issuerservice"
+          cp -R "${ih_charts}/tractusx-identityhub-memory" "${identityhub_slot}"
+          cp -R "${ih_charts}/tractusx-issuerservice" "${chart_dir}/charts/"
+          python3 - "${chart_dir}" "${IDENTITYHUB_CHART_VERSION}" <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          chart_dir, version = pathlib.Path(sys.argv[1]), sys.argv[2]
+          slot = chart_dir / "charts/decentralized-identity-connector/charts/tractusx-identityhub"
+
+          def substitute(path, pattern, replacement):
+              text = path.read_text()
+              patched, count = re.subn(pattern, replacement, text)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected one match for {pattern!r}, found {count}")
+              path.write_text(patched)
+
+          substitute(
+              slot / "Chart.yaml",
+              r"(?m)^name: tractusx-identityhub-memory$",
+              "name: tractusx-identityhub",
+          )
+          declarations = {
+              chart_dir / "charts/decentralized-identity-connector/Chart.yaml": "tractusx-identityhub",
+              chart_dir / "Chart.yaml": "tractusx-issuerservice",
+          }
+          for path, name in declarations.items():
+              substitute(
+                  path,
+                  rf"(name: {name}\n  repository: [^\n]+\n  version: )\S+",
+                  rf"\g<1>{version}",
+              )
+          PY
+
+          profile_url="https://raw.githubusercontent.com/eclipse-tractusx/tractus-x-umbrella/${UMBRELLA_VALUES_REF}/charts/umbrella/values-adopter-decentralized-identityhub.yaml"
+          rendered="${RUNNER_TEMP}/umbrella-rendered.yaml"
+          helm template umbrella "${chart_dir}" \
+            --namespace "${UMBRELLA_NAMESPACE}" \
+            -f "${profile_url}" \
+            -f "${TESTLAB_CI}/umbrella.values.yaml" \
+            -f "${UMBRELLA_VAULT_SECRETS}" \
+            > "${rendered}"
+
+          # Fail here, in seconds, rather than after a 25-minute deploy: the
+          # participants, the vault hooks, the connector routes and the DSP
+          # callbacks the tests depend on must all be in the manifest.
+          poetry run python - "${rendered}" <<'PY'
+          import sys
+
+          import yaml
+
+          expected_deployments = {
+              "provider-dtr",
+              "umbrella-consumer-connector-controlplane",
+              "umbrella-consumer-connector-dataplane",
+              "umbrella-consumer-identityhub",
+              "umbrella-issuerservice",
+              "umbrella-provider-connector-controlplane",
+              "umbrella-provider-connector-dataplane",
+              "umbrella-provider-identityhub",
+          }
+          expected_hooks = {
+              "umbrella-consumer-edc-post-install-vault-setup",
+              "umbrella-provider-edc-post-install-vault-setup",
+              "umbrella-post-install-bdrs-setup",
+          }
+          expected_routes = {
+              "provider-dsp.local": {"/api/v1/dsp"},
+              "provider-management.local": {"/management", "/control", "/catalog"},
+              "consumer-dsp.local": {"/api/v1/dsp"},
+              "consumer-management.local": {"/management", "/control", "/catalog"},
+          }
+          expected_callbacks = {
+              "umbrella-provider-connector-controlplane": "http://provider-dsp.local/api/v1/dsp",
+              "umbrella-consumer-connector-controlplane": "http://consumer-dsp.local/api/v1/dsp",
+          }
+
+          with open(sys.argv[1], encoding="utf-8") as stream:
+              documents = [document for document in yaml.safe_load_all(stream) if document]
+
+          def annotations(document):
+              return document.get("metadata", {}).get("annotations") or {}
+
+          deployments = {d["metadata"]["name"] for d in documents if d.get("kind") == "Deployment"}
+          missing = sorted(expected_deployments - deployments)
+          if missing:
+              raise SystemExit(f"Umbrella manifest is missing deployments: {', '.join(missing)}")
+
+          hooks = {
+              d["metadata"]["name"]
+              for d in documents
+              if d.get("kind") == "Job" and "helm.sh/hook" in annotations(d)
+          }
+          missing_hooks = sorted(expected_hooks - hooks)
+          if missing_hooks:
+              raise SystemExit(f"Umbrella manifest is missing install hooks: {', '.join(missing_hooks)}")
+
+          ingress_routes = {}
+          for document in documents:
+              if document.get("kind") != "Ingress":
+                  continue
+              for rule in document.get("spec", {}).get("rules", []):
+                  ingress_routes.setdefault(rule.get("host"), set()).update(
+                      path["path"] for path in rule.get("http", {}).get("paths", [])
+                  )
+          wrong_routes = {
+              host: sorted(ingress_routes.get(host, set()))
+              for host, paths in expected_routes.items()
+              if ingress_routes.get(host) != paths
+          }
+          if wrong_routes:
+              raise SystemExit(f"Umbrella manifest has incorrect connector routes: {wrong_routes}")
+
+          actual_callbacks = {}
+          for document in documents:
+              name = document.get("metadata", {}).get("name")
+              if document.get("kind") != "Deployment" or name not in expected_callbacks:
+                  continue
+              for container in document.get("spec", {}).get("template", {}).get("spec", {}).get("containers", []):
+                  for env in container.get("env", []) or []:
+                      if env.get("name") == "EDC_DSP_CALLBACK_ADDRESS":
+                          actual_callbacks[name] = env.get("value")
+          wrong_callbacks = {
+              name: actual_callbacks.get(name)
+              for name, expected in expected_callbacks.items()
+              if actual_callbacks.get(name) != expected
+          }
+          if wrong_callbacks:
+              raise SystemExit(f"Umbrella control planes advertise the wrong DSP callback address: {wrong_callbacks}")
+
+          print("Umbrella manifest: both connectors, the DTR, the issuer, the vault hooks,")
+          print("the connector routes and the DSP callbacks are in place.")
+          print("Ingress hosts:", ", ".join(sorted(h for h in ingress_routes if h)))
+          PY
+          echo "UMBRELLA_CHART_DIR=${chart_dir}" >> "${GITHUB_ENV}"
+          echo "UMBRELLA_PROFILE_URL=${profile_url}" >> "${GITHUB_ENV}"
+          echo "UMBRELLA_RENDERED=${rendered}" >> "${GITHUB_ENV}"
+
+      - name: Pre-load release images into the kind node
+        if: steps.kind-node-cache.outputs.hit != 'true'
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          # Best effort, through the node's CRI exactly as the kubelet would
+          # (`kind load` cannot carry `tag@sha256` digests). A miss only means
+          # the kubelet pulls the image itself.
+          images="$(grep -hoE '^[[:space:]]*-?[[:space:]]*image:[[:space:]]*"?[^"]+"?$' \
+            "${UMBRELLA_RENDERED}" \
+            | sed -E 's/.*image:[[:space:]]*//; s/"//g' | sort -u)"
+          echo "${images}"
+          for image in ${images}; do
+            docker exec tck-e2e-control-plane \
+              crictl --runtime-endpoint unix:///run/containerd/containerd.sock \
+              pull "${image}" >/dev/null 2>&1 \
+              && echo "loaded  ${image}" \
+              || echo "SKIPPED ${image} (the kubelet will pull it)"
+          done
+          df -h /
+          docker exec tck-e2e-control-plane df -h /
+
+      - name: Deploy Tractus-X Umbrella (decentralized IdentityHub profile)
+        run: |
+          set -uo pipefail
+          # `--wait` is load-bearing: the post-install hooks seed the vaults
+          # against services that must already be up. A watcher reports what
+          # is outstanding meanwhile, and restarts a runtime that logged ready
+          # but whose readiness probe never passes (TestLab's watchdog).
+          columns='NAME:.metadata.name'
+          columns="${columns},PHASE:.status.phase"
+          columns="${columns},RESTARTS:.status.containerStatuses[*].restartCount"
+          columns="${columns},STATE:.status.containerStatuses[*].state.*.reason"
+          columns="${columns},READY:.status.containerStatuses[*].ready"
+          (
+            tick=0
+            while true; do
+              sleep 30
+              tick=$((tick + 1))
+              echo "--- $(date -u +%H:%M:%S) waiting on the release ---"
+              outstanding="$(kubectl get pods -n "${UMBRELLA_NAMESPACE}" \
+                -o "custom-columns=${columns}" 2>/dev/null \
+                | awk 'NR == 1 || $NF !~ /^(true,)*true$/')"
+              printf '%s\n' "${outstanding}"
+              if [ "${tick}" -ge 6 ]; then
+                printf '%s\n' "${outstanding}" | awk 'NR > 1 { print $1 }' \
+                  | while IFS= read -r stuck; do
+                      [ -n "${stuck}" ] || continue
+                      kubectl get events -n "${UMBRELLA_NAMESPACE}" \
+                        --field-selector "involvedObject.name=${stuck},type=Warning" \
+                        -o "custom-columns=POD:.involvedObject.name,REASON:.reason,MESSAGE:.message" \
+                        --no-headers 2>/dev/null | tail -2
+                    done
+              fi
+              python3 "${TESTLAB_CI}/restart_wedged_runtimes.py" \
+                --namespace "${UMBRELLA_NAMESPACE}" \
+                --state-dir "${RUNNER_TEMP}/wedged-runtimes" \
+                --grace-seconds 120 --max-restarts 2 2>&1 || true
+            done
+          ) &
+          watcher=$!
+          trap 'kill "${watcher}" 2>/dev/null || true' EXIT
+
+          helm install umbrella "${UMBRELLA_CHART_DIR}" \
+            --namespace "${UMBRELLA_NAMESPACE}" --create-namespace \
+            -f "${UMBRELLA_PROFILE_URL}" \
+            -f "${TESTLAB_CI}/umbrella.values.yaml" \
+            -f "${UMBRELLA_VAULT_SECRETS}" \
+            --burst-limit 400 --qps 200 \
+            --timeout "${HELM_TIMEOUT}" --wait
+          status=$?
+
+          kill "${watcher}" 2>/dev/null || true
+          exit "${status}"
+
+      - name: Deploy in-cluster submodel server
+        run: |
+          set -euo pipefail
+          # The backend behind the provider's test asset: the tests upload a
+          # payload over the ingress, and the provider's data plane fetches
+          # it from the same hostname, which CoreDNS resolves too.
+          kubectl create configmap tck-submodel --namespace "${UMBRELLA_NAMESPACE}" \
+            --from-file=submodel_server.py="${TESTLAB_CI}/submodel_server.py"
+          kubectl apply --namespace "${UMBRELLA_NAMESPACE}" -f - <<'EOF'
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: tck-submodel
+            labels: { app: tck-submodel }
+          spec:
+            containers:
+              - name: submodel
+                image: python:3.12-alpine
+                command: ["python", "/submodel/submodel_server.py", "--port", "8080"]
+                ports: [{ containerPort: 8080 }]
+                volumeMounts: [{ name: submodel, mountPath: /submodel }]
+            volumes:
+              - name: submodel
+                configMap: { name: tck-submodel }
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: tck-submodel
+          spec:
+            selector: { app: tck-submodel }
+            ports: [{ port: 80, targetPort: 8080 }]
+          ---
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: tck-submodel
+          spec:
+            rules:
+              - host: tck-submodel.local
+                http:
+                  paths:
+                    - path: /
+                      pathType: Prefix
+                      backend:
+                        service: { name: tck-submodel, port: { number: 80 } }
+          EOF
+          kubectl wait --namespace "${UMBRELLA_NAMESPACE}" \
+            --for=condition=ready pod/tck-submodel --timeout=180s
+
+      - name: Show dataspace pods
+        run: |
+          kubectl get pods -n "${UMBRELLA_NAMESPACE}" -o wide
+          kubectl get jobs -n "${UMBRELLA_NAMESPACE}" || true
+
+      # ------------------------------------------------------------------
+      # 4. Issue the participants' credentials
+      # ------------------------------------------------------------------
+      - name: Issue Catena-X credentials to both participants
+        run: |
+          set -euo pipefail
+          # The IssuerService prints its one-time super-user key only to its
+          # log, followed by an ANSI reset; capture only the key's alphabet.
+          super_user_key=""
+          for _ in $(seq 1 30); do
+            super_user_key="$(kubectl logs -n "${UMBRELLA_NAMESPACE}" \
+              deployment/umbrella-issuerservice --tail=-1 2>/dev/null \
+              | sed -n 's/.*Please take note of the API Key: *\([A-Za-z0-9+\/=.]*\).*/\1/p' \
+              | tail -n 1)"
+            if [ -n "${super_user_key}" ]; then
+              break
+            fi
+            sleep 5
+          done
+          if [ -z "${super_user_key}" ]; then
+            echo "::error::Could not find the IssuerService super-user API key in its log."
+            kubectl logs -n "${UMBRELLA_NAMESPACE}" deployment/umbrella-issuerservice --tail=200 || true
+            exit 1
+          fi
+          echo "::add-mask::${super_user_key}"
+
+          # The helper's default issuer URL is the IssuerService ingress.
+          poetry run python "${TESTLAB_CI}/issue_credentials.py" \
+            --super-user-key "${super_user_key}"
+
+      # ------------------------------------------------------------------
+      # 5. Check the chart's DTR ingress, then check reachability
+      # ------------------------------------------------------------------
+      # The runner reaches every ingress on 127.0.0.1 (kind's host port), so
+      # the preflights address it there directly and route by Host header.
+      - name: Check the DTR ingress host and prefix
+        run: |
+          set -euo pipefail
+          host="$(kubectl get ingress provider-dtr \
+            -n "${UMBRELLA_NAMESPACE}" \
+            -o jsonpath='{.spec.rules[0].host}')"
+          # The registry sits under a rewritten prefix
+          # (`/semantics/registry(/|$)(.*)`), so the base URL is host + prefix.
+          path="$(kubectl get ingress provider-dtr \
+            -n "${UMBRELLA_NAMESPACE}" \
+            -o jsonpath='{.spec.rules[0].http.paths[0].path}')"
+          prefix="${path%%(*}"
+          prefix="${prefix%/}"
+          echo "DTR ingress: host=${host} path=${path}"
+          if [ "${host}" != "${DTR_HOST}" ] || [ "${prefix}" != "${DTR_PREFIX}" ]; then
+            echo "::error::Expected the DTR ingress at host=${DTR_HOST} prefix=${DTR_PREFIX}, found host='${host}' prefix='${prefix}'. Update DTR_HOST/DTR_PREFIX here and E2E_DTR_BASE_URL for the tests."
+            kubectl get ingress -n "${UMBRELLA_NAMESPACE}"
+            exit 1
+          fi
+
+      - name: Preflight - check the submodel server is reachable both ways
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error --retry 10 --retry-delay 3 \
+            --retry-all-errors --header "Host: ${SUBMODEL_SERVER_HOST}" \
+            "http://127.0.0.1/health"
+          echo
+          # From a pod, on the same hostname: the address the provider's data
+          # plane fetches from must resolve to the ingress controller. A
+          # failure here would surface later as a transfer that negotiates
+          # cleanly and then answers 502.
+          ingress_ip="$(kubectl -n ingress-nginx get svc ingress-nginx-controller \
+            -o jsonpath='{.spec.clusterIP}')"
+          resolved="$(kubectl exec --namespace "${UMBRELLA_NAMESPACE}" pod/tck-submodel -- \
+            python -c 'import socket, sys; print(socket.gethostbyname(sys.argv[1]))' \
+            "${SUBMODEL_SERVER_HOST}" || true)"
+          if [ "${resolved}" != "${ingress_ip}" ]; then
+            echo "::error::In the cluster, ${SUBMODEL_SERVER_HOST} resolves to '${resolved}', not the ingress controller ${ingress_ip}."
+            exit 1
+          fi
+          echo "submodel server: ${SUBMODEL_SERVER_HOST} reachable from the runner and resolved to the ingress from a pod"
+
+      - name: Preflight - check connector and DTR reachability
+        run: |
+          set -euo pipefail
+          # `password` is the management API key the Umbrella profile gives
+          # both connectors of this throwaway cluster; it is not a secret.
+          query='{"@context":{"edc":"https://w3id.org/edc/v0.0.1/ns/"},"@type":"QuerySpec","offset":0,"limit":1}'
+          for participant in provider consumer; do
+            curl --fail-with-body --silent --show-error \
+              --header "Host: ${participant}-management.local" \
+              --header "X-Api-Key: password" \
+              --header "Content-Type: application/json" \
+              --request POST --data "${query}" \
+              "http://127.0.0.1/management/v3/assets/request" \
+              > /dev/null
+            echo "${participant} management API: reachable"
+          done
+          if ! dtr_body="$(curl --fail-with-body --silent --show-error \
+            --header "Host: ${DTR_HOST}" \
+            "http://127.0.0.1${DTR_PREFIX}/api/v3/shell-descriptors" 2>&1)"; then
+            echo "::error::DTR API not reachable at ${DTR_HOST}${DTR_PREFIX}/api/v3/shell-descriptors"
+            printf '%s\n' "${dtr_body}"
+            exit 1
+          fi
+          echo "provider DTR API: reachable at ${DTR_HOST}${DTR_PREFIX}"
+
+      # ------------------------------------------------------------------
+      # 6. The SDK E2E suite
+      # ------------------------------------------------------------------
+      - name: Run the SDK E2E tests
+        env:
+          TX_SDK_E2E: "1"
+          E2E_PROVIDER_API_KEY: password
+          E2E_CONSUMER_API_KEY: password
+          E2E_TIMEOUT_SECONDS: "180"
+        run: |
+          mkdir -p "${E2E_RESULTS}"
+          poetry run python -m pytest tests/e2e -v -rA --tb=short \
+            --junit-xml="${E2E_RESULTS}/junit.xml" \
+            -o junit_suite_name=sdk-e2e-umbrella
+
+      - name: Report the E2E results
+        if: always()
+        run: |
+          python3 - "${E2E_RESULTS}/junit.xml" <<'PY' >> "${GITHUB_STEP_SUMMARY}"
+          import pathlib
+          import sys
+          import xml.etree.ElementTree as ET
+
+          report = pathlib.Path(sys.argv[1])
+          print("## SDK E2E against Tractus-X Umbrella\n")
+          if not report.exists():
+              print("No test report: the suite did not run (see the failed step above).")
+              raise SystemExit(0)
+          root = ET.parse(report).getroot()
+          suites = [root] if root.tag == "testsuite" else list(root.iter("testsuite"))
+          rows, totals = [], {"passed": 0, "failed": 0, "skipped": 0}
+          for suite in suites:
+              for case in suite.iter("testcase"):
+                  if case.find("failure") is not None or case.find("error") is not None:
+                      outcome = "failed"
+                  elif case.find("skipped") is not None:
+                      outcome = "skipped"
+                  else:
+                      outcome = "passed"
+                  totals[outcome] += 1
+                  icon = {"passed": "✅", "failed": "❌", "skipped": "⏭️"}[outcome]
+                  module = case.get("classname", "").rsplit(".", 1)[-1]
+                  rows.append(f"| {icon} | `{module}` | `{case.get('name')}` | {float(case.get('time', 0)):.1f}s |")
+          print(f"**{totals['passed']} passed, {totals['failed']} failed, {totals['skipped']} skipped**\n")
+          print("| | Module | Test | Time |")
+          print("|---|---|---|---|")
+          print("\n".join(rows))
+          PY
+
+      - name: Collect cluster diagnostics
+        if: ${{ failure() || cancelled() }}
+        run: |
+          mkdir -p ci-logs
+          helm status umbrella -n "${UMBRELLA_NAMESPACE}" > ci-logs/helm-status.txt 2>&1 || true
+          kubectl get all -n "${UMBRELLA_NAMESPACE}" -o wide > ci-logs/resources.txt 2>&1 || true
+          kubectl get nodes -o wide > ci-logs/nodes.txt 2>&1 || true
+          kubectl describe nodes > ci-logs/nodes-describe.txt 2>&1 || true
+          kubectl get pods -n "${UMBRELLA_NAMESPACE}" -o wide > ci-logs/pods.txt 2>&1 || true
+          kubectl describe pods -n "${UMBRELLA_NAMESPACE}" > ci-logs/pods-describe.txt 2>&1 || true
+          kubectl get jobs -n "${UMBRELLA_NAMESPACE}" -o yaml > ci-logs/jobs.yaml 2>&1 || true
+          kubectl get ingress -n "${UMBRELLA_NAMESPACE}" -o yaml > ci-logs/ingress.yaml 2>&1 || true
+          kubectl get ingressclass -o yaml > ci-logs/ingressclass.yaml 2>&1 || true
+          kubectl -n kube-system get configmap coredns -o yaml > ci-logs/coredns.yaml 2>&1 || true
+          kubectl get events -n "${UMBRELLA_NAMESPACE}" --sort-by=.metadata.creationTimestamp \
+            > ci-logs/events.txt 2>&1 || true
+          df -h / > ci-logs/disk.txt 2>&1 || true
+          while IFS= read -r pod; do
+            pod_name="${pod#pod/}"
+            kubectl logs -n "${UMBRELLA_NAMESPACE}" "${pod}" --all-containers --tail=1000 \
+              > "ci-logs/${pod_name}.log" 2>&1 || true
+            kubectl logs -n "${UMBRELLA_NAMESPACE}" "${pod}" --all-containers --previous --tail=1000 \
+              > "ci-logs/${pod_name}-previous.log" 2>&1 || true
+          done < <(kubectl get pods -n "${UMBRELLA_NAMESPACE}" -o name 2>/dev/null || true)
+
+          echo "::group::Pods"
+          cat ci-logs/pods.txt || true
+          echo "::endgroup::"
+          echo "::group::Warning events"
+          kubectl get events -n "${UMBRELLA_NAMESPACE}" --field-selector type=Warning \
+            --sort-by=.metadata.creationTimestamp \
+            -o "custom-columns=OBJECT:.involvedObject.name,REASON:.reason,MESSAGE:.message" \
+            2>/dev/null | tail -40 || true
+          echo "::endgroup::"
+          while IFS= read -r pod; do
+            pod_name="${pod#pod/}"
+            echo "::group::${pod_name} (last 40 lines)"
+            tail -40 "ci-logs/${pod_name}.log" 2>/dev/null || true
+            echo "::endgroup::"
+          done < <(kubectl get pods -n "${UMBRELLA_NAMESPACE}" \
+            -o "custom-columns=NAME:.metadata.name,READY:.status.containerStatuses[*].ready" \
+            --no-headers 2>/dev/null \
+            | awk '$NF !~ /^(true,)*true$/ { print "pod/" $1 }' || true)
+
+      - name: Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sdk-e2e-results-${{ github.run_id }}
+          path: ${{ env.E2E_RESULTS }}/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload cluster diagnostics
+        if: ${{ failure() || cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: umbrella-diagnostics-${{ github.run_id }}
+          path: ci-logs/
+          retention-days: 14
+
+      - name: Delete kind cluster
+        if: always()
+        run: ./kind delete cluster --name tck-e2e || true
