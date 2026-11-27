@@ -221,7 +221,7 @@ class SimpleTckConfig:
     sample_data: Optional[dict] = None
     cleanup: bool = True
     discovery_mode: str = "bpnl"
-    verify_ssl: bool = False
+    verify_ssl: bool = True
     banner_title: str = ""
     summary_title: str = ""
     config_section: str = ""  # YAML section name (e.g. "jupiter", "saturn") used by --config
@@ -267,7 +267,7 @@ class DetailedTckConfig:
     sample_data: Optional[dict] = None
     cleanup: bool = True
     discovery_mode: str = "bpnl"
-    verify_ssl: bool = False
+    verify_ssl: bool = True
     protocol: str = "dataspace-protocol-http:2025-1"
     negotiation_context: Optional[list] = None
     banner_title: str = ""

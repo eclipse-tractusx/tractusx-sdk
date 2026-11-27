@@ -401,8 +401,8 @@ def run_simple_test(config: SimpleTckConfig, script_dir: str) -> str:
     sep(banner)
 
     # ── 4. Initialize services ────────────────────────────────────────
-    provider = initialize_provider_service(logger, provider_dict, header_fn=sep)
-    consumer = initialize_consumer_service(logger, consumer_dict, header_fn=sep)
+    provider = initialize_provider_service(logger, provider_dict, header_fn=sep, verify_ssl=config.verify_ssl)
+    consumer = initialize_consumer_service(logger, consumer_dict, header_fn=sep, verify_ssl=config.verify_ssl)
 
     overall_result = "FAIL"
     run_start = time.time()
@@ -613,8 +613,8 @@ def run_detailed_test(config: DetailedTckConfig, script_dir: str) -> str:
     )
 
     # ── 4. Initialize services ────────────────────────────────────────
-    provider = initialize_provider_service(logger, provider_dict, header_fn=hdr)
-    consumer = initialize_consumer_service(logger, consumer_dict, header_fn=hdr)
+    provider = initialize_provider_service(logger, provider_dict, header_fn=hdr, verify_ssl=config.verify_ssl)
+    consumer = initialize_consumer_service(logger, consumer_dict, header_fn=hdr, verify_ssl=config.verify_ssl)
 
     overall_result = "FAIL"
     run_start = time.time()

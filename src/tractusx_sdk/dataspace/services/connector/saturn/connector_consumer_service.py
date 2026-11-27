@@ -135,7 +135,7 @@ class ConnectorConsumerService(BaseConnectorConsumerService):
     
     def _execute_http_request(self, method: str, dataplane_url: str, access_token: str, path: str = "/",
                             content_type: str = APPLICATION_JSON_CONTENT_TYPE, json=None, data=None, 
-                            verify: bool = False, headers: dict | None = None, timeout: int | None = None,
+                            verify: bool = True, headers: dict | None = None, timeout: int | None = None,
                             params: dict | None = None, allow_redirects: bool = False, session=None) -> Response:
         """
         Internal helper to execute HTTP requests with common logic.

@@ -208,10 +208,34 @@ def print_separator(logger: logging.Logger, title: str = ""):
 # ============================================================================
 
 
+def _connector_headers(config: dict) -> dict:
+    """Management API headers for a connector configuration."""
+    return {config["api_key_header"]: config["api_key"], "Content-Type": CONTENT_TYPE_JSON}
+
+
+def _announce_service(logger: logging.Logger, role: str, config: dict, header_fn: Optional[Callable]):
+    """Print the section header before a connector service is built."""
+    if header_fn is None:
+        print_header(logger, f"Initializing {role} Connector Service")
+    else:
+        header_fn(f"Initializing {role} Connector Service")
+
+
+def _log_service(logger: logging.Logger, role: str, config: dict) -> None:
+    """Log what a connector service was built for."""
+    identity_label = "BPN" if "bpn" in config else "DID"
+    identity_value = config.get("bpn", config.get("did", "N/A"))
+    logger.info("✓ %s service initialized", role)
+    logger.info("  - Base URL: %s", config["base_url"])
+    logger.info("  - Dataspace Version: %s", config["dataspace_version"])
+    logger.info("  - %s: %s", identity_label, identity_value)
+
+
 def initialize_provider_service(
     logger: logging.Logger,
     provider_config: dict,
     header_fn: Optional[Callable] = None,
+    verify_ssl: bool = True,
 ):
     """
     Initialize the Provider Connector Service.
@@ -221,37 +245,20 @@ def initialize_provider_service(
         provider_config: Provider connector configuration dict.
         header_fn: Function ``(title) -> None`` to print section header.
             Defaults to :func:`print_header`.
+        verify_ssl: Verify the connector's TLS certificate (default ``True``).
 
     Returns:
         ConnectorProviderService instance.
     """
-    if header_fn is None:
-        def header_fn(title):
-            print_header(logger, title)
-
-    header_fn("Initializing Provider Connector Service")
-
-    provider_headers = {
-        provider_config["api_key_header"]: provider_config["api_key"],
-        "Content-Type": CONTENT_TYPE_JSON,
-    }
-
+    _announce_service(logger, "Provider", provider_config, header_fn)
     provider_service = ServiceFactory.get_connector_provider_service(
         dataspace_version=provider_config["dataspace_version"],
         base_url=provider_config["base_url"],
         dma_path=provider_config["dma_path"],
-        headers=provider_headers,
-        verify_ssl=False,
+        headers=_connector_headers(provider_config),
+        verify_ssl=verify_ssl,
     )
-
-    identity_value = provider_config.get("bpn", provider_config.get("did", "N/A"))
-    identity_label = "BPN" if "bpn" in provider_config else "DID"
-
-    logger.info("✓ Provider service initialized")
-    logger.info("  - Base URL: %s", provider_config["base_url"])
-    logger.info("  - Dataspace Version: %s", provider_config["dataspace_version"])
-    logger.info("  - %s: %s", identity_label, identity_value)
-
+    _log_service(logger, "Provider", provider_config)
     return provider_service
 
 
@@ -260,6 +267,7 @@ def initialize_consumer_service(
     consumer_config: dict,
     header_fn: Optional[Callable] = None,
     connection_manager=None,
+    verify_ssl: bool = True,
 ):
     """
     Initialize the Consumer Connector Service.
@@ -270,38 +278,21 @@ def initialize_consumer_service(
         header_fn: Function ``(title) -> None`` to print section header.
             Defaults to :func:`print_header`.
         connection_manager: Optional connection manager for EDR caching.
+        verify_ssl: Verify the connector's TLS certificate (default ``True``).
 
     Returns:
         ConnectorConsumerService instance.
     """
-    if header_fn is None:
-        def header_fn(title):
-            print_header(logger, title)
-
-    header_fn("Initializing Consumer Connector Service")
-
-    consumer_headers = {
-        consumer_config["api_key_header"]: consumer_config["api_key"],
-        "Content-Type": CONTENT_TYPE_JSON,
-    }
-
+    _announce_service(logger, "Consumer", consumer_config, header_fn)
     consumer_service = ServiceFactory.get_connector_consumer_service(
         dataspace_version=consumer_config["dataspace_version"],
         base_url=consumer_config["base_url"],
         dma_path=consumer_config["dma_path"],
-        headers=consumer_headers,
+        headers=_connector_headers(consumer_config),
         connection_manager=connection_manager,
-        verify_ssl=False,
+        verify_ssl=verify_ssl,
     )
-
-    identity_value = consumer_config.get("bpn", consumer_config.get("did", "N/A"))
-    identity_label = "BPN" if "bpn" in consumer_config else "DID"
-
-    logger.info("✓ Consumer service initialized")
-    logger.info("  - Base URL: %s", consumer_config["base_url"])
-    logger.info("  - Dataspace Version: %s", consumer_config["dataspace_version"])
-    logger.info("  - %s: %s", identity_label, identity_value)
-
+    _log_service(logger, "Consumer", consumer_config)
     return consumer_service
 
 
@@ -377,7 +368,7 @@ def access_data_with_edr(
     access_token: str,
     header_fn: Optional[Callable] = None,
     path: str = "/",
-    verify: bool = False,
+    verify: bool = True,
 ):
     """
     Access data using EDR (Endpoint Data Reference).
@@ -487,7 +478,7 @@ def cleanup_backend_data(
     logger: logging.Logger,
     backend_config: dict,
     header_fn: Optional[Callable] = None,
-    verify: bool = False,
+    verify: bool = True,
 ):
     """
     Delete test data from backend storage.
@@ -958,7 +949,7 @@ def consume_simple_bpnl(
     provider_config: dict,
     accepted_policies=None,
     header_fn: Optional[Callable] = None,
-    verify: bool = False,
+    verify: bool = True,
 ):
     """
     Phase 2 (simple / BPNL): Consumer calls ``do_get_with_bpnl`` — SDK handles everything.
@@ -1017,7 +1008,7 @@ def consume_simple_did(
     provider_config: dict,
     accepted_policies=None,
     header_fn: Optional[Callable] = None,
-    verify: bool = False,
+    verify: bool = True,
 ):
     """
     Phase 2 (simple / DID): Consumer calls ``do_get`` with DID — SDK handles everything.
