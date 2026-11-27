@@ -245,24 +245,16 @@ class TestServiceInitialisation:
         "api_key_header": "X-Api-Key", "api_key": "k", "bpn": "BPNL000000000001",
     }
 
+    @pytest.mark.parametrize("verify_ssl", [None, True, False])
     @pytest.mark.parametrize("initialiser, factory_method", [
         (helpers.initialize_provider_service, "get_connector_provider_service"),
         (helpers.initialize_consumer_service, "get_connector_consumer_service"),
     ])
-    def test_the_services_are_built_without_logging_arguments(self, initialiser, factory_method):
+    def test_the_services_are_built_without_logging_arguments(self, initialiser, factory_method, verify_ssl):
+        extra = {} if verify_ssl is None else {"verify_ssl": verify_ssl}
         with mock.patch.object(helpers.ServiceFactory, factory_method) as factory:
-            initialiser(logging.getLogger("tck-init"), dict(self.CONFIG), header_fn=lambda title: None)
+            initialiser(logging.getLogger("tck-init"), dict(self.CONFIG), header_fn=lambda title: None, **extra)
 
         kwargs = factory.call_args.kwargs
         assert not {"verbose", "debug", "logger"} & set(kwargs)
-        assert kwargs["verify_ssl"] is True
-
-    @pytest.mark.parametrize("initialiser, factory_method", [
-        (helpers.initialize_provider_service, "get_connector_provider_service"),
-        (helpers.initialize_consumer_service, "get_connector_consumer_service"),
-    ])
-    def test_verify_ssl_false_is_passed_through(self, initialiser, factory_method):
-        with mock.patch.object(helpers.ServiceFactory, factory_method) as factory:
-            initialiser(logging.getLogger("tck-init"), dict(self.CONFIG), header_fn=lambda title: None, verify_ssl=False)
-
-        assert factory.call_args.kwargs["verify_ssl"] is False
+        assert kwargs["verify_ssl"] is (True if verify_ssl is None else verify_ssl)
