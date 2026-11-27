@@ -239,7 +239,7 @@ class TestSaturnConnectorConsumerService(TestCase):
                 json=json_data,
                 data=None,
                 headers={"Authorization": f"Bearer {access_token}"},
-                verify=False,
+                verify=True,
                 timeout=None,
                 allow_redirects=False
             )
@@ -274,7 +274,7 @@ class TestSaturnConnectorConsumerService(TestCase):
                 json=None,
                 data=data,
                 headers={"Authorization": f"Bearer {access_token}"},
-                verify=False,
+                verify=True,
                 timeout=None,
                 allow_redirects=False,
                 session=session

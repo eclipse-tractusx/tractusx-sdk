@@ -212,6 +212,7 @@ def initialize_provider_service(
     logger: logging.Logger,
     provider_config: dict,
     header_fn: Optional[Callable] = None,
+    verify_ssl: bool = True,
 ):
     """
     Initialize the Provider Connector Service.
@@ -221,6 +222,7 @@ def initialize_provider_service(
         provider_config: Provider connector configuration dict.
         header_fn: Function ``(title) -> None`` to print section header.
             Defaults to :func:`print_header`.
+        verify_ssl: Verify the connector's TLS certificate (default ``True``).
 
     Returns:
         ConnectorProviderService instance.
@@ -241,7 +243,7 @@ def initialize_provider_service(
         base_url=provider_config["base_url"],
         dma_path=provider_config["dma_path"],
         headers=provider_headers,
-        verify_ssl=False,
+        verify_ssl=verify_ssl,
     )
 
     identity_value = provider_config.get("bpn", provider_config.get("did", "N/A"))
@@ -260,6 +262,7 @@ def initialize_consumer_service(
     consumer_config: dict,
     header_fn: Optional[Callable] = None,
     connection_manager=None,
+    verify_ssl: bool = True,
 ):
     """
     Initialize the Consumer Connector Service.
@@ -270,6 +273,7 @@ def initialize_consumer_service(
         header_fn: Function ``(title) -> None`` to print section header.
             Defaults to :func:`print_header`.
         connection_manager: Optional connection manager for EDR caching.
+        verify_ssl: Verify the connector's TLS certificate (default ``True``).
 
     Returns:
         ConnectorConsumerService instance.
@@ -291,7 +295,7 @@ def initialize_consumer_service(
         dma_path=consumer_config["dma_path"],
         headers=consumer_headers,
         connection_manager=connection_manager,
-        verify_ssl=False,
+        verify_ssl=verify_ssl,
     )
 
     identity_value = consumer_config.get("bpn", consumer_config.get("did", "N/A"))
@@ -377,7 +381,7 @@ def access_data_with_edr(
     access_token: str,
     header_fn: Optional[Callable] = None,
     path: str = "/",
-    verify: bool = False,
+    verify: bool = True,
 ):
     """
     Access data using EDR (Endpoint Data Reference).
@@ -487,7 +491,7 @@ def cleanup_backend_data(
     logger: logging.Logger,
     backend_config: dict,
     header_fn: Optional[Callable] = None,
-    verify: bool = False,
+    verify: bool = True,
 ):
     """
     Delete test data from backend storage.
@@ -958,7 +962,7 @@ def consume_simple_bpnl(
     provider_config: dict,
     accepted_policies=None,
     header_fn: Optional[Callable] = None,
-    verify: bool = False,
+    verify: bool = True,
 ):
     """
     Phase 2 (simple / BPNL): Consumer calls ``do_get_with_bpnl`` — SDK handles everything.
@@ -1017,7 +1021,7 @@ def consume_simple_did(
     provider_config: dict,
     accepted_policies=None,
     header_fn: Optional[Callable] = None,
-    verify: bool = False,
+    verify: bool = True,
 ):
     """
     Phase 2 (simple / DID): Consumer calls ``do_get`` with DID — SDK handles everything.
