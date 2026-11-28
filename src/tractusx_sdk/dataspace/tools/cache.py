@@ -86,10 +86,14 @@ class LocalCache(CacheProvider):
 
     async def get(self, key: str):
         """See CacheProvider.get"""
+        if not key:
+            raise ValueError("Cache key must not be empty.")
         return await FastAPICache.get_backend().get(key)
 
     async def set(self, key: str, value, expire: int | None = None):
         """See CacheProvider.set"""
+        if not key:
+            raise ValueError("Cache key must not be empty.")
         await FastAPICache.get_backend().set(key, value, expire)
 
     async def delete(self, key: str):
@@ -100,6 +104,8 @@ class LocalCache(CacheProvider):
         this falls back to ``clear(key=...)``. Deleting a key that is not in
         the cache does nothing.
         """
+        if not key:
+            raise ValueError("Cache key must not be empty.")
         backend = FastAPICache.get_backend()
         delete = getattr(backend, "delete", None)
         if callable(delete):

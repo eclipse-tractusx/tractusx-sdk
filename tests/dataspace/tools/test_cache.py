@@ -43,6 +43,27 @@ class TestLocalCache(unittest.TestCase):
     def test_delete_missing_key_does_not_raise(self):
         asyncio.run(self.cache.delete("key-that-does-not-exist"))
 
+    def test_get_with_empty_key_raises_value_error(self):
+        async def scenario():
+            with self.assertRaises(ValueError):
+                await self.cache.get("")
+
+        asyncio.run(scenario())
+
+    def test_set_with_empty_key_raises_value_error(self):
+        async def scenario():
+            with self.assertRaises(ValueError):
+                await self.cache.set("", b"value")
+
+        asyncio.run(scenario())
+
+    def test_delete_with_empty_key_raises_value_error(self):
+        async def scenario():
+            with self.assertRaises(ValueError):
+                await self.cache.delete("")
+
+        asyncio.run(scenario())
+
 
 if __name__ == "__main__":
     unittest.main()
