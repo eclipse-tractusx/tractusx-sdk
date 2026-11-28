@@ -133,6 +133,31 @@ class TestDiscoveryFinderService:
         with pytest.raises(Exception, match="No endpoints were found"):
             discovery_finder.find_discovery_urls(keys=["bpn"])
 
+    @mock.patch("tractusx_sdk.dataspace.services.discovery.discovery_finder_service.HttpTools")
+    def test_find_discovery_urls_default_and_none_keys(self, mock_http, mock_oauth):
+        """Test find_discovery_urls with default and None keys defaults to ['bpn'] cleanly."""
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "endpoints": [
+                {"type": "bpn", "endpointAddress": "https://bpn-discovery.example.com"}
+            ]
+        }
+        mock_http.do_post.return_value = mock_response
+
+        discovery_finder = DiscoveryFinderService(
+            url="https://discovery.example.com",
+            oauth=mock_oauth
+        )
+
+        res1 = discovery_finder.find_discovery_urls()
+        assert res1 == {"bpn": "https://bpn-discovery.example.com"}
+        assert mock_http.do_post.call_args[1]["json"] == {"types": ["bpn"]}
+
+        res2 = discovery_finder.find_discovery_urls(keys=None)
+        assert res2 == {"bpn": "https://bpn-discovery.example.com"}
+        assert mock_http.do_post.call_args[1]["json"] == {"types": ["bpn"]}
+
 class TestConnectorDiscoveryService:
 
     @mock.patch("tractusx_sdk.dataspace.services.discovery.discovery_finder_service.HttpTools")
