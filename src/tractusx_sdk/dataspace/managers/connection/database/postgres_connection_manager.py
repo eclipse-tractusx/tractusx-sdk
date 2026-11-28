@@ -181,3 +181,36 @@ class PostgresConnectionManager(BaseConnectionManager):
             else:
                 logger.debug("[Postgres Connection Manager] No EDR found to delete for the provided keys.")
                 return False
+
+    def clear_connections_by_party(self, counter_party_id_substring: str) -> int:
+        """
+        Removes all cached EDR connections whose ``counter_party_id`` contains
+        ``counter_party_id_substring``.
+
+        Args:
+            counter_party_id_substring (str): Substring to match against
+                ``counter_party_id`` (e.g. ``"BPNL000000000065"``).
+
+        Returns:
+            int: Number of connection entries removed from the database.
+        """
+        stmt = select(self.EDRConnection).where(
+            self.EDRConnection.counter_party_id.contains(counter_party_id_substring)  # type: ignore[attr-defined]
+        )
+        with Session(self.engine) as session:
+            entries = session.exec(stmt).all()
+            count = len(entries)
+            if count > 0:
+                for entry in entries:
+                    session.delete(entry)
+                session.commit()
+                logger.info(
+                    "[Postgres Connection Manager] Cleared %d connection entries matching substring '%s'.",
+                    count, counter_party_id_substring
+                )
+            else:
+                logger.debug(
+                    "[Postgres Connection Manager] No entries found matching substring '%s'.",
+                    counter_party_id_substring
+                )
+            return count
