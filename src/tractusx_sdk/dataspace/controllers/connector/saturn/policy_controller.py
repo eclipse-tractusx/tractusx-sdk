@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,12 +21,17 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
+
+import requests
+
 from .dma_controller import DmaController
+from tractusx_sdk.dataspace.adapters.connector.base_dma_adapter import BaseDmaAdapter
 from tractusx_sdk.dataspace.controllers.connector.utils.mixins import CrudDmaController, UpdateByIdControllerMixin
 from tractusx_sdk.dataspace.models.connector.saturn import PolicyModel, EvaluationPolicyModel
 
 
-class PolicyController(UpdateByIdControllerMixin, CrudDmaController, DmaController):
+class PolicyController(UpdateByIdControllerMixin[PolicyModel], CrudDmaController[PolicyModel], DmaController):
     """
     Concrete implementation of the PolicyController for the Connector saturn Data Management API.
 
@@ -36,15 +41,18 @@ class PolicyController(UpdateByIdControllerMixin, CrudDmaController, DmaControll
 
     endpoint_url = "/v3/policydefinitions"
 
-    def create(self, obj: PolicyModel, **kwargs):
+    def __init__(self, adapter: BaseDmaAdapter) -> None:
+        super().__init__(adapter)
+
+    def create(self, obj: PolicyModel, **kwargs: Any) -> requests.Response:
         return super().create(obj, **kwargs)
 
-    def update(self, obj: PolicyModel, **kwargs):
+    def update(self, obj: PolicyModel, **kwargs: Any) -> requests.Response:
         return super().update(obj, **kwargs)
     
-    def evaluation_plan(self, oid: str, obj: EvaluationPolicyModel, **kwargs):
+    def evaluation_plan(self, oid: str, obj: EvaluationPolicyModel, **kwargs: Any) -> requests.Response:
         kwargs["data"] = obj.to_data()
         return self.adapter.post(url=f"{self.endpoint_url}/{oid}/evaluationplan", **kwargs)
 
-    def validate_policy(self, oid: str, **kwargs):
+    def validate_policy(self, oid: str, **kwargs: Any) -> requests.Response:
         return self.adapter.post(url=f"{self.endpoint_url}/{oid}/validate", **kwargs)

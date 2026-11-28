@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,11 +22,12 @@
 #################################################################################
 
 import argparse
+from typing import Any
 import yaml
 import logging.config
 from tractusx_sdk.dataspace.tools import op
 
-def get_arguments():
+def get_arguments() -> argparse.Namespace:
     
     parser = argparse.ArgumentParser()
 
@@ -40,7 +42,7 @@ def get_arguments():
     args = parser.parse_args()
     return args
 
-def get_log_config(path, type):
+def get_log_config(path: str, type: str) -> dict[str, Any]:
     with open(path,'rt') as f:
         log_config = yaml.safe_load(f.read())
         current_date = op.get_filedate()
@@ -48,12 +50,12 @@ def get_log_config(path, type):
         logging.config.dictConfig(log_config)
         return log_config
 
-def create_log(log_config, current_date, type):
+def create_log(log_config: dict[str, Any], current_date: str, type: str) -> dict[str, Any]:
     op.make_dir(dir_name="logs/"+current_date)
     log_config["handlers"]["file"]["filename"] = f'logs/{current_date}/{op.get_filedatetime()}-{type}.log'
     return log_config
 
-def get_app_config(path):
+def get_app_config(path: str) -> Any:
     with open(path, 'rt') as f:
         app_configuration = yaml.safe_load(f.read())
         return app_configuration

@@ -36,8 +36,9 @@ import sys
 import json
 import time
 import io
+from typing import Any
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, tzinfo
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ Class that defines operations in files, directories, clases, ...
 class op:
    
     @staticmethod
-    def json_string_to_object(json_string: str | bytes | bytearray):
+    def json_string_to_object(json_string: str | bytes | bytearray) -> Any:
         """
             Method to convert a JSON string into a python object
                 Accepts: json_string: source JSON string in string, bytes or bytearray
@@ -61,7 +62,7 @@ class op:
 
     
     @staticmethod
-    def to_json(source_object,indent:int | None=None,ensure_ascii:bool=True):
+    def to_json(source_object: Any,indent:int | None=None,ensure_ascii:bool=True) -> str:
         """
             Method to convert a python object to a JSON string
                 Accepts: obj:Source object in serializable formats (not sets, custom objects or bytes)
@@ -74,7 +75,7 @@ class op:
         return json.dumps(obj=source_object,indent=indent,ensure_ascii=ensure_ascii)
     
     @staticmethod
-    def to_json_file(source_object,json_file_path:str,file_open_mode:str="w",indent:int=2):
+    def to_json_file(source_object: Any,json_file_path:str,file_open_mode:str="w",indent:int=2) -> None:
         """
             Method to write a python object to a JSON file
                 Accepts: obj: Source object in serializable formats
@@ -90,7 +91,7 @@ class op:
         op.write_to_file(data=tmp_json_string, file_path=json_file_path,open_mode=file_open_mode, end="")
         
     @staticmethod
-    def read_json_file(file_path,encoding:str="utf-8"):
+    def read_json_file(file_path: str,encoding:str="utf-8") -> Any:
         """
             Method to read a JSON file and return its content as a python object
                 Accepts: file_path: Path to the JSON file
@@ -108,7 +109,7 @@ class op:
         return data  
 
     @ staticmethod
-    def path_exists(file_path):
+    def path_exists(file_path: str) -> bool:
         """
             Method to check if a file or directory exists
                 Accepts: file_path: Path to the file or directory
@@ -117,7 +118,7 @@ class op:
         return os.path.exists(file_path)
 
     @ staticmethod
-    def make_dir(dir_name, permits=0o777) -> bool:
+    def make_dir(dir_name: str, permits: int = 0o777) -> bool:
         """
             Method to create a directory
                 Accepts: dir_name: Name of the directory
@@ -131,7 +132,7 @@ class op:
     
     
     @ staticmethod
-    def delete_dir(dir_name) -> bool:
+    def delete_dir(dir_name: str) -> bool:
         """
             Method to delete a directory
                 Accepts: dir_name: Name of the directory
@@ -148,7 +149,7 @@ class op:
     Wrappers in snake_case convention for copying files and moving them.
     """
     @ staticmethod
-    def copy_file(file_path, dst):
+    def copy_file(file_path: str, dst: str) -> str:
         """
             Wrapper method to copy a file to a destination
                 Accepts: file_path: Source file path
@@ -158,7 +159,7 @@ class op:
         return copyfile(file_path, dst)
 
     @ staticmethod
-    def move_file(file_path, dst):
+    def move_file(file_path: str, dst: str) -> str:
         """
             Wrapper method to move a file to a destination
                 Accepts: file_path: Source file path
@@ -168,7 +169,7 @@ class op:
         return move(file_path, dst)
 
     @ staticmethod
-    def to_string(file_path, open_mode:str="r", encoding=sys.stdout.encoding):
+    def to_string(file_path: str, open_mode:str="r", encoding: str | None = sys.stdout.encoding) -> str:
         """
             Method to read a file and return its content as a string
                 Accepts: file_path: Path to the file
@@ -179,6 +180,7 @@ class op:
                     - FileNotFoundError: if the file does not exist
                     - IOError: if the file cannot be opened
         """
+        string: str
         if "b" in open_mode: #If reading binary, encoding arg not supported
             with open(file_path, open_mode) as f:
                 string = f.read()
@@ -188,7 +190,7 @@ class op:
         return string
     
     @ staticmethod
-    def load_file(file_path) -> io.BytesIO:
+    def load_file(file_path: str) -> io.BytesIO:
         """
             Method to load a file from the filesystem and return the contents as a buffer
                 Accepts: file_path: Path to the file
@@ -204,7 +206,7 @@ class op:
         return buffer
 
     @ staticmethod
-    def delete_file(file_path) -> bool:
+    def delete_file(file_path: str) -> bool:
         """
             Method to delete a file from the filesystem
                 Accepts: file_path: Path to the file
@@ -219,7 +221,7 @@ class op:
         return True
     
     @staticmethod
-    def timestamp(zone=timezone.utc, string=False):
+    def timestamp(zone: tzinfo = timezone.utc, string: bool = False) -> float | str:
         """
             Method to get the current timestamp according to the specified zone
                 Accepts: zone: The timezone to get the timestamp from
@@ -232,7 +234,7 @@ class op:
         return timestamp
     
     @staticmethod
-    def get_filedatetime(zone=timezone.utc):
+    def get_filedatetime(zone: tzinfo = timezone.utc) -> str:
         """
             Method to get the current time according to the specified zone
                 Accepts: zone: The timezone to get the timestamp from
@@ -241,7 +243,7 @@ class op:
         return datetime.now(zone).strftime("%Y%m%d_%H%M%S")
     
     @staticmethod
-    def get_filedate(zone=timezone.utc):
+    def get_filedate(zone: tzinfo = timezone.utc) -> str:
         """
             Method to get the current date according to the specified zone
                 Accepts: zone: The timezone to get the timestamp from
@@ -250,7 +252,7 @@ class op:
         return datetime.now(zone).strftime("%Y%m%d")
 
     @ staticmethod
-    def get_path_without_file(file_path):
+    def get_path_without_file(file_path: str) -> str:
         """
             Wrapper method to get the directory path of a file
                 Accepts: file_path: Path to the file
@@ -259,7 +261,7 @@ class op:
         return os.path.dirname(file_path)
 
     @ staticmethod
-    def write_to_file(data, file_path, open_mode:str="r", end:str="") -> bool:
+    def write_to_file(data: str | None, file_path: str, open_mode:str="r", end:str="") -> bool:
         """
             Method to write data to a file
                 Accepts: data: Data to be written
@@ -282,7 +284,7 @@ class op:
         return True
     
     @staticmethod
-    def wait(seconds):
+    def wait(seconds: float) -> None:
         """
             Wrapper method to sleep for some seconds
             Accepts: seconds: Number of seconds to sleep
@@ -291,7 +293,7 @@ class op:
         return time.sleep(seconds)
     
     @staticmethod
-    def get_attribute(source_object:dict,attr_path:str,default_value=None,path_sep:str="."):
+    def get_attribute(source_object:dict[str, Any],attr_path:str,default_value: Any = None,path_sep:str=".") -> Any:
         """
             Method to retrieve an attribute from a nested JSON object
                 Accepts: source_object: JSON object
@@ -332,7 +334,7 @@ class op:
         return os.path.join(path_one,path_two)
     
     @staticmethod
-    def list_directories(directory_path: str) -> list:
+    def list_directories(directory_path: str) -> list[Any]:
         """
         Lists all entries in the specified directory.
         Args:
@@ -369,7 +371,7 @@ class op:
         return os.path.isfile(path=path)
     
     @staticmethod
-    def search_element_by_field(array, id, field="id") -> dict | None:
+    def search_element_by_field(array: list[dict[str, Any]], id: Any, field: str = "id") -> dict[str, Any] | None:
         """
         Searches for an element in a list of dictionaries by a specific field value.
         Args:
@@ -382,7 +384,7 @@ class op:
         return next((x for x in array if x[field] == id), None)
 
     @staticmethod
-    def extract_dict_values(array: list, key: str = "value") -> list:
+    def extract_dict_values(array: list[Any], key: str = "value") -> list[Any]:
         """
         Extracts values for a specified key from a list of dictionaries.
         Args:
@@ -394,7 +396,7 @@ class op:
         return [x[key] for x in array if key in x]
 
     @staticmethod
-    def get_future_timestamp(minutes=0, zone=timezone.utc) -> float:
+    def get_future_timestamp(minutes: int = 0, zone: tzinfo = timezone.utc) -> float:
         """
         Calculates a future timestamp by adding minutes to the current time.
         Args:
@@ -407,7 +409,7 @@ class op:
         return future_time.timestamp()
 
     @staticmethod
-    def is_interval_reached(end_timestamp: int, zone=timezone.utc) -> bool:
+    def is_interval_reached(end_timestamp: int, zone: tzinfo = timezone.utc) -> bool:
         """
         Determines whether the current time has reached or passed a given timestamp.
         Args:
@@ -420,7 +422,7 @@ class op:
         return end_timestamp <= current_timestamp
 
     @staticmethod
-    def timestamp_to_datetime(timestamp: int, zone=timezone.utc, format: str = "%d.%m.%Y %H:%M:%S.%f") -> str:
+    def timestamp_to_datetime(timestamp: int, zone: tzinfo = timezone.utc, format: str = "%d.%m.%Y %H:%M:%S.%f") -> str:
         """
         Converts a timestamp into a formatted datetime string.
         Args:

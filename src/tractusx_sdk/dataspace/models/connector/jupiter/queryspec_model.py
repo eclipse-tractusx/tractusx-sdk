@@ -29,7 +29,7 @@ from ..base_queryspec_model import BaseQuerySpecModel
 class QuerySpecModel(BaseQuerySpecModel):
     TYPE: str = Field(default="QuerySpec", frozen=True)
 
-    def to_data(self):
+    def to_data(self) -> str:
         """
         Converts the model to a JSON representing the data that
         will be sent to the connector when using a queryspec model.

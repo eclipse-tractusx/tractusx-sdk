@@ -179,7 +179,8 @@ class NotificationService(BaseService):
                     type_id = str(dct_type)
                 
                 if self.DIGITAL_TWIN_EVENT_API_TYPE in type_id:
-                    return asset_data
+                    existing_asset: Optional[Dict[str, Any]] = asset_data
+                    return existing_asset
                 else:
                     logger.warning(
                         "Asset '%s' exists but is not a DigitalTwinEventAPI type (found: %s)",
@@ -206,7 +207,7 @@ class NotificationService(BaseService):
     class _Builder:
         """Builder class for fluent NotificationService construction."""
         
-        def __init__(self, cls):
+        def __init__(self, cls: "type[NotificationService]") -> None:
             self.cls = cls
             self._data: Dict[str, Any] = {}
         

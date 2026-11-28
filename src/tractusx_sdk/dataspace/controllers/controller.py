@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,7 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import Generic, TypeVar
+from typing import Generic, Self, TypeVar, Any
 
 from ..adapters.adapter import Adapter
 
@@ -31,11 +32,11 @@ class Controller:
     adapter: Adapter
     endpoint_url: str
 
-    def __init__(self, adapter: Adapter):
+    def __init__(self, adapter: Adapter) -> None:
         self.adapter = adapter
 
     @classmethod
-    def builder(cls):
+    def builder(cls) -> "Controller._Builder[Adapter]":
         """
         This method is intended to return a builder for the controller inheriting this class.
         This means that such a controller should implement its own `_Builder` inner class.
@@ -53,15 +54,15 @@ class Controller:
         the adapter their builder accepts without breaking the base builder contract.
         """
 
-        def __init__(self, cls):
+        def __init__(self, cls: "type[Controller]") -> None:
             self.cls = cls
-            self._data = {}
+            self._data: dict[str, Any] = {}
 
-        def adapter(self, adapter: AdapterT):
+        def adapter(self, adapter: AdapterT) -> Self:
             self._data["adapter"] = adapter
             return self
 
-        def data(self, data: dict):
+        def data(self, data: dict[str, Any]) -> Self:
             """
             This method is intended to set all the data of the controller inheriting this class.
 
@@ -73,7 +74,7 @@ class Controller:
             self._data.update(data)
             return self
 
-        def build(self):
+        def build(self) -> "Controller":
             """
             :return: an instance of the class inheriting the base controller
             """

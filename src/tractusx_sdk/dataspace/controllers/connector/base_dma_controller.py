@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,7 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
-from typing import TypeVar
+from typing import Self, TypeVar
 
 from ..controller import Controller
 from ...adapters.connector.base_dma_adapter import BaseDmaAdapter
@@ -29,14 +30,14 @@ DmaAdapterT = TypeVar("DmaAdapterT", bound=BaseDmaAdapter)
 
 
 class BaseDmaController(Controller):
-    def __init__(self, adapter: BaseDmaAdapter):
+    def __init__(self, adapter: BaseDmaAdapter) -> None:
         """
         Overwrite the default Controller constructor to force a BaseDmaAdapter-type adapter.
         """
         super().__init__(adapter)
 
     class _Builder(Controller._Builder[DmaAdapterT]):
-        def adapter(self, adapter: DmaAdapterT):
+        def adapter(self, adapter: DmaAdapterT) -> Self:
             """
             Overwrite the default Controller builder adapter method to force a BaseDmaAdapter-type adapter.
             """

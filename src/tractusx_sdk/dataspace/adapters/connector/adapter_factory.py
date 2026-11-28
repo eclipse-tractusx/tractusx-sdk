@@ -23,7 +23,10 @@
 from enum import Enum
 from importlib import import_module
 from os import listdir, path
+from typing import Any, cast
 
+from ..adapter import Adapter
+from .base_dma_adapter import BaseDmaAdapter
 from ...tools.tracing import Tracer
 
 
@@ -54,7 +57,7 @@ class AdapterFactory:
     def _get_adapter_builder(
             adapter_type: AdapterType,
             dataspace_version: str,
-    ):
+        ) -> Adapter._Builder:
         """
         Create an adapter, based on the specified adapter type and version.
 
@@ -82,7 +85,7 @@ class AdapterFactory:
             # Dynamically import the adapter class
             module = import_module(module_name)
             adapter_class = getattr(module, adapter_class_name)
-            return adapter_class.builder()
+            return cast(Adapter._Builder, adapter_class.builder())
         except AttributeError as attr_exception:
             raise AttributeError(
                 f"Failed to import adapter class {adapter_class_name} for module {module_name}"
@@ -97,10 +100,10 @@ class AdapterFactory:
             dataspace_version: str,
             base_url: str,
             dma_path: str,
-            headers: dict | None = None,
+            headers: dict[str, Any] | None = None,
             tracer: Tracer | None = None,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> BaseDmaAdapter:
         """
         Create a (DMA) adapter instance, based a specific version.
 
@@ -113,10 +116,10 @@ class AdapterFactory:
         :return: An instance of the specified Adapter subclass
         """
 
-        builder = AdapterFactory._get_adapter_builder(
+        builder = cast(BaseDmaAdapter._Builder, AdapterFactory._get_adapter_builder(
             adapter_type=AdapterType.DMA_ADAPTER,
             dataspace_version=dataspace_version,
-        )
+        ))
 
         builder.base_url(base_url)
         builder.headers(headers)
@@ -125,16 +128,16 @@ class AdapterFactory:
 
         # Include any additional parameters
         builder.data(kwargs)
-        return builder.build()
+        return cast(BaseDmaAdapter, builder.build())
 
     @staticmethod
     def get_dataplane_adapter(
             dataspace_version: str,
             base_url: str,
-            headers: dict | None = None,
+            headers: dict[str, Any] | None = None,
             tracer: Tracer | None = None,
-            **kwargs
-    ):
+            **kwargs: Any
+    ) -> Adapter:
         """
         Create a dataplane adapter instance, based a specific version.
 

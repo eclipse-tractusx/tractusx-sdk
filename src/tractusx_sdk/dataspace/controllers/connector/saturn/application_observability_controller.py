@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,6 +21,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
+
+import requests
+
 from .dma_controller import DmaController
 
 
@@ -33,14 +37,14 @@ class ApplicationObservabilityController(DmaController):
 
     endpoint_url = "/check"
 
-    def get_health(self, **kwargs):
+    def get_health(self, **kwargs: Any) -> requests.Response:
         return self.adapter.get(url=f"{self.endpoint_url}/health", **kwargs)
 
-    def get_liveness(self, **kwargs):
+    def get_liveness(self, **kwargs: Any) -> requests.Response:
         return self.adapter.get(url=f"{self.endpoint_url}/liveness", **kwargs)
 
-    def get_readiness(self, **kwargs):
+    def get_readiness(self, **kwargs: Any) -> requests.Response:
         return self.adapter.get(url=f"{self.endpoint_url}/readiness", **kwargs)
 
-    def get_startup(self, **kwargs):
+    def get_startup(self, **kwargs: Any) -> requests.Response:
         return self.adapter.get(url=f"{self.endpoint_url}/startup", **kwargs)

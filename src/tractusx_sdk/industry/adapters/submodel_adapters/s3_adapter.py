@@ -1,6 +1,7 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
+# Copyright (c) 2026 LKS Next
 # Copyright (c) 2026 DRÄXLMAIER Group
 # (represented by Lisa Dräxlmaier GmbH)
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
@@ -23,7 +24,7 @@
 #################################################################################
 
 import json
-from typing import Any, Mapping
+from typing import Any, Mapping, Self
 
 from .. import SubmodelAdapter
 
@@ -52,39 +53,39 @@ class S3Adapter(SubmodelAdapter):
     """
 
     @classmethod
-    def builder(cls):
+    def builder(cls) -> "S3Adapter._Builder":
         return cls._Builder(cls)
 
     class _Builder:
-        def __init__(self, cls):
+        def __init__(self, cls: "type[S3Adapter]") -> None:
             self.cls = cls
-            self._data = {}
+            self._data: dict[str, Any] = {}
 
-        def bucket_name(self, bucket_name: str):
+        def bucket_name(self, bucket_name: str) -> Self:
             self._data["bucket_name"] = bucket_name
             return self
 
-        def key_pattern(self, key_pattern: str):
+        def key_pattern(self, key_pattern: str) -> Self:
             self._data["key_pattern"] = key_pattern
             return self
 
-        def region_name(self, region_name: str):
+        def region_name(self, region_name: str) -> Self:
             self._data["region_name"] = region_name
             return self
 
-        def endpoint_url(self, endpoint_url: str | None):
+        def endpoint_url(self, endpoint_url: str | None) -> Self:
             self._data["endpoint_url"] = endpoint_url
             return self
 
-        def aws_access_key_id(self, aws_access_key_id: str | None):
+        def aws_access_key_id(self, aws_access_key_id: str | None) -> Self:
             self._data["aws_access_key_id"] = aws_access_key_id
             return self
 
-        def aws_secret_access_key(self, aws_secret_access_key: str | None):
+        def aws_secret_access_key(self, aws_secret_access_key: str | None) -> Self:
             self._data["aws_secret_access_key"] = aws_secret_access_key
             return self
 
-        def build(self):
+        def build(self) -> "S3Adapter":
             if "bucket_name" not in self._data:
                 raise ValueError("Missing required builder parameter: bucket_name")
             if "region_name" not in self._data:
@@ -129,7 +130,7 @@ class S3Adapter(SubmodelAdapter):
         self.client_error = ClientError
 
         # Build client kwargs, only including credentials if both are provided
-        client_kwargs: dict = {
+        client_kwargs: dict[str, Any] = {
             "region_name": region_name,
         }
         

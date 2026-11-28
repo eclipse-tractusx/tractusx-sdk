@@ -21,17 +21,18 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
 from abc import ABC, abstractmethod
 
 class BaseConnectionManager(ABC):
     TRANSFER_ID_KEY = "transferProcessId"
     
     @abstractmethod
-    def __init__(self):
+    def __init__(self) -> None:
         raise NotImplementedError
     
     @abstractmethod
-    def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry:dict) -> str | None:
+    def add_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str, connection_entry:dict[str, Any]) -> str | None:
         """
         Adds a connection to the open connections dictionary.
 
@@ -44,7 +45,7 @@ class BaseConnectionManager(ABC):
         raise NotImplementedError("This method should be implemented by subclasses.")
         
     @abstractmethod
-    def get_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str) -> dict | None:
+    def get_connection(self, counter_party_id: str, counter_party_address: str, query_checksum: str, policy_checksum: str) -> dict[str, Any] | None:
         """
         Gets a connection to the open connections dictionary.
 

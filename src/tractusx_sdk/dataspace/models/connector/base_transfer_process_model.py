@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Union
+from typing import Optional, Self, Union, Any
 from pydantic import Field
 
 from ..model import BaseModel
@@ -35,38 +36,38 @@ class BaseTransferProcessModel(BaseModel, ABC):
     counter_party_address: str
     transfer_type: str
     contract_id: str
-    data_destination: dict
-    private_properties: Optional[dict] = Field(default_factory=dict)
-    callback_addresses: Optional[list[dict]] = Field(default_factory=list)
-    context: Optional[Union[dict, list, str]] = Field(default={
+    data_destination: dict[str, Any]
+    private_properties: Optional[dict[str, Any]] = Field(default_factory=dict)
+    callback_addresses: Optional[list[dict[str, Any]]] = Field(default_factory=list)
+    context: Optional[Union[dict[str, Any], list[Any], str]] = Field(default={
         "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     })
 
     class _Builder(BaseModel._Builder):
-        def context(self, context: dict):
+        def context(self, context: dict[str, Any]) -> Self:
             self._data["context"] = context
             return self
 
-        def counter_party_address(self, counter_party_address: str):
+        def counter_party_address(self, counter_party_address: str) -> Self:
             self._data["counter_party_address"] = counter_party_address
             return self
 
-        def transfer_type(self, transfer_type: str):
+        def transfer_type(self, transfer_type: str) -> Self:
             self._data["transfer_type"] = transfer_type
             return self
 
-        def contract_id(self, contract_id: str):
+        def contract_id(self, contract_id: str) -> Self:
             self._data["contract_id"] = contract_id
             return self
 
-        def data_destination(self, data_destination: dict):
+        def data_destination(self, data_destination: dict[str, Any]) -> Self:
             self._data["data_destination"] = data_destination
             return self
 
-        def private_properties(self, private_properties: dict):
+        def private_properties(self, private_properties: dict[str, Any]) -> Self:
             self._data["private_properties"] = private_properties
             return self
 
-        def callback_addresses(self, callback_addresses: list[dict]):
+        def callback_addresses(self, callback_addresses: list[dict[str, Any]]) -> Self:
             self._data["callback_addresses"] = callback_addresses
             return self

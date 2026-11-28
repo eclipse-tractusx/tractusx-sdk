@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Union
+from typing import Optional, Self, Union, Any
 from pydantic import Field
 
 from .base_policy_model import BasePolicyModel
@@ -35,37 +36,37 @@ class BaseContractNegotiationModel(BaseModel, ABC):
 
     counter_party_address: str
     offer_id: str
-    offer_policy: dict
+    offer_policy: dict[str, Any]
     asset_id: str
     provider_id: str
-    context: Optional[Union[dict, list, str]] = Field(default={
+    context: Optional[Union[dict[str, Any], list[Any], str]] = Field(default={
         "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     })
-    callback_addresses: Optional[list[dict]] = Field(default_factory=list)
+    callback_addresses: Optional[list[dict[str, Any]]] = Field(default_factory=list)
     protocol: Optional[str] = Field(default="dataspace-protocol-http")
 
     class _Builder(BaseModel._Builder):
-        def context(self, context: dict):
+        def context(self, context: dict[str, Any]) -> Self:
             self._data["context"] = context
             return self
 
-        def counter_party_address(self, counter_party_address: str):
+        def counter_party_address(self, counter_party_address: str) -> Self:
             self._data["counter_party_address"] = counter_party_address
             return self
 
-        def offer_id(self, offer_id: str):
+        def offer_id(self, offer_id: str) -> Self:
             self._data["offer_id"] = offer_id
             return self
 
-        def asset_id(self, asset_id: str):
+        def asset_id(self, asset_id: str) -> Self:
             self._data["asset_id"] = asset_id
             return self
 
-        def provider_id(self, provider_id: str):
+        def provider_id(self, provider_id: str) -> Self:
             self._data["provider_id"] = provider_id
             return self
 
-        def offer_policy_from_policy_model(self, policy_model: BasePolicyModel):
+        def offer_policy_from_policy_model(self, policy_model: BasePolicyModel) -> Self:
             # Remove unnecessary fields from a policy model's policy data
             # to_data() returns a JSON string, so we need to parse it first
             from json import loads as jloads
@@ -76,14 +77,14 @@ class BaseContractNegotiationModel(BaseModel, ABC):
 
             return self.offer_policy(policy_data)
 
-        def offer_policy(self, offer_policy: dict):
+        def offer_policy(self, offer_policy: dict[str, Any]) -> Self:
             self._data["offer_policy"] = offer_policy
             return self
 
-        def callback_addresses(self, callback_addresses: list[dict]):
+        def callback_addresses(self, callback_addresses: list[dict[str, Any]]) -> Self:
             self._data["callback_addresses"] = callback_addresses
             return self
 
-        def protocol(self, protocol: str):
+        def protocol(self, protocol: str) -> Self:
             self._data["protocol"] = protocol
             return self

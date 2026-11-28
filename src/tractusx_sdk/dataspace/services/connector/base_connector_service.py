@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,13 +21,15 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any, Self
+
 from .base_connector_consumer import BaseConnectorConsumerService
 from .base_connector_provider import BaseConnectorProviderService
 from ..service import BaseService
 from ...adapters.connector.adapter_factory import AdapterFactory
 from ...controllers.connector.base_dma_controller import BaseDmaController
 from ...controllers.connector.controller_factory import ControllerFactory
-from ...managers.auth_manager import AuthManagerInterface
+from ...managers.auth_manager_interface import AuthManagerInterface
 
 
 class BaseConnectorService(BaseService):
@@ -38,7 +40,7 @@ class BaseConnectorService(BaseService):
     def __init__(self, dataspace_version: str, base_url: str, dma_path: str,
                  consumer_service: BaseConnectorConsumerService,
                  provider_service: BaseConnectorProviderService,
-                 headers: dict | None = None,
+                 headers: dict[str, Any] | None = None,
                  auth_manager: AuthManagerInterface | None = None,
                  trace: bool = False):
         """
@@ -73,26 +75,28 @@ class BaseConnectorService(BaseService):
         self._init_tracing(trace=trace)
 
     class _Builder(BaseService._Builder):
-        def dma_path(self, dma_path: str):
+        def dma_path(self, dma_path: str) -> Self:
             self._data["dma_path"] = dma_path
             return self
 
-        def provider_service(self, provider_service: BaseConnectorProviderService):
+        def provider_service(self, provider_service: BaseConnectorProviderService) -> Self:
             self._data["provider_service"] = provider_service
             return self
 
-        def consumer_service(self, consumer_service: BaseConnectorConsumerService):
+        def consumer_service(self, consumer_service: BaseConnectorConsumerService) -> Self:
             self._data["consumer_service"] = consumer_service
             return self
 
+    # The controller is version-specific (Jupiter/Saturn) and exposes operations beyond the
+    # BaseDmaController contract, hence `Any`.
     @property
-    def contract_agreements(self):
+    def contract_agreements(self) -> Any:
         return self._contract_agreement_controller
 
     @property
-    def consumer(self):
+    def consumer(self) -> BaseConnectorConsumerService:
         return self._consumer_service
 
     @property
-    def provider(self):
+    def provider(self) -> BaseConnectorProviderService:
         return self._provider_service

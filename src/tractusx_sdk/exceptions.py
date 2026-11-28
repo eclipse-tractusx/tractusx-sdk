@@ -141,8 +141,8 @@ class PolicyMismatchError(CatalogError, ValueError):
     :param evaluations: The ``PolicyEvaluation`` of each policy that was rejected.
     """
 
-    def __init__(self, message: str = "", catalog: dict | None = None,
-                 allowed_policies: Sequence | None = None, evaluations: Sequence[Any] = ()) -> None:
+    def __init__(self, message: str = "", catalog: dict[str, Any] | None = None,
+                 allowed_policies: Sequence[Any] | None = None, evaluations: Sequence[Any] = ()) -> None:
         super().__init__(message)
         self.catalog = catalog
         self.allowed_policies = allowed_policies

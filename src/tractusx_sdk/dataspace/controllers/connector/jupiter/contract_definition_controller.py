@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,12 +21,17 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
+
+import requests
+
 from .dma_controller import DmaController
+from tractusx_sdk.dataspace.adapters.connector.base_dma_adapter import BaseDmaAdapter
 from tractusx_sdk.dataspace.controllers.connector.utils.mixins import CrudDmaController
 from tractusx_sdk.dataspace.models.connector.jupiter import ContractDefinitionModel
 
 
-class ContractDefinitionController(CrudDmaController, DmaController):
+class ContractDefinitionController(CrudDmaController[ContractDefinitionModel], DmaController):
     """
     Concrete implementation of the ContractDefinitionController for the Connector jupiter Data Management API.
 
@@ -34,8 +40,11 @@ class ContractDefinitionController(CrudDmaController, DmaController):
 
     endpoint_url = "/v3/contractdefinitions"
 
-    def create(self, obj: ContractDefinitionModel, **kwargs):
+    def __init__(self, adapter: BaseDmaAdapter) -> None:
+        super().__init__(adapter)
+
+    def create(self, obj: ContractDefinitionModel, **kwargs: Any) -> requests.Response:
         return super().create(obj, **kwargs)
 
-    def update(self, obj: ContractDefinitionModel, **kwargs):
+    def update(self, obj: ContractDefinitionModel, **kwargs: Any) -> requests.Response:
         return super().update(obj, **kwargs)

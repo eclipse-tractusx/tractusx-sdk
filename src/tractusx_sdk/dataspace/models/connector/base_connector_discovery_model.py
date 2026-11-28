@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -22,7 +22,7 @@
 #################################################################################
 
 from abc import ABC
-from typing import Optional, Union
+from typing import Optional, Self, Union, Any
 from pydantic import Field
 
 from ..model import BaseModel
@@ -35,20 +35,20 @@ class BaseConnectorDiscoveryModel(BaseModel, ABC):
 
     bpnl: str
     counter_party_address: str
-    context: Optional[Union[dict, list, str]] = Field(default={
+    context: Optional[Union[dict[str, Any], list[Any], str]] = Field(default={
         "tx": "https://w3id.org/tractusx/v0.0.1/ns/",
         "edc": "https://w3id.org/edc/v0.0.1/ns/"
     })
 
     class _Builder(BaseModel._Builder):
-        def context(self, context: dict):
+        def context(self, context: dict[str, Any]) -> Self:
             self._data["context"] = context
             return self
 
-        def bpnl(self, bpnl: str):
+        def bpnl(self, bpnl: str) -> Self:
             self._data["bpnl"] = bpnl
             return self
 
-        def counter_party_address(self, counter_party_address: str):
+        def counter_party_address(self, counter_party_address: str) -> Self:
             self._data["counter_party_address"] = counter_party_address
             return self

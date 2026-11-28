@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,12 +21,17 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
+
+import requests
+
 from .dma_controller import DmaController
+from tractusx_sdk.dataspace.adapters.connector.base_dma_adapter import BaseDmaAdapter
 from tractusx_sdk.dataspace.controllers.connector.utils.mixins import CreateControllerMixin, GetAllControllerMixin, DeleteControllerMixin
 from tractusx_sdk.dataspace.models.connector.saturn import ContractNegotiationModel
 
 
-class EdrController(CreateControllerMixin, GetAllControllerMixin, DeleteControllerMixin, DmaController):
+class EdrController(CreateControllerMixin[ContractNegotiationModel], GetAllControllerMixin, DeleteControllerMixin, DmaController):
     """
     Concrete implementation of the EdrController for the Connector saturn Data Management API.
 
@@ -34,12 +39,15 @@ class EdrController(CreateControllerMixin, GetAllControllerMixin, DeleteControll
     """
 
     endpoint_url = "/v3/edrs"
+
+    def __init__(self, adapter: BaseDmaAdapter) -> None:
+        super().__init__(adapter)
     
-    def get_data_address(self, oid: str, **kwargs):
+    def get_data_address(self, oid: str, **kwargs: Any) -> requests.Response:
         return self.adapter.get(url=f"{self.endpoint_url}/{oid}/dataaddress", **kwargs)
 
-    def refresh(self, oid: str, **kwargs):
+    def refresh(self, oid: str, **kwargs: Any) -> requests.Response:
         return self.adapter.post(url=f"{self.endpoint_url}/{oid}/refresh", **kwargs)
 
-    def create(self, obj: ContractNegotiationModel, **kwargs):
+    def create(self, obj: ContractNegotiationModel, **kwargs: Any) -> requests.Response:
         return super().create(obj, **kwargs)

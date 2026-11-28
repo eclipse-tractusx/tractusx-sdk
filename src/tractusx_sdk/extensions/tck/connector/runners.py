@@ -40,7 +40,7 @@ import os
 import sys
 import time
 import uuid as _uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable
 
 try:
     import yaml as _yaml
@@ -71,7 +71,16 @@ from .helpers import (
 )
 
 if TYPE_CHECKING:
-    from .models import DetailedTckConfig, SimpleTckConfig
+    import argparse
+    import logging
+
+    import requests
+
+    from tractusx_sdk.dataspace.models.connector.model_factory import ModelFactory
+    from tractusx_sdk.dataspace.services.connector.base_connector_provider import BaseConnectorProviderService
+    from tractusx_sdk.dataspace.services.connector.saturn import ConnectorConsumerService
+
+    from .models import BackendConfig, ConnectorConfig, DetailedTckConfig, PolicyConfig, SimpleTckConfig
 
 
 # ============================================================================
@@ -88,7 +97,7 @@ _PHASE_3_NAME = "Phase 3 · Access data with EDR"
 _VOCAB_KEY = "@vocab"
 _EDC_NAMESPACE = "https://w3id.org/edc/v0.0.1/ns/"
 
-_DEFAULT_SATURN_NEGOTIATION_CONTEXT: list = [
+_DEFAULT_SATURN_NEGOTIATION_CONTEXT: list[Any] = [
     "https://w3id.org/catenax/2025/9/policy/odrl.jsonld",
     "https://w3id.org/catenax/2025/9/policy/context.jsonld",
     {_VOCAB_KEY: _EDC_NAMESPACE},
@@ -103,7 +112,7 @@ _POLL_INTERVAL = 2
 # ============================================================================
 
 
-def _load_yaml_section(yaml_path: str, section: str) -> dict:
+def _load_yaml_section(yaml_path: str, section: str) -> dict[str, Any]:
     """Load a single section from a YAML config file.
 
     Args:
@@ -130,15 +139,18 @@ def _load_yaml_section(yaml_path: str, section: str) -> dict:
             f"Section '{section}' not found in '{yaml_path}'. "
             f"Available sections: {available}"
         )
-    return data[section]
+    section_data: dict[str, Any] = data[section]
+    return section_data
 
 
-def _yaml_section_to_config(raw: dict, cfg_provider, cfg_consumer, cfg_backend,
-                             cfg_access_policy, cfg_usage_policy):
+def _yaml_section_to_config(raw: dict[str, Any], cfg_provider: ConnectorConfig, cfg_consumer: ConnectorConfig,
+                            cfg_backend: BackendConfig, cfg_access_policy: PolicyConfig,
+                            cfg_usage_policy: PolicyConfig,
+                            ) -> tuple[ConnectorConfig, ConnectorConfig, BackendConfig, PolicyConfig, PolicyConfig, Any, Any]:
     """Apply a raw YAML section dict onto existing config field objects in-place."""
     from .models import ConnectorConfig, BackendConfig, PolicyConfig
 
-    def _mk_connector(src: dict) -> ConnectorConfig:
+    def _mk_connector(src: dict[str, Any]) -> ConnectorConfig:
         return ConnectorConfig(
             base_url=src.get("base_url", ""),
             dma_path=src.get("dma_path") or "/management",
@@ -149,7 +161,7 @@ def _yaml_section_to_config(raw: dict, cfg_provider, cfg_consumer, cfg_backend,
             did=src.get("did") or None,
         )
 
-    def _mk_policy(src: dict) -> PolicyConfig:
+    def _mk_policy(src: dict[str, Any]) -> PolicyConfig:
         return PolicyConfig(
             context=src.get("context") or None,
             permissions=src.get("permissions") or [],
@@ -176,7 +188,7 @@ def _yaml_section_to_config(raw: dict, cfg_provider, cfg_consumer, cfg_backend,
 
 
 def _apply_cli_to_simple_config(
-    args,
+    args: argparse.Namespace,
     config: SimpleTckConfig,
 ) -> SimpleTckConfig:
     """Apply CLI argument overrides to a :class:`SimpleTckConfig`.
@@ -252,7 +264,7 @@ def _apply_cli_to_simple_config(
 
 
 def _apply_cli_to_detailed_config(
-    args,
+    args: argparse.Namespace,
     config: DetailedTckConfig,
 ) -> DetailedTckConfig:
     """Apply CLI argument overrides to a :class:`DetailedTckConfig`.
@@ -397,7 +409,7 @@ def run_simple_test(config: SimpleTckConfig, script_dir: str) -> str:
     phase2_name = _PHASE_2_SIMPLE_DID if is_did else _PHASE_2_SIMPLE_BPNL
     all_phases = [_PHASE_0_NAME, _PHASE_1_NAME, phase2_name]
 
-    sep = lambda title: print_separator(logger, title)
+    sep: Callable[[str], None] = lambda title: print_separator(logger, title)
     sep(banner)
 
     # ── 4. Initialize services ────────────────────────────────────────
@@ -406,7 +418,7 @@ def run_simple_test(config: SimpleTckConfig, script_dir: str) -> str:
 
     overall_result = "FAIL"
     run_start = time.time()
-    steps: list[dict] = []
+    steps: list[dict[str, Any]] = []
     ids = None
     http_status = None
 
@@ -440,7 +452,7 @@ def run_simple_test(config: SimpleTckConfig, script_dir: str) -> str:
         time.sleep(3)
 
         # Phase 2 — consumer consumes data
-        def _consume_and_validate(fn):
+        def _consume_and_validate(fn: Callable[[], Any]) -> Any:
             resp = fn()
             if resp.status_code != 200:
                 raise RuntimeError(
@@ -511,7 +523,7 @@ def run_simple_test(config: SimpleTckConfig, script_dir: str) -> str:
 # ============================================================================
 
 
-def _derive_negotiation_context(config: DetailedTckConfig) -> list:
+def _derive_negotiation_context(config: DetailedTckConfig) -> list[Any]:
     """Derive the negotiation ``@context`` list from a detailed config.
 
     Priority:
@@ -596,7 +608,7 @@ def run_detailed_test(config: DetailedTckConfig, script_dir: str) -> str:
     )
     negotiation_ctx = _derive_negotiation_context(config)
 
-    hdr = lambda title: print_header(logger, title)
+    hdr: Callable[[str], None] = lambda title: print_header(logger, title)
     hdr(banner)
 
     logger.warning(
@@ -618,7 +630,7 @@ def run_detailed_test(config: DetailedTckConfig, script_dir: str) -> str:
 
     overall_result = "FAIL"
     run_start = time.time()
-    steps: list[dict] = []
+    steps: list[dict[str, Any]] = []
     provision_ids = None
     consumption_result = None
 
@@ -661,7 +673,7 @@ def run_detailed_test(config: DetailedTckConfig, script_dir: str) -> str:
         )
 
         # ── Phase 3: Access data with EDR ─────────────────────────────
-        def _access_and_validate():
+        def _access_and_validate() -> requests.Response:
             resp = access_data_with_edr(
                 logger,
                 dataplane_url=consumption_result["dataplane_url"],
@@ -711,11 +723,11 @@ def run_detailed_test(config: DetailedTckConfig, script_dir: str) -> str:
 
 
 def _resolve_access_permissions(
-    access_policy_config: dict,
-    consumer_config: dict,
-) -> list:
+    access_policy_config: dict[str, Any],
+    consumer_config: dict[str, Any],
+) -> list[Any]:
     """Resolve access policy permissions, substituting BPN/DID constraints."""
-    access_permissions = copy.deepcopy(access_policy_config.get("permissions", []))
+    access_permissions: list[Any] = copy.deepcopy(access_policy_config.get("permissions", []))
     if not access_permissions:
         return access_permissions
 
@@ -729,9 +741,9 @@ def _resolve_access_permissions(
     return access_permissions
 
 
-def _extract_policy_kwargs(policy_config: dict) -> dict:
+def _extract_policy_kwargs(policy_config: dict[str, Any]) -> dict[str, Any]:
     """Extract optional context/profile kwargs from a policy config."""
-    kwargs: dict = {}
+    kwargs: dict[str, Any] = {}
     for key in ("context", "profile"):
         if key in policy_config:
             kwargs[key] = policy_config[key]
@@ -739,15 +751,15 @@ def _extract_policy_kwargs(policy_config: dict) -> dict:
 
 
 def _provision_detailed(
-    logger,
-    provider,
-    access_policy_config: dict,
-    usage_policy_config: dict,
-    asset_config: dict,
-    backend_config: dict,
-    consumer_config: dict,
-    header_fn,
-) -> dict:
+    logger: logging.Logger,
+    provider: BaseConnectorProviderService,
+    access_policy_config: dict[str, Any],
+    usage_policy_config: dict[str, Any],
+    asset_config: dict[str, Any],
+    backend_config: dict[str, Any],
+    consumer_config: dict[str, Any],
+    header_fn: Callable[[str], None],
+) -> dict[str, Any]:
     """Phase 1 (detailed): Provision data with verbose step-by-step logging."""
     import time as _time
 
@@ -896,7 +908,9 @@ def _provision_detailed(
 # ============================================================================
 
 
-def _step_discover_provider(logger, consumer_service, provider_config, is_did):
+def _step_discover_provider(
+    logger: logging.Logger, consumer_service: ConnectorConsumerService, provider_config: dict[str, Any], is_did: bool,
+) -> None:
     """Step 2.0: Discover provider connector info."""
     if is_did:
         logger.info("Step 2.0: Using Provider DID directly (no BPNL discovery)")
@@ -931,7 +945,7 @@ def _step_discover_provider(logger, consumer_service, provider_config, is_did):
         raise
 
 
-def _catalog_keys(is_prefixed: bool) -> dict:
+def _catalog_keys(is_prefixed: bool) -> dict[str, Any]:
     """Return JSON-LD key mappings based on whether catalog uses prefixed keys."""
     if is_prefixed:
         return {
@@ -948,7 +962,7 @@ def _catalog_keys(is_prefixed: bool) -> dict:
     }
 
 
-def _extract_dsp_endpoint(catalog_data, keys, fallback_url):
+def _extract_dsp_endpoint(catalog_data: dict[str, Any], keys: dict[str, Any], fallback_url: str) -> Any:
     """Extract the DSP endpoint URL from catalog service metadata."""
     services = catalog_data.get(keys["service"], [])
     if isinstance(services, dict):
@@ -959,7 +973,7 @@ def _extract_dsp_endpoint(catalog_data, keys, fallback_url):
     return fallback_url
 
 
-def _find_target_dataset(datasets, asset_id):
+def _find_target_dataset(datasets: list[dict[str, Any]], asset_id: str) -> dict[str, Any]:
     """Locate the dataset matching *asset_id* in the catalog datasets list."""
     for dataset in datasets:
         if dataset.get("@id") == asset_id:
@@ -967,14 +981,17 @@ def _find_target_dataset(datasets, asset_id):
     raise ValueError(f"Asset {asset_id} not found in catalog")
 
 
-def _ensure_list(value):
+def _ensure_list(value: dict[str, Any] | list[Any]) -> list[Any]:
     """Normalise a value that may be a single dict or a list into a list."""
     if isinstance(value, dict):
         return [value]
     return value
 
 
-def _step_fetch_catalog(logger, consumer_service, provider_config, asset_id, is_did):
+def _step_fetch_catalog(
+    logger: logging.Logger, consumer_service: ConnectorConsumerService, provider_config: dict[str, Any],
+    asset_id: str, is_did: bool,
+) -> tuple[bool, dict[str, Any], str, str, str]:
     """Step 2.1: Discover provider catalog and extract offer info.
 
     Returns ``(is_prefixed, offer_policy, offer_id, participant_id, dsp_endpoint)``.
@@ -1021,7 +1038,10 @@ def _step_fetch_catalog(logger, consumer_service, provider_config, asset_id, is_
     return is_prefixed, offer_policy, offer_id, participant_id, dsp_endpoint
 
 
-def _request_catalog(logger, consumer_service, provider_config, asset_id, is_did):
+def _request_catalog(
+    logger: logging.Logger, consumer_service: ConnectorConsumerService, provider_config: dict[str, Any],
+    asset_id: str, is_did: bool,
+) -> Any:
     """Issue the catalog request (DID or BPNL variant) and return raw data."""
     if is_did:
         catalog_request_params = {
@@ -1055,7 +1075,7 @@ def _request_catalog(logger, consumer_service, provider_config, asset_id, is_did
     )
 
 
-def _build_offer_policy_data(offer_policy, is_prefixed):
+def _build_offer_policy_data(offer_policy: dict[str, Any], is_prefixed: bool) -> dict[str, Any]:
     """Build the offer policy payload matching the catalog's prefix style."""
     if is_prefixed:
         return {
@@ -1077,10 +1097,10 @@ def _build_offer_policy_data(offer_policy, is_prefixed):
 
 
 def _step_negotiate_contract(
-    logger, consumer_service, model_factory, consumer_config,
-    is_prefixed, offer_policy, dsp_endpoint, offer_id, asset_id,
-    participant_id, negotiation_context, protocol,
-):
+    logger: logging.Logger, consumer_service: ConnectorConsumerService, model_factory: type[ModelFactory],
+    consumer_config: dict[str, Any], is_prefixed: bool, offer_policy: dict[str, Any], dsp_endpoint: str, offer_id: str,
+    asset_id: str, participant_id: str, negotiation_context: Any, protocol: str,
+) -> str:
     """Step 2.2: Negotiate a contract and return the negotiation ID."""
     logger.info("\nStep 2.2: Negotiating Contract")
     logger.info("%s", "-" * 80)
@@ -1116,7 +1136,7 @@ def _step_negotiate_contract(
             )
 
         negotiation_data = negotiation_response.json()
-        negotiation_id = negotiation_data.get("@id")
+        negotiation_id: str = negotiation_data.get("@id")
         logger.info("✓ Contract negotiation initiated: %s", negotiation_id)
         logger.info("  - Asset: %s", asset_id)
         logger.info("  - Provider: %s", participant_id)
@@ -1128,7 +1148,9 @@ def _step_negotiate_contract(
     return negotiation_id
 
 
-def _step_wait_for_agreement(logger, consumer_service, negotiation_id):
+def _step_wait_for_agreement(
+    logger: logging.Logger, consumer_service: ConnectorConsumerService, negotiation_id: str,
+) -> str:
     """Step 2.3: Poll until the contract negotiation reaches FINALIZED."""
     logger.info("\nStep 2.3: Waiting for Contract Agreement")
     logger.info("%s", "-" * 80)
@@ -1168,7 +1190,7 @@ def _step_wait_for_agreement(logger, consumer_service, negotiation_id):
             if state == "TERMINATED":
                 raise RuntimeError("Contract negotiation was TERMINATED")
 
-            contract_agreement_id = status_data.get(
+            contract_agreement_id: str | None = status_data.get(
                 "contractAgreementId",
                 status_data.get("edc:contractAgreementId"),
             )
@@ -1185,9 +1207,9 @@ def _step_wait_for_agreement(logger, consumer_service, negotiation_id):
 
 
 def _step_initiate_transfer(
-    logger, consumer_service, model_factory, consumer_config,
-    dsp_endpoint, contract_agreement_id, protocol,
-):
+    logger: logging.Logger, consumer_service: ConnectorConsumerService, model_factory: type[ModelFactory],
+    consumer_config: dict[str, Any], dsp_endpoint: str, contract_agreement_id: str, protocol: str,
+) -> str:
     """Step 2.4: Start a transfer process and return the transfer ID."""
     logger.info("\nStep 2.4: Initiating Transfer Process")
     logger.info("%s", "-" * 80)
@@ -1219,7 +1241,7 @@ def _step_initiate_transfer(
             )
 
         transfer_data = transfer_response.json()
-        transfer_id = transfer_data.get("@id")
+        transfer_id: str = transfer_data.get("@id")
         logger.info("✓ Transfer process initiated: %s", transfer_id)
         logger.info("  - Type: HttpData-PULL")
         logger.info("  - Contract: %s", contract_agreement_id)
@@ -1231,7 +1253,9 @@ def _step_initiate_transfer(
     return transfer_id
 
 
-def _step_wait_for_edr(logger, consumer_service, transfer_id):
+def _step_wait_for_edr(
+    logger: logging.Logger, consumer_service: ConnectorConsumerService, transfer_id: str,
+) -> tuple[dict[str, Any], str, str]:
     """Step 2.5: Poll until the EDR is available.
 
     Returns ``(edr_data, dataplane_url, access_token)``.
@@ -1298,17 +1322,17 @@ def _step_wait_for_edr(logger, consumer_service, transfer_id):
 
 
 def _consume_detailed(
-    logger,
-    consumer_service,
+    logger: logging.Logger,
+    consumer_service: ConnectorConsumerService,
     asset_id: str,
-    provider_config: dict,
-    consumer_config: dict,
+    provider_config: dict[str, Any],
+    consumer_config: dict[str, Any],
     protocol: str,
-    negotiation_context: list,
+    negotiation_context: list[Any],
     is_did: bool,
-    model_factory,
-    header_fn,
-) -> dict:
+    model_factory: type[ModelFactory],
+    header_fn: Callable[[str], None],
+) -> dict[str, Any]:
     """Phase 2 (detailed): Consumer discovers and consumes data (step-by-step).
 
     Handles both Saturn (unprefixed JSON-LD keys) and Jupiter

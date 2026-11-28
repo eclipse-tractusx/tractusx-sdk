@@ -21,6 +21,7 @@
 #################################################################################
 
 from unittest import TestCase
+from inspect import signature
 
 from tractusx_sdk.dataspace.controllers.connector.utils.decorators import controller_method
 from tractusx_sdk.dataspace.controllers.controller import Controller
@@ -65,3 +66,21 @@ class TestControllerMethodDecorator(TestCase, ControllerPropertiesMixin):
 
         ret_val = sample_controller.func()
         self.assertEqual("Hello world!", ret_val)
+
+    def test_decorator_preserves_function_metadata_and_signature(self):
+        class TypedController(Controller):
+            endpoint_url = ENDPOINT_URL
+
+            @controller_method
+            def lookup(self, oid: str, *, include_state: bool = False) -> str:
+                """Look up a resource."""
+                return oid
+
+        controller = TypedController(self.adapter)
+
+        self.assertEqual(controller.lookup.__name__, "lookup")
+        self.assertEqual(controller.lookup.__doc__, "Look up a resource.")
+        self.assertEqual(
+            str(signature(controller.lookup)),
+            "(oid: str, *, include_state: bool = False) -> str",
+        )

@@ -1,8 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 LKS NEXT
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2025,2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -21,6 +21,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Self
+
 from ..base_dma_controller import BaseDmaController
 from tractusx_sdk.dataspace.adapters.connector.saturn import DmaAdapter
 
@@ -34,5 +36,5 @@ class DmaController(BaseDmaController):
     """
 
     class _Builder(BaseDmaController._Builder[DmaAdapter]):
-        def adapter(self, adapter: DmaAdapter):
+        def adapter(self, adapter: DmaAdapter) -> Self:
             return super().adapter(adapter)

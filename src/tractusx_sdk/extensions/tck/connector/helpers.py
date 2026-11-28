@@ -36,11 +36,13 @@ import logging
 import os
 import sys
 import time
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 import requests
 
+from tractusx_sdk.dataspace.managers.connection.base_connection_manager import BaseConnectionManager
 from tractusx_sdk.dataspace.services.connector import ServiceFactory
 from tractusx_sdk.dataspace.services.connector.base_connector_provider import (
     BaseConnectorProviderService,
@@ -125,7 +127,7 @@ _tck_original_root_level: Optional[int] = None
 def setup_tck_logging(
     test_case_name: str,
     script_dir: str,
-) -> tuple:
+) -> tuple[Any, ...]:
     """
     Set up TCK logging with console + timestamped file handlers.
 
@@ -173,7 +175,7 @@ def setup_tck_logging(
     return logger, log_file
 
 
-def finalize_log(log_file: str, result: str):
+def finalize_log(log_file: str, result: str) -> None:
     """Flush and close the handlers of :func:`setup_tck_logging`, then rename the log file with PASS or FAIL result."""
     root = logging.getLogger()
     for handler in _tck_handlers[:]:
@@ -190,12 +192,12 @@ def finalize_log(log_file: str, result: str):
     sys.stdout.flush()
 
 
-def print_header(logger: logging.Logger, title: str):
+def print_header(logger: logging.Logger, title: str) -> None:
     """Log section header with 80-char ``=`` border (detailed style)."""
     logger.info("\n%s\n  %s\n%s", "=" * 80, title, "=" * 80)
 
 
-def print_separator(logger: logging.Logger, title: str = ""):
+def print_separator(logger: logging.Logger, title: str = "") -> None:
     """Log separator line with 70-char ``=`` border (simple style)."""
     if title:
         logger.info("\n%s\n  %s\n%s", "=" * 70, title, "=" * 70)
@@ -210,9 +212,9 @@ def print_separator(logger: logging.Logger, title: str = ""):
 
 def initialize_provider_service(
     logger: logging.Logger,
-    provider_config: dict,
-    header_fn: Optional[Callable] = None,
-):
+    provider_config: dict[str, Any],
+    header_fn: Optional[Callable[..., Any]] = None,
+) -> BaseConnectorProviderService:
     """
     Initialize the Provider Connector Service.
 
@@ -226,7 +228,7 @@ def initialize_provider_service(
         ConnectorProviderService instance.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_header(logger, title)
 
     header_fn("Initializing Provider Connector Service")
@@ -257,10 +259,10 @@ def initialize_provider_service(
 
 def initialize_consumer_service(
     logger: logging.Logger,
-    consumer_config: dict,
-    header_fn: Optional[Callable] = None,
-    connection_manager=None,
-):
+    consumer_config: dict[str, Any],
+    header_fn: Optional[Callable[..., Any]] = None,
+    connection_manager: BaseConnectionManager | None = None,
+) -> Any:  # Version-specific consumer (Jupiter/Saturn): do_get_with_bpnl & co. live on the subclasses
     """
     Initialize the Consumer Connector Service.
 
@@ -275,7 +277,7 @@ def initialize_consumer_service(
         ConnectorConsumerService instance.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_header(logger, title)
 
     header_fn("Initializing Consumer Connector Service")
@@ -312,11 +314,11 @@ def initialize_consumer_service(
 
 def upload_sample_data(
     logger: logging.Logger,
-    backend_config: dict,
-    sample_data: dict,
-    header_fn: Optional[Callable] = None,
+    backend_config: dict[str, Any],
+    sample_data: dict[str, Any],
+    header_fn: Optional[Callable[..., Any]] = None,
     verify: bool = True,
-):
+) -> None:
     """
     Upload sample aspect model data to backend storage.
 
@@ -330,7 +332,7 @@ def upload_sample_data(
         verify: Whether to verify SSL certificates. Defaults to True. The TCK runners pass ``config.verify_ssl``.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_header(logger, title)
 
     header_fn("PHASE 0: Uploading Sample Data to Backend Storage")
@@ -375,10 +377,10 @@ def access_data_with_edr(
     logger: logging.Logger,
     dataplane_url: str,
     access_token: str,
-    header_fn: Optional[Callable] = None,
+    header_fn: Optional[Callable[..., Any]] = None,
     path: str = "/",
     verify: bool = False,
-):
+) -> requests.Response:
     """
     Access data using EDR (Endpoint Data Reference).
 
@@ -394,7 +396,7 @@ def access_data_with_edr(
         ``requests.Response`` from the data plane.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_header(logger, title)
 
     header_fn("PHASE 3: Accessing Data with EDR")
@@ -449,10 +451,10 @@ def access_data_with_edr(
 
 def cleanup_provider_resources(
     logger: logging.Logger,
-    provider_service,
-    provision_ids: dict,
-    header_fn: Optional[Callable] = None,
-):
+    provider_service: BaseConnectorProviderService,
+    provision_ids: dict[str, Any],
+    header_fn: Optional[Callable[..., Any]] = None,
+) -> None:
     """
     Delete all created resources from Provider (in reverse order of creation).
 
@@ -463,7 +465,7 @@ def cleanup_provider_resources(
         header_fn: Function ``(title) -> None`` to print section header.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_header(logger, title)
 
     header_fn("CLEANUP: Deleting Provider Resources")
@@ -485,10 +487,10 @@ def cleanup_provider_resources(
 
 def cleanup_backend_data(
     logger: logging.Logger,
-    backend_config: dict,
-    header_fn: Optional[Callable] = None,
+    backend_config: dict[str, Any],
+    header_fn: Optional[Callable[..., Any]] = None,
     verify: bool = False,
-):
+) -> None:
     """
     Delete test data from backend storage.
 
@@ -499,13 +501,13 @@ def cleanup_backend_data(
         verify: Whether to verify SSL certificates. Defaults to False.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_header(logger, title)
 
     header_fn("CLEANUP: Deleting Backend Data")
 
     try:
-        headers: dict = {}
+        headers: dict[str, Any] = {}
         if backend_config.get("api_key"):
             headers[backend_config.get("api_key_header", "X-Api-Key")] = backend_config["api_key"]
 
@@ -535,7 +537,7 @@ def cleanup_backend_data(
 # ============================================================================
 
 
-def run_step(steps: list, name: str, fn: Callable):
+def run_step(steps: list[Any], name: str, fn: Callable[..., Any]) -> Any:
     """
     Execute a test step function, record timing and PASS/FAIL.
 
@@ -560,7 +562,7 @@ def run_step(steps: list, name: str, fn: Callable):
         raise
 
 
-def mark_skipped_phases(steps: list, all_phase_names: list):
+def mark_skipped_phases(steps: list[Any], all_phase_names: list[Any]) -> None:
     """Mark any phases not yet recorded in *steps* as ``SKIP``."""
     completed = {s["name"] for s in steps}
     for phase in all_phase_names:
@@ -570,14 +572,14 @@ def mark_skipped_phases(steps: list, all_phase_names: list):
 
 def print_summary(
     logger: logging.Logger,
-    steps: list,
+    steps: list[Any],
     overall_result: str,
     total_elapsed: float,
     title: str = "E2E TEST RUN SUMMARY",
-    provision_ids: Optional[dict] = None,
-    consumption_result: Optional[dict] = None,
+    provision_ids: Optional[dict[str, Any]] = None,
+    consumption_result: Optional[dict[str, Any]] = None,
     http_status: Optional[int] = None,
-):
+) -> None:
     """
     Print a formatted test summary table.
 
@@ -751,11 +753,11 @@ def build_tck_cli_parser(
 
 
 def apply_cli_overrides(
-    args,
-    provider_config: dict,
-    consumer_config: dict,
-    backend_config: dict,
-) -> tuple:
+    args: argparse.Namespace,
+    provider_config: dict[str, Any],
+    consumer_config: dict[str, Any],
+    backend_config: dict[str, Any],
+) -> tuple[Any, ...]:
     """
     Apply CLI argument overrides to configuration dicts.
 
@@ -800,7 +802,7 @@ def apply_cli_overrides(
     return p_cfg, c_cfg, b_cfg
 
 
-def enable_debug_logging(logger: logging.Logger):
+def enable_debug_logging(logger: logging.Logger) -> None:
     """
     Lower the TCK output to DEBUG level.
 
@@ -814,7 +816,7 @@ def enable_debug_logging(logger: logging.Logger):
     logger.info("DEBUG logging enabled")
 
 
-def log_config_warning(logger: logging.Logger):
+def log_config_warning(logger: logging.Logger) -> None:
     """Log the standard configuration warning."""
     logger.warning(
         "\n⚠️  IMPORTANT: Update the PLACEHOLDER values before running!\n"
@@ -838,14 +840,14 @@ def log_config_warning(logger: logging.Logger):
 def provision_simple(
     logger: logging.Logger,
     provider: BaseConnectorProviderService,
-    access_policy_config: dict,
-    usage_policy_config: dict,
-    asset_config: dict,
-    backend_config: dict,
-    consumer_config: dict,
-    header_fn: Optional[Callable] = None,
+    access_policy_config: dict[str, Any],
+    usage_policy_config: dict[str, Any],
+    asset_config: dict[str, Any],
+    backend_config: dict[str, Any],
+    consumer_config: dict[str, Any],
+    header_fn: Optional[Callable[..., Any]] = None,
     id_prefix: str = "e2e",
-) -> dict:
+) -> dict[str, Any]:
     """
     Phase 1 (simple): Provider provisions data.
 
@@ -868,7 +870,7 @@ def provision_simple(
         Dict with ``asset_id``, ``access_policy_id``, ``usage_policy_id``, ``contract_def_id``.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_separator(logger, title)
 
     header_fn("PHASE 1: Provider Data Provision")
@@ -890,13 +892,13 @@ def provision_simple(
         constraint["rightOperand"] = consumer_config["bpn"]
 
     # Build optional policy kwargs (context / profile)
-    access_kwargs: dict = {}
+    access_kwargs: dict[str, Any] = {}
     if "context" in access_policy_config:
         access_kwargs["context"] = access_policy_config["context"]
     if "profile" in access_policy_config:
         access_kwargs["profile"] = access_policy_config["profile"]
 
-    usage_kwargs: dict = {}
+    usage_kwargs: dict[str, Any] = {}
     if "context" in usage_policy_config:
         usage_kwargs["context"] = usage_policy_config["context"]
     if "profile" in usage_policy_config:
@@ -953,13 +955,13 @@ def provision_simple(
 
 def consume_simple_bpnl(
     logger: logging.Logger,
-    consumer,
+    consumer: Any,
     asset_id: str,
-    provider_config: dict,
-    accepted_policies=None,
-    header_fn: Optional[Callable] = None,
+    provider_config: dict[str, Any],
+    accepted_policies: Sequence[dict[str, Any]] | None = None,
+    header_fn: Optional[Callable[..., Any]] = None,
     verify: bool = False,
-):
+) -> requests.Response:
     """
     Phase 2 (simple / BPNL): Consumer calls ``do_get_with_bpnl`` — SDK handles everything.
 
@@ -976,7 +978,7 @@ def consume_simple_bpnl(
         ``requests.Response`` from the data source.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_separator(logger, title)
 
     header_fn("PHASE 2: Consumer — do_get_with_bpnl")
@@ -997,7 +999,7 @@ def consume_simple_bpnl(
         provider_config["bpn"],
         asset_id,
     )
-    response = consumer.do_get_with_bpnl(
+    response: requests.Response = consumer.do_get_with_bpnl(
         bpnl=provider_config["bpn"],
         counter_party_address=provider_config["dsp_url"],
         filter_expression=filter_expression,
@@ -1012,13 +1014,13 @@ def consume_simple_bpnl(
 
 def consume_simple_did(
     logger: logging.Logger,
-    consumer,
+    consumer: Any,
     asset_id: str,
-    provider_config: dict,
-    accepted_policies=None,
-    header_fn: Optional[Callable] = None,
+    provider_config: dict[str, Any],
+    accepted_policies: Sequence[dict[str, Any]] | None = None,
+    header_fn: Optional[Callable[..., Any]] = None,
     verify: bool = False,
-):
+) -> requests.Response:
     """
     Phase 2 (simple / DID): Consumer calls ``do_get`` with DID — SDK handles everything.
 
@@ -1035,7 +1037,7 @@ def consume_simple_did(
         ``requests.Response`` from the data source.
     """
     if header_fn is None:
-        def header_fn(title):
+        def header_fn(title: str) -> None:
             print_separator(logger, title)
 
     header_fn("PHASE 2: Consumer — do_get (DID-based)")
@@ -1057,7 +1059,7 @@ def consume_simple_did(
         provider_config["did"],
         asset_id,
     )
-    response = consumer.do_get(
+    response: requests.Response = consumer.do_get(
         counter_party_id=provider_config["did"],
         counter_party_address=provider_config["dsp_url"],
         filter_expression=filter_expression,

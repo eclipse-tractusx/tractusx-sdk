@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,6 +21,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any, Self
+
+from requests import Response
 from requests.structures import CaseInsensitiveDict
 
 from ..adapter import Adapter
@@ -30,7 +34,7 @@ from ...tools.tracing import Tracer
 class BaseDmaAdapter(Adapter):
     dma_path: str = ""
 
-    def __init__(self, base_url: str, dma_path: str, headers: dict | None = None, tracer: Tracer | None = None):
+    def __init__(self, base_url: str, dma_path: str, headers: dict[str, Any] | None = None, tracer: Tracer | None = None):
         """
         Create a new DMA adapter instance
 
@@ -45,7 +49,7 @@ class BaseDmaAdapter(Adapter):
         dma_url = HttpTools.concat_into_url(base_url, dma_path)
         super().__init__(dma_url, headers, tracer=tracer)
 
-    def request(self, method: str, path: str = "", **kwargs):
+    def request(self, method: str, path: str = "", **kwargs: Any) -> Response:
         """
         Perform a request against the Connector Data Management API
 
@@ -70,6 +74,6 @@ class BaseDmaAdapter(Adapter):
         return super().request(method, path, **kwargs)
 
     class _Builder(Adapter._Builder):
-        def dma_path(self, dma_path: str):
+        def dma_path(self, dma_path: str) -> Self:
             self._data["dma_path"] = dma_path
             return self

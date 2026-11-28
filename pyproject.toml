@@ -50,6 +50,10 @@ s3 = ["boto3>=1.43.0,<2.0.0"]
 
 [tool.poetry]
 requires-poetry = ">=2.0"
+# PEP 561: ship the py.typed marker so type checkers use the inline annotations
+include = [
+    { path = "src/tractusx_sdk/py.typed", format = ["sdist", "wheel"] },
+]
 
 [tool.poetry.group.dev.dependencies]
 fastapi-cli = "^0.0.7"
@@ -91,11 +95,9 @@ files = ["src"]
 mypy_path = "src"
 explicit_package_bases = true
 namespace_packages = true
-check_untyped_defs = true
 show_error_codes = true
 warn_unused_configs = true
-warn_redundant_casts = true
-warn_unused_ignores = true
+strict = true
 
 [[tool.mypy.overrides]]
 # Third-party packages without type stubs or a py.typed marker

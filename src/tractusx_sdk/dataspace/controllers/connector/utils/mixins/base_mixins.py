@@ -1,7 +1,8 @@
 #################################################################################
 # Eclipse Tractus-X - Software Development KIT
 #
-# Copyright (c) 2025 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 LKS Next
+# Copyright (c) 2025,2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,12 +21,18 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any, Generic, TypeVar
 from urllib.parse import quote
+
+import requests
 
 from tractusx_sdk.dataspace.controllers.connector.utils.decorators import controller_method
 from tractusx_sdk.dataspace.adapters.adapter import Adapter
 from tractusx_sdk.dataspace.models.model import BaseModel
 from tractusx_sdk.dataspace.models.connector.base_queryspec_model import BaseQuerySpecModel
+
+# Model accepted by the write methods of a mixin; concrete controllers narrow it to their own model
+ModelT = TypeVar("ModelT", bound=BaseModel)
 
 
 def _id_path(endpoint_url: str, oid: object) -> str:
@@ -35,7 +42,7 @@ def _id_path(endpoint_url: str, oid: object) -> str:
     return f"{endpoint_url}/{quote(oid, safe='')}"
 
 
-class CreateControllerMixin:
+class CreateControllerMixin(Generic[ModelT]):
     """
     This mixin injects a method to allow "create" requests
     to any class that inherits from the Controller class.
@@ -45,7 +52,7 @@ class CreateControllerMixin:
     endpoint_url: str
 
     @controller_method
-    def create(self, obj: BaseModel, **kwargs):
+    def create(self, obj: ModelT, **kwargs: Any) -> requests.Response:
         kwargs["data"] = obj.to_data()
         return self.adapter.post(url=self.endpoint_url, **kwargs)
 
@@ -60,11 +67,11 @@ class GetControllerMixin:
     endpoint_url: str
 
     @controller_method
-    def get_by_id(self, oid: str, **kwargs):
+    def get_by_id(self, oid: str, **kwargs: Any) -> requests.Response:
         return self.adapter.get(url=f"{self.endpoint_url}/{oid}", **kwargs)
 
 
-class UpdateControllerMixin:
+class UpdateControllerMixin(Generic[ModelT]):
     """
     This mixin injects a method to allow "update" requests
     to any class that inherits from the Controller class.
@@ -74,12 +81,12 @@ class UpdateControllerMixin:
     endpoint_url: str
 
     @controller_method
-    def update(self, obj: BaseModel, **kwargs):
+    def update(self, obj: ModelT, **kwargs: Any) -> requests.Response:
         kwargs["data"] = obj.to_data()
         return self.adapter.put(url=self.endpoint_url, **kwargs)
 
 
-class UpdateByIdControllerMixin:
+class UpdateByIdControllerMixin(Generic[ModelT]):
     """
     This mixin injects a method to allow "update" requests
     to any class that inherits from the Controller class.
@@ -90,7 +97,7 @@ class UpdateByIdControllerMixin:
     endpoint_url: str
 
     @controller_method
-    def update(self, obj: BaseModel, **kwargs):
+    def update(self, obj: ModelT, **kwargs: Any) -> requests.Response:
         url = _id_path(self.endpoint_url, getattr(obj, "oid", None))
         kwargs["data"] = obj.to_data()
         return self.adapter.put(url=url, **kwargs)
@@ -106,7 +113,7 @@ class DeleteControllerMixin:
     endpoint_url: str
 
     @controller_method
-    def delete(self, oid: str, **kwargs):
+    def delete(self, oid: str, **kwargs: Any) -> requests.Response:
         return self.adapter.delete(url=f"{self.endpoint_url}/{oid}", **kwargs)
 
 
@@ -120,7 +127,7 @@ class QueryControllerMixin:
     endpoint_url: str
 
     @controller_method
-    def query(self, obj: BaseQuerySpecModel | None = None, **kwargs):
+    def query(self, obj: BaseQuerySpecModel | None = None, **kwargs: Any) -> requests.Response:
         if obj:
             kwargs["data"] = obj.to_data()
 
@@ -137,7 +144,7 @@ class GetAllControllerMixin(QueryControllerMixin):
     endpoint_url: str
 
     @controller_method
-    def get_all(self, **kwargs):
+    def get_all(self, **kwargs: Any) -> requests.Response:
         return self.query(**kwargs)
 
 
@@ -151,11 +158,11 @@ class GetStateControllerMixin:
     endpoint_url: str
 
     @controller_method
-    def get_state_by_id(self, oid: str, **kwargs):
+    def get_state_by_id(self, oid: str, **kwargs: Any) -> requests.Response:
         return self.adapter.get(url=f"{self.endpoint_url}/{oid}/state", **kwargs)
 
 
-class TerminateControllerMixin:
+class TerminateControllerMixin(Generic[ModelT]):
     """
     This mixin injects a method to allow "terminate" requests
     to any class that inherits from the Controller class.
@@ -165,6 +172,6 @@ class TerminateControllerMixin:
     endpoint_url: str
 
     @controller_method
-    def terminate_by_id(self, oid: str, obj: BaseModel, **kwargs):
+    def terminate_by_id(self, oid: str, obj: ModelT, **kwargs: Any) -> requests.Response:
         kwargs["data"] = obj.to_data()
         return self.adapter.post(url=f"{self.endpoint_url}/{oid}/terminate", **kwargs)

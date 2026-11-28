@@ -20,6 +20,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #################################################################################
 
+from typing import Any
 from sqlmodel import SQLModel, Field
 from sqlalchemy import JSON, String
 from sqlmodel import Column
@@ -30,5 +31,5 @@ class EDRBase(SQLModel):
     counter_party_address: str
     query_checksum: str
     policy_checksum: str
-    edr_data: dict = Field(sa_column=Column(JSON))
+    edr_data: dict[str, Any] = Field(sa_column=Column(JSON))
     edr_hash: str = Field(default=None, sa_column=Column(String))

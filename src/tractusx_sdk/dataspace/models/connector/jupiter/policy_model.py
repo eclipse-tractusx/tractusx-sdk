@@ -31,7 +31,7 @@ class PolicyModel(BasePolicyModel):
     ODRL_TYPE: str = Field(default="odrl:Set", frozen=True)
     ODRL_CONTEXT: str = Field(default="http://www.w3.org/ns/odrl.jsonld", frozen=True)
 
-    def to_data(self):
+    def to_data(self) -> str:
         """
         Converts the model to a JSON representing the data that
         will be sent to the connector when using a policy model.

@@ -28,7 +28,7 @@ from ..base_contract_agreement_retirement_model import BaseContractAgreementReti
 
 class ContractAgreementRetirementModel(BaseContractAgreementRetirementModel):
 
-    def to_data(self):
+    def to_data(self) -> str:
         """
         Converts the model to a JSON representing the data that will
         be sent to a saturn connector when using a contract agreement retirement model.

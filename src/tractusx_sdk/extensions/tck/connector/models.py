@@ -31,7 +31,7 @@ of connector endpoints, policies, assets, and test-run parameters.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 
 # ============================================================================
@@ -63,14 +63,14 @@ class ConnectorConfig:
     did: Optional[str] = None
     dsp_url: Optional[str] = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dict, excluding ``None``-valued optional fields.
 
         Optional fields (``bpn``, ``did``, ``dsp_url``) are only included
         when they have non-``None`` values so that ``"bpn" in config``
         checks behave correctly in the helpers layer.
         """
-        result: dict = {
+        result: dict[str, Any] = {
             "base_url": self.base_url,
             "dma_path": self.dma_path,
             "api_key_header": self.api_key_header,
@@ -100,7 +100,7 @@ class BackendConfig:
     api_key_header: str = "X-Api-Key"
     api_key: str | None = ""
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dict."""
         return {
             "base_url": self.base_url,
@@ -126,13 +126,13 @@ class PolicyConfig:
             (e.g. ``"cx-policy:profile2405"``).
     """
 
-    permissions: list = field(default_factory=list)
-    context: Optional[list] = None
+    permissions: list[Any] = field(default_factory=list)
+    context: Optional[list[Any]] = None
     profile: Optional[str] = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dict, excluding ``None``-valued optional fields."""
-        result: dict = {"permissions": self.permissions}
+        result: dict[str, Any] = {"permissions": self.permissions}
         if self.context is not None:
             result["context"] = self.context
         if self.profile is not None:
@@ -157,7 +157,7 @@ class AssetConfig:
         "3.1.0#BusinessPartnerCertificate"
     )
     version: str = "1.0"
-    proxy_params: dict = field(
+    proxy_params: dict[str, Any] = field(
         default_factory=lambda: {
             "proxyQueryParams": "true",
             "proxyPath": "true",
@@ -166,7 +166,7 @@ class AssetConfig:
         }
     )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dict."""
         return {
             "dct_type": self.dct_type,
@@ -217,8 +217,8 @@ class SimpleTckConfig:
     access_policy: PolicyConfig
     usage_policy: PolicyConfig
     asset: AssetConfig = field(default_factory=AssetConfig)
-    accepted_policies: Optional[list] = None
-    sample_data: Optional[dict] = None
+    accepted_policies: Optional[list[Any]] = None
+    sample_data: Optional[dict[str, Any]] = None
     cleanup: bool = True
     discovery_mode: str = "bpnl"
     verify_ssl: bool = False
@@ -264,12 +264,12 @@ class DetailedTckConfig:
     access_policy: PolicyConfig
     usage_policy: PolicyConfig
     asset: AssetConfig = field(default_factory=AssetConfig)
-    sample_data: Optional[dict] = None
+    sample_data: Optional[dict[str, Any]] = None
     cleanup: bool = True
     discovery_mode: str = "bpnl"
     verify_ssl: bool = False
     protocol: str = "dataspace-protocol-http:2025-1"
-    negotiation_context: Optional[list] = None
+    negotiation_context: Optional[list[Any]] = None
     banner_title: str = ""
     summary_title: str = ""
     config_section: str = ""  # YAML section name (e.g. "jupiter", "saturn") used by --config
